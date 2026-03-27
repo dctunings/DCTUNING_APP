@@ -5,6 +5,7 @@
 [build.environment]
   NODE_VERSION = "20"
   VITE_WEB_MODE = "true"
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY"
 
 # SPA routing — all paths serve index.html
 [[redirects]]
