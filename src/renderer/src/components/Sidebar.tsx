@@ -110,7 +110,6 @@ const navItems: { section: string; items: { id: Page; icon: keyof typeof Icons; 
   {
     section: 'DCTuning',
     items: [
-      { id: 'home',      icon: 'home',      label: 'Home' },
       { id: 'dashboard', icon: 'dashboard', label: 'Dashboard' },
       { id: 'vin',       icon: 'vin',       label: 'VIN Decoder' },
     ]
@@ -153,7 +152,7 @@ function getPlanBadge(subscription: Subscription | null | undefined, isActive: b
   if (status === 'trialing') return { label: 'TRIAL', bg: 'rgba(234,179,8,0.15)', color: '#eab308' }
   const planId = subscription.plan_id
   if (planId === 'agency') return { label: 'AGENCY', bg: 'rgba(168,85,247,0.15)', color: '#a855f7' }
-  if (planId === 'pro') return { label: 'PRO', bg: 'rgba(184,240,42,0.15)', color: '#b8f02a' }
+  if (planId === 'pro') return { label: 'PRO', bg: 'rgba(0,174,200,0.15)', color: '#00aec8' }
   if (planId === 'starter') return { label: 'STARTER', bg: 'rgba(59,130,246,0.15)', color: '#3b82f6' }
   return null
 }
@@ -176,10 +175,12 @@ export default function Sidebar({ currentPage, setPage, user, subscription, isAc
       {/* Logo */}
       <div className="sidebar-logo">
         <div className="sidebar-logo-mark">
-          <div className="sidebar-logo-icon">DC</div>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', border: '1.5px solid rgba(0,174,200,.4)', boxShadow: '0 0 10px rgba(0,174,200,.2)', flexShrink: 0, background: '#000' }}>
+            <img src="/logo.jpg" alt="DC" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          </div>
           <div className="sidebar-logo-text">
             <div className="sidebar-logo-name">DCTuning</div>
-            <div className="sidebar-logo-sub">Desktop v1.0</div>
+            <div className="sidebar-logo-sub">Ireland · v1.0</div>
           </div>
         </div>
       </div>
@@ -231,7 +232,7 @@ export default function Sidebar({ currentPage, setPage, user, subscription, isAc
               width: 20,
               height: 20,
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #b8f02a 0%, #7eb81e 100%)',
+              background: 'linear-gradient(135deg, #00cce0 0%, #008fab 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

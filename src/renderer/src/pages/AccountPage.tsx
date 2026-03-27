@@ -20,7 +20,7 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
 
 const PLAN_COLORS: Record<string, string> = {
   starter: '#3b82f6',
-  pro:     '#b8f02a',
+  pro:     '#00aec8',
   agency:  '#a855f7',
 }
 
@@ -94,7 +94,7 @@ export default function AccountPage({ user, subscription, plans, onUpgrade, open
             width: 52,
             height: 52,
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #b8f02a 0%, #7eb81e 100%)',
+            background: 'linear-gradient(135deg, #00aec8 0%, #008fab 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -258,7 +258,7 @@ export default function AccountPage({ user, subscription, plans, onUpgrade, open
             <button
               onClick={openCustomerPortal}
               style={{
-                background: '#b8f02a',
+                background: '#00aec8',
                 color: '#000',
                 border: 'none',
                 borderRadius: 8,
@@ -276,9 +276,9 @@ export default function AccountPage({ user, subscription, plans, onUpgrade, open
             <button
               onClick={onUpgrade}
               style={{
-                background: 'rgba(184,240,42,0.1)',
-                color: '#b8f02a',
-                border: '1.5px solid rgba(184,240,42,0.3)',
+                background: 'rgba(0,174,200,0.1)',
+                color: '#00aec8',
+                border: '1.5px solid rgba(0,174,200,0.3)',
                 borderRadius: 8,
                 padding: '10px 20px',
                 fontSize: 13,
@@ -294,7 +294,7 @@ export default function AccountPage({ user, subscription, plans, onUpgrade, open
             <button
               onClick={onUpgrade}
               style={{
-                background: '#b8f02a',
+                background: '#00aec8',
                 color: '#000',
                 border: 'none',
                 borderRadius: 8,
