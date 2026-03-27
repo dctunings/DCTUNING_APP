@@ -47,16 +47,17 @@ export default function LoginScreen({ signIn, signUp }: Props) {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{
-            width: 64, height: 64,
-            background: 'var(--accent)',
-            borderRadius: 16,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 900, fontSize: 24, color: '#000',
+            width: 80, height: 80,
+            borderRadius: '50%',
+            overflow: 'hidden',
+            border: '2.5px solid rgba(0,174,200,.6)',
+            boxShadow: '0 0 28px rgba(0,174,200,.4), 0 0 8px rgba(0,174,200,.2)',
             margin: '0 auto 16px',
+            background: '#000',
           }}>
-            DC
+            <img src="/logo.jpg" alt="DCTuning" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           </div>
-          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}>DCTuning Desktop</div>
+          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}>DCTuning Ireland</div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
             {mode === 'login' ? 'Sign in to your account' : 'Create a new account'}
           </div>
