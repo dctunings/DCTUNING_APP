@@ -44,7 +44,7 @@ export function useAuth(): AuthState & {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name } }
+      options: { data: { full_name: name }, emailRedirectTo: 'https://app.dctuning.ie' }
     })
     return error?.message ?? null
   }
