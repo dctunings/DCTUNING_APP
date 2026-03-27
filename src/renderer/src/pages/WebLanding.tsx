@@ -147,10 +147,14 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
           .nav-signin{display:none}
           .hero-grid{grid-template-columns:1fr;gap:0;padding-top:40px!important}
           .hero-heatmap{display:none}
+          .hero-btns{flex-direction:column!important}
+          .hero-btns button{width:100%}
           .stats-4{grid-template-columns:repeat(2,1fr)}
+          .stats-4 > *{padding:16px 12px!important}
           .feat-2col{grid-template-columns:1fr}
           .price-3col{grid-template-columns:1fr;gap:14px}
           .price-3col > *{margin-top:0!important}
+          .site-footer{flex-direction:column;gap:12px;text-align:center;padding:20px 24px!important}
         }
       `}</style>
 
@@ -209,7 +213,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
             Stage 1/2/3 remap builder for professional tuners. Drop in your BIN and a definition file — A2L or DRT — configure your stage and export with checksum correction.
           </p>
 
-          <div style={{display:'flex',gap:12,marginBottom:48}}>
+          <div className="hero-btns" style={{display:'flex',gap:12,marginBottom:48}}>
             <button className="btn-cta" onClick={onSignUp} style={{padding:'15px 34px',borderRadius:12,fontSize:15,animation:'glowBtn 3s ease infinite'}}>Start 7-Day Free Trial →</button>
             <button className="btn-out-dark" onClick={onSignIn} style={{padding:'15px 26px',borderRadius:12,fontSize:15}}>Sign In</button>
           </div>
@@ -456,19 +460,19 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
 
       {/* ── CTA SECTION ───────────────────────────────── */}
       <section style={{position:'relative',zIndex:1,maxWidth:1100,margin:'0 auto',padding:'0 max(24px,calc(50% - 550px)) 64px'}}>
-        <div className="gc" style={{padding:'80px 56px',textAlign:'center'}}>
+        <div className="gc" style={{padding:'60px 28px',textAlign:'center'}}>
           <h2 style={{fontSize:'clamp(30px,4.2vw,58px)',fontWeight:800,letterSpacing:'-2px',lineHeight:.98,marginBottom:18,position:'relative',color:'#fff'}}>Ready to remap?</h2>
           <p style={{fontSize:17,color:'rgba(255,255,255,.48)',margin:'0 auto 38px',maxWidth:420,lineHeight:1.68,fontWeight:500,position:'relative'}}>
             Join professional tuners building better remaps, faster — no installs, no dongles, no hassle.
           </p>
-          <button className="btn-cta" onClick={onSignUp} style={{padding:'17px 52px',borderRadius:13,fontSize:16,animation:'glowBtn 3s ease infinite',position:'relative',fontWeight:700}}>
+          <button className="btn-cta" onClick={onSignUp} style={{padding:'15px 32px',borderRadius:13,fontSize:15,animation:'glowBtn 3s ease infinite',position:'relative',fontWeight:700,maxWidth:'100%'}}>
             Start Free Trial — No Card Required →
           </button>
         </div>
       </section>
 
       {/* ── FOOTER ────────────────────────────────────── */}
-      <footer style={{borderTop:'1px solid rgba(0,0,0,.1)',padding:'22px max(24px,calc(50% - 660px))',display:'flex',justifyContent:'space-between',alignItems:'center',position:'relative',zIndex:1}}>
+      <footer className="site-footer" style={{borderTop:'1px solid rgba(0,0,0,.1)',padding:'22px max(24px,calc(50% - 660px))',display:'flex',justifyContent:'space-between',alignItems:'center',position:'relative',zIndex:1}}>
         <div style={{display:'flex',alignItems:'center',gap:9}}>
           <div style={{width:32,height:32,borderRadius:'50%',overflow:'hidden',border:'1.5px solid rgba(0,0,0,.12)',background:'#000',flexShrink:0}}>
             <img src="/logo.jpg" alt="DCTuning" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
