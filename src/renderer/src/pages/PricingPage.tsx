@@ -19,7 +19,7 @@ const PLAN_STYLES: Record<string, { border: string; shadow: string; badge?: stri
   },
   pro: {
     border: '2px solid var(--accent)',
-    shadow: '0 0 32px rgba(184,240,42,0.12), 0 4px 24px rgba(0,0,0,0.5)',
+    shadow: '0 0 32px rgba(0,174,200,0.12), 0 4px 24px rgba(0,0,0,0.5)',
     badge: 'Most Popular',
   },
   agency: {
@@ -30,7 +30,7 @@ const PLAN_STYLES: Record<string, { border: string; shadow: string; badge?: stri
 
 const PLAN_COLORS: Record<string, string> = {
   starter: '#3b82f6',
-  pro: '#b8f02a',
+  pro: '#00aec8',
   agency: '#a855f7',
 }
 
@@ -114,13 +114,13 @@ export default function PricingPage({
       <div style={{ textAlign: 'center', marginBottom: 36 }}>
         <div style={{
           display: 'inline-block',
-          background: 'rgba(184,240,42,0.1)',
-          border: '1px solid rgba(184,240,42,0.25)',
+          background: 'rgba(0,174,200,0.1)',
+          border: '1px solid rgba(0,174,200,0.25)',
           borderRadius: 20,
           padding: '4px 14px',
           fontSize: 11,
           fontWeight: 700,
-          color: '#b8f02a',
+          color: '#00aec8',
           letterSpacing: '0.8px',
           textTransform: 'uppercase',
           marginBottom: 16,
@@ -188,7 +188,7 @@ export default function PricingPage({
           >
             Yearly
             <span style={{
-              background: '#b8f02a',
+              background: '#00aec8',
               color: '#000',
               fontSize: 9,
               fontWeight: 900,
@@ -244,7 +244,7 @@ export default function PricingPage({
                     position: 'absolute',
                     top: -1,
                     right: 20,
-                    background: '#b8f02a',
+                    background: '#00aec8',
                     color: '#000',
                     fontSize: 9,
                     fontWeight: 900,
@@ -306,7 +306,7 @@ export default function PricingPage({
                   {interval === 'yearly' && (
                     <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                       Billed €{Math.round(plan.price_yearly / 100)}/year
-                      <span style={{ color: '#b8f02a', marginLeft: 6, fontWeight: 700 }}>Save €{Math.round((plan.price_monthly * 12 - plan.price_yearly) / 100)}</span>
+                      <span style={{ color: '#00aec8', marginLeft: 6, fontWeight: 700 }}>Save €{Math.round((plan.price_monthly * 12 - plan.price_yearly) / 100)}</span>
                     </div>
                   )}
                   {interval === 'monthly' && (
@@ -371,7 +371,7 @@ export default function PricingPage({
                       padding: '12px 0',
                       borderRadius: 8,
                       border: isPro ? 'none' : `1.5px solid ${color}44`,
-                      background: isPro ? '#b8f02a' : `${color}22`,
+                      background: isPro ? '#00aec8' : `${color}22`,
                       color: isPro ? '#000' : color,
                       fontWeight: 700,
                       fontSize: 14,

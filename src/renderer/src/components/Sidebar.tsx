@@ -11,6 +11,7 @@ interface Props {
   isPro?: boolean
   isAgency?: boolean
   daysRemaining?: number | null
+  onSignOut?: () => void
 }
 
 // ── Clean SVG icons (16×16 stroke-based) ─────────────────────
@@ -167,7 +168,7 @@ function getInitials(user: User): string {
   return (user.email || 'U').slice(0, 2).toUpperCase()
 }
 
-export default function Sidebar({ currentPage, setPage, user, subscription, isActive, isPro, daysRemaining }: Props) {
+export default function Sidebar({ currentPage, setPage, user, subscription, isActive, isPro, daysRemaining, onSignOut }: Props) {
   const planBadge = getPlanBadge(subscription, isActive)
 
   return (
@@ -295,9 +296,20 @@ export default function Sidebar({ currentPage, setPage, user, subscription, isAc
               <div className="status-dot online" />
               <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 700 }}>Signed In</span>
             </div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 8 }}>
               {user.user_metadata?.full_name || user.email}
             </div>
+            {onSignOut && (
+              <div
+                onClick={onSignOut}
+                style={{ fontSize: 11, color: 'var(--text-muted)', cursor: 'pointer', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 8px', borderRadius: 5, border: '1px solid var(--border)', transition: 'all .12s' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--danger)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,68,68,.3)' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)' }}
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Sign Out
+              </div>
+            )}
           </>
         ) : (
           <>

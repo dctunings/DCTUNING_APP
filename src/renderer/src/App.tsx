@@ -52,7 +52,7 @@ export default function App() {
   const [connected, setConnected] = useState(false)
   const [activeVehicle, setActiveVehicle] = useState<ActiveVehicle | null>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
-  const { user, loading: authLoading, signIn, signUp } = useAuth()
+  const { user, loading: authLoading, signIn, signUp, signOut } = useAuth()
 
   const {
     subscription,
@@ -156,6 +156,7 @@ export default function App() {
         isPro={isPro}
         isAgency={isAgency}
         daysRemaining={daysRemaining}
+        onSignOut={signOut}
       />
       <div className="app-main">
         <Topbar
