@@ -1,0 +1,16 @@
+node_modules
+out
+web-dist
+dist
+*.local
+.env
+.env.*
+!.env.example
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+logs
+*.log
