@@ -21,7 +21,7 @@ interface Props {
   downloadUrl?: string
 }
 
-export default function WebOnlyBanner({ downloadUrl = 'https://dctuning.ie/download' }: Props) {
+export default function WebOnlyBanner({ downloadUrl = 'https://github.com/dctunings/DCTUNING_APP/releases/latest' }: Props) {
   if (!isWebMode()) return null
 
   return (
