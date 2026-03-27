@@ -133,6 +133,25 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
 
         /* TAG */
         .tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:5px;font-size:11px;font-weight:700;letter-spacing:.2px;background:rgba(0,174,200,.12);color:#008fab;border:1px solid rgba(0,174,200,.25)}
+
+        /* ── RESPONSIVE LAYOUT CLASSES ─────────────────── */
+        .hero-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:72px;align-items:center;}
+        .feat-2col{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;margin-bottom:16px;}
+        .stats-4{display:grid;grid-template-columns:repeat(4,1fr);}
+        .price-3col{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch;}
+        .nav-links-d{display:flex;gap:32px;}
+        .nav-signin{}
+
+        @media(max-width:768px){
+          .nav-links-d{display:none}
+          .nav-signin{display:none}
+          .hero-grid{grid-template-columns:1fr;gap:0;padding-top:40px!important}
+          .hero-heatmap{display:none}
+          .stats-4{grid-template-columns:repeat(2,1fr)}
+          .feat-2col{grid-template-columns:1fr}
+          .price-3col{grid-template-columns:1fr;gap:14px}
+          .price-3col > *{margin-top:0!important}
+        }
       `}</style>
 
       {/* ── BACKGROUND ──────────────────────────────────── */}
@@ -150,11 +169,11 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
           </div>
           <span style={{fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:4,background:'rgba(0,174,200,.12)',color:'#00aec8',border:'1px solid rgba(0,174,200,.25)',letterSpacing:'1px',textTransform:'uppercase'}}>PRO</span>
         </div>
-        <div style={{display:'flex',gap:32}}>
+        <div className="nav-links-d">
           {['Features','Pricing','Docs'].map(l=><a key={l} href={`#${l.toLowerCase()}`} className="nav-link">{l}</a>)}
         </div>
         <div style={{display:'flex',gap:10}}>
-          <button onClick={onSignIn} style={{padding:'9px 20px',borderRadius:9,fontSize:13,fontFamily:'inherit',fontWeight:600,background:'transparent',border:'1.5px solid rgba(0,0,0,.18)',color:'rgba(0,0,0,.6)',cursor:'pointer',transition:'all .18s'}}>Sign In</button>
+          <button className="nav-signin" onClick={onSignIn} style={{padding:'9px 20px',borderRadius:9,fontSize:13,fontFamily:'inherit',fontWeight:600,background:'transparent',border:'1.5px solid rgba(0,0,0,.18)',color:'rgba(0,0,0,.6)',cursor:'pointer',transition:'all .18s'}}>Sign In</button>
           <button className="btn-cta" onClick={onSignUp} style={{padding:'9px 20px',borderRadius:9,fontSize:13,animation:'glowBtn 3s ease infinite'}}>Start Free Trial</button>
         </div>
       </nav>
@@ -171,7 +190,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
         <div style={{position:'absolute',top:0,left:0,right:0,height:'22%',background:'linear-gradient(rgba(8,9,14,.75) 0%,transparent 100%)',zIndex:3}}/>
         {/* Bottom fade into page */}
         <div style={{position:'absolute',bottom:0,left:0,right:0,height:'25%',background:'linear-gradient(transparent,#f4f4f6)',zIndex:3}}/>
-      <div style={{position:'relative',zIndex:10,maxWidth:1280,margin:'0 auto',padding:'80px max(24px,calc(50% - 640px)) 0',display:'grid',gridTemplateColumns:'1fr 1.1fr',gap:72,alignItems:'center'}}>
+      <div className="hero-grid" style={{position:'relative',zIndex:10,maxWidth:1280,margin:'0 auto',padding:'80px max(24px,calc(50% - 640px)) 0'}}>
 
         <div style={{animation:'fadeUp .6s ease both',paddingBottom:32}}>
           {/* Live pill */}
@@ -196,7 +215,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
           </div>
 
           {/* Stats bar */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',background:'rgba(0,0,0,.45)',border:'1px solid rgba(255,255,255,.14)',borderRadius:14,overflow:'hidden',backdropFilter:'blur(20px)',boxShadow:'0 8px 32px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.09)'}}>
+          <div className="stats-4" style={{background:'rgba(0,0,0,.45)',border:'1px solid rgba(255,255,255,.14)',borderRadius:14,overflow:'hidden',backdropFilter:'blur(20px)',boxShadow:'0 8px 32px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.09)'}}>
             {[
               {n:`${Math.round(counts.files/1000)}k+`,l:'Tuning Files'},
               {n:`${Math.round(counts.drt/1000)}k+`,  l:'DRT Drivers'},
@@ -212,7 +231,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
         </div>
 
         {/* Heatmap visual */}
-        <div style={{position:'relative',animation:'fadeUp .6s ease .18s both, floatY 8s ease infinite'}}>
+        <div className="hero-heatmap" style={{position:'relative',animation:'fadeUp .6s ease .18s both, floatY 8s ease infinite'}}>
           <div style={{position:'absolute',inset:-70,background:'radial-gradient(circle at 55% 50%,rgba(0,174,200,.11) 0%,transparent 65%)',pointerEvents:'none'}}/>
 
           {/* Floating tooltip chips */}
@@ -309,7 +328,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
         </div>
 
         {/* Row 1: big card + list card */}
-        <div style={{display:'grid',gridTemplateColumns:'1.25fr 1fr',gap:16,marginBottom:16}}>
+        <div className="feat-2col">
 
           {/* Remap Builder */}
           <div className="gc" style={{padding:'44px'}}>
@@ -349,7 +368,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
         </div>
 
         {/* Stats strip */}
-        <div className="gc" style={{padding:'28px 36px',display:'grid',gridTemplateColumns:'repeat(4,1fr)',textAlign:'center',gap:0}}>
+        <div className="gc stats-4" style={{padding:'28px 36px',textAlign:'center',gap:0}}>
           {[
             {n:`${Math.round(counts.files/1000)}k+`,l:'Tuning files in library'},
             {n:`${Math.round(counts.drt/1000)}k+`,  l:'ECM Titanium DRT drivers'},
@@ -380,7 +399,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
           </div>
         </div>
 
-        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:22,alignItems:'stretch'}}>
+        <div className="price-3col">
           {[
             {name:'Starter',mo:49,yr:39,hot:false,
              features:['Remap Builder (A2L + DRT)','VIN Decoder','Device Library','5 remaps / month','Email support'],
