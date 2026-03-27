@@ -48,7 +48,8 @@ html.landing-mode,
 html.landing-mode body,
 html.landing-mode #root {
   height: auto !important;
-  overflow: visible !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────── */

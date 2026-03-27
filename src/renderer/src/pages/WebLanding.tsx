@@ -44,7 +44,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
   const flat = heat.flat(), mn = Math.min(...flat), mx = Math.max(...flat)
 
   return (
-    <div style={{ minHeight:'100vh', background:'#f4f4f6', fontFamily:"'Plus Jakarta Sans',system-ui,sans-serif", color:'#0a0a0a', overflowX:'hidden' }}>
+    <div style={{ minHeight:'100vh', background:'#f4f4f6', fontFamily:"'Plus Jakarta Sans',system-ui,sans-serif", color:'#0a0a0a' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
