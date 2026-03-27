@@ -13,7 +13,6 @@ import J2534PassThru from './pages/J2534PassThru'
 import ECUUnlock from './pages/ECUUnlock'
 import WiringDiagrams from './pages/WiringDiagrams'
 import DeviceLibrary from './pages/DeviceLibrary'
-import Home from './pages/Home'
 import RemapBuilder from './pages/RemapBuilder'
 import PricingPage from './pages/PricingPage'
 import AccountPage from './pages/AccountPage'
@@ -27,7 +26,6 @@ import { useSubscription } from './lib/useSubscription'
 import './styles/app.css'
 
 export type Page =
-  | 'home'
   | 'dashboard'
   | 'vin'
   | 'scanner'
@@ -48,7 +46,7 @@ export type Page =
 const OBD2_PAGES: Page[] = ['scanner', 'voltage', 'j2534', 'cloning', 'unlock']
 
 export default function App() {
-  const [page, setPage] = useState<Page>('home')
+  const [page, setPage] = useState<Page>('dashboard')
   const [manufacturer, setManufacturer] = useState<string>('')
   const [vehicle, setVehicle] = useState<string>('')
   const [connected, setConnected] = useState(false)
@@ -78,7 +76,6 @@ export default function App() {
 
   const renderPage = () => {
     switch (page) {
-      case 'home':         return <Home />
       case 'dashboard':    return <Dashboard setPage={setPage} connected={connected} activeVehicle={activeVehicle} />
       case 'vin':          return <VINDecoder onVehicleSelect={handleVehicleSelect} activeVehicle={activeVehicle} setPage={setPage} />
       case 'scanner':      return <ECUScanner connected={connected} activeVehicle={activeVehicle} />

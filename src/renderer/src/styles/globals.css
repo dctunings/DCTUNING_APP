@@ -12,10 +12,10 @@
   --bg-input:      #0d0d0d;
   --border:        rgba(255,255,255,0.07);
   --border-mid:    rgba(255,255,255,0.10);
-  --border-accent: rgba(184,240,42,0.35);
-  --accent:        #b8f02a;
-  --accent-dim:    rgba(184,240,42,0.10);
-  --accent-hover:  #ccff44;
+  --border-accent: rgba(0,174,200,0.35);
+  --accent:        #00aec8;
+  --accent-dim:    rgba(0,174,200,0.10);
+  --accent-hover:  #00cce0;
   --text-primary:  #f0f0f0;
   --text-secondary:#9a9a9a;
   --text-muted:    #555555;
@@ -81,7 +81,7 @@ html.landing-mode #root {
   background: var(--accent);
   color: #000;
 }
-.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(184,240,42,0.25); }
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,174,200,0.25); }
 .btn-primary:active { transform: translateY(0); }
 
 .btn-secondary {
@@ -119,7 +119,7 @@ html.landing-mode #root {
 
 .card-accent {
   border-color: var(--border-accent);
-  box-shadow: 0 0 0 1px rgba(184,240,42,0.06) inset;
+  box-shadow: 0 0 0 1px rgba(0,174,200,0.06) inset;
 }
 
 /* ── Badges ────────────────────────────────────────────────── */
@@ -158,8 +158,8 @@ input, select, textarea {
 textarea { height: auto; padding: 10px 11px; }
 
 input:focus, select:focus, textarea:focus {
-  border-color: rgba(184,240,42,0.5);
-  box-shadow: 0 0 0 3px rgba(184,240,42,0.07);
+  border-color: rgba(0,174,200,0.5);
+  box-shadow: 0 0 0 3px rgba(0,174,200,0.07);
 }
 
 input::placeholder { color: var(--text-muted); }
@@ -219,7 +219,7 @@ label {
   height: 32px;
   background: var(--accent-dim);
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(184,240,42,0.2);
+  border: 1px solid rgba(0,174,200,0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -237,7 +237,7 @@ label {
 }
 .banner-danger  { background: var(--danger-dim);  border: 1px solid rgba(255,68,68,0.25);   color: #ffaaaa; }
 .banner-warning { background: var(--warning-dim); border: 1px solid rgba(245,158,11,0.25);  color: #fcd88a; }
-.banner-info    { background: var(--accent-dim);  border: 1px solid rgba(184,240,42,0.2);   color: #d4f5a0; }
+.banner-info    { background: var(--accent-dim);  border: 1px solid rgba(0,174,200,0.2);   color: #d4f5a0; }
 
 /* ── Status dot ────────────────────────────────────────────── */
 .status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
