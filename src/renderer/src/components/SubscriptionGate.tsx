@@ -50,8 +50,8 @@ export default function SubscriptionGate({
         <div style={{
           width: 28,
           height: 28,
-          border: '2.5px solid rgba(184,240,42,0.2)',
-          borderTop: '2.5px solid #b8f02a',
+          border: '2.5px solid rgba(0,174,200,0.2)',
+          borderTop: '2.5px solid #00aec8',
           borderRadius: '50%',
           animation: 'spin 0.8s linear infinite',
         }} />
@@ -70,8 +70,8 @@ export default function SubscriptionGate({
             position: 'sticky',
             top: 0,
             zIndex: 10,
-            background: 'rgba(184,240,42,0.12)',
-            border: '1px solid rgba(184,240,42,0.3)',
+            background: 'rgba(0,174,200,0.12)',
+            border: '1px solid rgba(0,174,200,0.3)',
             borderRadius: 0,
             padding: '8px 20px',
             display: 'flex',
@@ -79,13 +79,13 @@ export default function SubscriptionGate({
             justifyContent: 'space-between',
             gap: 12,
           }}>
-            <span style={{ fontSize: 12, color: '#b8f02a', fontWeight: 600 }}>
+            <span style={{ fontSize: 12, color: '#00aec8', fontWeight: 600 }}>
               Demo Mode — Stripe is not configured
             </span>
             <button
               onClick={() => setPage('dashboard')}
               style={{
-                background: '#b8f02a',
+                background: '#00aec8',
                 color: '#000',
                 border: 'none',
                 borderRadius: 6,

@@ -198,7 +198,7 @@ function MapGrid({ grid, unit, decimals, minOverride, maxOverride, onChange }: M
                         cursor: 'pointer',
                         boxSizing: 'border-box',
                         border: isSel ? '2px solid var(--accent)' : '1px solid rgba(0,0,0,0.3)',
-                        outline: isSel ? '1px solid rgba(184,240,42,0.4)' : 'none',
+                        outline: isSel ? '1px solid rgba(0,174,200,0.4)' : 'none',
                         userSelect: 'none',
                         transition: 'border 0.05s',
                       }}

@@ -542,7 +542,7 @@ const COMPAT_COLOR: Record<AppCompat, string> = {
   'diagnostics':  'var(--success)',
 }
 const COMPAT_BG: Record<AppCompat, string> = {
-  'direct-obd':   'rgba(184,240,42,0.10)',
+  'direct-obd':   'rgba(0,174,200,0.10)',
   'direct-j2534': 'rgba(167,139,250,0.10)',
   'files-only':   'rgba(96,165,250,0.10)',
   'diagnostics':  'rgba(34,197,94,0.10)',

@@ -24,7 +24,7 @@ export default defineConfig({
   },
   define: {
     'import.meta.env.VITE_WEB_MODE': JSON.stringify('true'),
-    'import.meta.env.VITE_DEMO_MODE': JSON.stringify('true'),
+    'import.meta.env.VITE_DEMO_MODE': JSON.stringify('false'),
     'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL || 'https://eqfmeavkefflwmzihqkd.supabase.co'),
     'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxZm1lYXZrZWZmbHdtemlocWtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MjQzMjksImV4cCI6MjA4OTEwMDMyOX0.1F1v2KOm30s-o2lRmy5ZuNf3B1Cm8FTx8FpHWLANrIE'),
   }

@@ -403,7 +403,7 @@ CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id
                   {/* Folder info bar */}
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
-                    background: 'rgba(184,240,42,0.05)', border: '1px solid rgba(184,240,42,0.15)',
+                    background: 'rgba(0,174,200,0.05)', border: '1px solid rgba(0,174,200,0.15)',
                     borderRadius: 10, marginBottom: 14, flexWrap: 'wrap',
                   }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)', flexShrink: 0 }} />
@@ -441,14 +441,14 @@ CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id
                         return (
                           <div key={i} className="card" style={{
                             marginBottom: 8,
-                            borderColor: isNew ? 'rgba(184,240,42,0.3)' : 'var(--border)',
+                            borderColor: isNew ? 'rgba(0,174,200,0.3)' : 'var(--border)',
                           }}>
                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                                   <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--accent)' }}>{f.name}</span>
                                   {isNew && (
-                                    <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: 'rgba(184,240,42,0.12)', border: '1px solid rgba(184,240,42,0.25)', color: 'var(--accent)', textTransform: 'uppercase' }}>
+                                    <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: 'rgba(0,174,200,0.12)', border: '1px solid rgba(0,174,200,0.25)', color: 'var(--accent)', textTransform: 'uppercase' }}>
                                       New
                                     </span>
                                   )}

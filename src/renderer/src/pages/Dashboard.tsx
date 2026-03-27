@@ -135,7 +135,7 @@ export default function Dashboard({ setPage, connected, activeVehicle }: Props) 
                 {activeVehicle.variant} · {activeVehicle.year_from}–{activeVehicle.year_to ?? '—'}
               </div>
               <code style={{
-                background: 'rgba(184,240,42,0.08)', border: '1px solid rgba(184,240,42,0.18)',
+                background: 'rgba(0,174,200,0.08)', border: '1px solid rgba(0,174,200,0.18)',
                 borderRadius: 4, padding: '2px 8px', fontSize: 11, color: 'var(--accent)',
               }}>
                 {activeVehicle.ecu}
@@ -168,7 +168,7 @@ export default function Dashboard({ setPage, connected, activeVehicle }: Props) 
             onClick={() => setPage(a.id)}
             style={{ cursor: 'pointer', padding: '16px 18px', transition: 'border-color 0.12s, background 0.12s' }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'rgba(184,240,42,0.3)'
+              e.currentTarget.style.borderColor = 'rgba(0,174,200,0.3)'
               e.currentTarget.style.background = 'var(--bg-card-hover)'
             }}
             onMouseLeave={(e) => {

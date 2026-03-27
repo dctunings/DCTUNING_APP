@@ -68,7 +68,7 @@ function MapPreview() {
   const heatColor = (v: number) => {
     if (v < 0.25) return `rgba(30,80,200,${0.4+v})`
     if (v < 0.50) return `rgba(0,190,150,${0.5+v*0.3})`
-    if (v < 0.75) return `rgba(184,240,42,${0.6+v*0.2})`
+    if (v < 0.75) return `rgba(0,174,200,${0.6+v*0.2})`
     return `rgba(255,${Math.round(180-v*120)},20,${0.7+v*0.2})`
   }
   const rpms = ['800','2k','3k','4k','5k','6k']
@@ -102,7 +102,7 @@ function ToolCard({ icon, title, desc, page, setPage }: { icon: JSX.Element; tit
       className="card"
       onClick={() => setPage(page)}
       style={{ padding: '15px 16px', cursor: 'pointer', transition: 'border-color .12s, transform .1s' }}
-      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(184,240,42,0.3)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(0,174,200,0.3)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
       onMouseLeave={(e) => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.transform = '' }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 7 }}>
@@ -123,7 +123,7 @@ export default function Home({ setPage }: Props) {
       {/* ── Hero ────────────────────────────────────────────────────────────── */}
       <div style={{
         padding: '44px 28px 36px',
-        background: 'radial-gradient(ellipse at 30% -20%, rgba(184,240,42,0.09) 0%, transparent 55%)',
+        background: 'radial-gradient(ellipse at 30% -20%, rgba(0,174,200,0.09) 0%, transparent 55%)',
         borderBottom: '1px solid var(--border)',
         position: 'relative',
       }}>
@@ -210,8 +210,8 @@ export default function Home({ setPage }: Props) {
           <div
             className="card"
             onClick={() => setPage('scanner')}
-            style={{ padding: '22px 22px', cursor: 'pointer', background: 'linear-gradient(135deg, rgba(184,240,42,0.05) 0%, var(--bg-card) 60%)', transition: 'border-color .12s, transform .1s' }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(184,240,42,0.4)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+            style={{ padding: '22px 22px', cursor: 'pointer', background: 'linear-gradient(135deg, rgba(0,174,200,0.05) 0%, var(--bg-card) 60%)', transition: 'border-color .12s, transform .1s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(0,174,200,0.4)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.transform = '' }}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -222,7 +222,7 @@ export default function Home({ setPage }: Props) {
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Live hardware · OBD2</div>
                 </div>
               </div>
-              <span style={{ fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 8, background: 'rgba(184,240,42,0.12)', border: '1px solid rgba(184,240,42,0.25)', color: 'var(--accent)' }}>LIVE</span>
+              <span style={{ fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 8, background: 'rgba(0,174,200,0.12)', border: '1px solid rgba(0,174,200,0.25)', color: 'var(--accent)' }}>LIVE</span>
             </div>
             <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 0 }}>
               Read & clear fault codes. 120+ DTC descriptions built in. Real-time live data — RPM, boost, AFR, MAF, IAT, TPS.
@@ -237,8 +237,8 @@ export default function Home({ setPage }: Props) {
           <div
             className="card"
             onClick={() => setPage('performance')}
-            style={{ padding: '22px 22px', cursor: 'pointer', background: 'linear-gradient(135deg, rgba(184,240,42,0.05) 0%, var(--bg-card) 60%)', transition: 'border-color .12s, transform .1s' }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(184,240,42,0.4)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+            style={{ padding: '22px 22px', cursor: 'pointer', background: 'linear-gradient(135deg, rgba(0,174,200,0.05) 0%, var(--bg-card) 60%)', transition: 'border-color .12s, transform .1s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(0,174,200,0.4)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.transform = '' }}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -249,7 +249,7 @@ export default function Home({ setPage }: Props) {
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>2D map editor · Heatmap</div>
                 </div>
               </div>
-              <span style={{ fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 8, background: 'rgba(184,240,42,0.12)', border: '1px solid rgba(184,240,42,0.25)', color: 'var(--accent)' }}>EDITOR</span>
+              <span style={{ fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 8, background: 'rgba(0,174,200,0.12)', border: '1px solid rgba(0,174,200,0.25)', color: 'var(--accent)' }}>EDITOR</span>
             </div>
             <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
               WinOLS-style RPM × Load heatmap grid. Keyboard nav, cell editing, boost curve editor, CSV export.

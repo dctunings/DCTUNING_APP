@@ -79,7 +79,7 @@ function MiniHeatmap({ data, label }: { data: number[][], label: string }) {
 
 // ─── Category badge ───────────────────────────────────────────────────────────
 const CAT_COLORS: Record<string, string> = {
-  boost:    '#b8f02a',
+  boost:    '#00aec8',
   fuel:     '#3b82f6',
   torque:   '#f59e0b',
   ignition: '#a855f7',
@@ -117,7 +117,7 @@ function StepBar({ current }: { current: number }) {
               background: i < current ? 'var(--accent)' : i === current ? 'var(--accent)' : 'var(--bg-card)',
               color: i <= current ? '#000' : 'var(--text-muted)',
               border: i > current ? '1px solid var(--border)' : 'none',
-              boxShadow: i === current ? '0 0 0 3px rgba(184,240,42,0.2)' : 'none',
+              boxShadow: i === current ? '0 0 0 3px rgba(0,174,200,0.2)' : 'none',
               transition: 'all 0.2s ease',
             }}>
               {i < current ? (
@@ -343,7 +343,7 @@ export default function RemapBuilder() {
         style={{
           border: `2px dashed ${isDragOver ? 'var(--accent)' : 'var(--border)'}`,
           borderRadius: 12, padding: '48px 32px', textAlign: 'center',
-          background: isDragOver ? 'rgba(184,240,42,0.05)' : 'var(--bg-card)',
+          background: isDragOver ? 'rgba(0,174,200,0.05)' : 'var(--bg-card)',
           transition: 'all 0.15s ease', cursor: 'pointer',
         }}
         onClick={handleFileOpen}
@@ -467,7 +467,7 @@ export default function RemapBuilder() {
   const renderStep1 = () => (
     <div>
       {detected ? (
-        <div style={{ marginBottom: 20, padding: '16px 18px', borderRadius: 10, background: 'rgba(184,240,42,0.06)', border: '1px solid rgba(184,240,42,0.2)' }}>
+        <div style={{ marginBottom: 20, padding: '16px 18px', borderRadius: 10, background: 'rgba(0,174,200,0.06)', border: '1px solid rgba(0,174,200,0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 6px var(--accent)' }} />
             <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent)' }}>ECU Detected</span>
@@ -614,7 +614,7 @@ export default function RemapBuilder() {
                 <div style={{ fontSize: 20, fontWeight: 900, color: active ? info.color : 'var(--text-primary)', marginBottom: 2 }}>{info.power}</div>
                 <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>power gain</div>
                 <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-                  <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 3, background: 'rgba(184,240,42,0.1)', color: 'var(--accent)', fontWeight: 700 }}>
+                  <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 3, background: 'rgba(0,174,200,0.1)', color: 'var(--accent)', fontWeight: 700 }}>
                     Boost {info.boost}
                   </span>
                   <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 3, background: 'rgba(245,158,11,0.1)', color: '#f59e0b', fontWeight: 700 }}>
@@ -644,7 +644,7 @@ export default function RemapBuilder() {
                 style={{
                   padding: '12px 14px', borderRadius: 8, cursor: compatible ? 'pointer' : 'not-allowed',
                   border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-                  background: active ? 'rgba(184,240,42,0.06)' : 'var(--bg-card)',
+                  background: active ? 'rgba(0,174,200,0.06)' : 'var(--bg-card)',
                   opacity: compatible ? 1 : 0.4,
                   transition: 'all 0.12s ease',
                   display: 'flex', alignItems: 'flex-start', gap: 10,
@@ -734,7 +734,7 @@ export default function RemapBuilder() {
                 {m.found ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     {expectedPct > 0 && (
-                      <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--accent)', padding: '2px 7px', borderRadius: 4, background: 'rgba(184,240,42,0.1)' }}>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--accent)', padding: '2px 7px', borderRadius: 4, background: 'rgba(0,174,200,0.1)' }}>
                         +{expectedPct.toFixed(0)}%
                       </span>
                     )}

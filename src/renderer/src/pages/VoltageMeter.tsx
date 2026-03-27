@@ -76,7 +76,7 @@ export default function VoltageMeter({ connected }: Props) {
         {connected && (
           <span className="badge" style={{
             marginLeft: 12,
-            background: source === 'live' ? 'rgba(184,240,42,.12)' : 'rgba(255,255,255,.06)',
+            background: source === 'live' ? 'rgba(0,174,200,.12)' : 'rgba(255,255,255,.06)',
             color: source === 'live' ? 'var(--accent)' : 'var(--text-muted)',
             border: `1px solid ${source === 'live' ? 'var(--accent)' : 'var(--border)'}`,
             fontSize: 11,

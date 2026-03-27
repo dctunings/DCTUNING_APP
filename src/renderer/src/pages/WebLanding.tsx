@@ -263,7 +263,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
             <div style={{background:'rgba(255,255,255,.02)',borderBottom:'1px solid rgba(255,255,255,.06)',padding:'9px 14px',display:'flex',alignItems:'center',gap:5}}>
               {['Upload BIN','Load A2L/DRT','Configure','Preview','Export'].map((s,i)=>(
                 <div key={s} style={{display:'flex',alignItems:'center',gap:5}}>
-                  <div style={{padding:'3px 9px',borderRadius:5,fontSize:9.5,fontWeight:700,background:i<=2?'#b8f02a':'rgba(255,255,255,.05)',color:i<=2?'#000':'rgba(255,255,255,.22)',letterSpacing:'.1px'}}>
+                  <div style={{padding:'3px 9px',borderRadius:5,fontSize:9.5,fontWeight:700,background:i<=2?'#00aec8':'rgba(255,255,255,.05)',color:i<=2?'#000':'rgba(255,255,255,.22)',letterSpacing:'.1px'}}>
                     {i<=2?'✓ ':''}{s}
                   </div>
                   {i<4&&<span style={{color:'rgba(255,255,255,.12)',fontSize:9}}>›</span>}
@@ -279,7 +279,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
                 </div>
                 <div style={{display:'flex',gap:4}}>
                   {['S1','S2','S3'].map((s,i)=>(
-                    <div key={s} style={{padding:'2px 8px',borderRadius:4,fontSize:9,fontWeight:700,background:i===1?'#b8f02a':'rgba(255,255,255,.06)',color:i===1?'#000':'rgba(255,255,255,.22)'}}>{s}</div>
+                    <div key={s} style={{padding:'2px 8px',borderRadius:4,fontSize:9,fontWeight:700,background:i===1?'#00aec8':'rgba(255,255,255,.06)',color:i===1?'#000':'rgba(255,255,255,.22)'}}>{s}</div>
                   ))}
                 </div>
               </div>
@@ -429,7 +429,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
                 </div>
               )}
 
-              <div style={{fontSize:11,fontWeight:700,color:plan.hot?'#b8f02a':'rgba(255,255,255,.4)',letterSpacing:'1.5px',textTransform:'uppercase',marginBottom:10}}>{plan.name}</div>
+              <div style={{fontSize:11,fontWeight:700,color:plan.hot?'#00aec8':'rgba(255,255,255,.4)',letterSpacing:'1.5px',textTransform:'uppercase',marginBottom:10}}>{plan.name}</div>
 
               <div style={{display:'flex',alignItems:'flex-end',gap:3,marginBottom:yearly?4:22}}>
                 <span style={{fontSize:20,fontWeight:700,color:'rgba(255,255,255,.38)',marginBottom:7}}>€</span>
@@ -443,7 +443,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
               <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:26,flex:1}}>
                 {plan.features.map(f=>(
                   <div key={f} style={{display:'flex',alignItems:'flex-start',gap:10,fontSize:14,color:'rgba(255,255,255,.7)',fontWeight:500}}>
-                    <span style={{color:plan.hot?'#b8f02a':'rgba(255,255,255,.38)',fontWeight:700,flexShrink:0,marginTop:1}}>✓</span>{f}
+                    <span style={{color:plan.hot?'#00aec8':'rgba(255,255,255,.38)',fontWeight:700,flexShrink:0,marginTop:1}}>✓</span>{f}
                   </div>
                 ))}
               </div>
