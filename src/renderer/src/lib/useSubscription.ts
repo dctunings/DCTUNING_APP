@@ -70,9 +70,12 @@ export function useSubscription(user: User | null): SubscriptionState & {
 
   useEffect(() => { loadData() }, [user?.id])
 
-  const isActive = subscription?.status === 'active' || subscription?.status === 'trialing'
-  const isPro = isActive && (subscription?.plan_id === 'pro' || subscription?.plan_id === 'agency')
-  const isAgency = isActive && subscription?.plan_id === 'agency'
+  // Owner always has full access
+  const isOwner = user?.email === 'dctunings@gmail.com'
+
+  const isActive = isOwner || subscription?.status === 'active' || subscription?.status === 'trialing'
+  const isPro = isOwner || (isActive && (subscription?.plan_id === 'pro' || subscription?.plan_id === 'agency'))
+  const isAgency = isOwner || (isActive && subscription?.plan_id === 'agency')
 
   let daysRemaining: number | null = null
   if (subscription?.current_period_end) {
