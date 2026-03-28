@@ -45,6 +45,36 @@ export type Page =
 // Pages that require a live OBD2/J2534 hardware connection
 const OBD2_PAGES: Page[] = ['scanner', 'voltage', 'j2534', 'cloning', 'unlock']
 
+// Pages that require at least the Pro plan
+const PRO_ONLY_PAGES: Page[] = ['tunes', 'j2534', 'unlock', 'cloning', 'emissions']
+
+function ProUpgradeWall({ setPage }: { setPage: (p: Page) => void }) {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      minHeight: '60vh', gap: 16, textAlign: 'center', padding: '40px 24px',
+    }}>
+      <div style={{ fontSize: 52, marginBottom: 4 }}>🔒</div>
+      <div style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>Pro Plan Required</div>
+      <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', maxWidth: 400, lineHeight: 1.7 }}>
+        This feature is available on the <strong style={{ color: '#00aec8' }}>Pro</strong> and{' '}
+        <strong style={{ color: '#a855f7' }}>Agency</strong> plans.
+        Upgrade to unlock the full ECU toolkit.
+      </div>
+      <button
+        onClick={() => setPage('pricing')}
+        style={{
+          marginTop: 8, padding: '10px 24px', borderRadius: 8, border: 'none',
+          background: 'var(--accent)', color: '#000', fontWeight: 800, fontSize: 14,
+          cursor: 'pointer', fontFamily: 'inherit',
+        }}
+      >
+        View Plans &amp; Upgrade →
+      </button>
+    </div>
+  )
+}
+
 export default function App() {
   const [page, setPage] = useState<Page>('dashboard')
   const [manufacturer, setManufacturer] = useState<string>('')
@@ -75,6 +105,11 @@ export default function App() {
   }
 
   const renderPage = () => {
+    // Gate Pro-only pages — Starter users see upgrade wall
+    if (PRO_ONLY_PAGES.includes(page) && !isPro) {
+      return <ProUpgradeWall setPage={setPage} />
+    }
+
     switch (page) {
       case 'dashboard':    return <Dashboard setPage={setPage} connected={connected} activeVehicle={activeVehicle} />
       case 'vin':          return <VINDecoder onVehicleSelect={handleVehicleSelect} activeVehicle={activeVehicle} setPage={setPage} />

@@ -105,7 +105,7 @@ const Icons: Record<string, JSX.Element> = {
 }
 
 // Pro-only pages that require at least Pro plan
-const PRO_ONLY_PAGES: Page[] = ['j2534', 'unlock', 'cloning', 'emissions']
+const PRO_ONLY_PAGES: Page[] = ['tunes', 'j2534', 'unlock', 'cloning', 'emissions']
 
 const navItems: { section: string; items: { id: Page; icon: keyof typeof Icons; label: string }[] }[] = [
   {

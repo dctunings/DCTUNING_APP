@@ -385,7 +385,7 @@ export default function PricingPage({
                       ? 'Loading...'
                       : isActive
                         ? `Switch to ${plan.name}`
-                        : `Start Free Trial`}
+                        : `Subscribe to ${plan.name}`}
                   </button>
                 )}
               </div>
@@ -402,9 +402,9 @@ export default function PricingPage({
         flexWrap: 'wrap',
       }}>
         {[
-          { icon: '🎁', text: 'All plans include 7-day free trial' },
           { icon: '✕', text: 'Cancel anytime' },
           { icon: '🔒', text: 'Stripe secured payments' },
+          { icon: '⚡', text: 'Instant access after payment' },
         ].map((badge) => (
           <div key={badge.text} style={{
             display: 'flex',
