@@ -43,10 +43,18 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState<TuneRecord | null>(null)
   const [search, setSearch] = useState('')
-  const [tab, setTab] = useState<'cloud' | 'local' | 'watch'>('cloud')
+  const [tab, setTab] = useState<'cloud' | 'library' | 'local' | 'watch'>('library')
   const [localFiles, setLocalFiles] = useState<{ name: string; size: number; path: string }[]>([])
   const [downloading, setDownloading] = useState<string | null>(null)
   const [error, setError] = useState('')
+  // Library state
+  const [libResults, setLibResults] = useState<any[]>([])
+  const [libLoading, setLibLoading] = useState(false)
+  const [libSearch, setLibSearch] = useState('')
+  const [libMake, setLibMake] = useState('')
+  const [libTotal, setLibTotal] = useState(0)
+  const [libPage, setLibPage] = useState(0)
+  const LIB_PAGE_SIZE = 50
   // Watch folder state
   const [watchFolder, setWatchFolder] = useState<string | null>(null)
   const [watchedFiles, setWatchedFiles] = useState<{ name: string; path: string; size: number; mtime: string }[]>([])
@@ -106,6 +114,34 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
     const files = api?.scanFolderForBins ? await api.scanFolderForBins(target) : []
     setWatchedFiles(files)
   }
+
+  const searchLibrary = useCallback(async (page = 0) => {
+    setLibLoading(true)
+    let query = supabase
+      .from('library_entries')
+      .select('id,vehicle_make,vehicle_model,vehicle_fuel,remap_type,original_file_name,original_file_path,original_file_size,ecu_type', { count: 'exact' })
+      .range(page * LIB_PAGE_SIZE, (page + 1) * LIB_PAGE_SIZE - 1)
+
+    if (libMake) query = query.ilike('vehicle_make', `%${libMake}%`)
+    if (libSearch) {
+      query = query.or(
+        `vehicle_make.ilike.%${libSearch}%,vehicle_model.ilike.%${libSearch}%,original_file_name.ilike.%${libSearch}%,remap_type.ilike.%${libSearch}%`
+      )
+    }
+    query = query.order('vehicle_make').order('vehicle_model')
+
+    const { data, count, error } = await query
+    if (!error) {
+      setLibResults(data || [])
+      setLibTotal(count || 0)
+      setLibPage(page)
+    }
+    setLibLoading(false)
+  }, [libSearch, libMake])
+
+  useEffect(() => {
+    if (tab === 'library') searchLibrary(0)
+  }, [tab, libSearch, libMake])
 
   const clearWatchFolder = () => {
     if (watchIntervalRef.current) clearInterval(watchIntervalRef.current)
@@ -198,7 +234,7 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
       {/* Tabs + controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: 4 }}>
-          {(['cloud', 'local', 'watch'] as const).map((t) => (
+          {(['library', 'cloud', 'local', 'watch'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -215,8 +251,10 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
                 position: 'relative' as const,
               }}
             >
-              {t === 'cloud'
-                ? `Cloud (${tunes.length})`
+              {t === 'library'
+                ? `Library (${libTotal > 0 ? libTotal.toLocaleString() : '92k+'})`
+                : t === 'cloud'
+                ? `My Tunes (${tunes.length})`
                 : t === 'local'
                 ? `Local (${localFiles.length})`
                 : <>
@@ -232,12 +270,29 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
           ))}
         </div>
 
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search tunes..."
-          style={{ flex: 1, minWidth: 120, height: 34 }}
-        />
+        {tab === 'library' ? (
+          <>
+            <input
+              value={libMake}
+              onChange={(e) => setLibMake(e.target.value)}
+              placeholder="Make (e.g. BMW)"
+              style={{ width: 130, height: 34 }}
+            />
+            <input
+              value={libSearch}
+              onChange={(e) => setLibSearch(e.target.value)}
+              placeholder="Model / filename / type..."
+              style={{ flex: 1, minWidth: 120, height: 34 }}
+            />
+          </>
+        ) : (
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search tunes..."
+            style={{ flex: 1, minWidth: 120, height: 34 }}
+          />
+        )}
 
         {tab === 'cloud' && (
           <button className="btn btn-secondary" style={{ fontSize: 12 }} onClick={fetchTunes} disabled={loading}>
@@ -293,6 +348,70 @@ CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id
       <div className="grid-2" style={{ gap: 20, alignItems: 'start' }}>
         {/* File list */}
         <div>
+          {tab === 'library' && (
+            <>
+              {/* Stats bar */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, fontSize: 12, color: 'var(--text-muted)' }}>
+                <span>{libTotal.toLocaleString()} entries in library</span>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  {libPage > 0 && (
+                    <button className="btn btn-ghost" style={{ fontSize: 11, padding: '4px 10px' }} onClick={() => searchLibrary(libPage - 1)}>← Prev</button>
+                  )}
+                  <span>Page {libPage + 1} of {Math.ceil(libTotal / LIB_PAGE_SIZE)}</span>
+                  {(libPage + 1) * LIB_PAGE_SIZE < libTotal && (
+                    <button className="btn btn-ghost" style={{ fontSize: 11, padding: '4px 10px' }} onClick={() => searchLibrary(libPage + 1)}>Next →</button>
+                  )}
+                </div>
+              </div>
+
+              {libLoading && (
+                <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)', fontSize: 13 }}>
+                  ⏳ Searching library...
+                </div>
+              )}
+
+              {!libLoading && libResults.length === 0 && (
+                <div className="card" style={{ textAlign: 'center', padding: 40 }}>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
+                  <div style={{ fontWeight: 700, marginBottom: 6 }}>No results</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Try a different make or model</div>
+                </div>
+              )}
+
+              {!libLoading && libResults.map((entry) => (
+                <div key={entry.id} className="card" style={{ marginBottom: 6, padding: '10px 14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>
+                        {entry.vehicle_make} {entry.vehicle_model}
+                        {entry.vehicle_fuel && <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: 12 }}> · {entry.vehicle_fuel}</span>}
+                      </div>
+                      <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--accent)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {entry.original_file_name}
+                      </div>
+                      {entry.ecu_type && (
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{entry.ecu_type}</div>
+                      )}
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
+                        background: 'var(--accent-dim)', color: 'var(--accent)',
+                        border: '1px solid rgba(0,174,200,0.2)',
+                        display: 'inline-block', marginBottom: 4,
+                      }}>
+                        {entry.remap_type || 'Tune'}
+                      </span>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        {entry.original_file_size ? `${Math.round(entry.original_file_size / 1024)} KB` : '—'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+
           {tab === 'cloud' && (
             <>
               {loading && (
