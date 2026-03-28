@@ -23,6 +23,17 @@ import WebOnlyBanner, { isWebMode } from './components/WebOnlyBanner'
 import type { ActiveVehicle } from './lib/vehicleContext'
 import { useAuth } from './lib/useAuth'
 import { useSubscription } from './lib/useSubscription'
+import type { A2LMapDef } from './lib/a2lParser'
+import type { DRTConvertedMap } from './lib/drtParser'
+import type { DetectedEcu } from './lib/binaryParser'
+
+export interface EcuFileState {
+  fileName: string
+  fileBuffer: ArrayBuffer
+  detected: DetectedEcu | null
+  a2lMaps: A2LMapDef[]
+  drtMaps: DRTConvertedMap[]
+}
 import './styles/app.css'
 
 export type Page =
@@ -81,6 +92,7 @@ export default function App() {
   const [vehicle, setVehicle] = useState<string>('')
   const [connected, setConnected] = useState(false)
   const [activeVehicle, setActiveVehicle] = useState<ActiveVehicle | null>(null)
+  const [ecuFile, setEcuFile] = useState<EcuFileState | null>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const { user, loading: authLoading, signIn, signUp, signOut } = useAuth()
 
@@ -118,12 +130,12 @@ export default function App() {
       case 'wiring':       return <WiringDiagrams activeVehicle={activeVehicle} />
       case 'tunes':        return <TuneManager activeVehicle={activeVehicle} />
       case 'cloning':      return <ECUCloning connected={connected} activeVehicle={activeVehicle} />
-      case 'performance':  return <Performance activeVehicle={activeVehicle} />
+      case 'performance':  return <Performance activeVehicle={activeVehicle} ecuFile={ecuFile} setPage={setPage} />
       case 'emissions':    return <EmissionsDelete activeVehicle={activeVehicle} />
       case 'j2534':        return <J2534PassThru connected={connected} setConnected={setConnected} activeVehicle={activeVehicle} />
       case 'unlock':       return <ECUUnlock connected={connected} activeVehicle={activeVehicle} />
       case 'devices':      return <DeviceLibrary />
-      case 'remap':        return <RemapBuilder />
+      case 'remap':        return <RemapBuilder onEcuLoaded={setEcuFile} />
       case 'pricing':
         return (
           <PricingPage

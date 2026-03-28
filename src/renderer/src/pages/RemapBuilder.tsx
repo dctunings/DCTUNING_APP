@@ -11,6 +11,7 @@ import type { A2LParseResult, A2LMapDef } from '../lib/a2lParser'
 import { parseDRT, convertDRTMaps, guessEcuFamilyFromDRT } from '../lib/drtParser'
 import type { DRTParseResult, DRTConvertedMap } from '../lib/drtParser'
 import { supabase } from '../lib/supabase'
+import type { EcuFileState } from '../App'
 
 interface DefinitionEntry {
   id: string
@@ -158,7 +159,8 @@ function StepBar({ current }: { current: number }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function RemapBuilder() {
+interface RemapBuilderProps { onEcuLoaded?: (state: EcuFileState) => void }
+export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [step, setStep] = useState(0)
 
   // Step 0 state
@@ -223,7 +225,9 @@ export default function RemapBuilder() {
       setSelectedEcuId('')
     }
     setStep(1)
-  }, [])
+    // Share file state with Performance page (a2l/drt maps not loaded yet — updated later)
+    onEcuLoaded?.({ fileName: name, fileBuffer: buf, detected: det, a2lMaps: [], drtMaps: [] })
+  }, [onEcuLoaded])
 
   const handleFileOpen = async () => {
     try {
@@ -321,6 +325,8 @@ export default function RemapBuilder() {
       setDrtResult(null)
       setDrtMaps([])
       setDrtFileName('')
+      // Share with Performance page
+      if (fileBuffer) onEcuLoaded?.({ fileName, fileBuffer, detected, a2lMaps: maps, drtMaps: [] })
     } catch (e) {
       console.error('A2L parse error:', e)
     }
@@ -346,6 +352,8 @@ export default function RemapBuilder() {
       setA2lResult(null)
       setA2lMaps([])
       setA2lFileName('')
+      // Share with Performance page
+      if (fileBuffer) onEcuLoaded?.({ fileName, fileBuffer, detected, a2lMaps: [], drtMaps: converted })
     } catch (e) {
       console.error('DRT parse error:', e)
     }
