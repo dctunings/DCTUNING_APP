@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import VehicleStrip from '../components/VehicleStrip'
 import type { ActiveVehicle } from '../lib/vehicleContext'
 
@@ -74,31 +74,20 @@ function heatColor(pct: number): string {
     [0.15, '#0d3b7a'],
     [0.30, '#0077b6'],
     [0.45, '#00b4a0'],
-    [0.60, '#90c e00'],
-    [0.72, '#e8c000'],
-    [0.84, '#f07000'],
-    [1.00, '#e02020'],
-  ]
-  // fix the typo in the stop above
-  const fixedStops: [number, string][] = [
-    [0.00, '#0a1628'],
-    [0.15, '#0d3b7a'],
-    [0.30, '#0077b6'],
-    [0.45, '#00b4a0'],
     [0.60, '#90be00'],
     [0.72, '#e8c000'],
     [0.84, '#f07000'],
     [1.00, '#e02020'],
   ]
-  for (let i = 1; i < fixedStops.length; i++) {
-    const [t0, c0] = fixedStops[i - 1]
-    const [t1, c1] = fixedStops[i]
+  for (let i = 1; i < stops.length; i++) {
+    const [t0, c0] = stops[i - 1]
+    const [t1, c1] = stops[i]
     if (pct <= t1) {
       const t = (pct - t0) / (t1 - t0)
       return lerpColor(c0, c1, t)
     }
   }
-  return fixedStops[fixedStops.length - 1][1]
+  return stops[stops.length - 1][1]
 }
 
 // ─── MapGrid component ────────────────────────────────────────────────────────
@@ -429,14 +418,32 @@ function BoostCurve({ curve, onChange }: { curve: number[]; onChange: (i: number
   )
 }
 
+const STORAGE_KEY = 'dc_performance_maps'
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function Performance({ activeVehicle }: Props) {
   const [tab, setTab] = useState<Tab>('fuel')
-  const [fuelMap,   setFuelMap]   = useState<number[][]>(makeDefaultFuelMap)
-  const [timingMap, setTimingMap] = useState<number[][]>(makeDefaultTimingMap)
+  const [fuelMap,    setFuelMap]    = useState<number[][]>(makeDefaultFuelMap)
+  const [timingMap,  setTimingMap]  = useState<number[][]>(makeDefaultTimingMap)
   const [boostCurve, setBoostCurve] = useState<number[]>(DEFAULT_BOOST_CURVE)
-  const [limiters, setLimiters]   = useState<LimiterValue[]>(DEFAULT_LIMITERS)
-  const [dirty, setDirty] = useState(false)
+  const [limiters,   setLimiters]   = useState<LimiterValue[]>(DEFAULT_LIMITERS)
+  const [dirty,      setDirty]      = useState(false)
+  const [savedAt,    setSavedAt]    = useState<string | null>(null)
+  const importRef = useRef<HTMLInputElement>(null)
+
+  // ── Load saved maps from localStorage on mount ────────────────────────────
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (!raw) return
+      const saved = JSON.parse(raw)
+      if (saved.fuelMap)    setFuelMap(saved.fuelMap)
+      if (saved.timingMap)  setTimingMap(saved.timingMap)
+      if (saved.boostCurve) setBoostCurve(saved.boostCurve)
+      if (saved.limiters)   setLimiters(saved.limiters)
+      if (saved.savedAt)    setSavedAt(saved.savedAt)
+    } catch { /* ignore corrupt data */ }
+  }, [])
 
   const updateGrid = (
     setGrid: React.Dispatch<React.SetStateAction<number[][]>>,
@@ -461,12 +468,23 @@ export default function Performance({ activeVehicle }: Props) {
   }
 
   const resetDefaults = () => {
-    if (tab === 'fuel')    { setFuelMap(makeDefaultFuelMap());    setDirty(false) }
-    if (tab === 'timing')  { setTimingMap(makeDefaultTimingMap()); setDirty(false) }
-    if (tab === 'boost')   { setBoostCurve([...DEFAULT_BOOST_CURVE]); setDirty(false) }
-    if (tab === 'limiters'){ setLimiters([...DEFAULT_LIMITERS]); setDirty(false) }
+    if (tab === 'fuel')     { setFuelMap(makeDefaultFuelMap());     setDirty(false) }
+    if (tab === 'timing')   { setTimingMap(makeDefaultTimingMap()); setDirty(false) }
+    if (tab === 'boost')    { setBoostCurve([...DEFAULT_BOOST_CURVE]); setDirty(false) }
+    if (tab === 'limiters') { setLimiters([...DEFAULT_LIMITERS]);   setDirty(false) }
   }
 
+  // ── Save all maps to localStorage ─────────────────────────────────────────
+  const saveAll = () => {
+    const now = new Date().toLocaleString()
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      fuelMap, timingMap, boostCurve, limiters, savedAt: now
+    }))
+    setSavedAt(now)
+    setDirty(false)
+  }
+
+  // ── Export CSV ────────────────────────────────────────────────────────────
   const exportCSV = () => {
     let csv = ''
     if (tab === 'fuel' || tab === 'timing') {
@@ -486,6 +504,54 @@ export default function Performance({ activeVehicle }: Props) {
     URL.revokeObjectURL(a.href)
   }
 
+  // ── Import CSV ────────────────────────────────────────────────────────────
+  const importCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const text = ev.target?.result as string
+        const lines = text.trim().split('\n').map(l => l.trim()).filter(Boolean)
+        if (tab === 'fuel' || tab === 'timing') {
+          // expect: Load\RPM, rpm1, rpm2... then rows
+          const dataLines = lines.slice(1)
+          const grid = dataLines.map(line => {
+            const parts = line.split(',')
+            return parts.slice(1).map(Number)
+          })
+          if (grid.length === ROWS && grid[0].length === COLS) {
+            if (tab === 'fuel') setFuelMap(grid)
+            else setTimingMap(grid)
+            setDirty(true)
+          } else {
+            alert(`Invalid CSV — expected ${ROWS} rows × ${COLS} cols, got ${grid.length} × ${grid[0]?.length ?? 0}`)
+          }
+        } else if (tab === 'boost') {
+          const vals = lines.slice(1).map(l => parseFloat(l.split(',')[1]))
+          if (vals.length === COLS && vals.every(v => !isNaN(v))) {
+            setBoostCurve(vals)
+            setDirty(true)
+          } else {
+            alert(`Invalid CSV — expected ${COLS} RPM rows`)
+          }
+        } else {
+          // limiters: Parameter,Value,Unit
+          const updated = [...limiters]
+          lines.slice(1).forEach(line => {
+            const [label, val] = line.split(',')
+            const idx = updated.findIndex(l => l.label === label?.trim())
+            if (idx >= 0 && val) updated[idx] = { ...updated[idx], value: parseFloat(val) }
+          })
+          setLimiters(updated)
+          setDirty(true)
+        }
+      } catch { alert('Failed to parse CSV file') }
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }
+
   const tabs: { id: Tab; label: string; desc: string }[] = [
     { id: 'fuel',    label: '⛽ Fuel Map',        desc: 'Injection quantity (% of stock baseline)' },
     { id: 'timing',  label: '⚡ Ignition Timing', desc: 'Advance degrees BTDC vs RPM and load' },
@@ -500,11 +566,16 @@ export default function Performance({ activeVehicle }: Props) {
         <div style={{ flex: 1 }}>
           <h1>Performance Tuning</h1>
         </div>
-        {dirty && (
-          <span className="badge" style={{ background: 'rgba(255,150,0,.12)', color: '#ff9500', border: '1px solid #ff9500', fontSize: 11 }}>
-            ● Unsaved Changes
-          </span>
-        )}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+          {dirty && (
+            <span className="badge" style={{ background: 'rgba(255,150,0,.12)', color: '#ff9500', border: '1px solid #ff9500', fontSize: 11 }}>
+              ● Unsaved Changes
+            </span>
+          )}
+          {savedAt && !dirty && (
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>✓ Saved {savedAt}</span>
+          )}
+        </div>
       </div>
 
       <VehicleStrip vehicle={activeVehicle} />
@@ -546,9 +617,11 @@ export default function Performance({ activeVehicle }: Props) {
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
+            <input ref={importRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={importCSV} />
+            <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => importRef.current?.click()}>📤 Import CSV</button>
             <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={exportCSV}>📥 Export CSV</button>
             <button className="btn btn-secondary" style={{ fontSize: 12 }} onClick={resetDefaults}>↩ Reset</button>
-            <button className="btn btn-primary" style={{ fontSize: 12 }} onClick={() => { alert('Save to tune file — IPC hook coming next'); setDirty(false) }}>
+            <button className="btn btn-primary" style={{ fontSize: 12 }} onClick={saveAll}>
               💾 Save
             </button>
           </div>
