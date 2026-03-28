@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { ECU_DEFINITIONS, ADDONS } from '../lib/ecuDefinitions'
 import type { EcuDef } from '../lib/ecuDefinitions'
 import { detectEcu, extractAllMaps } from '../lib/binaryParser'
@@ -10,6 +10,20 @@ import { parseA2L, extractMapsFromA2L, guessEcuFamily, ECU_BASE_ADDRESSES } from
 import type { A2LParseResult, A2LMapDef } from '../lib/a2lParser'
 import { parseDRT, convertDRTMaps, guessEcuFamilyFromDRT } from '../lib/drtParser'
 import type { DRTParseResult, DRTConvertedMap } from '../lib/drtParser'
+import { supabase } from '../lib/supabase'
+
+interface DefinitionEntry {
+  id: string
+  filename: string
+  file_type: 'a2l' | 'drt'
+  driver_name: string | null
+  ecu_family: string | null
+  make: string | null
+  model: string | null
+  storage_path: string
+  map_count: number
+  curve_count: number
+}
 
 // ─── Color helpers ────────────────────────────────────────────────────────────
 function hexToRgb(hex: string): [number, number, number] {
@@ -180,6 +194,12 @@ export default function RemapBuilder() {
   const [drtMaps, setDrtMaps] = useState<DRTConvertedMap[]>([])
   const [drtFileName, setDrtFileName] = useState<string>('')
 
+  // Library search state
+  const [libSearch, setLibSearch] = useState('')
+  const [libResults, setLibResults] = useState<DefinitionEntry[]>([])
+  const [libLoading, setLibLoading] = useState(false)
+  const [showLibrary, setShowLibrary] = useState(false)
+
   const selectedEcu: EcuDef | undefined = ECU_DEFINITIONS.find(e => e.id === selectedEcuId)
 
   // ─── File loading ─────────────────────────────────────────────────────────
@@ -331,6 +351,64 @@ export default function RemapBuilder() {
     }
   }
 
+  // ─── Library search ───────────────────────────────────────────────────────
+  const searchLibrary = useCallback(async (query: string) => {
+    if (!query.trim()) { setLibResults([]); return }
+    setLibLoading(true)
+    try {
+      const { data } = await supabase
+        .from('definitions_index')
+        .select('*')
+        .or(`filename.ilike.%${query}%,ecu_family.ilike.%${query}%,make.ilike.%${query}%,model.ilike.%${query}%,driver_name.ilike.%${query}%`)
+        .order('file_type')
+        .limit(20)
+      setLibResults((data ?? []) as DefinitionEntry[])
+    } finally {
+      setLibLoading(false)
+    }
+  }, [])
+
+  // Auto-search when ECU is detected
+  useEffect(() => {
+    if (detected && showLibrary) {
+      const query = detected.def.family || detected.def.name
+      setLibSearch(query)
+      searchLibrary(query)
+    }
+  }, [detected, showLibrary, searchLibrary])
+
+  const loadDefinitionFromLibrary = async (entry: DefinitionEntry) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('definition-files')
+        .download(entry.storage_path)
+      if (error || !data) throw error ?? new Error('Download failed')
+
+      if (entry.file_type === 'a2l') {
+        const text = await data.text()
+        const result = parseA2L(text)
+        const family = guessEcuFamily(result)
+        const baseAddr = ECU_BASE_ADDRESSES[family] ?? 0x80000000
+        const maps = extractMapsFromA2L(result, baseAddr)
+        setA2lResult(result)
+        setA2lMaps(maps)
+        setA2lFileName(entry.filename)
+        setDrtResult(null); setDrtMaps([]); setDrtFileName('')
+      } else {
+        const buf = await data.arrayBuffer()
+        const result = parseDRT(buf, entry.driver_name ?? entry.filename)
+        const converted = convertDRTMaps(result)
+        setDrtResult(result)
+        setDrtMaps(converted)
+        setDrtFileName(entry.filename)
+        setA2lResult(null); setA2lMaps([]); setA2lFileName('')
+      }
+      setShowLibrary(false)
+    } catch (e) {
+      console.error('Library load error:', e)
+    }
+  }
+
   // ─── Render steps ─────────────────────────────────────────────────────────
 
   const renderStep0 = () => (
@@ -381,6 +459,62 @@ export default function RemapBuilder() {
           </div>
         </div>
       )}
+      {/* Library search panel */}
+      {showLibrary && (
+        <div style={{ marginTop: 16, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)', flex: 1 }}>Search A2L / DRT Library</span>
+            <button onClick={() => setShowLibrary(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 0 }}>×</button>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+            <input
+              value={libSearch}
+              onChange={e => setLibSearch(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && searchLibrary(libSearch)}
+              placeholder="Search by ECU family, make, model, filename…"
+              style={{ flex: 1, padding: '8px 12px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
+            />
+            <button
+              onClick={() => searchLibrary(libSearch)}
+              style={{ padding: '8px 14px', borderRadius: 7, border: 'none', background: 'var(--accent)', color: '#000', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              {libLoading ? '…' : 'Search'}
+            </button>
+          </div>
+          {libResults.length === 0 && !libLoading && libSearch && (
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>
+              No definitions found — library will be populated once files are uploaded
+            </div>
+          )}
+          {libResults.length === 0 && !libLoading && !libSearch && (
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>
+              Search 3,186 A2L files and 32,000+ DRT driver files
+            </div>
+          )}
+          {libResults.map(entry => (
+            <div
+              key={entry.id}
+              onClick={() => loadDefinitionFromLibrary(entry)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 4, background: 'rgba(255,255,255,0.03)', border: '1px solid transparent', transition: 'all 0.1s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,174,200,0.08)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,174,200,0.2)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; (e.currentTarget as HTMLElement).style.borderColor = 'transparent' }}
+            >
+              <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: entry.file_type === 'a2l' ? 'rgba(34,197,94,0.15)' : 'rgba(59,130,246,0.15)', color: entry.file_type === 'a2l' ? '#22c55e' : '#3b82f6', flexShrink: 0 }}>
+                {entry.file_type.toUpperCase()}
+              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.filename}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                  {[entry.ecu_family, entry.make, entry.model].filter(Boolean).join(' · ')}
+                  {entry.map_count > 0 && ` · ${entry.map_count}M ${entry.curve_count}C`}
+                </div>
+              </div>
+              <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}>Load →</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Definition file drop zone — A2L or DRT */}
       <div
         style={{
@@ -445,14 +579,20 @@ export default function RemapBuilder() {
         ) : (
           <>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
-              Optional: Drop definition file
+              Optional: Drop definition file or search library
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 8 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', fontWeight: 700 }}>
                 .a2l — Bosch/ASAP2
               </span>
               <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.3)', fontWeight: 700 }}>
                 .drt — ECM Titanium
+              </span>
+              <span
+                onClick={e => { e.stopPropagation(); setShowLibrary(v => !v) }}
+                style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(0,174,200,0.1)', color: 'var(--accent)', border: '1px solid rgba(0,174,200,0.3)', fontWeight: 700, cursor: 'pointer' }}
+              >
+                🔍 Search Library
               </span>
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, opacity: 0.7 }}>
