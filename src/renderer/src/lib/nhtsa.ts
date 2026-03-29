@@ -16,8 +16,10 @@ export interface VINResult {
   wmi: string
 }
 
-// VIN position 10 year encoding — cycles every 30 years
+// VIN position 10 year encoding — full two-cycle table (1980-2039)
+// Letters skip I, O, Q, U, Z; digits skip 0
 const VIN_YEAR_MAP: Record<string, number> = {
+  // First cycle 1980–2009
   'A': 1980, 'B': 1981, 'C': 1982, 'D': 1983, 'E': 1984, 'F': 1985,
   'G': 1986, 'H': 1987, 'J': 1988, 'K': 1989, 'L': 1990, 'M': 1991,
   'N': 1992, 'P': 1993, 'R': 1994, 'S': 1995, 'T': 1996, 'V': 1997,
@@ -28,24 +30,29 @@ const VIN_YEAR_MAP: Record<string, number> = {
 
 // Fix the 30-year cycle: A=1980 OR A=2010 — pick the correct one
 function decodeVINYear(vin: string, fallback: string): string {
-  const yearChar = vin[9]?.toUpperCase()
-  if (!yearChar) return fallback
-
-  const baseYear = VIN_YEAR_MAP[yearChar]
-  if (!baseYear) return fallback
-
   const currentYear = new Date().getFullYear()
 
-  // Letters A-Y cover 1980-2000, but also repeat for 2010-2030
-  // If baseYear is in the "old" cycle (1980-2009) and baseYear+30 <= currentYear+1, prefer the newer year
-  if (baseYear <= 2009) {
-    const laterYear = baseYear + 30
-    if (laterYear <= currentYear + 1) {
-      return String(laterYear)
+  // Try position 10 (index 9) first — standard model year position
+  for (const idx of [9, 10]) {
+    const yearChar = vin[idx]?.toUpperCase()
+    if (!yearChar) continue
+    const baseYear = VIN_YEAR_MAP[yearChar]
+    if (!baseYear) continue
+
+    // For letters (first cycle 1980-2000): prefer +30 year if it's plausible
+    if (baseYear <= 2000) {
+      const laterYear = baseYear + 30
+      if (laterYear <= currentYear + 2) return String(laterYear)
     }
+    // For digits (2001-2009): prefer +20 year if it's plausible
+    if (baseYear >= 2001 && baseYear <= 2009) {
+      const laterYear = baseYear + 20
+      if (laterYear <= currentYear + 2) return String(laterYear)
+    }
+    return String(baseYear)
   }
 
-  return String(baseYear)
+  return fallback
 }
 
 // EU WMI first-character prefixes — VINs starting with these are European and must NOT call NHTSA
@@ -290,46 +297,54 @@ function decodeEuropeanVIN(vin: string): VINResult {
 
 export async function decodeVIN(vin: string): Promise<VINResult | null> {
   try {
-    // EU VINs — decode entirely from local data; never call NHTSA
-    if (isEuropeanVIN(vin)) {
-      return decodeEuropeanVIN(vin)
-    }
+    const wmi = vin.substring(0, 3).toUpperCase()
+    const europeanInfo = EUROPEAN_WMI[wmi]
+    const isEuropean = isEuropeanVIN(vin) || !!europeanInfo
 
-    // Non-EU VINs — call NHTSA
+    // Always call NHTSA — it has data for BMW, VW, Audi, Mercedes, Renault, etc.
     const url = `https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`
     const res = await fetch(url)
     const json = await res.json()
     const results: { Variable: string; Value: string }[] = json.Results || []
 
-    const get = (variable: string) =>
-      results.find((r) => r.Variable === variable)?.Value || ''
-
-    const wmi = vin.substring(0, 3).toUpperCase()
-    const europeanInfo = EUROPEAN_WMI[wmi]
-    const isEuropean = !!europeanInfo
-
-    // Get make — normalise casing: "VOLKSWAGEN" → "Volkswagen"
-    let make = get('Make')
-    if (europeanInfo) {
-      make = europeanInfo.make
-    } else if (make) {
-      make = make.charAt(0).toUpperCase() + make.slice(1).toLowerCase()
+    const get = (variable: string) => {
+      const val = results.find((r) => r.Variable === variable)?.Value || ''
+      // NHTSA returns "Not Applicable" / "null" as literal strings
+      if (val === 'Not Applicable' || val === 'null' || val === '0') return ''
+      return val
     }
 
-    // Get model — NHTSA is blind to European ZZZ-format VINs, use our own lookup
+    // Make: prefer our local WMI table (more accurate casing + branding)
+    let make = europeanInfo?.make || ''
+    if (!make) {
+      const nhtsaMake = results.find((r) => r.Variable === 'Make')?.Value || ''
+      if (nhtsaMake && nhtsaMake !== 'Not Applicable') {
+        make = nhtsaMake.charAt(0).toUpperCase() + nhtsaMake.slice(1).toLowerCase()
+      }
+    }
+
+    // Model: NHTSA first, then our local VDS lookup as fallback
     let model = get('Model')
-    if (!model && isEuropean) {
+    if (!model) {
       model = getEuropeanModel(vin, make)
     }
 
-    // Fix the year cycle (1980/2010 ambiguity etc.)
-    const nthsaYear = get('Model Year')
-    const correctedYear = decodeVINYear(vin, nthsaYear)
+    // Year: NHTSA first, then our own VIN position 10 parse
+    const nhtsaYear = get('Model Year')
+    const correctedYear = decodeVINYear(vin, nhtsaYear)
 
-    // Country of manufacture
-    const plantCountry = isEuropean
-      ? europeanInfo.country
-      : get('Plant Country')
+    // Plant country: local WMI table first, then NHTSA
+    const plantCountry = europeanInfo?.country || get('Plant Country') || get('Plant State') || ''
+
+    // Clean up NHTSA fuel type
+    let fuelType = get('Fuel Type - Primary')
+    if (fuelType.toLowerCase().includes('gasoline')) fuelType = 'Petrol'
+    if (fuelType.toLowerCase().includes('diesel')) fuelType = 'Diesel'
+
+    // If NHTSA returned nothing useful and this is a known EU WMI, fall back to local only
+    if (!make && isEuropean) {
+      return decodeEuropeanVIN(vin)
+    }
 
     return {
       vin,
@@ -337,7 +352,7 @@ export async function decodeVIN(vin: string): Promise<VINResult | null> {
       model,
       year: correctedYear,
       engineDisplacement: get('Displacement (L)'),
-      fuelType: get('Fuel Type - Primary'),
+      fuelType,
       bodyClass: get('Body Class'),
       driveType: get('Drive Type'),
       transmissionStyle: get('Transmission Style'),
@@ -349,6 +364,10 @@ export async function decodeVIN(vin: string): Promise<VINResult | null> {
       wmi,
     }
   } catch {
+    // Network failure — fall back to local decode for European VINs
+    if (isEuropeanVIN(vin)) {
+      return decodeEuropeanVIN(vin)
+    }
     return null
   }
 }
