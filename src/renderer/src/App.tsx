@@ -195,6 +195,20 @@ export default function App() {
   // Remove landing mode when app is running
   document.documentElement.classList.remove('landing-mode')
 
+  // Desktop sign-in modal
+  if (showAuthModal && !user) {
+    return (
+      <LoginScreen
+        signIn={async (email, password) => {
+          const err = await signIn(email, password)
+          if (!err) setShowAuthModal(false)
+          return err
+        }}
+        signUp={signUp}
+      />
+    )
+  }
+
   return (
     <div className="app-shell">
       <Sidebar
@@ -207,6 +221,7 @@ export default function App() {
         isAgency={isAgency}
         daysRemaining={daysRemaining}
         onSignOut={signOut}
+        onSignIn={() => setShowAuthModal(true)}
       />
       <div className="app-main">
         <Topbar

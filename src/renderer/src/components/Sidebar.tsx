@@ -12,6 +12,7 @@ interface Props {
   isAgency?: boolean
   daysRemaining?: number | null
   onSignOut?: () => void
+  onSignIn?: () => void
 }
 
 // ── Clean SVG icons (16×16 stroke-based) ─────────────────────
@@ -175,7 +176,7 @@ function getInitials(user: User): string {
   return (user.email || 'U').slice(0, 2).toUpperCase()
 }
 
-export default function Sidebar({ currentPage, setPage, user, subscription, isActive, isPro, daysRemaining, onSignOut }: Props) {
+export default function Sidebar({ currentPage, setPage, user, subscription, isActive, isPro, daysRemaining, onSignOut, onSignIn }: Props) {
   const planBadge = getPlanBadge(subscription, isActive)
 
   return (
@@ -326,7 +327,7 @@ export default function Sidebar({ currentPage, setPage, user, subscription, isAc
             </div>
             <div
               style={{ fontSize: 11, color: 'var(--accent)', cursor: 'pointer', fontWeight: 700 }}
-              onClick={() => setPage('tunes')}
+              onClick={() => onSignIn?.()}
             >
               Sign in →
             </div>
