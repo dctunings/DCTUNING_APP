@@ -60,6 +60,8 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
   const [watchedFiles, setWatchedFiles] = useState<{ name: string; path: string; size: number; mtime: string }[]>([])
   const [watching, setWatching] = useState(false)
   const watchIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Browser File System Access API handle (when not in Electron)
+  const watchFolderHandleRef = useRef<any>(null)
 
   const fetchTunes = useCallback(async () => {
     if (!user) return
@@ -90,28 +92,88 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
     if (user) fetchTunes()
   }, [user, fetchTunes])
 
+  const ECU_EXTS = new Set(['bin', 'hex', 'ori', 'sgo', 'damos', 'kp', 'frf', 'mot', 'srec'])
+
   const openLocalFile = async () => {
-    const result = await (window as any).api?.openEcuFile()
-    if (result) {
-      setLocalFiles((f) => [...f, result])
-      setTab('local')
+    const electronApi = (window as any).api
+
+    if (electronApi?.openEcuFile) {
+      // ── Electron desktop path ──────────────────────────────────────────────
+      const result = await electronApi.openEcuFile()
+      if (result) {
+        setLocalFiles((f) => [...f, result])
+        setTab('local')
+      }
+    } else {
+      // ── Browser fallback — hidden file input ───────────────────────────────
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = '.bin,.hex,.ori,.sgo,.damos,.kp,.frf,.mot,.srec'
+      input.onchange = () => {
+        const file = input.files?.[0]
+        if (!file) return
+        setLocalFiles((f) => [...f, { name: file.name, size: file.size, path: file.name }])
+        setTab('local')
+      }
+      input.click()
     }
   }
 
+  // Browser: scan directory handle for ECU files
+  const scanDirHandle = async (handle: any): Promise<{ name: string; path: string; size: number; mtime: string }[]> => {
+    const results: { name: string; path: string; size: number; mtime: string }[] = []
+    for await (const [name, fh] of handle.entries()) {
+      if (fh.kind !== 'file') continue
+      const ext = name.split('.').pop()?.toLowerCase() ?? ''
+      if (!ECU_EXTS.has(ext)) continue
+      try {
+        const file: File = await fh.getFile()
+        results.push({ name, path: name, size: file.size, mtime: new Date(file.lastModified).toISOString() })
+      } catch { /* skip locked files */ }
+    }
+    return results.sort((a, b) => b.mtime.localeCompare(a.mtime))
+  }
+
   const pickWatchFolder = async () => {
-    const api = (window as any).api
-    const folder = api?.selectWatchFolder ? await api.selectWatchFolder() : null
-    if (!folder) return
-    setWatchFolder(folder)
-    setWatching(true)
-    await refreshWatchedFiles(folder)
+    const electronApi = (window as any).api
+
+    if (electronApi?.selectWatchFolder) {
+      // ── Electron path ──────────────────────────────────────────────────────
+      const folder = await electronApi.selectWatchFolder()
+      if (!folder) return
+      watchFolderHandleRef.current = null
+      setWatchFolder(folder)
+      setWatching(true)
+      await refreshWatchedFiles(folder)
+    } else if ('showDirectoryPicker' in window) {
+      // ── Browser File System Access API (Chrome/Edge/Brave) ─────────────────
+      try {
+        const handle = await (window as any).showDirectoryPicker({ mode: 'read' })
+        watchFolderHandleRef.current = handle
+        setWatchFolder(handle.name)
+        setWatching(true)
+        const files = await scanDirHandle(handle)
+        setWatchedFiles(files)
+      } catch {
+        // User cancelled picker — no-op
+      }
+    } else {
+      alert('Watch Folder requires the DCTuning desktop app or a modern Chromium-based browser (Chrome / Edge / Brave).')
+    }
   }
 
   const refreshWatchedFiles = async (folder?: string) => {
+    // Browser handle path
+    if (watchFolderHandleRef.current) {
+      const files = await scanDirHandle(watchFolderHandleRef.current)
+      setWatchedFiles(files)
+      return
+    }
+    // Electron path
     const target = folder ?? watchFolder
     if (!target) return
-    const api = (window as any).api
-    const files = api?.scanFolderForBins ? await api.scanFolderForBins(target) : []
+    const electronApi = (window as any).api
+    const files = electronApi?.scanFolderForBins ? await electronApi.scanFolderForBins(target) : []
     setWatchedFiles(files)
   }
 
@@ -146,6 +208,7 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
 
   const clearWatchFolder = () => {
     if (watchIntervalRef.current) clearInterval(watchIntervalRef.current)
+    watchFolderHandleRef.current = null
     setWatchFolder(null)
     setWatchedFiles([])
     setWatching(false)
