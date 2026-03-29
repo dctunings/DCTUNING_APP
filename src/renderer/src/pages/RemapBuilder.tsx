@@ -205,7 +205,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [libLoadError, setLibLoadError] = useState('')
   const [libLoadingId, setLibLoadingId] = useState<string | null>(null)
   const [showLibrary, setShowLibrary] = useState(false)
-  const LIB_PAGE_SIZE = 50
+  const LIB_PAGE_SIZE = 25
 
   const selectedEcu: EcuDef | undefined = ECU_DEFINITIONS.find(e => e.id === selectedEcuId)
 

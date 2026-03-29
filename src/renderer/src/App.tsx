@@ -131,7 +131,7 @@ export default function App() {
       case 'tunes':        return <TuneManager activeVehicle={activeVehicle} />
       case 'cloning':      return <ECUCloning connected={connected} activeVehicle={activeVehicle} />
       case 'performance':  return <Performance activeVehicle={activeVehicle} ecuFile={ecuFile} setPage={setPage} />
-      case 'emissions':    return <EmissionsDelete activeVehicle={activeVehicle} />
+      case 'emissions':    return <EmissionsDelete activeVehicle={activeVehicle} ecuFile={ecuFile} setPage={setPage} />
       case 'j2534':        return <J2534PassThru connected={connected} setConnected={setConnected} activeVehicle={activeVehicle} />
       case 'unlock':       return <ECUUnlock connected={connected} activeVehicle={activeVehicle} />
       case 'devices':      return <DeviceLibrary />
