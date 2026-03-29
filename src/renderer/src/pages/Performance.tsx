@@ -185,19 +185,19 @@ function MapGrid({ grid, xLabels, yLabels, unit, decimals, onChange }: MapGridPr
   return (
     <div>
       <div style={{ overflowX: 'auto', marginBottom: 16 }}>
-        <table style={{ borderCollapse: 'collapse', fontSize: 11, fontFamily: 'monospace', tableLayout: 'fixed', minWidth: Math.max(500, cols * 52 + 60) }}>
+        <table style={{ borderCollapse: 'collapse', fontSize: 11, fontFamily: 'monospace', tableLayout: 'fixed', width: '100%', minWidth: Math.max(500, cols * 52 + 60) }}>
           <thead>
             <tr>
-              <th style={{ width: 52, padding: '4px 6px', textAlign: 'right', color: 'var(--text-muted)', fontWeight: 600, fontSize: 10 }}>Y \ X</th>
+              <th style={{ width: 58, padding: '4px 8px', textAlign: 'right', color: 'var(--text-muted)', fontWeight: 600, fontSize: 10, whiteSpace: 'nowrap' }}>Y \ X</th>
               {xLabels.map((lbl, i) => (
-                <th key={i} style={{ width: 52, padding: '4px 3px', textAlign: 'center', color: 'var(--text-muted)', fontWeight: 700, fontSize: 10 }}>{lbl}</th>
+                <th key={i} style={{ padding: '4px 3px', textAlign: 'center', color: 'var(--text-muted)', fontWeight: 700, fontSize: 10 }}>{lbl}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {grid.map((row, ri) => (
               <tr key={ri}>
-                <td style={{ padding: '2px 6px 2px 0', textAlign: 'right', color: 'var(--accent)', fontWeight: 700, fontSize: 10, userSelect: 'none' }}>
+                <td style={{ width: 58, padding: '2px 8px 2px 0', textAlign: 'right', color: 'var(--accent)', fontWeight: 700, fontSize: 10, userSelect: 'none', whiteSpace: 'nowrap' }}>
                   {yLabels[ri] ?? ri}
                 </td>
                 {row.map((v, ci) => {
@@ -206,7 +206,7 @@ function MapGrid({ grid, xLabels, yLabels, unit, decimals, onChange }: MapGridPr
                   return (
                     <td key={ci} onClick={() => { setSelRow(ri); setSelCol(ci) }}
                       style={{
-                        width: 52, height: 26, textAlign: 'center', background: bg,
+                        height: 28, textAlign: 'center', background: bg,
                         color: textForBg(bg), fontWeight: isSel ? 900 : 600, fontSize: 11,
                         cursor: 'pointer', boxSizing: 'border-box',
                         border: isSel ? '2px solid var(--accent)' : '1px solid rgba(0,0,0,0.3)',
@@ -265,7 +265,7 @@ function BoostCurve({ curve, xLabels, onChange }: { curve: number[]; xLabels: st
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 160, marginBottom: 12, padding: '0 0 0 4px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 180, marginBottom: 12, width: '100%' }}>
         {curve.map((boost, i) => {
           const pct = boost / maxBar
           const isSel = i === selIdx
