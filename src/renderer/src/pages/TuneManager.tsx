@@ -120,6 +120,7 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
     let query = supabase
       .from('library_entries')
       .select('id,vehicle_make,vehicle_model,vehicle_fuel,remap_type,original_file_name,original_file_path,original_file_size,ecu_type,storage_path,storage_uploaded', { count: 'exact' })
+      .eq('storage_uploaded', true)
       .range(page * LIB_PAGE_SIZE, (page + 1) * LIB_PAGE_SIZE - 1)
 
     if (libMake) query = query.ilike('vehicle_make', `%${libMake}%`)
@@ -289,7 +290,7 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
               }}
             >
               {t === 'library'
-                ? `Library (${libTotal > 0 ? libTotal.toLocaleString() : '38k+'})`
+                ? `Library (${libTotal > 0 ? libTotal.toLocaleString() : '…'})`
                 : t === 'cloud'
                 ? `My Tunes (${tunes.length})`
                 : t === 'local'
