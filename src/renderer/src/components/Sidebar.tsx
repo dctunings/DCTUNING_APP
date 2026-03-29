@@ -91,6 +91,12 @@ const Icons: Record<string, JSX.Element> = {
       <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
     </svg>
   ),
+  ecuflash: (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+      <circle cx="19" cy="5" r="3" fill="currentColor" stroke="none" opacity="0.7"/>
+    </svg>
+  ),
   account: (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -105,7 +111,7 @@ const Icons: Record<string, JSX.Element> = {
 }
 
 // Pro-only pages that require at least Pro plan
-const PRO_ONLY_PAGES: Page[] = ['tunes', 'j2534', 'unlock', 'cloning', 'emissions']
+const PRO_ONLY_PAGES: Page[] = ['tunes', 'j2534', 'unlock', 'cloning', 'emissions', 'ecuflash']
 
 const navItems: { section: string; items: { id: Page; icon: keyof typeof Icons; label: string }[] }[] = [
   {
@@ -127,6 +133,7 @@ const navItems: { section: string; items: { id: Page; icon: keyof typeof Icons; 
     section: 'ECU Tools',
     items: [
       { id: 'tunes',       icon: 'tunes',       label: 'Tune Manager' },
+      { id: 'ecuflash',    icon: 'ecuflash',    label: 'ECU Flash' },
       { id: 'cloning',     icon: 'cloning',     label: 'ECU Cloning' },
       { id: 'performance', icon: 'performance', label: 'Performance' },
       { id: 'remap',       icon: 'remap',       label: 'Remap Builder' },

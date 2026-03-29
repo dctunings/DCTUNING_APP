@@ -14,6 +14,7 @@ import ECUUnlock from './pages/ECUUnlock'
 import WiringDiagrams from './pages/WiringDiagrams'
 import DeviceLibrary from './pages/DeviceLibrary'
 import RemapBuilder from './pages/RemapBuilder'
+import ECUFlashManager from './pages/ECUFlashManager'
 import PricingPage from './pages/PricingPage'
 import AccountPage from './pages/AccountPage'
 import SubscriptionGate from './components/SubscriptionGate'
@@ -50,6 +51,7 @@ export type Page =
   | 'unlock'
   | 'devices'
   | 'remap'
+  | 'ecuflash'
   | 'pricing'
   | 'account'
 
@@ -57,7 +59,7 @@ export type Page =
 const OBD2_PAGES: Page[] = ['scanner', 'voltage', 'j2534', 'cloning', 'unlock']
 
 // Pages that require at least the Pro plan
-const PRO_ONLY_PAGES: Page[] = ['tunes', 'j2534', 'unlock', 'cloning', 'emissions']
+const PRO_ONLY_PAGES: Page[] = ['tunes', 'j2534', 'unlock', 'cloning', 'emissions', 'ecuflash']
 
 function ProUpgradeWall({ setPage }: { setPage: (p: Page) => void }) {
   return (
@@ -136,6 +138,7 @@ export default function App() {
       case 'unlock':       return <ECUUnlock connected={connected} activeVehicle={activeVehicle} />
       case 'devices':      return <DeviceLibrary />
       case 'remap':        return <RemapBuilder onEcuLoaded={setEcuFile} />
+      case 'ecuflash':     return <ECUFlashManager connected={connected} activeVehicle={activeVehicle} />
       case 'pricing':
         return (
           <PricingPage

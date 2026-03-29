@@ -11,8 +11,22 @@ import {
   obdClearDTCs,
   obdReadPID,
   obdReadAllLivePIDs,
-  scanJ2534Devices,
 } from './obdManager'
+import {
+  scanJ2534Devices,
+  j2534Open,
+  j2534Connect,
+  j2534Close,
+  j2534IsOpen,
+  j2534IsConnected,
+  j2534ReadDTCs,
+  j2534ClearDTCs,
+  j2534ReadLivePIDs,
+  j2534ReadECUID,
+  j2534ReadECUFlash,
+  j2534WriteECUFlash,
+  type ECUIdentification,
+} from './j2534Manager'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -162,6 +176,55 @@ app.whenReady().then(() => {
 
   ipcMain.handle('scan-j2534', () => {
     return scanJ2534Devices()
+  })
+
+  // ─── J2534 DLL bridge IPC handlers ───────────────────────────────────────
+  ipcMain.handle('j2534-open', async (_, dllPath: string) => j2534Open(dllPath))
+  ipcMain.handle('j2534-connect', async (_, protocol: number, baud: number) => j2534Connect(protocol, baud))
+  ipcMain.handle('j2534-close', async () => { await j2534Close(); return { ok: true } })
+  ipcMain.handle('j2534-is-open', () => j2534IsOpen())
+  ipcMain.handle('j2534-is-connected', () => j2534IsConnected())
+  ipcMain.handle('j2534-read-dtcs', async (_, protocol: number) => j2534ReadDTCs(protocol))
+  ipcMain.handle('j2534-clear-dtcs', async (_, protocol: number) => j2534ClearDTCs(protocol))
+  ipcMain.handle('j2534-read-live-pids', async (_, protocol: number) => j2534ReadLivePIDs(protocol))
+
+  // ECU identification (UDS DIDs — no security access required)
+  ipcMain.handle('j2534-read-ecu-id', async () => j2534ReadECUID())
+
+  // ECU flash read with progress streaming
+  ipcMain.handle('j2534-read-ecu-flash', async (event, startAddr: number, totalLength: number, chunkSize: number, protocol: number) => {
+    return j2534ReadECUFlash(
+      startAddr,
+      totalLength,
+      chunkSize,
+      (pct, msg) => event.sender.send('j2534-progress', { pct, msg }),
+      protocol
+    )
+  })
+
+  // ECU flash write with progress streaming — data arrives as number array (Uint8Array not IPC-serialisable)
+  ipcMain.handle('j2534-write-ecu-flash', async (event, dataArr: number[], startAddr: number, chunkSize: number, protocol: number, ecuId: string) => {
+    const data = new Uint8Array(dataArr)
+    return j2534WriteECUFlash(
+      data,
+      startAddr,
+      chunkSize,
+      (pct, msg) => event.sender.send('j2534-progress', { pct, msg }),
+      protocol,
+      ecuId
+    )
+  })
+
+  // Seed/key calculator - standalone (for testing/debugging)
+  ipcMain.handle('j2534-calc-key', async (_, ecuId: string, seedHex: string) => {
+    const { calculateKey } = await import('./ecuSeedKey')
+    const seedBytes = seedHex.replace(/\s+/g, '').match(/.{2}/g)?.map(h => parseInt(h, 16)) ?? []
+    return calculateKey(ecuId, seedBytes)
+  })
+
+  ipcMain.handle('j2534-get-ecu-definitions', async () => {
+    const { ECU_FLASH_DEFINITIONS } = await import('./ecuSeedKey')
+    return ECU_FLASH_DEFINITIONS
   })
 
   createWindow()

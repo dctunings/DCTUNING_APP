@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import VehicleStrip from '../components/VehicleStrip'
 import type { ActiveVehicle } from '../lib/vehicleContext'
+import { elm327 } from '../lib/elm327WebSerial'
 
 interface Props { connected: boolean; activeVehicle: ActiveVehicle | null }
 
@@ -206,7 +207,24 @@ export default function ECUScanner({ connected, activeVehicle }: Props) {
     setScanError('')
 
     const api = (window as any).api
-    if (api?.obdReadDTCs) {
+
+    // Web Serial path — elm327 driver connected
+    if (elm327.isConnected()) {
+      const result = await elm327.readDTCs()
+      if (result.error && result.codes.length === 0) {
+        setScanError(result.error)
+        setScanning(false)
+        setScanComplete(true)
+        return
+      }
+      setRawResponse(result.raw)
+      setDtcs(result.codes.map((code) => ({
+        code,
+        description: describeDTC(code),
+        status: classifyDTC(code),
+      })))
+    } else if (api?.obdReadDTCs) {
+      // Electron IPC path
       const result = await api.obdReadDTCs()
       if (result?.error) {
         setScanError(result.error)
@@ -221,8 +239,7 @@ export default function ECUScanner({ connected, activeVehicle }: Props) {
       }))
       setDtcs(parsed)
     } else {
-      // No IPC available (running in browser dev mode)
-      setScanError('OBD2 IPC not available. Run via Electron.')
+      setScanError('No OBD2 connection. Connect an ELM327 adapter via J2534 PassThru first.')
     }
     setScanning(false)
     setScanComplete(true)
@@ -232,7 +249,17 @@ export default function ECUScanner({ connected, activeVehicle }: Props) {
     if (!connected) return
     setClearing(true)
     const api = (window as any).api
-    if (api?.obdClearDTCs) {
+
+    if (elm327.isConnected()) {
+      const result = await elm327.clearDTCs()
+      if (result.ok) {
+        setDtcs([])
+        setScanComplete(false)
+        setRawResponse('')
+      } else {
+        setScanError(result.error || 'Clear failed')
+      }
+    } else if (api?.obdClearDTCs) {
       const result = await api.obdClearDTCs()
       if (result?.ok) {
         setDtcs([])
@@ -241,11 +268,26 @@ export default function ECUScanner({ connected, activeVehicle }: Props) {
       } else {
         setScanError(result?.error || 'Clear failed')
       }
+    } else {
+      setScanError('No OBD2 connection available')
     }
     setClearing(false)
   }
 
   const pollLivePIDs = async () => {
+    // Web Serial path
+    if (elm327.isConnected()) {
+      const result = await elm327.readAllLivePIDs()
+      const pids: LivePID[] = Object.entries(result).map(([pid, data]) => ({
+        pid,
+        name: data.name,
+        value: data.value,
+        unit: data.unit,
+      }))
+      setLivePIDs(pids)
+      return
+    }
+    // Electron IPC path
     const api = (window as any).api
     if (!api?.obdReadAllPIDs) return
     const result = await api.obdReadAllPIDs()

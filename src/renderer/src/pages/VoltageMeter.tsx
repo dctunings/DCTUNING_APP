@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { elm327 } from '../lib/elm327WebSerial'
 
 interface Props { connected: boolean }
 
@@ -24,6 +25,16 @@ export default function VoltageMeter({ connected }: Props) {
     }
 
     const poll = async () => {
+      // Web Serial path — elm327 driver
+      if (elm327.isConnected()) {
+        const v = await elm327.readVoltage()
+        if (typeof v === 'number' && v > 0) {
+          setSource('live')
+          applyReading(v)
+          return
+        }
+      }
+      // Electron IPC path
       const api = (window as any).api
       if (api?.obdReadVoltage) {
         const v = await api.obdReadVoltage()

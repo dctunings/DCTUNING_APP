@@ -27,12 +27,12 @@ const VIN_YEAR_MAP: Record<string, number> = {
 }
 
 // Fix the 30-year cycle: A=1980 OR A=2010 — pick the correct one
-function decodeVINYear(vin: string, nthsaYear: string): string {
+function decodeVINYear(vin: string, fallback: string): string {
   const yearChar = vin[9]?.toUpperCase()
-  if (!yearChar) return nthsaYear
+  if (!yearChar) return fallback
 
   const baseYear = VIN_YEAR_MAP[yearChar]
-  if (!baseYear) return nthsaYear
+  if (!baseYear) return fallback
 
   const currentYear = new Date().getFullYear()
 
@@ -48,72 +48,113 @@ function decodeVINYear(vin: string, nthsaYear: string): string {
   return String(baseYear)
 }
 
+// EU WMI first-character prefixes — VINs starting with these are European and must NOT call NHTSA
+const EU_WMI_PREFIXES = new Set(['W', 'S', 'V', 'T', 'Y', 'Z', 'X', 'U', 'N'])
+
 // European WMI (World Manufacturer Identifier) — first 3 chars of VIN
 // Covers the main brands you'd see in Ireland
 const EUROPEAN_WMI: Record<string, { make: string; country: string }> = {
   // Germany
-  'WVW': { make: 'Volkswagen', country: 'Germany' },
-  'WV1': { make: 'Volkswagen', country: 'Germany' },
-  'WV2': { make: 'Volkswagen', country: 'Germany' },
-  'WAU': { make: 'Audi',       country: 'Germany' },
-  'WA1': { make: 'Audi',       country: 'Germany' },
-  'WBA': { make: 'BMW',        country: 'Germany' },
-  'WBS': { make: 'BMW',        country: 'Germany' },
-  'WBX': { make: 'BMW',        country: 'Germany' },
+  'WVW': { make: 'Volkswagen',    country: 'Germany' },
+  'WV1': { make: 'Volkswagen',    country: 'Germany' },
+  'WV2': { make: 'Volkswagen',    country: 'Germany' },
+  'WAU': { make: 'Audi',          country: 'Germany' },
+  'WA1': { make: 'Audi',          country: 'Germany' },
+  'WBA': { make: 'BMW',           country: 'Germany' },
+  'WBS': { make: 'BMW',           country: 'Germany' },
+  'WBX': { make: 'BMW',           country: 'Germany' },
   'WDB': { make: 'Mercedes-Benz', country: 'Germany' },
   'WDC': { make: 'Mercedes-Benz', country: 'Germany' },
   'WDD': { make: 'Mercedes-Benz', country: 'Germany' },
   'WDF': { make: 'Mercedes-Benz', country: 'Germany' },
-  'W0L': { make: 'Opel',       country: 'Germany' },
-  'WF0': { make: 'Ford',       country: 'Germany' },
-  'WP0': { make: 'Porsche',    country: 'Germany' },
-  'WP1': { make: 'Porsche',    country: 'Germany' },
-  'VSS': { make: 'SEAT',       country: 'Spain' },
-  'VSK': { make: 'SEAT',       country: 'Spain' },
-  'TMB': { make: 'Skoda',      country: 'Czech Republic' },
-  'TM9': { make: 'Skoda',      country: 'Czech Republic' },
+  'W0L': { make: 'Opel',          country: 'Germany' },
+  'WF0': { make: 'Ford',          country: 'Germany' },
+  'WP0': { make: 'Porsche',       country: 'Germany' },
+  'WP1': { make: 'Porsche',       country: 'Germany' },
+  'WMW': { make: 'MINI',          country: 'Germany' },
+  'WME': { make: 'Smart',         country: 'Germany' },
+  'WKK': { make: 'Volkswagen',    country: 'Germany' },
+  'W1K': { make: 'Mercedes-Benz', country: 'Germany' },
+  'WMX': { make: 'Mercedes-Benz', country: 'Germany' },
+  'WMA': { make: 'Mercedes-Benz', country: 'Germany' },
+  'WAP': { make: 'Porsche',       country: 'Germany' },
+  'W1V': { make: 'Mercedes-Benz', country: 'Germany' },
+  // Spain
+  'VSS': { make: 'SEAT',          country: 'Spain' },
+  'VSK': { make: 'SEAT',          country: 'Spain' },
+  'VSA': { make: 'SEAT',          country: 'Spain' },
+  'VS6': { make: 'Ford',          country: 'Spain' },
+  'VS7': { make: 'Ford',          country: 'Spain' },
+  // Czech Republic
+  'TMB': { make: 'Skoda',         country: 'Czech Republic' },
+  'TM9': { make: 'Skoda',         country: 'Czech Republic' },
   // UK
-  'SAJ': { make: 'Jaguar',     country: 'United Kingdom' },
-  'SAL': { make: 'Land Rover', country: 'United Kingdom' },
-  'SCC': { make: 'Lotus',      country: 'United Kingdom' },
-  'SCB': { make: 'Bentley',    country: 'United Kingdom' },
-  'SCA': { make: 'Rolls-Royce',country: 'United Kingdom' },
-  'SUF': { make: 'Ford',       country: 'United Kingdom' },
-  'SHH': { make: 'Honda',      country: 'United Kingdom' },
-  'NM0': { make: 'Ford',       country: 'United Kingdom' },
+  'SAJ': { make: 'Jaguar',        country: 'United Kingdom' },
+  'SAL': { make: 'Land Rover',    country: 'United Kingdom' },
+  'SCC': { make: 'Lotus',         country: 'United Kingdom' },
+  'SCB': { make: 'Bentley',       country: 'United Kingdom' },
+  'SCA': { make: 'Rolls-Royce',   country: 'United Kingdom' },
+  'SUF': { make: 'Ford',          country: 'United Kingdom' },
+  'SHH': { make: 'Honda',         country: 'United Kingdom' },
+  'NM0': { make: 'Ford',          country: 'United Kingdom' },
+  'SFD': { make: 'Ford',          country: 'United Kingdom' },
+  'SAA': { make: 'Aston Martin',  country: 'United Kingdom' },
+  'SBM': { make: 'McLaren',       country: 'United Kingdom' },
+  'SUP': { make: 'Ford',          country: 'United Kingdom' },
   // France
-  'VF1': { make: 'Renault',    country: 'France' },
-  'VF3': { make: 'Peugeot',    country: 'France' },
-  'VF7': { make: 'Citroën',    country: 'France' },
-  'VF6': { make: 'Citroën',    country: 'France' },
-  'VN1': { make: 'Renault',    country: 'France' },
+  'VF1': { make: 'Renault',       country: 'France' },
+  'VF3': { make: 'Peugeot',       country: 'France' },
+  'VF7': { make: 'Citroën',       country: 'France' },
+  'VF6': { make: 'Citroën',       country: 'France' },
+  'VN1': { make: 'Renault',       country: 'France' },
+  'VF0': { make: 'Renault',       country: 'France' },
+  'VF2': { make: 'Renault',       country: 'France' },
+  'VF8': { make: 'Renault',       country: 'France' },
+  'VR1': { make: 'Renault',       country: 'France' },
+  'VG5': { make: 'Renault',       country: 'France' },
+  'VNE': { make: 'Renault',       country: 'France' },
+  'VF4': { make: 'Peugeot',       country: 'France' },
+  'VF9': { make: 'Peugeot',       country: 'France' },
+  'VNK': { make: 'Toyota',        country: 'France' },
+  'VNV': { make: 'Nissan',        country: 'France' },
   // Italy
-  'ZFA': { make: 'Fiat',       country: 'Italy' },
-  'ZFB': { make: 'Fiat',       country: 'Italy' },
-  'ZFF': { make: 'Ferrari',    country: 'Italy' },
-  'ZHW': { make: 'Lamborghini',country: 'Italy' },
-  'ZAR': { make: 'Alfa Romeo', country: 'Italy' },
-  'ZBB': { make: 'Alfa Romeo', country: 'Italy' },
-  'ZCF': { make: 'Iveco',      country: 'Italy' },
+  'ZFA': { make: 'Fiat',          country: 'Italy' },
+  'ZFB': { make: 'Fiat',          country: 'Italy' },
+  'ZFF': { make: 'Ferrari',       country: 'Italy' },
+  'ZHW': { make: 'Lamborghini',   country: 'Italy' },
+  'ZAR': { make: 'Alfa Romeo',    country: 'Italy' },
+  'ZBB': { make: 'Alfa Romeo',    country: 'Italy' },
+  'ZCF': { make: 'Iveco',         country: 'Italy' },
+  'ZLA': { make: 'Alfa Romeo',    country: 'Italy' },
+  'ZAM': { make: 'Maserati',      country: 'Italy' },
   // Sweden
-  'YV1': { make: 'Volvo',      country: 'Sweden' },
-  'YV4': { make: 'Volvo',      country: 'Sweden' },
-  'YS2': { make: 'Scania',     country: 'Sweden' },
-  'XLR': { make: 'DAF',        country: 'Netherlands' },
+  'YV1': { make: 'Volvo',         country: 'Sweden' },
+  'YV4': { make: 'Volvo',         country: 'Sweden' },
+  'YS2': { make: 'Scania',        country: 'Sweden' },
+  'XLR': { make: 'DAF',           country: 'Netherlands' },
+  // Romania
+  'UU1': { make: 'Dacia',         country: 'Romania' },
+  'UU3': { make: 'Dacia',         country: 'Romania' },
+  // Russia
+  'XTA': { make: 'Lada',          country: 'Russia' },
+  // Hungary
+  'TRU': { make: 'Audi',          country: 'Hungary' },
+  // Slovakia
+  'TYA': { make: 'Volkswagen',    country: 'Slovakia' },
   // Korea (common in Ireland)
-  'KNA': { make: 'Kia',        country: 'South Korea' },
-  'KNB': { make: 'Kia',        country: 'South Korea' },
-  'KNC': { make: 'Kia',        country: 'South Korea' },
-  'KMH': { make: 'Hyundai',    country: 'South Korea' },
-  'KMF': { make: 'Hyundai',    country: 'South Korea' },
+  'KNA': { make: 'Kia',           country: 'South Korea' },
+  'KNB': { make: 'Kia',           country: 'South Korea' },
+  'KNC': { make: 'Kia',           country: 'South Korea' },
+  'KMH': { make: 'Hyundai',       country: 'South Korea' },
+  'KMF': { make: 'Hyundai',       country: 'South Korea' },
   // Japan
-  'JHM': { make: 'Honda',      country: 'Japan' },
-  'JN1': { make: 'Nissan',     country: 'Japan' },
-  'JN3': { make: 'Nissan',     country: 'Japan' },
-  'JT2': { make: 'Toyota',     country: 'Japan' },
-  'JT3': { make: 'Toyota',     country: 'Japan' },
-  'JMB': { make: 'Mitsubishi', country: 'Japan' },
-  'JS3': { make: 'Suzuki',     country: 'Japan' },
+  'JHM': { make: 'Honda',         country: 'Japan' },
+  'JN1': { make: 'Nissan',        country: 'Japan' },
+  'JN3': { make: 'Nissan',        country: 'Japan' },
+  'JT2': { make: 'Toyota',        country: 'Japan' },
+  'JT3': { make: 'Toyota',        country: 'Japan' },
+  'JMB': { make: 'Mitsubishi',    country: 'Japan' },
+  'JS3': { make: 'Suzuki',        country: 'Japan' },
 }
 
 // European VIN model codes (chars 4-8 after stripping ZZZ filler)
@@ -165,12 +206,38 @@ const AUDI_MODEL_CODES: Record<string, string> = {
   'FY': 'Q5 (2nd)',
 }
 
+const BMW_MODEL_CODES: Record<string, string> = {
+  'E46': '3 Series (E46)',
+  'E90': '3 Series (E90)',
+  'E91': '3 Series Touring (E91)',
+  'E92': '3 Series Coupe (E92)',
+  'F30': '3 Series (F30)',
+  'F31': '3 Series Touring (F31)',
+  'G20': '3 Series (G20)',
+  'E60': '5 Series (E60)',
+  'E61': '5 Series Touring (E61)',
+  'F10': '5 Series (F10)',
+  'F11': '5 Series Touring (F11)',
+  'G30': '5 Series (G30)',
+  'E87': '1 Series (E87)',
+  'F20': '1 Series (F20)',
+  'F40': '1 Series (F40)',
+  'E53': 'X5 (E53)',
+  'E70': 'X5 (E70)',
+  'F15': 'X5 (F15)',
+  'G05': 'X5 (G05)',
+  'F26': 'X4 (F26)',
+  'G02': 'X4 (G02)',
+}
+
 function getEuropeanModel(vin: string, make: string): string {
   // European VINs often have ZZZ in positions 4-6 (indices 3-5)
   // The actual model code is in positions 7-8 (indices 6-7)
   const chars45 = vin.substring(3, 5)  // Positions 4-5
   const chars67 = vin.substring(6, 8)  // Positions 7-8
   const chars45_stripped = chars45.replace(/Z/g, '')
+  // BMW platform code often appears at positions 4-6 (indices 3-6)
+  const chars46 = vin.substring(3, 6)  // Positions 4-6
 
   const lowerMake = make.toLowerCase()
 
@@ -180,12 +247,55 @@ function getEuropeanModel(vin: string, make: string): string {
   if (lowerMake === 'audi') {
     return AUDI_MODEL_CODES[chars67] || AUDI_MODEL_CODES[chars45_stripped] || ''
   }
+  if (lowerMake === 'bmw') {
+    return BMW_MODEL_CODES[chars46] || BMW_MODEL_CODES[chars67] || ''
+  }
 
   return ''
 }
 
+/** Returns true if this VIN should be decoded locally (no NHTSA fetch). */
+function isEuropeanVIN(vin: string): boolean {
+  const firstChar = vin[0]?.toUpperCase()
+  if (!firstChar) return false
+  return EU_WMI_PREFIXES.has(firstChar)
+}
+
+/** Build a VINResult from local WMI tables only — no network call. */
+function decodeEuropeanVIN(vin: string): VINResult {
+  const wmi = vin.substring(0, 3).toUpperCase()
+  const europeanInfo = EUROPEAN_WMI[wmi] ?? { make: 'Unknown', country: 'Europe' }
+  const make = europeanInfo.make
+  const model = getEuropeanModel(vin, make)
+  const year = decodeVINYear(vin, '')
+
+  return {
+    vin,
+    make,
+    model,
+    year,
+    engineDisplacement: '',
+    fuelType: '',
+    bodyClass: '',
+    driveType: '',
+    transmissionStyle: '',
+    engineCylinders: '',
+    plantCountry: europeanInfo.country,
+    errorCode: '',
+    errorText: '',
+    isEuropean: true,
+    wmi,
+  }
+}
+
 export async function decodeVIN(vin: string): Promise<VINResult | null> {
   try {
+    // EU VINs — decode entirely from local data; never call NHTSA
+    if (isEuropeanVIN(vin)) {
+      return decodeEuropeanVIN(vin)
+    }
+
+    // Non-EU VINs — call NHTSA
     const url = `https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`
     const res = await fetch(url)
     const json = await res.json()
@@ -198,12 +308,11 @@ export async function decodeVIN(vin: string): Promise<VINResult | null> {
     const europeanInfo = EUROPEAN_WMI[wmi]
     const isEuropean = !!europeanInfo
 
-    // Get make — prefer our WMI lookup for European cars (NHTSA sometimes returns ALL CAPS)
+    // Get make — normalise casing: "VOLKSWAGEN" → "Volkswagen"
     let make = get('Make')
     if (europeanInfo) {
       make = europeanInfo.make
     } else if (make) {
-      // Normalise casing: "VOLKSWAGEN" → "Volkswagen"
       make = make.charAt(0).toUpperCase() + make.slice(1).toLowerCase()
     }
 
