@@ -496,7 +496,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           )}
           {libResults.length === 0 && !libLoading && !libSearch && (
             <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>
-              Search 3,186 A2L files and 32,000+ DRT driver files
+              Search 4,400+ A2L files and 16,000+ DRT driver files
             </div>
           )}
           {libResults.map(entry => (

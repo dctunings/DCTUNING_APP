@@ -38,7 +38,7 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVehicle | null }) {
-  const { user, loading: authLoading, signIn, signUp, signOut } = useAuth()
+  const { user, isAdmin, loading: authLoading, signIn, signUp, signOut } = useAuth()
   const [tunes, setTunes] = useState<TuneRecord[]>([])
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState<TuneRecord | null>(null)
@@ -119,13 +119,13 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
     setLibLoading(true)
     let query = supabase
       .from('library_entries')
-      .select('id,vehicle_make,vehicle_model,vehicle_fuel,remap_type,original_file_name,original_file_path,original_file_size,ecu_type', { count: 'exact' })
+      .select('id,vehicle_make,vehicle_model,vehicle_fuel,remap_type,original_file_name,original_file_path,original_file_size,ecu_type,storage_path,storage_uploaded', { count: 'exact' })
       .range(page * LIB_PAGE_SIZE, (page + 1) * LIB_PAGE_SIZE - 1)
 
     if (libMake) query = query.ilike('vehicle_make', `%${libMake}%`)
     if (libSearch) {
       query = query.or(
-        `vehicle_make.ilike.%${libSearch}%,vehicle_model.ilike.%${libSearch}%,original_file_name.ilike.%${libSearch}%,remap_type.ilike.%${libSearch}%`
+        `vehicle_make.ilike.%${libSearch}%,vehicle_model.ilike.%${libSearch}%,original_file_name.ilike.%${libSearch}%,remap_type.ilike.%${libSearch}%,ecu_type.ilike.%${libSearch}%`
       )
     }
     query = query.order('vehicle_make').order('vehicle_model')
@@ -165,13 +165,43 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
         .from('tunes')
         .download(tune.file_path)
       if (error) throw error
+      const buffer = await data.arrayBuffer()
+      const api = (window as any).api
+      if (api?.saveEcuFile) {
+        await api.saveEcuFile(buffer, tune.filename)
+      } else {
+        const blob = new Blob([buffer], { type: 'application/octet-stream' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url; a.download = tune.filename; a.click()
+        URL.revokeObjectURL(url)
+      }
+    } catch (e: any) {
+      alert(`Download failed: ${e.message}`)
+    }
+    setDownloading(null)
+  }
 
-      // Save via Electron dialog
-      const savePath = await (window as any).api?.saveEcuFile({ defaultName: tune.filename })
-      if (savePath) {
-        const buffer = await data.arrayBuffer()
-        // Write via IPC — for now show success
-        alert(`Downloaded: ${tune.filename}`)
+  const downloadLibraryFile = async (entry: any) => {
+    const storagePath = entry.storage_path || entry.original_file_name
+    if (!storagePath) return
+    setDownloading(entry.id)
+    try {
+      const { data, error } = await supabase.storage
+        .from('tune-files')
+        .download(storagePath)
+      if (error) throw error
+      const buffer = await data.arrayBuffer()
+      const filename = entry.original_file_name || entry.storage_path
+      const api = (window as any).api
+      if (api?.saveEcuFile) {
+        await api.saveEcuFile(buffer, filename)
+      } else {
+        const blob = new Blob([buffer], { type: 'application/octet-stream' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url; a.download = filename; a.click()
+        URL.revokeObjectURL(url)
       }
     } catch (e: any) {
       alert(`Download failed: ${e.message}`)
@@ -206,6 +236,8 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
     return <LoginScreen signIn={signIn} signUp={signUp} />
   }
 
+  // Admin badge shown in header
+
   const filteredCloud = tunes.filter((t) =>
     [t.filename, t.vehicle_make, t.vehicle_model, t.ecu, t.notes].some((v) =>
       v?.toLowerCase().includes(search.toLowerCase())
@@ -221,6 +253,11 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
         </div>
         {/* User info */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {isAdmin && (
+            <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 4, background: 'rgba(184,240,42,0.15)', color: 'var(--accent)', border: '1px solid rgba(184,240,42,0.3)', letterSpacing: '0.5px' }}>
+              ADMIN
+            </span>
+          )}
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 12, fontWeight: 600 }}>{user.user_metadata?.full_name || user.email}</div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{user.email}</div>
@@ -252,7 +289,7 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
               }}
             >
               {t === 'library'
-                ? `Library (${libTotal > 0 ? libTotal.toLocaleString() : '92k+'})`
+                ? `Library (${libTotal > 0 ? libTotal.toLocaleString() : '38k+'})`
                 : t === 'cloud'
                 ? `My Tunes (${tunes.length})`
                 : t === 'local'
@@ -393,18 +430,28 @@ CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id
                         <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{entry.ecu_type}</div>
                       )}
                     </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                       <span style={{
                         fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
                         background: 'var(--accent-dim)', color: 'var(--accent)',
                         border: '1px solid rgba(0,174,200,0.2)',
-                        display: 'inline-block', marginBottom: 4,
+                        display: 'inline-block',
                       }}>
                         {entry.remap_type || 'Tune'}
                       </span>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                         {entry.original_file_size ? `${Math.round(entry.original_file_size / 1024)} KB` : '—'}
                       </div>
+                      {(entry.storage_uploaded || isAdmin) && (
+                        <button
+                          className="btn btn-primary"
+                          style={{ fontSize: 10, padding: '3px 10px', marginTop: 2 }}
+                          onClick={() => downloadLibraryFile(entry)}
+                          disabled={downloading === entry.id}
+                        >
+                          {downloading === entry.id ? '⏳' : '⬇ Download'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

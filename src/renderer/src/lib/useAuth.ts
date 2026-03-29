@@ -2,10 +2,13 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import type { User, Session } from '@supabase/supabase-js'
 
+const ADMIN_EMAILS = ['dctunings@gmail.com']
+
 export interface AuthState {
   user: User | null
   session: Session | null
   loading: boolean
+  isAdmin: boolean
 }
 
 export function useAuth(): AuthState & {
@@ -16,6 +19,7 @@ export function useAuth(): AuthState & {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const isAdmin = ADMIN_EMAILS.includes(user?.email ?? '')
 
   useEffect(() => {
     // Get current session on mount
@@ -53,5 +57,5 @@ export function useAuth(): AuthState & {
     await supabase.auth.signOut()
   }
 
-  return { user, session, loading, signIn, signUp, signOut }
+  return { user, session, loading, isAdmin, signIn, signUp, signOut }
 }
