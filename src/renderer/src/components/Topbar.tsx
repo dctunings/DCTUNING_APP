@@ -21,14 +21,14 @@ export default function Topbar({
   const [dbVariants, setDbVariants] = useState<ActiveVehicle[]>([])
 
   useEffect(() => {
-    supabase.from('vehicle_database').select('make').then(({ data }) => {
+    supabase.from('vehicle_database').select('make').limit(10000).then(({ data }) => {
       if (data) setMakes([...new Set(data.map((r: any) => r.make))].sort())
     })
   }, [])
 
   useEffect(() => {
     if (!manufacturer) { setVehicles([]); setDbVariants([]); return }
-    supabase.from('vehicle_database').select('model').eq('make', manufacturer).then(({ data }) => {
+    supabase.from('vehicle_database').select('model').eq('make', manufacturer).limit(2000).then(({ data }) => {
       if (data) setVehicles([...new Set(data.map((r: any) => r.model))].sort())
     })
   }, [manufacturer])

@@ -71,7 +71,7 @@ export default function Dashboard({ setPage, connected, activeVehicle }: Props) 
   useEffect(() => {
     supabase.from('vehicle_database').select('*', { count: 'exact', head: true })
       .then(({ count }) => setVehicleCount(count || 0))
-    supabase.from('vehicle_database').select('make')
+    supabase.from('vehicle_database').select('make').limit(10000)
       .then(({ data }) => { if (data) setMakeCount(new Set(data.map((r: any) => r.make)).size) })
   }, [])
 
