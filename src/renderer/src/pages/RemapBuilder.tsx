@@ -199,8 +199,13 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   // Library search state
   const [libSearch, setLibSearch] = useState('')
   const [libResults, setLibResults] = useState<DefinitionEntry[]>([])
+  const [libTotal, setLibTotal] = useState(0)
+  const [libPage, setLibPage] = useState(0)
   const [libLoading, setLibLoading] = useState(false)
+  const [libLoadError, setLibLoadError] = useState('')
+  const [libLoadingId, setLibLoadingId] = useState<string | null>(null)
   const [showLibrary, setShowLibrary] = useState(false)
+  const LIB_PAGE_SIZE = 50
 
   const selectedEcu: EcuDef | undefined = ECU_DEFINITIONS.find(e => e.id === selectedEcuId)
 
@@ -360,21 +365,24 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   }
 
   // ─── Library search ───────────────────────────────────────────────────────
-  const searchLibrary = useCallback(async (query: string) => {
-    if (!query.trim()) { setLibResults([]); return }
+  const searchLibrary = useCallback(async (query: string, page = 0) => {
+    if (!query.trim()) { setLibResults([]); setLibTotal(0); return }
     setLibLoading(true)
     try {
-      const { data } = await supabase
+      const { data, count } = await supabase
         .from('definitions_index')
-        .select('*')
+        .select('*', { count: 'exact' })
         .or(`filename.ilike.%${query}%,ecu_family.ilike.%${query}%,make.ilike.%${query}%,model.ilike.%${query}%,driver_name.ilike.%${query}%`)
         .order('file_type')
-        .limit(20)
+        .order('filename')
+        .range(page * LIB_PAGE_SIZE, (page + 1) * LIB_PAGE_SIZE - 1)
       setLibResults((data ?? []) as DefinitionEntry[])
+      setLibTotal(count ?? 0)
+      setLibPage(page)
     } finally {
       setLibLoading(false)
     }
-  }, [])
+  }, [LIB_PAGE_SIZE])
 
   // Auto-search when ECU is detected
   useEffect(() => {
@@ -386,6 +394,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   }, [detected, showLibrary, searchLibrary])
 
   const loadDefinitionFromLibrary = async (entry: DefinitionEntry) => {
+    setLibLoadingId(entry.id)
+    setLibLoadError('')
     try {
       const { data, error } = await supabase.storage
         .from('definition-files')
@@ -412,8 +422,10 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         setA2lResult(null); setA2lMaps([]); setA2lFileName('')
       }
       setShowLibrary(false)
-    } catch (e) {
-      console.error('Library load error:', e)
+    } catch (e: any) {
+      setLibLoadError(`Failed to load ${entry.filename}: ${e?.message ?? 'Unknown error'}`)
+    } finally {
+      setLibLoadingId(null)
     }
   }
 
@@ -478,20 +490,42 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             <input
               value={libSearch}
               onChange={e => setLibSearch(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && searchLibrary(libSearch)}
+              onKeyDown={e => e.key === 'Enter' && searchLibrary(libSearch, 0)}
               placeholder="Search by ECU family, make, model, filename…"
               style={{ flex: 1, padding: '8px 12px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
             />
             <button
-              onClick={() => searchLibrary(libSearch)}
+              onClick={() => searchLibrary(libSearch, 0)}
               style={{ padding: '8px 14px', borderRadius: 7, border: 'none', background: 'var(--accent)', color: '#000', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               {libLoading ? '…' : 'Search'}
             </button>
           </div>
+
+          {libLoadError && (
+            <div style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 6, padding: '6px 10px', marginBottom: 8 }}>
+              ⚠ {libLoadError}
+            </div>
+          )}
+
+          {libTotal > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
+              <span>{libTotal.toLocaleString()} results</span>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                {libPage > 0 && (
+                  <button onClick={() => searchLibrary(libSearch, libPage - 1)} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)', borderRadius: 5, padding: '2px 8px', cursor: 'pointer', fontSize: 11, fontFamily: 'inherit' }}>← Prev</button>
+                )}
+                <span>Page {libPage + 1} of {Math.ceil(libTotal / LIB_PAGE_SIZE)}</span>
+                {(libPage + 1) * LIB_PAGE_SIZE < libTotal && (
+                  <button onClick={() => searchLibrary(libSearch, libPage + 1)} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)', borderRadius: 5, padding: '2px 8px', cursor: 'pointer', fontSize: 11, fontFamily: 'inherit' }}>Next →</button>
+                )}
+              </div>
+            </div>
+          )}
+
           {libResults.length === 0 && !libLoading && libSearch && (
             <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>
-              No definitions found — library will be populated once files are uploaded
+              No definitions found
             </div>
           )}
           {libResults.length === 0 && !libLoading && !libSearch && (
@@ -499,13 +533,11 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
               Search 4,400+ A2L files and 16,000+ DRT driver files
             </div>
           )}
+
           {libResults.map(entry => (
             <div
               key={entry.id}
-              onClick={() => loadDefinitionFromLibrary(entry)}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 4, background: 'rgba(255,255,255,0.03)', border: '1px solid transparent', transition: 'all 0.1s' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,174,200,0.08)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,174,200,0.2)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; (e.currentTarget as HTMLElement).style.borderColor = 'transparent' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, marginBottom: 4, background: 'rgba(255,255,255,0.03)', border: '1px solid transparent' }}
             >
               <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: entry.file_type === 'a2l' ? 'rgba(34,197,94,0.15)' : 'rgba(59,130,246,0.15)', color: entry.file_type === 'a2l' ? '#22c55e' : '#3b82f6', flexShrink: 0 }}>
                 {entry.file_type.toUpperCase()}
@@ -517,7 +549,13 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                   {entry.map_count > 0 && ` · ${entry.map_count}M ${entry.curve_count}C`}
                 </div>
               </div>
-              <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}>Load →</span>
+              <button
+                onClick={() => loadDefinitionFromLibrary(entry)}
+                disabled={libLoadingId === entry.id}
+                style={{ fontSize: 10, fontWeight: 700, color: libLoadingId === entry.id ? 'var(--text-muted)' : 'var(--accent)', background: 'none', border: '1px solid', borderColor: libLoadingId === entry.id ? 'var(--border)' : 'rgba(0,174,200,0.3)', borderRadius: 5, padding: '3px 10px', cursor: libLoadingId === entry.id ? 'default' : 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+              >
+                {libLoadingId === entry.id ? '⏳' : 'Load →'}
+              </button>
             </div>
           ))}
         </div>
