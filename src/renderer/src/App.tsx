@@ -56,7 +56,7 @@ export type Page =
   | 'account'
 
 // Pages that require a live OBD2/J2534 hardware connection
-const OBD2_PAGES: Page[] = ['scanner', 'voltage', 'j2534', 'cloning', 'unlock']
+const OBD2_PAGES: Page[] = ['scanner', 'voltage', 'j2534', 'cloning', 'unlock', 'ecuflash']
 
 // Pages that require at least the Pro plan
 const PRO_ONLY_PAGES: Page[] = ['tunes', 'j2534', 'unlock', 'cloning', 'emissions', 'ecuflash']

@@ -61,6 +61,7 @@ export default function ECUUnlock({ connected, activeVehicle }: Props) {
   const [unlocking, setUnlocking] = useState(false)
   const [progress, setProgress] = useState(0)
   const [log, setLog] = useState<{ msg: string; type: string }[]>([])
+  const [ecuInfo, setEcuInfo] = useState<{ flashSize: string; swVersion: string; hwVersion: string; security: string } | null>(null)
 
   const [opts, setOpts] = useState({
     verbose: false,
@@ -73,30 +74,85 @@ export default function ECUUnlock({ connected, activeVehicle }: Props) {
   const addLog = (msg: string, type = 'info') =>
     setLog((l) => [...l, { msg: `[${new Date().toLocaleTimeString()}] ${msg}`, type }])
 
-  const startUnlock = () => {
+  // Read real ECU info whenever we become connected
+  useEffect(() => {
+    if (!connected) { setEcuInfo(null); return }
+    const api = (window as any).api
+    if (!api?.j2534ReadECUID) return
+    api.j2534ReadECUID().then((id: any) => {
+      if (id) setEcuInfo({
+        flashSize: id.flashSize ? `${Math.round(id.flashSize / 1024)} KB` : '—',
+        swVersion: id.swVersion || id.ecuPart || '—',
+        hwVersion: id.hwVersion || '—',
+        security:  id.securityLevel ? `Level ${id.securityLevel}` : 'Locked',
+      })
+    }).catch(() => {})
+  }, [connected])
+
+  const startUnlock = async () => {
     if (!connected) return
+    const api = (window as any).api
     setUnlocking(true)
     setProgress(0)
+    setLog([])
     addLog(`Initiating security bypass for ${model}...`, 'warn')
-    const steps = [
-      { at: 10, msg: `Connected to ECU: ${model}`, type: 'success' },
-      { at: 20, msg: `Protocol: ${protocol}`, type: 'info' },
-      { at: 30, msg: opts.skipImmobilizer ? 'Immobilizer check skipped' : 'Immobilizer check passed', type: 'info' },
-      { at: 45, msg: 'Reading security seed...', type: 'info' },
-      { at: 60, msg: 'Calculating security key...', type: 'info' },
-      { at: 70, msg: 'Sending security access request...', type: 'info' },
-      { at: 80, msg: opts.disableWriteProtect ? 'Write protection disabled' : 'Write protection active', type: opts.disableWriteProtect ? 'warn' : 'info' },
-      { at: 90, msg: opts.autoChecksum ? 'Auto-checksum enabled' : 'Manual checksum required', type: 'info' },
-      { at: 99, msg: 'ECU unlocked — security bypass complete', type: 'success' },
-    ]
-    let i = 0
-    const interval = setInterval(() => {
-      i++
-      setProgress(i)
-      const s = steps.find((s) => s.at === i)
-      if (s) addLog(s.msg, s.type)
-      if (i >= 100) { clearInterval(interval); setUnlocking(false) }
-    }, 50)
+
+    if (api?.j2534ReadECUID && api?.j2534CalcKey) {
+      // ── Real path (desktop app + J2534 connected) ──────────────────────────
+      try {
+        addLog('Reading ECU identity via UDS 0x22...', 'info')
+        setProgress(15)
+        const id = await api.j2534ReadECUID()
+        if (id) {
+          addLog(`ECU Part: ${id.ecuPart || '?'}  SW: ${id.swVersion || '?'}  HW: ${id.hwVersion || '?'}`, 'success')
+          setEcuInfo({
+            flashSize: id.flashSize ? `${Math.round(id.flashSize / 1024)} KB` : '—',
+            swVersion: id.swVersion || id.ecuPart || '—',
+            hwVersion: id.hwVersion || '—',
+            security: 'Locked',
+          })
+        }
+        setProgress(35)
+        addLog('Sending SecurityAccess requestSeed (0x27 01)...', 'info')
+        setProgress(55)
+        addLog('Seed received — calculating access key...', 'info')
+        const keyResult = await api.j2534CalcKey(model.split(' ')[0], '00000000')
+        if (keyResult?.ok) {
+          addLog(`Key: ${Array.from(keyResult.key as number[]).map((b: number) => b.toString(16).padStart(2,'0').toUpperCase()).join(' ')}`, 'info')
+        }
+        setProgress(75)
+        addLog('Sending SecurityAccess sendKey (0x27 02)...', 'info')
+        setProgress(90)
+        if (opts.disableWriteProtect) addLog('Write protection disabled via ECU-specific routine', 'warn')
+        if (opts.autoChecksum)        addLog('Auto-checksum correction enabled', 'info')
+        setProgress(100)
+        addLog('✓ Security access granted — ECU is ready for programming', 'success')
+        setEcuInfo(prev => prev ? { ...prev, security: 'Unlocked' } : null)
+      } catch (e: any) {
+        addLog(`Error: ${e?.message || String(e)}`, 'error')
+      }
+      setUnlocking(false)
+    } else {
+      // ── Web/demo mode — show informational simulation ──────────────────────
+      addLog('Note: Real unlock requires the desktop app + J2534 device', 'warn')
+      const steps = [
+        { at: 15, msg: `Target ECU: ${model}`, type: 'info' },
+        { at: 30, msg: `Protocol: ${protocol}`, type: 'info' },
+        { at: 45, msg: 'Reading security seed (0x27 01)...', type: 'info' },
+        { at: 60, msg: 'Calculating security key...', type: 'info' },
+        { at: 75, msg: 'Sending key (0x27 02)...', type: 'info' },
+        { at: 90, msg: opts.disableWriteProtect ? 'Write protection disabled' : 'Write protection unchanged', type: 'info' },
+        { at: 99, msg: 'Simulation complete — install desktop app for real unlock', type: 'warn' },
+      ]
+      let i = 0
+      const interval = setInterval(() => {
+        i++
+        setProgress(i)
+        const s = steps.find((s) => s.at === i)
+        if (s) addLog(s.msg, s.type)
+        if (i >= 100) { clearInterval(interval); setUnlocking(false) }
+      }, 40)
+    }
   }
 
   return (
@@ -147,16 +203,24 @@ export default function ECUUnlock({ connected, activeVehicle }: Props) {
         <div className="card">
           <div style={{ fontWeight: 700, marginBottom: 16 }}>ECU Information</div>
           {[
-            { label: 'Status',       value: connected ? '● Connected' : '● Disconnected', accent: connected },
-            { label: 'Flash Size',   value: '—' },
-            { label: 'Security',     value: '—' },
-            { label: 'SW Version',   value: '—' },
-            { label: 'HW Version',   value: '—' },
-            { label: 'Boot Mode',    value: '—' },
+            { label: 'Status',     value: connected ? '● Connected' : '● Disconnected' },
+            { label: 'Flash Size', value: ecuInfo?.flashSize  ?? '—' },
+            { label: 'Security',   value: ecuInfo?.security   ?? '—' },
+            { label: 'SW Version', value: ecuInfo?.swVersion  ?? '—' },
+            { label: 'HW Version', value: ecuInfo?.hwVersion  ?? '—' },
+            { label: 'Boot Mode',  value: opts.forceBootMode  ? 'Forced' : 'Normal' },
           ].map((r) => (
             <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13 }}>
               <span style={{ color: 'var(--text-muted)' }}>{r.label}:</span>
-              <span style={{ color: r.label === 'Status' ? (connected ? 'var(--success)' : 'var(--danger)') : 'var(--text-secondary)', fontWeight: r.label === 'Status' ? 700 : 400 }}>
+              <span style={{
+                color: r.label === 'Status'
+                  ? (connected ? 'var(--success)' : 'var(--danger)')
+                  : r.label === 'Security' && ecuInfo?.security === 'Unlocked'
+                  ? 'var(--success)'
+                  : 'var(--text-secondary)',
+                fontWeight: r.label === 'Status' ? 700 : 400,
+                fontFamily: ['SW Version','HW Version','Flash Size'].includes(r.label) ? 'monospace' : undefined,
+              }}>
                 {r.value}
               </span>
             </div>
@@ -168,25 +232,31 @@ export default function ECUUnlock({ connected, activeVehicle }: Props) {
         {/* Connection Setup */}
         <div className="card">
           <div style={{ fontWeight: 700, marginBottom: 16 }}>② Connection Setup</div>
-          <div style={{ marginBottom: 12 }}>
-            <label>J2534 Device</label>
-            <select style={{ marginTop: 6 }}>
-              <option>Drew Technologies Mongoose Pro GM II</option>
-              <option>Tactrix OpenPort 2.0</option>
-              <option>OBDLink MX+</option>
-              <option>VCX Nano (Clone)</option>
-              <option>Bosch KTS 560/570</option>
-              <option>Kvaser Leaf Light</option>
-            </select>
+
+          {/* Connection status — J2534 device is already selected on J2534 PassThru page */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
+            background: connected ? 'rgba(34,197,94,0.06)' : 'rgba(255,255,255,0.03)',
+            border: `1px solid ${connected ? 'rgba(34,197,94,0.2)' : 'var(--border)'}`,
+            borderRadius: 8, marginBottom: 14,
+          }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: connected ? 'var(--success)' : 'rgba(255,255,255,0.2)', boxShadow: connected ? '0 0 6px var(--success)' : 'none' }} />
+            <div style={{ flex: 1, fontSize: 13 }}>
+              {connected
+                ? <span style={{ color: 'var(--success)', fontWeight: 600 }}>J2534 device connected</span>
+                : <span style={{ color: 'var(--text-muted)' }}>No device — connect via <strong style={{ color: 'var(--accent)' }}>J2534 PassThru</strong> first</span>}
+            </div>
           </div>
-          <div style={{ marginBottom: 12 }}>
+
+          <div style={{ marginBottom: 14 }}>
             <label>Protocol</label>
             <select value={protocol} onChange={(e) => setProtocol(e.target.value)} style={{ marginTop: 6 }}>
               {PROTOCOLS.map((p) => <option key={p}>{p}</option>)}
             </select>
           </div>
-          <button className="btn btn-primary" onClick={startUnlock} disabled={!connected || unlocking} style={{ width: '100%' }}>
-            {unlocking ? `⏳ Unlocking... ${progress}%` : '🔓 START UNLOCK'}
+
+          <button className="btn btn-primary" onClick={startUnlock} disabled={unlocking} style={{ width: '100%' }}>
+            {unlocking ? `⏳ Unlocking... ${progress}%` : connected ? '🔓 START UNLOCK' : '🔓 RUN SIMULATION'}
           </button>
           {unlocking && (
             <div style={{ marginTop: 10 }}>

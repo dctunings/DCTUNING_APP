@@ -306,7 +306,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         URL.revokeObjectURL(url)
       }
     } catch (err) {
-      console.error('Save error:', err)
+      setLoadError(`Save failed: ${String(err)}`)
     }
   }
 
@@ -333,7 +333,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       // Share with Performance page
       if (fileBuffer) onEcuLoaded?.({ fileName, fileBuffer, detected, a2lMaps: maps, drtMaps: [] })
     } catch (e) {
-      console.error('A2L parse error:', e)
+      setLoadError(`A2L parse failed: ${String(e)}`)
     }
   }
 
@@ -360,7 +360,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       // Share with Performance page
       if (fileBuffer) onEcuLoaded?.({ fileName, fileBuffer, detected, a2lMaps: [], drtMaps: converted })
     } catch (e) {
-      console.error('DRT parse error:', e)
+      setLoadError(`DRT parse failed: ${String(e)}`)
     }
   }
 

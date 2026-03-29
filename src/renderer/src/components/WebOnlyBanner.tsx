@@ -1,5 +1,6 @@
 export function isWebMode(): boolean {
-  return import.meta.env.VITE_WEB_MODE === 'true'
+  // Runtime detection: Electron exposes window.api via preload; plain browsers never have it
+  return !(window as any).api
 }
 
 const DownloadIcon = (
