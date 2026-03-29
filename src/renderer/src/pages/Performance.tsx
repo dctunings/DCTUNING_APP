@@ -431,7 +431,8 @@ export default function Performance({ activeVehicle, ecuFile, setPage }: Props) 
   ]
 
   return (
-    <div>
+    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      {/* Header */}
       <div className="page-header">
         <div className="page-icon">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -440,11 +441,25 @@ export default function Performance({ activeVehicle, ecuFile, setPage }: Props) 
         </div>
         <div style={{ flex: 1 }}>
           <h1>Performance Tuning</h1>
-          {isLive && <div style={{ fontSize: 12, color: 'var(--accent)', marginTop: 2 }}>📂 {ecuFile!.fileName} — {allMaps.length} maps loaded</div>}
+          {isLive
+            ? <div style={{ fontSize: 12, color: 'var(--accent)', marginTop: 2 }}>📂 {ecuFile!.fileName} — {allMaps.length} maps loaded</div>
+            : <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Load an ECU file in Remap Builder to edit real map data</div>}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-          {dirty && <span className="badge" style={{ background: 'rgba(255,150,0,.12)', color: '#ff9500', border: '1px solid #ff9500', fontSize: 11 }}>● Unsaved Changes</span>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {dirty && <span className="badge" style={{ background: 'rgba(255,150,0,.12)', color: '#ff9500', border: '1px solid #ff9500', fontSize: 11 }}>● Unsaved</span>}
           {savedAt && !dirty && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>✓ Exported {savedAt}</span>}
+          <input ref={importRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={importCSV} />
+          <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => importRef.current?.click()}>📤 Import CSV</button>
+          <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={exportCSV}>📥 Export CSV</button>
+          {isLive ? (
+            <button className="btn btn-primary" style={{ fontSize: 12 }} onClick={exportBinary}>
+              💾 Export Modified File
+            </button>
+          ) : (
+            <button className="btn btn-secondary" style={{ fontSize: 12 }} onClick={() => setPage('remap')}>
+              📂 Load ECU File
+            </button>
+          )}
         </div>
       </div>
 
@@ -455,48 +470,35 @@ export default function Performance({ activeVehicle, ecuFile, setPage }: Props) 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'rgba(0,174,200,0.08)', border: '1px solid rgba(0,174,200,0.25)', borderRadius: 8, marginBottom: 16, fontSize: 13 }}>
           <span style={{ fontSize: 20 }}>⚠️</span>
           <div>
-            <div style={{ fontWeight: 700, color: 'var(--accent)' }}>Demo data — no ECU file loaded</div>
-            <div style={{ color: 'var(--text-muted)', marginTop: 2 }}>
-              Go to <button onClick={() => setPage('remap')} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontWeight: 700, padding: 0, textDecoration: 'underline', fontSize: 13 }}>Remap Builder</button> and load an ECU binary + A2L/DRT definition to see and edit real map data from your ECU.
-            </div>
+            <strong style={{ color: 'var(--accent)' }}>Demo data — no ECU file loaded.</strong>
+            <span style={{ color: 'var(--text-muted)', marginLeft: 6 }}>
+              Go to <button onClick={() => setPage('remap')} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontWeight: 700, padding: 0, textDecoration: 'underline', fontSize: 13 }}>Remap Builder</button> and load an ECU binary + A2L/DRT definition to see and edit real ECU map data.
+            </span>
           </div>
         </div>
       )}
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)' }}>
-        {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
-            padding: '8px 18px', background: tab === t.id ? 'var(--accent-dim)' : 'transparent',
-            border: 'none', borderBottom: `2px solid ${tab === t.id ? 'var(--accent)' : 'transparent'}`,
-            color: tab === t.id ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer',
-            fontFamily: 'Manrope, sans-serif', fontWeight: 600, fontSize: 13, transition: 'all 0.15s', marginBottom: -1,
-          }}>{t.label}</button>
-        ))}
-      </div>
-
-      <div className="card" style={{ marginTop: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
-        {/* Toolbar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div>
-            <div style={{ fontWeight: 700, color: 'var(--accent)', fontSize: 14 }}>{tabs.find(t => t.id === tab)?.label.replace(/^[^ ]+ /, '')}</div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{tabs.find(t => t.id === tab)?.desc}</div>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input ref={importRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={importCSV} />
-            <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => importRef.current?.click()}>📤 Import CSV</button>
-            <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={exportCSV}>📥 Export CSV</button>
-            {isLive ? (
-              <button className="btn btn-primary" style={{ fontSize: 12 }} onClick={exportBinary} disabled={!dirty && !!savedAt}>
-                💾 Export Modified File
-              </button>
-            ) : (
-              <button className="btn btn-secondary" style={{ fontSize: 12 }} onClick={() => setPage('remap')}>
-                📂 Load ECU File
-              </button>
-            )}
-          </div>
+      {/* Tabs + Card */}
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
+        {/* Tab bar */}
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', padding: '0 20px' }}>
+          {tabs.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)} style={{
+              padding: '12px 20px', background: 'transparent',
+              border: 'none', borderBottom: `2px solid ${tab === t.id ? 'var(--accent)' : 'transparent'}`,
+              color: tab === t.id ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer',
+              fontFamily: 'Manrope, sans-serif', fontWeight: 700, fontSize: 13, transition: 'all 0.15s', marginBottom: -1,
+            }}>{t.label}</button>
+          ))}
         </div>
+
+        {/* Map description sub-header */}
+        <div style={{ padding: '12px 24px 0', borderBottom: '1px solid var(--border)', marginBottom: 0 }}>
+          <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 13 }}>{tabs.find(t => t.id === tab)?.label.replace(/^[^ ]+ /, '')}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, paddingBottom: 10 }}>{tabs.find(t => t.id === tab)?.desc}</div>
+        </div>
+
+        <div style={{ padding: '20px 24px' }}>
 
         {/* Fuel Map */}
         {tab === 'fuel' && (
@@ -551,7 +553,8 @@ export default function Performance({ activeVehicle, ecuFile, setPage }: Props) 
             )}
           </div>
         )}
-      </div>
+        </div>{/* end padding div */}
+      </div>{/* end tabs+card wrapper */}
 
       {/* Info banner */}
       <div className="banner banner-warning" style={{ marginTop: 16, fontSize: 12 }}>
