@@ -373,7 +373,6 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         .from('definitions_index')
         .select('*', { count: 'exact' })
         .or(`filename.ilike.%${query}%,ecu_family.ilike.%${query}%,make.ilike.%${query}%,model.ilike.%${query}%,driver_name.ilike.%${query}%`)
-        .order('file_type')
         .order('filename')
         .range(page * LIB_PAGE_SIZE, (page + 1) * LIB_PAGE_SIZE - 1)
       setLibResults((data ?? []) as DefinitionEntry[])
