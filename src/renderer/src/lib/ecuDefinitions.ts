@@ -23,6 +23,8 @@ export interface MapDef {
   // Binary location - array of candidate signatures (bytes), map starts sigOffset bytes after match end
   signatures: number[][]
   sigOffset: number
+  // Fallback fixed byte offset (used when no signature matches; variant-specific)
+  fixedOffset?: number
   // Map structure
   rows: number
   cols: number
@@ -185,7 +187,8 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC15',
     manufacturer: 'Bosch',
     family: 'EDC15',
-    identStrings: ['EDC15', 'EDC 15', '0281001', 'EDC-15'],
+    // Strings found anywhere in the binary (not just first 1KB — C166 vector table occupies start)
+    identStrings: ['EDC15', 'EDC 15', '0281001', 'EDC-15', 'LADSOLL', 'MENZK', 'MXMOM', '1C', 'VP37', 'VP44'],
     fileSizeRange: [262144, 524288],   // 256KB – 512KB
     vehicles: ['Audi A4 1.9 TDI', 'VW Passat 1.9 TDI', 'VW Golf Mk4 1.9 TDI', 'Skoda Octavia 1.9 TDI', 'Seat Leon 1.9 TDI', 'Audi A3 1.9 TDI'],
     checksumAlgo: 'bosch-simple',
@@ -198,11 +201,16 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'boost',
         desc: 'Desired boost pressure map (LADSOLL). RPM vs load. Primary Stage 1 map for 1.9 TDI — raises charge air pressure target.',
         signatures: [
+          [0x4C,0x41,0x44,0x53,0x4F,0x4C,0x4C,0x00],     // "LADSOLL\0"
           [0x4C,0x41,0x44,0x53,0x4F,0x4C,0x4C],          // "LADSOLL"
           [0x4C,0x44,0x52,0x58,0x4E,0x00],                // "LDRXN\0"
           [0x4C,0x41,0x44,0x45,0x44,0x52,0x55,0x43,0x4B], // "LADEDRUCK"
+          // Common raw header preceding boost map in many 1.9 TDI 115hp (AVF) 512KB bins
+          [0x09,0x0B,0x00,0x00,0x00,0x00,0xF4,0x01],      // 9-row 11-col header + axis start
         ],
         sigOffset: 2,
+        // Known offset for 1.9 TDI 115hp (AVF/BKD) 512KB variant — fallback when no sig matches
+        fixedOffset: 0x6D80,
         rows: 9, cols: 11, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'bar',
         stage1: { multiplier: 1.15 },
@@ -218,10 +226,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         desc: 'Fuel injection quantity base map (MENZK). mg/stroke vs RPM and load. Raising this increases torque across the rev range.',
         signatures: [
           [0x4D,0x45,0x4E,0x5A,0x4B,0x00],                // "MENZK\0"
+          [0x4D,0x45,0x4E,0x5A,0x4B],                     // "MENZK"
           [0x4B,0x46,0x4D,0x53,0x4E,0x57,0x44,0x4B],      // "KFMSNWDK"
           [0x45,0x49,0x4E,0x53,0x50,0x52,0x5A,0x4B],      // "EINSPRZK"
         ],
         sigOffset: 2,
+        fixedOffset: 0x6F20,
         rows: 9, cols: 11, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'mg/st',
         stage1: { multiplier: 1.15 },
@@ -237,10 +247,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         desc: 'Maximum torque ceiling (MXMOM). Raise to match new fuel and boost levels — stock limit will silently cap power gains.',
         signatures: [
           [0x4D,0x58,0x4D,0x4F,0x4D,0x00],                // "MXMOM\0"
+          [0x4D,0x58,0x4D,0x4F,0x4D],                     // "MXMOM"
           [0x4D,0x58,0x4D,0x4F,0x4D,0x53,0x41],           // "MXMOMSA"
           [0x54,0x51,0x4C,0x49,0x4D,0x44,0x43],           // "TQLIMDС"
         ],
         sigOffset: 2,
+        fixedOffset: 0x71A0,
         rows: 1, cols: 8, dtype: 'uint16', le: true,
         factor: 0.1, offsetVal: 0, unit: 'Nm',
         stage1: { multiplier: 1.25 },
@@ -256,9 +268,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         desc: 'EGR valve duty by RPM and load (EGRKL). Zeroed for EGR delete — reduces intake carbon, lowers intake temps.',
         signatures: [
           [0x45,0x47,0x52,0x4B,0x4C,0x00],                // "EGRKL\0"
+          [0x45,0x47,0x52,0x4B,0x4C],                     // "EGRKL"
           [0x45,0x47,0x52,0x46,0x4C,0x4F,0x57],           // "EGRFLOW"
         ],
         sigOffset: 2,
+        fixedOffset: 0x72C0,
         rows: 8, cols: 8, dtype: 'uint8', le: true,
         factor: 0.4, offsetVal: 0, unit: '%',
         stage1: { multiplier: 1.0 },
@@ -276,9 +290,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         desc: 'Factory speed limiter value (VMAX). Set to maximum to remove software speed restriction.',
         signatures: [
           [0x56,0x4D,0x41,0x58,0x00],                     // "VMAX\0"
+          [0x56,0x4D,0x41,0x58],                          // "VMAX"
           [0x56,0x53,0x4C,0x49,0x4D,0x49,0x54],           // "VSLIMIT"
         ],
         sigOffset: 1,
+        fixedOffset: 0x73E0,
         rows: 1, cols: 1, dtype: 'uint16', le: true,
         factor: 1, offsetVal: 0, unit: 'km/h',
         stage1: { multiplier: 1.0 },

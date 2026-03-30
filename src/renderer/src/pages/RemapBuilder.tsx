@@ -1090,7 +1090,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             <span>·</span>
             <span>Stage 1 / 2 / 3</span>
             <span>·</span>
-            <span>MED17 · EDC17 · SIMOS18 · ME7</span>
+            <span>{ECU_DEFINITIONS.map(e => e.family).join(' · ')}</span>
           </div>
         </div>
       </div>

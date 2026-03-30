@@ -19,8 +19,10 @@ export interface ExtractedMap {
 // ─── ECU Detection ────────────────────────────────────────────────────────────
 export function detectEcu(buffer: ArrayBuffer): DetectedEcu | null {
   const bytes = new Uint8Array(buffer)
-  const firstKb = bytes.slice(0, Math.min(1024, bytes.length))
-  const ascii = Array.from(firstKb).map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : ' ').join('')
+  // Search up to 512KB (or full file if smaller) for ECU identification strings
+  const searchLen = Math.min(524288, bytes.length)
+  const searchSlice = bytes.slice(0, searchLen)
+  const ascii = Array.from(searchSlice).map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : ' ').join('')
 
   let best: DetectedEcu | null = null
   let bestScore = 0
@@ -83,14 +85,8 @@ export function extractMap(buffer: ArrayBuffer, mapDef: MapDef): ExtractedMap {
   const elSize = dtypeSize(mapDef.dtype)
   const needed = mapDef.rows * mapDef.cols * elSize
 
-  // Try each signature
-  for (const sig of mapDef.signatures) {
-    let pos = findSignature(bytes, sig)
-    if (pos === -1) continue
-    pos += mapDef.sigOffset
-    if (pos + needed > buffer.byteLength) continue
-
-    // Read raw data
+  const readAt = (pos: number) => {
+    if (pos < 0 || pos + needed > buffer.byteLength) return null
     const raw: number[][] = []
     const phys: number[][] = []
     for (let r = 0; r < mapDef.rows; r++) {
@@ -102,7 +98,25 @@ export function extractMap(buffer: ArrayBuffer, mapDef: MapDef): ExtractedMap {
         phys[r].push(rawVal * mapDef.factor + mapDef.offsetVal)
       }
     }
-    return { mapDef, data: phys, rawData: raw, offset: pos, found: true }
+    return { raw, phys }
+  }
+
+  // Try each signature
+  for (const sig of mapDef.signatures) {
+    let pos = findSignature(bytes, sig)
+    if (pos === -1) continue
+    pos += mapDef.sigOffset
+    const result = readAt(pos)
+    if (!result) continue
+    return { mapDef, data: result.phys, rawData: result.raw, offset: pos, found: true }
+  }
+
+  // Fallback: use fixedOffset if provided (known variant-specific location)
+  if (mapDef.fixedOffset !== undefined && mapDef.fixedOffset >= 0) {
+    const result = readAt(mapDef.fixedOffset)
+    if (result) {
+      return { mapDef, data: result.phys, rawData: result.raw, offset: mapDef.fixedOffset, found: true }
+    }
   }
 
   // Not found — return zeroed placeholder
