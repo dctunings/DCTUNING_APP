@@ -1,6 +1,6 @@
 {
   "name": "dctuning-desktop",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "DCTuning Ireland — Professional ECU Tuning Suite",
   "main": "out/main/index.js",
   "scripts": {
@@ -36,7 +36,8 @@
     "productName": "DCTuning Desktop",
     "win": {
       "target": "nsis",
-      "icon": "resources/icon.ico"
+      "icon": "resources/icon.ico",
+      "requestedExecutionLevel": "requireAdministrator"
     },
     "directories": {
       "output": "release"
