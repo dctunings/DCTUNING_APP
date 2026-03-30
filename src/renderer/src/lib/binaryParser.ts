@@ -43,7 +43,7 @@ export function detectEcu(buffer: ArrayBuffer): DetectedEcu | null {
     }
   }
 
-  return bestScore > 0.15 ? best : null
+  return bestScore > 0.10 ? best : null
 }
 
 // ─── Signature search ─────────────────────────────────────────────────────────
