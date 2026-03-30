@@ -329,6 +329,7 @@ interface BridgeState {
   dllPath: string
   process: import('child_process').ChildProcess | null
   buffer: string
+  stderrLog: string
   pendingResolves: Array<(data: string) => void>
 }
 
@@ -729,6 +730,7 @@ export async function j2534Open(dllPath: string): Promise<J2534ConnectResult> {
       dllPath,
       process: proc,
       buffer: '',
+      stderrLog: '',
       pendingResolves: [],
     }
 
@@ -748,14 +750,14 @@ export async function j2534Open(dllPath: string): Promise<J2534ConnectResult> {
 
     proc.stderr!.on('data', (d: Buffer) => {
       const msg = d.toString()
-      if (!/warning|deprecated/i.test(msg)) {
-        console.error('[J2534Bridge stderr]', msg.slice(0, 200))
-      }
+      if (bridge) bridge.stderrLog += msg
+      console.error('[J2534Bridge stderr]', msg.slice(0, 500))
     })
 
-    proc.on('exit', () => {
+    proc.on('exit', (code) => {
       if (bridge?.pendingResolves) {
-        const err = JSON.stringify({ ok: false, error: 'Bridge process exited' })
+        const stderr = bridge.stderrLog.slice(0, 400).replace(/\r?\n/g, ' | ')
+        const err = JSON.stringify({ ok: false, error: `Bridge exited (code ${code})${stderr ? ': ' + stderr : ''}` })
         bridge.pendingResolves.forEach((r) => r(err))
       }
       bridge = null
