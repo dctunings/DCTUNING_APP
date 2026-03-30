@@ -4,7 +4,7 @@ import { electronAPI } from '@electron-toolkit/preload'
 const api = {
   // ─── File I/O ─────────────────────────────────────────────────────────────
   openEcuFile: () => ipcRenderer.invoke('open-ecu-file'),
-  saveEcuFile: (opts: { defaultName: string }) => ipcRenderer.invoke('save-ecu-file', opts),
+  saveEcuFile: (opts: { defaultName: string; buffer: number[] }) => ipcRenderer.invoke('save-ecu-file', opts),
   listSerialPorts: () => ipcRenderer.invoke('list-serial-ports'),
 
   // ─── OBD2 / ELM327 ────────────────────────────────────────────────────────

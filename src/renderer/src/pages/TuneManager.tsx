@@ -270,13 +270,19 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
         .from('tune-files')
         .download(storagePath)
       if (error) throw error
-      const buffer = await data.arrayBuffer()
+      const arrayBuf = await data.arrayBuffer()
       const filename = entry.original_file_name || entry.storage_path
       const api = (window as any).api
       if (api?.saveEcuFile) {
-        await api.saveEcuFile(buffer, filename)
+        // Pass buffer as plain number array (safe across IPC boundary)
+        const result = await api.saveEcuFile({
+          defaultName: filename,
+          buffer: Array.from(new Uint8Array(arrayBuf)),
+        })
+        if (!result?.ok) return // user cancelled
       } else {
-        const blob = new Blob([buffer], { type: 'application/octet-stream' })
+        // Web fallback
+        const blob = new Blob([arrayBuf], { type: 'application/octet-stream' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url; a.download = filename; a.click()

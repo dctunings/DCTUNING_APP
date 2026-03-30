@@ -138,13 +138,19 @@ app.whenReady().then(() => {
   })
 
   // IPC: Save file dialog
-  ipcMain.handle('save-ecu-file', async (_, { defaultName }) => {
+  ipcMain.handle('save-ecu-file', async (_, { defaultName, buffer }: { defaultName: string; buffer: number[] }) => {
+    const ext = defaultName.split('.').pop()?.toLowerCase() || 'bin'
     const result = await dialog.showSaveDialog({
       title: 'Save ECU File',
       defaultPath: defaultName,
-      filters: [{ name: 'ECU Files', extensions: ['bin', 'hex'] }]
+      filters: [
+        { name: 'ECU Files', extensions: ['bin', 'ori', 'hex', 'map', 'damos', 'kp'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
     })
-    return result.canceled ? null : result.filePath
+    if (result.canceled || !result.filePath) return { ok: false }
+    fs.writeFileSync(result.filePath, Buffer.from(buffer))
+    return { ok: true, filePath: result.filePath }
   })
 
   // IPC: List serial ports
