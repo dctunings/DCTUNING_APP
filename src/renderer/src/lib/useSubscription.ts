@@ -84,10 +84,18 @@ export function useSubscription(user: User | null): SubscriptionState & {
     daysRemaining = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
   }
 
+  const openUrl = (url: string) => {
+    // In Electron, open in default browser so the app window isn't replaced
+    if (window.electron?.shell?.openExternal) {
+      window.electron.shell.openExternal(url)
+    } else {
+      window.location.href = url
+    }
+  }
+
   const createCheckoutSession = async (planId: string, interval: 'monthly' | 'yearly') => {
     const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true'
     if (isDemoMode) {
-      console.log('[Demo] createCheckoutSession called', { planId, interval })
       alert('Stripe not configured — add STRIPE_SECRET_KEY to Supabase Edge Function env vars')
       return
     }
@@ -96,7 +104,12 @@ export function useSubscription(user: User | null): SubscriptionState & {
         body: { planId, interval, userId: user?.id, userEmail: user?.email }
       })
       if (error) throw error
-      if (data?.url) window.location.href = data.url
+      if (data?.url) {
+        openUrl(data.url)
+        if (window.electron?.shell?.openExternal) {
+          setTimeout(() => loadData(), 10000)
+        }
+      }
     } catch (e) {
       console.error('Checkout error:', e)
       alert('Failed to start checkout. Please try again.')
@@ -106,7 +119,6 @@ export function useSubscription(user: User | null): SubscriptionState & {
   const openCustomerPortal = async () => {
     const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true'
     if (isDemoMode) {
-      console.log('[Demo] openCustomerPortal called')
       alert('Stripe not configured — add STRIPE_SECRET_KEY to Supabase Edge Function env vars')
       return
     }
@@ -115,7 +127,7 @@ export function useSubscription(user: User | null): SubscriptionState & {
         body: { userId: user?.id }
       })
       if (error) throw error
-      if (data?.url) window.location.href = data.url
+      if (data?.url) openUrl(data.url)
     } catch (e) {
       console.error('Portal error:', e)
       alert('Failed to open billing portal. Please try again.')
