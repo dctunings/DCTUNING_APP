@@ -198,15 +198,11 @@ export default function App() {
   // Remove landing mode when app is running
   document.documentElement.classList.remove('landing-mode')
 
-  // Desktop sign-in modal
-  if (showAuthModal && !user) {
+  // Desktop: always show login screen if not authenticated
+  if (!isWebMode() && !user && !authLoading) {
     return (
       <LoginScreen
-        signIn={async (email, password) => {
-          const err = await signIn(email, password)
-          if (!err) setShowAuthModal(false)
-          return err
-        }}
+        signIn={signIn}
         signUp={signUp}
       />
     )
