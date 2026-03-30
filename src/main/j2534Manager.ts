@@ -752,8 +752,12 @@ export async function j2534Open(dllPath: string): Promise<J2534ConnectResult> {
     // Write the script to PowerShell stdin
     proc.stdin!.write(script + '\n')
 
-    // Send open command
-    const result = await sendBridgeCommand({ action: 'open' }, 10000)
+    // Wait for Add-Type C# compilation before sending open command.
+    // On first run, PowerShell compiles the inline C# assembly which can take 10-25s.
+    await new Promise((r) => setTimeout(r, 8000))
+
+    // Send open command — allow 25s for PassThruOpen (device init can be slow)
+    const result = await sendBridgeCommand({ action: 'open' }, 25000)
     const parsed = JSON.parse(result)
     if (parsed.ok) {
       bridge.deviceId = parsed.deviceId
