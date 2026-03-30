@@ -20,6 +20,7 @@
 import { execSync, spawn } from 'child_process'
 import path from 'path'
 import fs from 'fs'
+import { app } from 'electron'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -710,16 +711,17 @@ export async function j2534Open(dllPath: string): Promise<J2534ConnectResult> {
     // Close existing bridge if any
     await j2534Close()
 
-    const script = buildBridgeScript(dllPath)
+    // Locate the pre-compiled 32-bit j2534helper.exe bundled with the app.
+    // It loads the DLL directly and communicates via JSON on stdin/stdout.
+    const helperExe = app.isPackaged
+      ? path.join(process.resourcesPath, 'j2534helper.exe')
+      : path.join(__dirname, '../../resources/j2534helper.exe')
 
-    // Write bridge script to a temp .ps1 file so PowerShell runs it via -File.
-    // Using -Command - mixes the script with our JSON commands on the same stdin stream.
-    // -File keeps stdin exclusively for JSON IPC commands.
-    const os = await import('os')
-    const tmpScript = path.join(os.tmpdir(), 'dctuning_j2534_bridge.ps1')
-    fs.writeFileSync(tmpScript, script, 'utf8')
+    if (!fs.existsSync(helperExe)) {
+      return { ok: false, error: 'j2534helper.exe not found at: ' + helperExe }
+    }
 
-    const proc = spawn(PS32, ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', tmpScript], {
+    const proc = spawn(helperExe, [dllPath], {
       stdio: ['pipe', 'pipe', 'pipe'],
       windowsHide: true,
     })
@@ -761,7 +763,6 @@ export async function j2534Open(dllPath: string): Promise<J2534ConnectResult> {
         bridge.pendingResolves.forEach((r) => r(err))
       }
       bridge = null
-      try { fs.unlinkSync(tmpScript) } catch { /* ignore */ }
     })
 
     // Send open command — allow 25s for Add-Type compilation + PassThruOpen
