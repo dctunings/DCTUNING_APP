@@ -52,6 +52,7 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
   const [libLoading, setLibLoading] = useState(false)
   const [libSearch, setLibSearch] = useState('')
   const [libMake, setLibMake] = useState('')
+  const [libStage, setLibStage] = useState<string>('all')
   const [libTotal, setLibTotal] = useState(0)
   const [libPage, setLibPage] = useState(0)
   const LIB_PAGE_SIZE = 50
@@ -177,12 +178,22 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
     setWatchedFiles(files)
   }
 
+  const STAGE_FILTERS: { label: string; value: string; remap_types?: string[] }[] = [
+    { label: 'All',     value: 'all' },
+    { label: 'Stage 1', value: 'stage1', remap_types: ['Stage 1'] },
+    { label: 'Stage 2', value: 'stage2', remap_types: ['Stage 2'] },
+    { label: 'Stage 3', value: 'stage3', remap_types: ['Stage 3'] },
+    { label: 'Emissions', value: 'emissions', remap_types: ['DPF Off','EGR Off','Adblue Off','Pop & Bang'] },
+    { label: 'Original', value: 'original', remap_types: ['Original'] },
+  ]
+
   const searchLibrary = useCallback(async (page = 0) => {
     setLibLoading(true)
     let query = supabase
       .from('library_entries')
       .select('id,vehicle_make,vehicle_model,vehicle_fuel,remap_type,original_file_name,original_file_path,original_file_size,ecu_type,storage_path,storage_uploaded', { count: 'exact' })
       .eq('storage_uploaded', true)
+      .eq('is_visible', true)
       .range(page * LIB_PAGE_SIZE, (page + 1) * LIB_PAGE_SIZE - 1)
 
     if (libMake) query = query.ilike('vehicle_make', `%${libMake}%`)
@@ -190,6 +201,10 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
       query = query.or(
         `vehicle_make.ilike.%${libSearch}%,vehicle_model.ilike.%${libSearch}%,original_file_name.ilike.%${libSearch}%,remap_type.ilike.%${libSearch}%,ecu_type.ilike.%${libSearch}%`
       )
+    }
+    const activeStage = STAGE_FILTERS.find(s => s.value === libStage)
+    if (activeStage?.remap_types) {
+      query = query.in('remap_type', activeStage.remap_types)
     }
     query = query.order('vehicle_make').order('vehicle_model')
 
@@ -200,11 +215,11 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
       setLibPage(page)
     }
     setLibLoading(false)
-  }, [libSearch, libMake])
+  }, [libSearch, libMake, libStage])
 
   useEffect(() => {
     if (tab === 'library') searchLibrary(0)
-  }, [tab, libSearch, libMake])
+  }, [tab, libSearch, libMake, libStage])
 
   const clearWatchFolder = () => {
     if (watchIntervalRef.current) clearInterval(watchIntervalRef.current)
@@ -375,14 +390,14 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
           <>
             <input
               value={libMake}
-              onChange={(e) => setLibMake(e.target.value)}
+              onChange={(e) => { setLibMake(e.target.value); setLibPage(0) }}
               placeholder="Make (e.g. BMW)"
               style={{ width: 130, height: 34 }}
             />
             <input
               value={libSearch}
-              onChange={(e) => setLibSearch(e.target.value)}
-              placeholder="Model / filename / type..."
+              onChange={(e) => { setLibSearch(e.target.value); setLibPage(0) }}
+              placeholder="Model / ECU / filename..."
               style={{ flex: 1, minWidth: 120, height: 34 }}
             />
           </>
@@ -451,9 +466,37 @@ CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id
         <div>
           {tab === 'library' && (
             <>
+              {/* Stage filter pills */}
+              <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+                {STAGE_FILTERS.map(s => {
+                  const stageColors: Record<string, string> = {
+                    stage1: '#00aec8', stage2: '#ff9500', stage3: '#ff4500',
+                    emissions: '#888', original: '#666', all: 'var(--accent)',
+                  }
+                  const active = libStage === s.value
+                  const col = stageColors[s.value] || '#888'
+                  return (
+                    <button
+                      key={s.value}
+                      onClick={() => { setLibStage(s.value); setLibPage(0) }}
+                      style={{
+                        padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700,
+                        border: `1px solid ${active ? col : 'rgba(255,255,255,0.1)'}`,
+                        background: active ? `${col}22` : 'transparent',
+                        color: active ? col : 'rgba(255,255,255,0.4)',
+                        cursor: 'pointer', fontFamily: 'Manrope, sans-serif',
+                        transition: 'all .15s',
+                      }}
+                    >
+                      {s.label}
+                    </button>
+                  )
+                })}
+              </div>
+
               {/* Stats bar */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, fontSize: 12, color: 'var(--text-muted)' }}>
-                <span>{libTotal.toLocaleString()} entries in library</span>
+                <span>{libTotal.toLocaleString()} entries{libStage !== 'all' ? ` · ${STAGE_FILTERS.find(s => s.value === libStage)?.label}` : ''}</span>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   {libPage > 0 && (
                     <button className="btn btn-ghost" style={{ fontSize: 11, padding: '4px 10px' }} onClick={() => searchLibrary(libPage - 1)}>← Prev</button>
