@@ -2,6 +2,23 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import fs from 'fs'
+import { execSync, spawnSync } from 'child_process'
+
+// Re-launch as Administrator if not already elevated (required for J2534/SmUsb access)
+if (process.platform === 'win32' && !is.dev) {
+  try {
+    execSync('net session', { windowsHide: true, stdio: 'ignore' })
+  } catch {
+    // Not admin — re-launch elevated via PowerShell
+    const exePath = process.execPath
+    spawnSync('powershell.exe', [
+      '-WindowStyle', 'Hidden',
+      '-Command',
+      `Start-Process -FilePath "${exePath}" -Verb RunAs`
+    ], { windowsHide: true })
+    app.quit()
+  }
+}
 import {
   obdConnect,
   obdDisconnect,
