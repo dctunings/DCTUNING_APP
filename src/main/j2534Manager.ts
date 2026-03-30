@@ -405,6 +405,11 @@ $channelId = 0
 $filterId  = 0
 $connected = $false
 
+# Force stdout to auto-flush so Node.js subprocess receives each response immediately
+$stdout = New-Object System.IO.StreamWriter([Console]::OpenStandardOutput())
+$stdout.AutoFlush = $true
+[Console]::SetOut($stdout)
+
 while ($true) {
     $line = [Console]::ReadLine()
     if ($null -eq $line) { break }
