@@ -35,7 +35,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
     const s = Date.now(), d = 2200
     const tick = () => {
       const p = Math.min(1, (Date.now()-s)/d), e = 1-Math.pow(1-p, 3)
-      setCounts({ files: Math.round(e*80000), drt: Math.round(e*50000) })
+      setCounts({ files: Math.round(e*38977), drt: Math.round(e*16000) })
       if (p < 1) requestAnimationFrame(tick)
     }
     requestAnimationFrame(tick)
@@ -178,7 +178,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
         </div>
         <div style={{display:'flex',gap:10}}>
           <button className="nav-signin" onClick={onSignIn} style={{padding:'9px 20px',borderRadius:9,fontSize:13,fontFamily:'inherit',fontWeight:600,background:'transparent',border:'1.5px solid rgba(0,0,0,.18)',color:'rgba(0,0,0,.6)',cursor:'pointer',transition:'all .18s'}}>Sign In</button>
-          <button className="btn-cta" onClick={onSignUp} style={{padding:'9px 20px',borderRadius:9,fontSize:13,animation:'glowBtn 3s ease infinite'}}>Start Free Trial</button>
+          <button className="btn-cta" onClick={onSignUp} style={{padding:'9px 20px',borderRadius:9,fontSize:13,animation:'glowBtn 3s ease infinite'}}>Try Free — Limited Time</button>
         </div>
       </nav>
 
@@ -214,7 +214,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
           </p>
 
           <div className="hero-btns" style={{display:'flex',gap:12,marginBottom:48}}>
-            <button className="btn-cta" onClick={onSignUp} style={{padding:'15px 34px',borderRadius:12,fontSize:15,animation:'glowBtn 3s ease infinite'}}>Start 7-Day Free Trial →</button>
+            <button className="btn-cta" onClick={onSignUp} style={{padding:'15px 34px',borderRadius:12,fontSize:15,animation:'glowBtn 3s ease infinite'}}>Try For Free — Limited Time →</button>
             <button className="btn-out-dark" onClick={onSignIn} style={{padding:'15px 26px',borderRadius:12,fontSize:15}}>Sign In</button>
           </div>
 
@@ -223,8 +223,8 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
             {[
               {n:`${Math.round(counts.files/1000)}k+`,l:'Tuning Files'},
               {n:`${Math.round(counts.drt/1000)}k+`,  l:'DRT Drivers'},
-              {n:'4',    l:'ECU Families'},
-              {n:'7 day',l:'Free Trial'},
+              {n:'13',   l:'ECU Families'},
+              {n:'Free',l:'Limited Trial'},
             ].map((s,i)=>(
               <div key={s.l} style={{padding:'18px 14px',textAlign:'center',borderLeft:i>0?'1px solid rgba(255,255,255,.08)':'none'}}>
                 <div style={{fontSize:28,fontWeight:800,letterSpacing:'-1px',lineHeight:1,color:'#00aec8'}}>{s.n}</div>
@@ -351,9 +351,9 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
           {/* Feature list */}
           <div className="gc" style={{padding:0}}>
             {[
-              {icon:'📚',title:'80k+ File Library',     sub:'PRO',  desc:'Original + tuned BIN pairs. Smart Match finds the closest calibration in seconds.'},
+              {icon:'📚',title:'39k+ File Library',     sub:'PRO',  desc:'Original + tuned BIN pairs. Smart Match finds the closest calibration in seconds.'},
               {icon:'🔍',title:'VIN Decoder',            sub:null,   desc:'Full vehicle spec from any VIN — make, model, engine, ECU type.'},
-              {icon:'📄',title:'50k DRT Drivers',        sub:null,   desc:'Every ECM Titanium .drt driver parsed — exact map addresses and axis scaling.'},
+              {icon:'📄',title:'16k DRT Drivers',        sub:null,   desc:'Every ECM Titanium .drt driver parsed — exact map addresses and axis scaling.'},
               {icon:'📐',title:'A2L / ASAP2 Support',    sub:null,   desc:'OEM A2L files from Bosch, Continental and Siemens — precise map addresses.'},
               {icon:'🔌',title:'Device Library',         sub:null,   desc:'PCMFlash, KT200, KESS3, K-TAG — compatibility ratings for every tool.'},
             ].map(f=>(
@@ -376,8 +376,8 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
           {[
             {n:`${Math.round(counts.files/1000)}k+`,l:'Tuning files in library'},
             {n:`${Math.round(counts.drt/1000)}k+`,  l:'ECM Titanium DRT drivers'},
-            {n:'6,600+',l:'A2L / ASAP2 definitions'},
-            {n:'4 ECU', l:'Supported families'},
+            {n:'4,400+',l:'A2L / ASAP2 definitions'},
+            {n:'13',    l:'ECU families supported'},
           ].map((s,i)=>(
             <div key={s.l} style={{position:'relative',padding:'8px 24px',borderLeft:i>0?'1px solid rgba(255,255,255,.08)':'none'}}>
               <div style={{fontSize:34,fontWeight:800,color:'#00aec8',lineHeight:1,letterSpacing:'-1.2px'}}>{s.n}</div>
@@ -412,7 +412,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
             },
             {name:'Pro',mo:99,yr:79,hot:true,
              features:['Everything in Starter','Unlimited remaps','80,000+ file library','50,000 DRT definitions','Smart Match engine','Priority support'],
-             cta:'Start Free Trial →',
+             cta:'Try For Free →',
              btn:{background:'linear-gradient(135deg,#00cce0,#008fab)',color:'#000',border:'none',boxShadow:'0 4px 20px rgba(0,174,200,.45)',animation:'glowBtn 3s ease infinite'},
             },
             {name:'Agency',mo:199,yr:159,hot:false,
@@ -454,7 +454,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
         </div>
 
         <p style={{textAlign:'center',marginTop:26,fontSize:13,color:'rgba(0,0,0,.45)',fontWeight:500}}>
-          7-day free trial on all plans · No credit card required · Cancel anytime
+          Limited time free trial · No credit card required · Cancel anytime
         </p>
       </section>
 
@@ -466,7 +466,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
             Join professional tuners building better remaps, faster — no installs, no dongles, no hassle.
           </p>
           <button className="btn-cta" onClick={onSignUp} style={{padding:'15px 32px',borderRadius:13,fontSize:15,animation:'glowBtn 3s ease infinite',position:'relative',fontWeight:700,maxWidth:'100%'}}>
-            Start Free Trial — No Card Required →
+            Try For Free — No Card Required →
           </button>
         </div>
       </section>

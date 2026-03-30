@@ -1,6 +1,7 @@
 import type { Page } from '../App'
 import type { User } from '@supabase/supabase-js'
 import type { Subscription } from '../lib/useSubscription'
+import logoUrl from '../assets/logo.jpg'
 
 interface Props {
   currentPage: Page
@@ -185,7 +186,7 @@ export default function Sidebar({ currentPage, setPage, user, subscription, isAc
       <div className="sidebar-logo">
         <div className="sidebar-logo-mark">
           <div style={{ width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(0,174,200,.6)', boxShadow: '0 0 18px rgba(0,174,200,.35), 0 0 6px rgba(0,174,200,.2)', flexShrink: 0, background: '#000' }}>
-            <img src="/logo.jpg" alt="DC" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            <img src={logoUrl} alt="DC" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           </div>
           <div className="sidebar-logo-text">
             <div className="sidebar-logo-name" style={{ fontSize: 14, letterSpacing: '-0.4px' }}>DCTuning</div>
