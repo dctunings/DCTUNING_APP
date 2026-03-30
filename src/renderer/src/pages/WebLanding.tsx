@@ -223,7 +223,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
             {[
               {n:`${Math.round(counts.files/1000)}k+`,l:'Tuning Files'},
               {n:`${Math.round(counts.drt/1000)}k+`,  l:'DRT Drivers'},
-              {n:'13',   l:'ECU Families'},
+              {n:'20+',  l:'ECU Families'},
               {n:'Free',l:'Limited Trial'},
             ].map((s,i)=>(
               <div key={s.l} style={{padding:'18px 14px',textAlign:'center',borderLeft:i>0?'1px solid rgba(255,255,255,.08)':'none'}}>
@@ -377,7 +377,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
             {n:`${Math.round(counts.files/1000)}k+`,l:'Tuning files in library'},
             {n:`${Math.round(counts.drt/1000)}k+`,  l:'ECM Titanium DRT drivers'},
             {n:'4,400+',l:'A2L / ASAP2 definitions'},
-            {n:'13',    l:'ECU families supported'},
+            {n:'20+',   l:'ECU families supported'},
           ].map((s,i)=>(
             <div key={s.l} style={{position:'relative',padding:'8px 24px',borderLeft:i>0?'1px solid rgba(255,255,255,.08)':'none'}}>
               <div style={{fontSize:34,fontWeight:800,color:'#00aec8',lineHeight:1,letterSpacing:'-1.2px'}}>{s.n}</div>
