@@ -711,7 +711,14 @@ export async function j2534Open(dllPath: string): Promise<J2534ConnectResult> {
 
     const script = buildBridgeScript(dllPath)
 
-    const proc = spawn(PS32, ['-NoProfile', '-NonInteractive', '-Command', '-'], {
+    // Write bridge script to a temp .ps1 file so PowerShell runs it via -File.
+    // Using -Command - mixes the script with our JSON commands on the same stdin stream.
+    // -File keeps stdin exclusively for JSON IPC commands.
+    const os = await import('os')
+    const tmpScript = path.join(os.tmpdir(), 'dctuning_j2534_bridge.ps1')
+    fs.writeFileSync(tmpScript, script, 'utf8')
+
+    const proc = spawn(PS32, ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', tmpScript], {
       stdio: ['pipe', 'pipe', 'pipe'],
       windowsHide: true,
     })
@@ -752,12 +759,10 @@ export async function j2534Open(dllPath: string): Promise<J2534ConnectResult> {
         bridge.pendingResolves.forEach((r) => r(err))
       }
       bridge = null
+      try { fs.unlinkSync(tmpScript) } catch { /* ignore */ }
     })
 
-    // Write the script to PowerShell stdin
-    proc.stdin!.write(script + '\n')
-
-    // Send open command — allow 25s for PassThruOpen (device init can be slow)
+    // Send open command — allow 25s for Add-Type compilation + PassThruOpen
     const result = await sendBridgeCommand({ action: 'open' }, 25000)
     const parsed = JSON.parse(result)
     if (parsed.ok) {
