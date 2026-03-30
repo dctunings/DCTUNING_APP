@@ -65,7 +65,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch MED17',
     manufacturer: 'Bosch',
     family: 'MED17',
-    identStrings: ['MED17', 'ME17', '0261S', 'BOSCH', 'MEDG17'],
+    identStrings: ['MED17', 'ME17', '0261S', 'MEDG17', 'MED1750'],
     fileSizeRange: [524288, 2097152],   // 512KB – 2MB
     vehicles: ['VW Golf GTI Mk6/7', 'Audi A3/S3 8P/8V', 'Seat Leon Cupra', 'Skoda Octavia vRS', 'VW Polo GTI', 'Audi TTS'],
     checksumAlgo: 'bosch-crc32',
@@ -179,13 +179,240 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── Bosch EDC15 (VAG TDI 1.9 / 2.0 diesel, late 90s – early 2000s) ──────
+  {
+    id: 'edc15',
+    name: 'Bosch EDC15',
+    manufacturer: 'Bosch',
+    family: 'EDC15',
+    identStrings: ['EDC15', 'EDC 15', '0281001', 'EDC-15'],
+    fileSizeRange: [262144, 524288],   // 256KB – 512KB
+    vehicles: ['Audi A4 1.9 TDI', 'VW Passat 1.9 TDI', 'VW Golf Mk4 1.9 TDI', 'Skoda Octavia 1.9 TDI', 'Seat Leon 1.9 TDI', 'Audi A3 1.9 TDI'],
+    checksumAlgo: 'bosch-simple',
+    checksumOffset: 0x7FFF0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc15_boost_target',
+        name: 'Boost Pressure Target (LADSOLL)',
+        category: 'boost',
+        desc: 'Desired boost pressure map (LADSOLL). RPM vs load. Primary Stage 1 map for 1.9 TDI — raises charge air pressure target.',
+        signatures: [
+          [0x4C,0x41,0x44,0x53,0x4F,0x4C,0x4C],          // "LADSOLL"
+          [0x4C,0x44,0x52,0x58,0x4E,0x00],                // "LDRXN\0"
+          [0x4C,0x41,0x44,0x45,0x44,0x52,0x55,0x43,0x4B], // "LADEDRUCK"
+        ],
+        sigOffset: 2,
+        rows: 9, cols: 11, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.38, clampMax: 52000 },
+        critical: true, showPreview: true,
+        addonOverrides: {},
+      },
+      {
+        id: 'edc15_fuel_quantity',
+        name: 'Injection Quantity Map (MENZK)',
+        category: 'fuel',
+        desc: 'Fuel injection quantity base map (MENZK). mg/stroke vs RPM and load. Raising this increases torque across the rev range.',
+        signatures: [
+          [0x4D,0x45,0x4E,0x5A,0x4B,0x00],                // "MENZK\0"
+          [0x4B,0x46,0x4D,0x53,0x4E,0x57,0x44,0x4B],      // "KFMSNWDK"
+          [0x45,0x49,0x4E,0x53,0x50,0x52,0x5A,0x4B],      // "EINSPRZK"
+        ],
+        sigOffset: 2,
+        rows: 9, cols: 11, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.22 },
+        stage3: { multiplier: 1.32, clampMax: 62000 },
+        critical: true, showPreview: true,
+        addonOverrides: {},
+      },
+      {
+        id: 'edc15_torque_limit',
+        name: 'Max Torque Map (MXMOM)',
+        category: 'torque',
+        desc: 'Maximum torque ceiling (MXMOM). Raise to match new fuel and boost levels — stock limit will silently cap power gains.',
+        signatures: [
+          [0x4D,0x58,0x4D,0x4F,0x4D,0x00],                // "MXMOM\0"
+          [0x4D,0x58,0x4D,0x4F,0x4D,0x53,0x41],           // "MXMOMSA"
+          [0x54,0x51,0x4C,0x49,0x4D,0x44,0x43],           // "TQLIMDС"
+        ],
+        sigOffset: 2,
+        rows: 1, cols: 8, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.25 },
+        stage2: { multiplier: 1.40 },
+        stage3: { multiplier: 1.55, clampMax: 65000 },
+        critical: true, showPreview: true,
+        addonOverrides: {},
+      },
+      {
+        id: 'edc15_egr_map',
+        name: 'EGR Flow Map (EGRKL)',
+        category: 'emission',
+        desc: 'EGR valve duty by RPM and load (EGRKL). Zeroed for EGR delete — reduces intake carbon, lowers intake temps.',
+        signatures: [
+          [0x45,0x47,0x52,0x4B,0x4C,0x00],                // "EGRKL\0"
+          [0x45,0x47,0x52,0x46,0x4C,0x4F,0x57],           // "EGRFLOW"
+        ],
+        sigOffset: 2,
+        rows: 8, cols: 8, dtype: 'uint8', le: true,
+        factor: 0.4, offsetVal: 0, unit: '%',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          egr: { multiplier: 0, clampMax: 0 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc15_speed_limit',
+        name: 'Vehicle Speed Limiter (VMAX)',
+        category: 'limiter',
+        desc: 'Factory speed limiter value (VMAX). Set to maximum to remove software speed restriction.',
+        signatures: [
+          [0x56,0x4D,0x41,0x58,0x00],                     // "VMAX\0"
+          [0x56,0x53,0x4C,0x49,0x4D,0x49,0x54],           // "VSLIMIT"
+        ],
+        sigOffset: 1,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'km/h',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          speedlimiter: { multiplier: 0, addend: 65535 },
+        },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ── Bosch EDC16 (VAG TDI 2.0, 3.0 diesel, 2004–2009) ────────────────────
+  {
+    id: 'edc16',
+    name: 'Bosch EDC16',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['EDC16', 'EDC 16', '0281010', '0281011', '0281012'],
+    fileSizeRange: [524288, 1048576],   // 512KB – 1MB
+    vehicles: ['VW Golf Mk5 2.0 TDI', 'Audi A4 2.0 TDI', 'VW Passat 2.0 TDI', 'Seat Leon 2.0 TDI', 'Skoda Octavia 2.0 TDI', 'Audi A6 3.0 TDI'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFF4,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_boost_target',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Desired charge air pressure vs RPM and load. Key Stage 1 map — safe +18% gives strong mid-range torque without hardware changes.',
+        signatures: [
+          [0x4C,0x4C,0x53,0x4F,0x4C,0x4C],                // "LLSOLL"
+          [0x4C,0x41,0x44,0x53,0x4F,0x4C,0x4C],           // "LADSOLL"
+          [0x42,0x53,0x54,0x47,0x54,0x44,0x43],           // "BSTGTDC"
+        ],
+        sigOffset: 4,
+        rows: 11, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.18 },
+        stage2: { multiplier: 1.28 },
+        stage3: { multiplier: 1.40, clampMax: 54000 },
+        critical: true, showPreview: true,
+        addonOverrides: {},
+      },
+      {
+        id: 'edc16_fuel_quantity',
+        name: 'Injection Quantity Map',
+        category: 'fuel',
+        desc: 'Fuel injection quantity map in mg/stroke. Primary diesel power map — raising this increases torque across all RPM.',
+        signatures: [
+          [0x4D,0x45,0x4E,0x5A,0x4B,0x00],                // "MENZK\0"
+          [0x49,0x4E,0x4A,0x51,0x54,0x59,0x44,0x43],      // "INJQTYDC"
+          [0x46,0x55,0x45,0x4C,0x51,0x54,0x59,0x01],      // "FUELQTY\1"
+        ],
+        sigOffset: 4,
+        rows: 11, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.24 },
+        stage3: { multiplier: 1.35, clampMax: 62000 },
+        critical: true, showPreview: true,
+        addonOverrides: {},
+      },
+      {
+        id: 'edc16_torque_limit',
+        name: 'Torque Limitation Map',
+        category: 'torque',
+        desc: 'Maximum torque ceiling by RPM. Must be raised when increasing fuel/boost to prevent silent power cap.',
+        signatures: [
+          [0x4D,0x58,0x4D,0x4F,0x4D,0x00],                // "MXMOM\0"
+          [0x54,0x51,0x4C,0x49,0x4D,0x44,0x43],           // "TQLIMDС"
+          [0x54,0x4F,0x52,0x51,0x4C,0x44,0x43,0x01],      // "TORQLDC\1"
+        ],
+        sigOffset: 2,
+        rows: 8, cols: 8, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.28 },
+        stage2: { multiplier: 1.42 },
+        stage3: { multiplier: 1.60, clampMax: 65000 },
+        critical: true, showPreview: true,
+        addonOverrides: {},
+      },
+      {
+        id: 'edc16_dpf_regen',
+        name: 'DPF Regeneration Threshold',
+        category: 'emission',
+        desc: 'DPF soot load threshold triggering regen. Zeroed for DPF delete.',
+        signatures: [
+          [0x44,0x50,0x46,0x52,0x45,0x47,0x54,0x48],      // "DPFREGTH"
+          [0x44,0x50,0x46,0x53,0x4F,0x4F,0x54],           // "DPFSOOT"
+        ],
+        sigOffset: 4,
+        rows: 4, cols: 4, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'g/L',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          dpf: { multiplier: 0, clampMax: 0 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc16_egr_map',
+        name: 'EGR Flow Map',
+        category: 'emission',
+        desc: 'EGR valve duty cycle map. Zeroed for EGR delete — reduces carbon buildup and intake temps.',
+        signatures: [
+          [0x45,0x47,0x52,0x4B,0x4C,0x00],                // "EGRKL\0"
+          [0x45,0x47,0x52,0x46,0x4C,0x4F,0x57],           // "EGRFLOW"
+          [0x41,0x47,0x52,0x46,0x4C,0x4F,0x57],           // "AGRFLOW"
+        ],
+        sigOffset: 4,
+        rows: 8, cols: 12, dtype: 'uint8', le: true,
+        factor: 0.4, offsetVal: 0, unit: '%',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          egr: { multiplier: 0, clampMax: 0 },
+        },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
   // ── Bosch EDC17 (VAG/BMW diesel) ─────────────────────────────────────────
   {
     id: 'edc17',
     name: 'Bosch EDC17',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['EDC17', 'EDC 17', '0281', 'BOSCH', 'EDCD17'],
+    identStrings: ['EDC17', 'EDC 17', '0281013', '0281014', '0281015', '0281016', '0281017', 'EDCD17'],
     fileSizeRange: [524288, 2097152],
     vehicles: ['VW Golf GTD Mk6/7', 'Audi A4 2.0 TDI', 'BMW 320d/520d', 'VW Passat TDI', 'Skoda Superb TDI', 'Seat Ibiza TDI'],
     checksumAlgo: 'bosch-crc32',
