@@ -680,8 +680,23 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           </div>
         </div>
       ) : (
-        <div style={{ marginBottom: 20, padding: '14px 16px', borderRadius: 10, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#f59e0b', fontSize: 12 }}>
-          ECU not automatically detected — please select manually below.
+        <div style={{ marginBottom: 20, padding: '16px 18px', borderRadius: 10, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b' }} />
+            <span style={{ fontSize: 13, fontWeight: 800, color: '#f59e0b' }}>ECU Not Recognised</span>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>{(fileSize / 1024).toFixed(0)} KB</span>
+          </div>
+          {fileSize < 131072 ? (
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+              <div style={{ marginBottom: 6 }}>This file is <strong style={{ color: '#f59e0b' }}>{(fileSize / 1024).toFixed(0)} KB</strong> — likely a pre-OBD ECU (pre-1996) or a partial calibration-only read.</div>
+              <div>Pre-OBD ECUs (Digifant, Motronic 1.x/2.x, early K-Jetronic) are not supported for software remapping — they require hardware chip replacement. If this is a modern ECU, the file may be incomplete — re-read with your flashing tool.</div>
+            </div>
+          ) : (
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+              <div style={{ marginBottom: 6 }}>No matching ECU definition found for this binary. This may be an unsupported variant or the binary may be encrypted.</div>
+              <div>You can manually select the closest ECU family below, or contact DCTuning to add support for this file.</div>
+            </div>
+          )}
         </div>
       )}
 
