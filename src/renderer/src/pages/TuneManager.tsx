@@ -194,6 +194,7 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
       .select('id,vehicle_make,vehicle_model,vehicle_fuel,remap_type,original_file_name,original_file_path,original_file_size,ecu_type,storage_path,storage_uploaded', { count: 'exact' })
       .eq('storage_uploaded', true)
       .eq('is_visible', true)
+      .gte('original_file_size', 131072)
       .range(page * LIB_PAGE_SIZE, (page + 1) * LIB_PAGE_SIZE - 1)
 
     if (libMake) query = query.ilike('vehicle_make', `%${libMake}%`)
