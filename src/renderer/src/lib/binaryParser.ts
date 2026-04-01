@@ -43,10 +43,13 @@ export function detectEcu(buffer: ArrayBuffer): DetectedEcu | null {
     // Require at least one ident string match — size alone is not sufficient
     if (matched.length === 0) continue
 
-    // Score: reward any match heavily; additional matches increase confidence.
-    // Using min(matched, 3)/3 so 3+ matches = full string score — avoids penalising
-    // ECUs that have fewer identStrings vs ones that have many.
-    const stringScore = Math.min(matched.length, 3) / 3
+    // Length-weighted scoring: longer strings are more specific and count for more.
+    // "EDC17CP20" (9 chars) outweighs "EDC16" (5 chars) — prevents a binary that
+    // contains both EDC16 and EDC17 strings from resolving to the wrong family.
+    const qualifiedStrings = def.identStrings.filter(s => s.length >= 4)
+    const matchedWeight  = matched.reduce((sum, s) => sum + s.length, 0)
+    const totalWeight    = qualifiedStrings.reduce((sum, s) => sum + s.length, 0)
+    const stringScore    = totalWeight > 0 ? matchedWeight / totalWeight : 0
     const score = stringScore * 0.7 + (sizeOk ? 0.3 : 0)
     if (score > bestScore) {
       bestScore = score
