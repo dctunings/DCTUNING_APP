@@ -26,8 +26,8 @@ const DRIVERS: DriverDef[] = [
   },
   {
     id: 'scanmatik',
-    label: 'Scanmatik Software & USB Driver (v2.21.32)',
-    description: 'Installs the Scanmatik software, SmUsb USB driver and smj2534.dll J2534 PassThru interface. Works with both genuine and clone SM2 Pro / SM3 Pro units. Required for DCTuning to communicate with your device.',
+    label: 'Scanmatik Software & USB Driver (v2.21.22)',
+    description: 'Installs the Scanmatik software, SmUsb USB driver and smj2534.dll J2534 PassThru interface. Works with genuine and clone SM2 Pro / SM3 Pro units including PCMTuner clones. Required for DCTuning to communicate with your device.',
     devices: ['SM2 Pro (genuine)', 'SM2 Pro clone', 'SM3 Pro (genuine)', 'SM3 Pro clone', 'KT200 Plus', 'KTflash adapter'],
     bundledFile: 'scanmatik_setup.exe',
     vidPid: 'VID_20A2&PID_0001',
