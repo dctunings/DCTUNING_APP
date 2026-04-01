@@ -334,8 +334,10 @@ export function guessEcuFamily(result: A2LParseResult): string {
   if (nameUpper.includes('SIMOS18') || nameUpper.includes('SIMOS 18')) return 'SIMOS18'
   if (nameUpper.includes('SIMOS19')) return 'SIMOS19'
   if (nameUpper.includes('ME7')) return 'ME7'
-  if (nameUpper.includes('MED9')) return 'MED9'
+  if (nameUpper.includes('ME9') || nameUpper.includes('MED9')) return 'ME9'
   if (nameUpper.includes('EDC16')) return 'EDC16'
+  if (nameUpper.includes('EDC15')) return 'EDC15'
+  if (nameUpper.includes('MS43') || nameUpper.includes('MS45')) return 'ME7'
 
   // Score by characteristic names
   const names = new Set(result.characteristics.map(c => c.name))
@@ -348,5 +350,30 @@ export function guessEcuFamily(result: A2LParseResult): string {
 
   if (me7Score > med17Score && me7Score > edc17Score) return 'ME7'
   if (edc17Score > med17Score) return 'EDC17'
-  return 'MED17'
+  // Don't force-return MED17 — return empty string to signal "unknown"
+  // so detectBaseAddress can derive from addresses instead
+  if (med17Score > 0) return 'MED17'
+  return ''
 }
+
+// ─── Auto-detect flash base address ───────────────────────────────────────────
+// Preferred over the fixed ECU_BASE_ADDRESSES lookup when the ECU family is
+// unknown or the A2L comes from a non-standard tool.
+// Strategy: use the family lookup when available; otherwise derive the base
+// from the minimum characteristic address (rounded to 64KB boundary).
+export function detectBaseAddress(result: A2LParseResult): number {
+  const family = guessEcuFamily(result)
+  if (family && ECU_BASE_ADDRESSES[family] !== undefined) return ECU_BASE_ADDRESSES[family]
+
+  // Derive from actual A2L addresses — the flash base is approximately the
+  // minimum characteristic address, rounded down to a 64KB boundary.
+  const addrs = result.characteristics
+    .filter(c => c.type !== 'VALUE')
+    .map(c => c.address)
+    .filter(a => a > 0)
+  if (addrs.length === 0) return 0x80000000  // safe fallback for Bosch TriCore
+
+  const minAddr = Math.min(...addrs)
+  return minAddr & 0xFFFF0000  // round down to 64KB boundary
+}
+

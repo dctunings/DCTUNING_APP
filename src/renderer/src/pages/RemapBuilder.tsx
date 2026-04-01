@@ -6,7 +6,7 @@ import type { DetectedEcu, ExtractedMap, A2LValidationResult } from '../lib/bina
 import { buildRemap, buildFilename } from '../lib/remapEngine'
 import type { Stage, AddonId, RemapResult } from '../lib/remapEngine'
 import { verifyChecksum, correctChecksum } from '../lib/checksumEngine'
-import { parseA2L, extractMapsFromA2L, guessEcuFamily, ECU_BASE_ADDRESSES } from '../lib/a2lParser'
+import { parseA2L, extractMapsFromA2L, detectBaseAddress } from '../lib/a2lParser'
 import type { A2LParseResult, A2LMapDef } from '../lib/a2lParser'
 import { parseDRT, convertDRTMaps, guessEcuFamilyFromDRT } from '../lib/drtParser'
 import type { DRTParseResult, DRTConvertedMap } from '../lib/drtParser'
@@ -24,6 +24,35 @@ interface DefinitionEntry {
   storage_path: string
   map_count: number
   curve_count: number
+}
+
+// ─── Multi-candidate base address search ────────────────────────────────────
+// When the binary is available, try multiple base address candidates and return
+// the one that produces the most 'valid' A2L map validations.
+// Handles: ME7/ME9 A2Ls mis-guessed as MED17, tool-format header offsets,
+// non-standard ECU variants, and any A2L whose family isn't in the lookup table.
+function pickBestBaseAddress(buffer: ArrayBuffer, result: A2LParseResult): number {
+  const preferred = detectBaseAddress(result)
+  const addrs = result.characteristics
+    .filter(c => c.type !== 'VALUE')
+    .map(c => c.address)
+    .filter(a => a > 0)
+  const minAddr = addrs.length > 0 ? Math.min(...addrs) : preferred
+  const derivedBase = minAddr & 0xFFFF0000
+
+  const candidates = [...new Set([preferred, 0x80000000, 0x00000000, 0x80800000, derivedBase])]
+
+  let bestBase = preferred
+  let bestScore = -1
+  for (const base of candidates) {
+    const maps = extractMapsFromA2L(result, base)
+    if (maps.length === 0) continue
+    const validation = validateA2LMapsInBinary(buffer, maps)
+    const validCount = validation.filter(v => v.status === 'valid').length
+    const score = validCount / Math.max(validation.length, 1)
+    if (score > bestScore) { bestScore = score; bestBase = base }
+  }
+  return bestBase
 }
 
 // ─── Calibration proximity helper ─────────────────────────────────────────────
@@ -431,8 +460,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     try {
       const content = await file.text()
       const result = parseA2L(content)
-      const family = guessEcuFamily(result)
-      const baseAddr = ECU_BASE_ADDRESSES[family] ?? 0x80000000
+      // Auto-detect base address: binary-aware multi-candidate search when binary
+      // is loaded, otherwise derive from A2L addresses (handles ME7, EDC15, etc.)
+      const baseAddr = fileBuffer ? pickBestBaseAddress(fileBuffer, result) : detectBaseAddress(result)
       const maps = extractMapsFromA2L(result, baseAddr)
       setA2lResult(result)
       setA2lMaps(maps)
@@ -505,14 +535,15 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   }, [LIB_PAGE_SIZE])
 
   // When ECU is detected, pre-fill library search; fall back to ECU family if part number finds nothing.
-  // For TriCore/MPC ECUs (EDC16/EDC17/MED17/SIMOS etc.) auto-open the library panel — these ECUs
-  // require a definition file and the user must see matching results immediately without any clicks.
+  // EDC15, ME7, ME9, MS43 embed DAMOS symbol tables so binary-only map extraction works.
+  // All other ECUs (EDC16, EDC17, MED17, SIMOS, Delphi DCM/CRD, Marelli, SID, PPD1 etc.)
+  // do NOT embed map addresses — an A2L or DRT definition file is required. Auto-open library.
   const SIG_SUPPORTED = ['edc15', 'me7', 'me9', 'me9_merc', 'bmw_ms43']
   useEffect(() => {
     if (!detected) return
     const family = detected.def.family || detected.def.name
     const needsDef = !SIG_SUPPORTED.includes(detected.def.id)
-    if (needsDef) setShowLibrary(true)   // auto-open for TriCore ECUs
+    if (needsDef) setShowLibrary(true)   // auto-open — A2L/DRT required for this ECU
     const partMatch = fileName.match(/(?<!\d)(\d{5,9})(?!\d)/)
     if (partMatch) {
       const part = partMatch[1]
@@ -544,8 +575,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       if (entry.file_type === 'a2l') {
         const text = await data.text()
         const result = parseA2L(text)
-        const family = guessEcuFamily(result)
-        const baseAddr = ECU_BASE_ADDRESSES[family] ?? 0x80000000
+        const baseAddr = fileBuffer ? pickBestBaseAddress(fileBuffer, result) : detectBaseAddress(result)
         const maps = extractMapsFromA2L(result, baseAddr)
         setA2lResult(result)
         setA2lMaps(maps)
@@ -885,10 +915,10 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       )}
 
       {/* ── A2L/DRT required banner ───────────────────────────────────────────
-          EDC15 and ME7/ME9 embed DAMOS symbol tables in ROM — signatures work.
-          All TriCore/MPC/SH-series ECUs (EDC16, EDC17, MED17, SIMOS, etc.)
-          do NOT embed map names — exact memory addresses from an A2L or DRT
-          file are the only way to locate maps in those binaries.
+          EDC15, ME7, ME9, MS43 embed DAMOS symbol tables → signatures work.
+          All other ECUs (EDC16, EDC17, MED17, SIMOS, Delphi, Marelli, SID,
+          PPD1 etc.) do NOT embed map addresses — an A2L or DRT file with the
+          exact memory map is the only way to locate calibration tables.
       */}
       {(() => {
         const ecuId = selectedEcuId || detected?.def.id || ''
@@ -903,11 +933,11 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                 Definition File Required for Map Extraction
               </div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.65 }}>
-                <strong style={{ color: 'var(--text-secondary)' }}>{detected?.def.name ?? ecuId}</strong> is a TriCore/MPC-based ECU.
-                These ECUs do not embed map names in the binary — maps can only be located using an
+                <strong style={{ color: 'var(--text-secondary)' }}>{detected?.def.name ?? ecuId}</strong> does not embed map addresses in the binary.
+                Maps can only be located using an
                 <strong style={{ color: 'var(--text-secondary)'}}> A2L</strong> or
                 <strong style={{ color: 'var(--text-secondary)'}}> DRT</strong> definition file
-                that provides exact memory addresses.
+                that contains the exact calibration memory layout.
               </div>
               <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 8, fontWeight: 700 }}>
                 👇 Search the library below and load a matching A2L or DRT file to proceed.
