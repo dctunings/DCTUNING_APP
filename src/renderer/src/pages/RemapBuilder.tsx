@@ -1,8 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { ECU_DEFINITIONS, ADDONS } from '../lib/ecuDefinitions'
 import type { EcuDef } from '../lib/ecuDefinitions'
-import { detectEcu, extractAllMaps } from '../lib/binaryParser'
-import type { DetectedEcu, ExtractedMap } from '../lib/binaryParser'
+import { detectEcu, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L } from '../lib/binaryParser'
+import type { DetectedEcu, ExtractedMap, A2LValidationResult } from '../lib/binaryParser'
 import { buildRemap, buildFilename } from '../lib/remapEngine'
 import type { Stage, AddonId, RemapResult } from '../lib/remapEngine'
 import { verifyChecksum, correctChecksum } from '../lib/checksumEngine'
@@ -208,6 +208,12 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [libFallbackNote, setLibFallbackNote] = useState('')
   const LIB_PAGE_SIZE = 25
 
+  // A2L validation state
+  const [a2lValidation, setA2lValidation] = useState<A2LValidationResult[]>([])
+  const [showSigExport, setShowSigExport] = useState(false)
+  const [sigExportText, setSigExportText] = useState('')
+  const [a2lFallbackCount, setA2lFallbackCount] = useState(0)
+
   const selectedEcu: EcuDef | undefined = ECU_DEFINITIONS.find(e => e.id === selectedEcuId)
 
   // ─── File loading ─────────────────────────────────────────────────────────
@@ -230,6 +236,10 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     } else {
       setSelectedEcuId('')
     }
+    // Clear any previously loaded A2L validation when a new binary is loaded
+    setA2lValidation([])
+    setA2lFallbackCount(0)
+    setShowSigExport(false)
     setStep(1)
     // Share file state with Performance page (a2l/drt maps not loaded yet — updated later)
     onEcuLoaded?.({ fileName: name, fileBuffer: buf, detected: det, a2lMaps: [], drtMaps: [] })
@@ -274,9 +284,61 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   // ─── Step 2→3: extract maps ───────────────────────────────────────────────
   const handleConfigureNext = () => {
     if (!fileBuffer || !selectedEcu) return
-    const maps = extractAllMaps(fileBuffer, selectedEcu)
+    let maps = extractAllMaps(fileBuffer, selectedEcu)
+
+    // A2L fallback: for each map not found via binary signatures, try the best
+    // validated A2L address for that category (confidence >= 0.70 = data in range).
+    // This is safe because validation confirmed the data at that address is realistic.
+    if (a2lValidation.length > 0) {
+      // Pick highest-confidence valid result per category
+      const bestByCategory = new Map<string, A2LValidationResult>()
+      for (const v of a2lValidation) {
+        if (v.status !== 'valid') continue
+        const prev = bestByCategory.get(v.map.category)
+        if (!prev || v.confidence > prev.confidence) bestByCategory.set(v.map.category, v)
+      }
+      let fallbackCount = 0
+      maps = maps.map(em => {
+        if (em.found) return em
+        const best = bestByCategory.get(em.mapDef.category)
+        if (!best) return em
+        const synthDef = syntheticMapDefFromA2L(best.map, em.mapDef)
+        const result = extractMap(fileBuffer, synthDef)
+        if (result.found) { fallbackCount++; return result }
+        return em
+      })
+      setA2lFallbackCount(fallbackCount)
+    }
+
     setExtractedMaps(maps)
     setStep(3)
+  }
+
+  // ─── Signature export ─────────────────────────────────────────────────────
+  const handleExtractSignatures = () => {
+    const valid = a2lValidation.filter(v => v.status === 'valid')
+    if (valid.length === 0) {
+      setSigExportText('// No maps validated yet. Load a binary first, then an A2L.')
+      setShowSigExport(true)
+      return
+    }
+    const lines: string[] = [
+      `// Binary signatures extracted from: ${a2lFileName}`,
+      `// Validated against: ${fileName}`,
+      `// Paste into the relevant ECU entry in ecuDefinitions.ts → maps → signatures`,
+      '',
+    ]
+    for (const v of valid) {
+      const hexSig = v.signature
+        .map(b => '0x' + b.toString(16).padStart(2, '0').toUpperCase())
+        .join(', ')
+      lines.push(`// ${v.map.name}  category: ${v.map.category}  confidence: ${(v.confidence * 100).toFixed(0)}%`)
+      lines.push(`// file offset: 0x${v.map.fileOffset.toString(16).toUpperCase()}  ${v.map.rows}×${v.map.cols} ${v.map.dataType}`)
+      lines.push(`signatures: [[${hexSig}]], sigOffset: 0,`)
+      lines.push('')
+    }
+    setSigExportText(lines.join('\n'))
+    setShowSigExport(true)
   }
 
   // ─── Step 3→4: build remap ────────────────────────────────────────────────
@@ -331,6 +393,12 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       setDrtResult(null)
       setDrtMaps([])
       setDrtFileName('')
+      // Validate A2L addresses against the loaded binary
+      if (fileBuffer) {
+        const validation = validateA2LMapsInBinary(fileBuffer, maps)
+        setA2lValidation(validation)
+        setShowSigExport(false)
+      }
       // Share with Performance page
       if (fileBuffer) onEcuLoaded?.({ fileName, fileBuffer, detected, a2lMaps: maps, drtMaps: [] })
     } catch (e) {
@@ -427,6 +495,12 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         setA2lMaps(maps)
         setA2lFileName(entry.filename)
         setDrtResult(null); setDrtMaps([]); setDrtFileName('')
+        // Validate A2L addresses against the loaded binary
+        if (fileBuffer) {
+          const validation = validateA2LMapsInBinary(fileBuffer, maps)
+          setA2lValidation(validation)
+          setShowSigExport(false)
+        }
       } else {
         const buf = await data.arrayBuffer()
         const result = parseDRT(buf, entry.driver_name ?? entry.filename)
@@ -757,6 +831,68 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           {a2lResult?.warnings[0] && (
             <div style={{ marginTop: 8, fontSize: 11, color: '#f59e0b' }}>{a2lResult.warnings[0]}</div>
           )}
+
+          {/* A2L address validation panel */}
+          {a2lValidation.length > 0 && (() => {
+            const vCount = a2lValidation.filter(v => v.status === 'valid').length
+            const uCount = a2lValidation.filter(v => v.status === 'uncertain').length
+            const iCount = a2lValidation.filter(v => v.status === 'invalid' || v.status === 'outofrange').length
+            return (
+              <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                  Address Validation vs This Binary
+                </div>
+                <div style={{ display: 'flex', gap: 16, marginBottom: 8, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#22c55e' }}>✓ {vCount} valid</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b' }}>? {uCount} uncertain</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#ef4444' }}>✗ {iCount} mismatch</span>
+                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>/ {a2lValidation.length} total</span>
+                </div>
+                {vCount > 0 && (
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginBottom: 8, lineHeight: 1.5 }}>
+                    {vCount} map address{vCount !== 1 ? 'es' : ''} confirmed in this binary — will be used automatically if binary signatures fail.
+                  </div>
+                )}
+                {vCount === 0 && (
+                  <div style={{ fontSize: 11, color: '#f59e0b', marginBottom: 8 }}>
+                    ⚠ No addresses validated. This A2L may be for a different software version. Do not use for writing.
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button
+                    onClick={handleExtractSignatures}
+                    style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid rgba(184,240,42,0.3)', background: 'rgba(184,240,42,0.07)', color: '#b8f02a', fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    Export Signatures →
+                  </button>
+                </div>
+                {showSigExport && (
+                  <div style={{ marginTop: 10 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Paste into ecuDefinitions.ts</span>
+                      <button
+                        onClick={() => navigator.clipboard.writeText(sigExportText)}
+                        style={{ padding: '3px 10px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)', fontWeight: 700, fontSize: 10, cursor: 'pointer', fontFamily: 'inherit' }}
+                      >
+                        Copy All
+                      </button>
+                    </div>
+                    <textarea
+                      readOnly
+                      value={sigExportText}
+                      style={{ width: '100%', minHeight: 140, background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#79c0ff', fontFamily: "'Courier New', monospace", fontSize: 11, padding: '8px', resize: 'vertical', boxSizing: 'border-box' }}
+                    />
+                    <button
+                      onClick={() => setShowSigExport(false)}
+                      style={{ marginTop: 4, padding: '3px 10px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.08)', background: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 10, cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                      Close
+                    </button>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
         </div>
       )}
 
@@ -982,6 +1118,11 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         )}
         <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
           {extractedMaps.filter(m => m.found).length} / {extractedMaps.length} maps found
+          {a2lFallbackCount > 0 && (
+            <span style={{ marginLeft: 8, color: '#22c55e', fontWeight: 700 }}>
+              ({a2lFallbackCount} via A2L ✓)
+            </span>
+          )}
         </span>
       </div>
 

@@ -1,5 +1,6 @@
 import type { EcuDef, MapDef, DataType } from './ecuDefinitions'
 import { ECU_DEFINITIONS } from './ecuDefinitions'
+import type { A2LMapDef } from './a2lParser'
 
 export interface DetectedEcu {
   def: EcuDef
@@ -139,6 +140,93 @@ function writeVal(view: DataView, offset: number, value: number, dtype: DataType
     case 'uint16':  view.setUint16(offset, Math.max(0, Math.min(65535, clamped)), le); break
     case 'int16':   view.setInt16(offset, Math.max(-32768, Math.min(32767, clamped)), le); break
     case 'float32': view.setFloat32(offset, value, le); break
+  }
+}
+
+// ─── A2L address validation ────────────────────────────────────────────────────
+// Validates whether A2L map addresses point to real data in the binary by checking
+// if sample physical values fall within the map's declared min/max range.
+// This is the safety gate: only maps with status 'valid' should be written to.
+
+export interface A2LValidationResult {
+  map: A2LMapDef
+  status: 'valid' | 'uncertain' | 'invalid' | 'outofrange'
+  confidence: number      // 0–1, fraction of sample values within physical range
+  sampleValues: number[]  // physical values sampled from the binary at this address
+  signature: number[]     // up to 12 bytes immediately before the map in the binary
+}
+
+export function validateA2LMapsInBinary(
+  buffer: ArrayBuffer,
+  maps: A2LMapDef[]
+): A2LValidationResult[] {
+  const bytes = new Uint8Array(buffer)
+  const view = new DataView(buffer)
+
+  return maps.map(map => {
+    const dtype = map.dataType as DataType
+    const elSize = dtypeSize(dtype)
+    const totalBytes = map.rows * map.cols * elSize
+
+    // Address out of file bounds
+    if (map.fileOffset < 0 || map.fileOffset + totalBytes > buffer.byteLength) {
+      return { map, status: 'outofrange', confidence: 0, sampleValues: [], signature: [] }
+    }
+
+    // Sample up to 16 values spread across the map
+    const total = map.rows * map.cols
+    const stride = Math.max(1, Math.floor(total / 16))
+    const sampleValues: number[] = []
+    for (let i = 0; i < total; i += stride) {
+      const raw = readVal(view, map.fileOffset + i * elSize, dtype, true) // default LE
+      sampleValues.push(raw * map.factor + map.physicalOffset)
+    }
+
+    // Detect erased flash (all 0xFF or 0xFFFF) or blank (all zero)
+    const allFF = sampleValues.every(v => {
+      const raw = map.factor !== 0 ? (v - map.physicalOffset) / map.factor : 0
+      return Math.abs(raw - 255) < 2 || Math.abs(raw - 65535) < 2
+    })
+    const allZero = sampleValues.every(v => Math.abs(v) < 0.0001)
+
+    // Fraction of samples within the declared physical range (±15% tolerance)
+    const rangeSpan = map.max - map.min
+    const tol = rangeSpan > 0 ? rangeSpan * 0.15 : Math.abs(map.max) * 0.15 + 1
+    const inRangeCount = sampleValues.filter(
+      v => v >= map.min - tol && v <= map.max + tol
+    ).length
+    const confidence = sampleValues.length > 0 ? inRangeCount / sampleValues.length : 0
+
+    // Extract 12-byte signature immediately before the map
+    const sigStart = Math.max(0, map.fileOffset - 12)
+    const signature = Array.from(bytes.slice(sigStart, map.fileOffset))
+
+    let status: A2LValidationResult['status']
+    if (allFF || allZero)       status = 'uncertain'
+    else if (confidence >= 0.70) status = 'valid'
+    else if (confidence >= 0.35) status = 'uncertain'
+    else                         status = 'invalid'
+
+    return { map, status, confidence, sampleValues, signature }
+  })
+}
+
+// ─── Build a MapDef from a validated A2L map ────────────────────────────────
+// Creates a synthetic MapDef that uses the A2L's exact file offset (fixedOffset)
+// instead of signature searching. Stage params and metadata are inherited from
+// the matching ecuDefinitions MapDef so the remap engine still applies correctly.
+export function syntheticMapDefFromA2L(a2lMap: A2LMapDef, baseDef: MapDef): MapDef {
+  return {
+    ...baseDef,
+    rows:       a2lMap.rows,
+    cols:       a2lMap.cols,
+    dtype:      a2lMap.dataType as DataType,
+    le:         true,  // Bosch/Continental ECUs are little-endian
+    factor:     a2lMap.factor,
+    offsetVal:  a2lMap.physicalOffset,
+    signatures: [],    // skip signature search
+    sigOffset:  0,
+    fixedOffset: a2lMap.fileOffset,  // go directly to validated address
   }
 }
 

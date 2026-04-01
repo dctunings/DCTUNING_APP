@@ -69,9 +69,12 @@ jobs:
             ## DCTuning Desktop v${{ steps.pkg.outputs.version }}
 
             ### What's new
-            - Remap Builder: Library search now auto-falls back to ECU family (e.g. EDC16) when no exact part number match found
-            - Remap Builder: Fallback note shown so tuner knows why results changed
-            - Remap Builder: Result count now shows total matches, not just current page count
+            - Remap Builder: A2L address validation — validates every map address against the loaded binary before allowing use
+            - Remap Builder: A2L fallback extraction — if binary signatures fail, validated A2L addresses are used automatically (safe)
+            - Remap Builder: Shows valid/uncertain/mismatch count per loaded A2L so tuner knows if wrong version was selected
+            - Remap Builder: Export Signatures button — generates ready-to-paste ecuDefinitions.ts code for any validated map
+            - Remap Builder: Maps found display shows how many were found via A2L fallback vs binary signatures
+            - Library search: auto-fallback to ECU family when part number finds nothing
 
             ### Installation
             Download and run the `.exe` installer. Administrator rights required.
