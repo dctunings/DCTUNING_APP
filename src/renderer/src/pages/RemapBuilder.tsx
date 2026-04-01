@@ -383,15 +383,19 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     }
   }, [LIB_PAGE_SIZE])
 
-  // When ECU is detected, pre-fill library search with part number from filename (more specific than family)
+  // When ECU is detected, pre-fill library search with part number extracted from filename
   useEffect(() => {
     if (detected) {
-      // Try to extract a part number (5-9 digit number) from the filename
-      const partMatch = fileName.match(/\b(\d{5,9})\b/)
-      const query = partMatch ? partMatch[1] : (detected.def.family || detected.def.name)
-      setLibSearch(query)
-      // Only auto-search if we have a specific part number, not just a broad family name
-      if (partMatch) searchLibrary(query)
+      // Use lookahead/lookbehind to find 5-9 digit number not adjacent to other digits
+      const partMatch = fileName.match(/(?<!\d)(\d{5,9})(?!\d)/)
+      if (partMatch) {
+        // Specific part number found — pre-fill and auto-search
+        setLibSearch(partMatch[1])
+        searchLibrary(partMatch[1])
+      } else {
+        // No part number — just pre-fill with family name, do NOT auto-search
+        setLibSearch(detected.def.family || detected.def.name)
+      }
     }
   }, [detected, fileName, searchLibrary])
 
