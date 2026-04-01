@@ -458,6 +458,91 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
         </p>
       </section>
 
+      {/* ── DOCS ──────────────────────────────────────── */}
+      <section id="docs" style={{position:'relative',zIndex:1,maxWidth:1100,margin:'0 auto',padding:'60px max(24px,calc(50% - 550px)) 80px'}}>
+        <div style={{textAlign:'center',marginBottom:52}}>
+          <div style={{fontSize:11,fontWeight:700,color:'#00aec8',letterSpacing:'2.5px',textTransform:'uppercase',marginBottom:12}}>Documentation</div>
+          <h2 style={{fontSize:'clamp(28px,3.5vw,48px)',fontWeight:800,letterSpacing:'-1.5px',lineHeight:1.05,color:'#0a0a0a',marginBottom:16}}>Get up and running fast</h2>
+          <p style={{fontSize:16,color:'rgba(0,0,0,.5)',maxWidth:520,margin:'0 auto',lineHeight:1.7,fontWeight:500}}>Everything you need to install, connect your device and start remapping in minutes.</p>
+        </div>
+
+        {/* Quick start steps */}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:20,marginBottom:48}}>
+          {[
+            { step:'01', title:'Download & Install', desc:'Download the DCTuning Desktop installer. Run as Administrator — it sets up everything automatically including the app, database and J2534 helper.' },
+            { step:'02', title:'Install Device Driver', desc:'Open Driver Setup in the sidebar. Click Install next to your device (KessV2, Scanmatik/PCMTuner, KT200 Plus). One click — driver is bundled.' },
+            { step:'03', title:'Connect Your Device', desc:'Plug in your J2534 adapter or OBD2 interface. The app auto-detects it via the J2534 PassThru scanner. No manual config needed.' },
+            { step:'04', title:'Start Remapping', desc:'Open Tune Manager to browse 21,000+ files or use Remap Builder to build a custom map from scratch using DRT definitions.' },
+          ].map(s=>(
+            <div key={s.step} className="gc" style={{padding:'24px 22px'}}>
+              <div style={{fontSize:11,fontWeight:800,color:'#00aec8',letterSpacing:'2px',marginBottom:10}}>{s.step}</div>
+              <div style={{fontSize:15,fontWeight:700,color:'#fff',marginBottom:8}}>{s.title}</div>
+              <div style={{fontSize:13,color:'rgba(255,255,255,.45)',lineHeight:1.65,fontWeight:500}}>{s.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Two column: Supported devices + Quick reference */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20,marginBottom:20}}>
+
+          {/* Supported devices */}
+          <div className="gc" style={{padding:'28px 26px'}}>
+            <div style={{fontSize:12,fontWeight:700,color:'#00aec8',letterSpacing:'1.5px',textTransform:'uppercase',marginBottom:18}}>Supported Devices</div>
+            <div style={{display:'flex',flexDirection:'column',gap:10}}>
+              {[
+                { name:'KessV2 (genuine + clone)', type:'Files only', color:'rgba(255,255,255,.35)' },
+                { name:'Scanmatik SM2 Pro / SM3 Pro', type:'J2534 direct', color:'#00aec8' },
+                { name:'PCMTuner (clone)', type:'J2534 direct', color:'#00aec8' },
+                { name:'KT200 Plus / KTflash', type:'J2534 direct', color:'#00aec8' },
+                { name:'KT200 / KT200 II', type:'Files only', color:'rgba(255,255,255,.35)' },
+                { name:'ELM327 (WiFi/BT/USB)', type:'Diagnostics only', color:'rgba(255,200,80,.7)' },
+                { name:'Any J2534 PassThru device', type:'J2534 direct', color:'#00aec8' },
+              ].map(d=>(
+                <div key={d.name} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderBottom:'1px solid rgba(255,255,255,.06)'}}>
+                  <span style={{fontSize:13,color:'rgba(255,255,255,.7)',fontWeight:500}}>{d.name}</span>
+                  <span style={{fontSize:11,fontWeight:700,color:d.color,whiteSpace:'nowrap',marginLeft:8}}>{d.type}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick reference */}
+          <div style={{display:'flex',flexDirection:'column',gap:16}}>
+            {[
+              { q:'What is J2534 direct?', a:'Your device connects directly to the DCTuning app via the J2534 PassThru standard. Enables live OBD2 diagnostics (DTC, live PIDs, voltage) inside the app without any extra software.' },
+              { q:'What is files only?', a:'Use the manufacturer\'s own software to read the ECU binary from the car. Upload the .bin file into DCTuning Tune Manager for editing and remapping, then write back with the original tool.' },
+              { q:'Driver Setup not finding my device?', a:'Unplug and re-plug your device after installing the driver. If it still shows Unknown, try a different USB port. Some clone devices need the exact driver version — use the bundled installer in Driver Setup.' },
+              { q:'Which remap type should I choose?', a:'Stage 1 — OBD tune only, no hardware mods. Stage 2 — requires intake/exhaust/intercooler upgrades. DPF/EGR Off — emissions hardware removed. Check vehicle specs before ordering.' },
+            ].map(item=>(
+              <div key={item.q} className="gc" style={{padding:'18px 20px'}}>
+                <div style={{fontSize:13,fontWeight:700,color:'#fff',marginBottom:6}}>{item.q}</div>
+                <div style={{fontSize:12.5,color:'rgba(255,255,255,.42)',lineHeight:1.65,fontWeight:500}}>{item.a}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* System requirements */}
+        <div className="gc" style={{padding:'24px 26px'}}>
+          <div style={{fontSize:12,fontWeight:700,color:'#00aec8',letterSpacing:'1.5px',textTransform:'uppercase',marginBottom:16}}>System Requirements</div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:16}}>
+            {[
+              { label:'OS', value:'Windows 10 / 11 (64-bit)' },
+              { label:'RAM', value:'4 GB minimum, 8 GB recommended' },
+              { label:'Disk', value:'2 GB free space' },
+              { label:'Permissions', value:'Administrator required' },
+              { label:'Internet', value:'Required for library & updates' },
+              { label:'.NET / VC++', value:'Bundled in installer' },
+            ].map(r=>(
+              <div key={r.label} style={{display:'flex',flexDirection:'column',gap:4}}>
+                <span style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,.28)',textTransform:'uppercase',letterSpacing:'1px'}}>{r.label}</span>
+                <span style={{fontSize:13,color:'rgba(255,255,255,.65)',fontWeight:500}}>{r.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA SECTION ───────────────────────────────── */}
       <section style={{position:'relative',zIndex:1,maxWidth:1100,margin:'0 auto',padding:'0 max(24px,calc(50% - 550px)) 64px'}}>
         <div className="gc" style={{padding:'60px 28px',textAlign:'center'}}>
