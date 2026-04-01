@@ -88,6 +88,11 @@ const Icons: Record<string, JSX.Element> = {
       <circle cx="8" cy="12" r="1" fill="currentColor" stroke="none"/>
     </svg>
   ),
+  driversetup: (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+    </svg>
+  ),
   remap: (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
@@ -147,7 +152,8 @@ const navItems: { section: string; items: { id: Page; icon: keyof typeof Icons; 
       { id: 'emissions', icon: 'emissions', label: 'Emissions Delete' },
       { id: 'j2534',     icon: 'j2534',     label: 'J2534 PassThru' },
       { id: 'unlock',    icon: 'unlock',    label: 'ECU Unlock' },
-      { id: 'devices',   icon: 'devices',   label: 'Device Library' },
+      { id: 'devices',      icon: 'devices',      label: 'Device Library' },
+      { id: 'driversetup',  icon: 'driversetup',  label: 'Driver Setup' },
     ]
   }
 ]

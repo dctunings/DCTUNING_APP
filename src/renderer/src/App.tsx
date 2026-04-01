@@ -13,6 +13,7 @@ import J2534PassThru from './pages/J2534PassThru'
 import ECUUnlock from './pages/ECUUnlock'
 import WiringDiagrams from './pages/WiringDiagrams'
 import DeviceLibrary from './pages/DeviceLibrary'
+import DriverSetupPage from './pages/DriverSetupPage'
 import RemapBuilder from './pages/RemapBuilder'
 import ECUFlashManager from './pages/ECUFlashManager'
 import PricingPage from './pages/PricingPage'
@@ -50,6 +51,7 @@ export type Page =
   | 'j2534'
   | 'unlock'
   | 'devices'
+  | 'driversetup'
   | 'remap'
   | 'ecuflash'
   | 'pricing'
@@ -140,6 +142,7 @@ export default function App() {
       case 'j2534':        return <J2534PassThru connected={connected} setConnected={setConnected} activeVehicle={activeVehicle} />
       case 'unlock':       return <ECUUnlock connected={connected} activeVehicle={activeVehicle} />
       case 'devices':      return <DeviceLibrary />
+      case 'driversetup':  return <DriverSetupPage />
       case 'remap':        return <RemapBuilder onEcuLoaded={setEcuFile} />
       case 'ecuflash':     return <ECUFlashManager connected={connected} activeVehicle={activeVehicle} />
       case 'pricing':

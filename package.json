@@ -40,7 +40,8 @@
       "requestedExecutionLevel": "requireAdministrator"
     },
     "extraResources": [
-      { "from": "resources/j2534helper.exe", "to": "j2534helper.exe" }
+      { "from": "resources/j2534helper.exe", "to": "j2534helper.exe" },
+      { "from": "resources/drivers", "to": "drivers" }
     ],
     "directories": {
       "output": "release"

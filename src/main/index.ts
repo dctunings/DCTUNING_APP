@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import fs from 'fs'
-import { execSync, spawnSync } from 'child_process'
+import { execSync, spawnSync, spawn } from 'child_process'
 
 // Re-launch as Administrator if not already elevated (required for J2534/SmUsb access)
 if (process.platform === 'win32' && !is.dev) {
@@ -249,6 +249,84 @@ app.whenReady().then(() => {
   ipcMain.handle('j2534-get-ecu-definitions', async () => {
     const { ECU_FLASH_DEFINITIONS } = await import('./ecuSeedKey')
     return ECU_FLASH_DEFINITIONS
+  })
+
+  // ─── Driver setup IPC ────────────────────────────────────────────────────────
+
+  // Returns path to a bundled driver file in resources/drivers/
+  const driverPath = (filename: string): string =>
+    is.dev
+      ? join(__dirname, '../../resources/drivers', filename)
+      : join(process.resourcesPath, 'drivers', filename)
+
+  // Check if a USB device is present by VID/PID using PowerShell
+  ipcMain.handle('driver-check-device', async (_, vidPid: string) => {
+    try {
+      const result = execSync(
+        `powershell -NoProfile -Command "Get-PnpDevice | Where-Object { $_.InstanceId -like '*${vidPid}*' -and $_.Status -eq 'OK' } | Select-Object -First 1 FriendlyName,Status | ConvertTo-Json"`,
+        { windowsHide: true, encoding: 'utf8', timeout: 5000 }
+      ).trim()
+      if (!result || result === 'null') return { present: false }
+      const parsed = JSON.parse(result)
+      return { present: true, name: parsed?.FriendlyName || vidPid }
+    } catch {
+      return { present: false }
+    }
+  })
+
+  // Check if a driver INF is present in the Windows Driver Store
+  ipcMain.handle('driver-check-installed', async (_, driverName: string) => {
+    try {
+      const result = execSync(
+        `powershell -NoProfile -Command "Get-WmiObject Win32_PnPSignedDriver | Where-Object { $_.DeviceName -like '*${driverName}*' -or $_.InfName -like '*${driverName}*' } | Select-Object -First 1 DeviceName | ConvertTo-Json"`,
+        { windowsHide: true, encoding: 'utf8', timeout: 8000 }
+      ).trim()
+      return { installed: !!(result && result !== 'null') }
+    } catch {
+      return { installed: false }
+    }
+  })
+
+  // Run a bundled driver installer — returns { ok, error }
+  ipcMain.handle('driver-install', async (_, driverFile: string) => {
+    const exePath = driverPath(driverFile)
+    if (!fs.existsSync(exePath)) {
+      return { ok: false, error: `Driver file not found: ${driverFile}` }
+    }
+    return new Promise((resolve) => {
+      const proc = spawn(exePath, [], { windowsHide: false, detached: false })
+      proc.on('close', (code) => {
+        resolve({ ok: code === 0, code })
+      })
+      proc.on('error', (err) => {
+        resolve({ ok: false, error: err.message })
+      })
+    })
+  })
+
+  // Open a URL in the system default browser
+  ipcMain.handle('open-external', async (_, url: string) => {
+    if (typeof url === 'string' && (url.startsWith('https://') || url.startsWith('http://'))) {
+      await shell.openExternal(url)
+      return { ok: true }
+    }
+    return { ok: false }
+  })
+
+  // List which bundled drivers are available on disk
+  ipcMain.handle('driver-list-bundled', async () => {
+    const driversDir = is.dev
+      ? join(__dirname, '../../resources/drivers')
+      : join(process.resourcesPath, 'drivers')
+    try {
+      return fs.readdirSync(driversDir).map((f) => ({
+        file: f,
+        path: join(driversDir, f),
+        size: fs.statSync(join(driversDir, f)).size,
+      }))
+    } catch {
+      return []
+    }
   })
 
   createWindow()
