@@ -383,14 +383,14 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     }
   }, [LIB_PAGE_SIZE])
 
-  // Auto-search when ECU is detected
+  // Auto-search library whenever ECU is detected (regardless of panel open state)
   useEffect(() => {
-    if (detected && showLibrary) {
+    if (detected) {
       const query = detected.def.family || detected.def.name
       setLibSearch(query)
       searchLibrary(query)
     }
-  }, [detected, showLibrary, searchLibrary])
+  }, [detected, searchLibrary])
 
   const loadDefinitionFromLibrary = async (entry: DefinitionEntry) => {
     setLibLoadingId(entry.id)
@@ -753,7 +753,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       </select>
 
       {selectedEcu && (
-        <div style={{ padding: '12px 14px', borderRadius: 8, background: 'var(--bg-card)', border: '1px solid var(--border)', marginBottom: 20 }}>
+        <div style={{ padding: '12px 14px', borderRadius: 8, background: 'var(--bg-card)', border: '1px solid var(--border)', marginBottom: 16 }}>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>Maps available for this ECU</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {selectedEcu.maps.map(m => (
@@ -763,6 +763,44 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Library definitions banner */}
+      {libResults.length > 0 && (
+        <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 8, background: 'rgba(0,174,200,0.06)', border: '1px solid rgba(0,174,200,0.25)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)' }}>
+              {libResults.length} definition{libResults.length > 1 ? 's' : ''} found in library
+            </span>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>— load one for accurate map addresses</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 180, overflowY: 'auto' }}>
+            {libResults.slice(0, 8).map(entry => (
+              <div key={entry.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', borderRadius: 6, background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                <div style={{ minWidth: 0 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{entry.filename}</span>
+                  {entry.driver_name && <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8 }}>{entry.driver_name}</span>}
+                  <span style={{ fontSize: 10, marginLeft: 8, padding: '1px 5px', borderRadius: 3, background: entry.file_type === 'a2l' ? 'rgba(34,197,94,0.1)' : 'rgba(59,130,246,0.1)', color: entry.file_type === 'a2l' ? '#22c55e' : '#3b82f6', fontWeight: 700 }}>
+                    .{entry.file_type}
+                  </span>
+                </div>
+                <button
+                  className="btn-primary"
+                  style={{ fontSize: 10, padding: '3px 10px', flexShrink: 0 }}
+                  disabled={libLoadingId === entry.id}
+                  onClick={() => loadDefinitionFromLibrary(entry)}
+                >
+                  {libLoadingId === entry.id ? '⏳' : 'Load'}
+                </button>
+              </div>
+            ))}
+          </div>
+          {libLoadError && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 6 }}>{libLoadError}</div>}
+        </div>
+      )}
+
+      {libLoading && (
+        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 12, textAlign: 'center' }}>Searching library...</div>
       )}
 
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
