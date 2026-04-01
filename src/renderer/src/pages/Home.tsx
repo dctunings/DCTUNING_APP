@@ -133,7 +133,7 @@ export default function Home({ setPage }: Props) {
           <div style={{ width: 44, height: 44, borderRadius: 11, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 14, color: '#000', letterSpacing: '-0.5px', flexShrink: 0 }}>DC</div>
           <div>
             <div style={{ fontWeight: 800, fontSize: 17, color: 'var(--text-primary)', lineHeight: 1 }}>DCTuning <span style={{ color: 'var(--accent)' }}>Desktop</span></div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>Professional ECU Diagnostics & Tuning Suite · v1.0</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>Professional ECU Diagnostics & Tuning Suite · v{__APP_VERSION__}</div>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e' }} />

@@ -115,7 +115,7 @@ export default function Dashboard({ setPage, connected, activeVehicle }: Props) 
         </div>
         <div className="stat-box">
           <div className="stat-label">Software</div>
-          <div className="stat-value" style={{ fontSize: 22 }}>v1.0</div>
+          <div className="stat-value" style={{ fontSize: 22 }}>v{__APP_VERSION__}</div>
           <div className="stat-sub">DCTuning Desktop</div>
         </div>
       </div>
@@ -196,7 +196,7 @@ export default function Dashboard({ setPage, connected, activeVehicle }: Props) 
         <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>DCTuning Ireland</span>
         <span>Supabase Cloud DB</span>
         <span>OBD2 · J2534 · KWP2000 · UDS</span>
-        <span style={{ marginLeft: 'auto', color: 'var(--accent)', fontWeight: 600 }}>v1.0.0</span>
+        <span style={{ marginLeft: 'auto', color: 'var(--accent)', fontWeight: 600 }}>v{__APP_VERSION__}</span>
       </div>
     </div>
   )

@@ -119,7 +119,7 @@ export default function LoginScreen({ signIn, signUp }: Props) {
 
           {/* Version badge */}
           <div style={{ marginTop: 36, fontSize: 11, color: 'rgba(255,255,255,.25)', fontWeight: 600, letterSpacing: '0.5px' }}>
-            DCTuning Desktop · v1.2.0 · Ireland
+            DCTuning Desktop · v{__APP_VERSION__} · Ireland
           </div>
         </div>
       </div>

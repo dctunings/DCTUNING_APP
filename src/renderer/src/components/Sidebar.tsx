@@ -196,7 +196,7 @@ export default function Sidebar({ currentPage, setPage, user, subscription, isAc
           </div>
           <div className="sidebar-logo-text">
             <div className="sidebar-logo-name" style={{ fontSize: 14, letterSpacing: '-0.4px' }}>DCTuning</div>
-            <div className="sidebar-logo-sub">Ireland · v1.0</div>
+            <div className="sidebar-logo-sub">Ireland · v{__APP_VERSION__}</div>
           </div>
         </div>
       </div>
@@ -341,7 +341,7 @@ export default function Sidebar({ currentPage, setPage, user, subscription, isAc
           </>
         )}
         <div style={{ marginTop: 10, color: 'var(--text-muted)', fontSize: 10, opacity: 0.5 }}>
-          DCTuning Ireland · v1.0
+          DCTuning Ireland · v{__APP_VERSION__}
         </div>
       </div>
     </aside>
