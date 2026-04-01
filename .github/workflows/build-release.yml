@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -60,8 +63,6 @@ jobs:
             Download and run the `.exe` installer below. Administrator rights required.
           files: release/*.exe
           make_latest: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-web:
     runs-on: ubuntu-latest
