@@ -37,6 +37,22 @@ const TYPE_LABELS: Record<string, string> = {
   custom: 'Custom', stock: 'Stock Backup',
 }
 
+const ENGINE_ACRONYMS = new Set(['TDI','TFSI','TSI','GTI','GTE','CDI','HDI','JTD','CDTI','DTI','CRDI','MHEV','PHEV','OBD'])
+function fmtVehicle(make: string, model: string): string {
+  const capWord = (w: string) => {
+    const u = w.toUpperCase()
+    if (ENGINE_ACRONYMS.has(u)) return u
+    // e.g. "1600tdi" → "1600 TDI", "1400tb" → "1400 TB", "90kw" → "90kW"
+    const engMatch = w.match(/^(\d+)(tdi|tfsi|tsi|gti|cdi|hdi|jtd|cdti|dti|crdi|tb|t)$/i)
+    if (engMatch) return engMatch[1] + ' ' + engMatch[2].toUpperCase()
+    const kwMatch = w.match(/^(\d+)kw$/i)
+    if (kwMatch) return kwMatch[1] + 'kW'
+    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+  }
+  const fmt = (s: string) => s.split(/[\s\-_]+/).filter(Boolean).map(capWord).join(' ')
+  return [make, model].filter(Boolean).map(fmt).join(' ')
+}
+
 export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVehicle | null }) {
   const { user, isAdmin, loading: authLoading, signIn, signUp, signOut } = useAuth()
   const [tunes, setTunes] = useState<TuneRecord[]>([])
@@ -537,15 +553,12 @@ CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontWeight: 700, fontSize: 13 }}>
-                        {entry.vehicle_make} {entry.vehicle_model}
+                        {fmtVehicle(entry.vehicle_make, entry.vehicle_model)}
                         {entry.vehicle_fuel && <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: 12 }}> · {entry.vehicle_fuel}</span>}
                       </div>
-                      <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--accent)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {entry.original_file_name}
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>
+                        {entry.ecu_type || '—'}
                       </div>
-                      {entry.ecu_type && (
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{entry.ecu_type}</div>
-                      )}
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                       <span style={{
@@ -606,11 +619,9 @@ CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--accent)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {t.filename}
-                      </div>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>
-                        {t.vehicle_make} {t.vehicle_model} {t.vehicle_variant}
+                        {fmtVehicle(t.vehicle_make, t.vehicle_model)}
+                        {t.vehicle_variant ? <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: 12 }}> {t.vehicle_variant}</span> : null}
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
                         {t.engine_code && <span style={{ fontFamily: 'monospace' }}>{t.engine_code} · </span>}

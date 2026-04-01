@@ -4,7 +4,7 @@ import type { ExtractedMap } from './binaryParser'
 import { writeMap } from './binaryParser'
 
 export type Stage = 1 | 2 | 3
-export type AddonId = 'popbang' | 'dpf' | 'egr' | 'launchcontrol' | 'speedlimiter'
+export type AddonId = 'popbang' | 'dpf' | 'egr' | 'launchcontrol' | 'speedlimiter' | 'adblue' | 'dpf_sensors' | 'egr_dtcs' | 'cat' | 'sai' | 'evap'
 
 export interface MapChange {
   mapDef: MapDef

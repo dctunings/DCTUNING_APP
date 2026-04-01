@@ -836,7 +836,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           {ADDONS.map(addon => {
             const active = addons.includes(addon.id as AddonId)
             // Check ECU compatibility
-            const compatible = !addon.compatEcus || addon.compatEcus.includes(selectedEcuId)
+            const compatible = !addon.compatEcus || addon.compatEcus.some(c => selectedEcuId === c || selectedEcuId.startsWith(c + '_'))
             return (
               <div
                 key={addon.id}
