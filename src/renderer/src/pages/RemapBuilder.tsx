@@ -122,7 +122,7 @@ function MiniHeatmap({ data, label, mapCategory }: { data: number[][], label: st
   // When DRT addresses point to wrong/zeroed binary regions, all raw bytes = 0 so physical
   // values equal physicalOffset (e.g. -1.0 for boost, -10.0 for fuel). Range is tiny AND max < 0.
   // Strict every() alone breaks when factor=0.001 and one byte = 1 → diff = exactly 0.001, fails < check.
-  const positiveExpected = ['boost', 'fuel', 'torque', 'limiter', 'emission'].includes(mapCategory ?? '')
+  const positiveExpected = ['boost', 'fuel', 'torque', 'limiter', 'emission', 'smoke'].includes(mapCategory ?? '')
   // sampleAllNegative: sample cells all negative AND tightly clustered (range < 0.5).
   // Catches A2L wrong-address case where full-map has a few edge bytes > 0 (breaking mapMax < 0)
   // but the operating region is uniform-negative (all cells = physicalOffset, raw = 0).
@@ -177,6 +177,7 @@ const CAT_COLORS: Record<string, string> = {
   ignition: '#a855f7',
   limiter:  '#ef4444',
   emission: '#6b7280',
+  smoke:    '#f97316',
   misc:     '#64748b',
 }
 
@@ -1196,9 +1197,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   )
 
   const STAGE_INFO: Record<Stage, { power: string; boost: string; torque: string; desc: string; color: string }> = {
-    1: { power: '+15–25%', boost: '+18%', torque: '+25%', desc: 'Safe bolt-on gains. Stock hardware, no turbo or intercooler upgrade required. Ideal for daily drivers.', color: '#3b82f6' },
-    2: { power: '+25–40%', boost: '+30%', torque: '+40%', desc: 'Performance hardware upgrade required. Uprated intercooler, sports exhaust recommended. Significant power gains.', color: '#f59e0b' },
-    3: { power: '+40–60%', boost: '+45%', torque: '+60%', desc: 'Track/motorsport build. Hybrid turbo, fuelling hardware, forged internals recommended. Maximum power output.', color: '#ef4444' },
+    1: { power: '+15–25%', boost: '+18%', torque: '+28%', desc: 'Safe bolt-on gains on stock hardware. Raises torque ceiling, fuel quantity, smoke limiter and boost target in step. No turbo or intercooler upgrade required. Ideal for daily drivers.', color: '#3b82f6' },
+    2: { power: '+25–40%', boost: '+28%', torque: '+45%', desc: 'Performance build. Uprated intercooler and sports exhaust recommended. SOI advance added for combustion efficiency. Significant power gains with proper supporting hardware.', color: '#f59e0b' },
+    3: { power: '+40–60%', boost: '+40%', torque: '+65%', desc: 'Track/motorsport build. Hybrid or upgraded turbo, forged internals and uprated fuelling hardware required. Full map chain raised to maximum safe limits.', color: '#ef4444' },
   }
 
   const renderStep2 = () => (
