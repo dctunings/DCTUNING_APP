@@ -60,6 +60,73 @@ export function detectEcu(buffer: ArrayBuffer): DetectedEcu | null {
   return bestScore > 0.15 ? best : null
 }
 
+// ─── Filename-based ECU detection fallback ────────────────────────────────────
+// Used when binary content detection fails (encrypted/proprietary/tool-format files).
+// Parses the filename for ECU family keywords and returns a low-confidence match.
+// Keyword list covers common naming conventions from WinOLS, ECM Titanium, KESS, CMD etc.
+export function detectEcuFromFilename(filename: string): DetectedEcu | null {
+  const lower = filename.toLowerCase()
+
+  // Map of filename keywords → ECU definition id (ordered most-specific first)
+  const filenameRules: Array<[string[], string]> = [
+    [['edc17cp20','cp20'],            'edc17'],
+    [['edc17cp14','cp14'],            'edc17'],
+    [['edc17c46','c46'],              'edc17'],
+    [['edc17c41','c41'],              'edc17'],
+    [['edc17cp','edc17c','edc17u'],   'edc17'],
+    [['edc17'],                       'edc17'],
+    [['edc16c34','c34'],              'edc16'],
+    [['edc16c8','c8'],                'edc16'],
+    [['edc16cp','edc16c','edc16u'],   'edc16'],
+    [['edc16'],                       'edc16'],
+    [['edc15c','edc15p','edc15'],     'edc15'],
+    [['med17.5','med175'],            'med17'],
+    [['med17.9','med179'],            'med17'],
+    [['med17'],                       'med17'],
+    [['me7.5','me75','me7'],          'me7'],
+    [['me9.0','me90','me9'],          'me9'],
+    [['simos18','sim18'],             'simos18'],
+    [['simos11','sim11'],             'continental_simos11'],
+    [['simos10','sim10'],             'simos10'],
+    [['msd80','msd85','msd87'],       'bmw_msd'],
+    [['ppd1.1','ppd1.2','ppd1.3','ppd1.5','ppd1'], 'vag_ppd1'],
+    [['dcm3.5','dcm35'],              'dcm35'],
+    [['dcm3.7','dcm37'],              'delphi_mt86'],
+    [['dcm6.1','dcm61'],              'dcm61'],
+    [['dcm6.2','dcm62'],              'vag_dcm62'],
+    [['crd2.1','crd2'],               'delphi_crd2'],
+    [['crd3.1','crd3'],               'delphi_crd3'],
+    [['sid208'],                      'sid208'],
+    [['sid807'],                      'sid807'],
+    [['sid310','sid305','sid307'],    'sid310'],
+    [['ems3120','ems312'],            'ems3120'],
+    [['pcr2.1','pcr21'],              'pcr21'],
+    [['mjd6','mjd8','mj8'],           'marelli_mjd'],
+    [['iaw4','iaw5','iaw6','iaw7'],   'marelli_iaw'],
+    [['mt80'],                        'delphi_mt80'],
+    [['mevd17'],                      'bmw_mevd17'],
+    [['mg1cs','mg1c'],                'mg1'],
+    [['sim2k'],                       'sim2k'],
+  ]
+
+  for (const [keywords, defId] of filenameRules) {
+    for (const kw of keywords) {
+      if (lower.includes(kw)) {
+        const def = ECU_DEFINITIONS.find(d => d.id === defId)
+        if (def) {
+          return {
+            def,
+            confidence: 0.35,   // low confidence — filename hint only
+            matchedStrings: [kw],
+            fileSize: 0,
+          }
+        }
+      }
+    }
+  }
+  return null
+}
+
 // ─── Signature search ─────────────────────────────────────────────────────────
 function findSignature(bytes: Uint8Array, sig: number[]): number {
   outer: for (let i = 0; i <= bytes.length - sig.length; i++) {

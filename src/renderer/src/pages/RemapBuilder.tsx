@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { ECU_DEFINITIONS, ADDONS } from '../lib/ecuDefinitions'
 import type { EcuDef } from '../lib/ecuDefinitions'
-import { detectEcu, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, syntheticMapDefFromDRT } from '../lib/binaryParser'
+import { detectEcu, detectEcuFromFilename, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, syntheticMapDefFromDRT } from '../lib/binaryParser'
 import type { DetectedEcu, ExtractedMap, A2LValidationResult } from '../lib/binaryParser'
 import { buildRemap, buildFilename } from '../lib/remapEngine'
 import type { Stage, AddonId, RemapResult } from '../lib/remapEngine'
@@ -247,8 +247,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ')
     setHexPreview(hex)
 
-    // Auto-detect ECU
-    const det = detectEcu(buf)
+    // Auto-detect ECU — binary first, filename fallback for encrypted/proprietary files
+    const det = detectEcu(buf) ?? detectEcuFromFilename(name)
     setDetected(det)
     if (det) {
       setSelectedEcuId(det.def.id)
