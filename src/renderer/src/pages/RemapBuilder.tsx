@@ -877,6 +877,39 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         </div>
       )}
 
+      {/* ── A2L/DRT required banner ───────────────────────────────────────────
+          EDC15 and ME7/ME9 embed DAMOS symbol tables in ROM — signatures work.
+          All TriCore/MPC/SH-series ECUs (EDC16, EDC17, MED17, SIMOS, etc.)
+          do NOT embed map names — exact memory addresses from an A2L or DRT
+          file are the only way to locate maps in those binaries.
+      */}
+      {(() => {
+        const ecuId = selectedEcuId || detected?.def.id || ''
+        const sigSupported = ['edc15', 'me7', 'me9', 'me9_merc', 'bmw_ms43'].includes(ecuId)
+        const needsBanner  = ecuId && !sigSupported && !a2lResult && !drtResult
+        if (!needsBanner) return null
+        return (
+          <div style={{ marginBottom: 20, padding: '14px 18px', borderRadius: 10, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.35)', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <div style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>⚠️</div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#f59e0b', marginBottom: 5 }}>
+                Definition File Required for Map Extraction
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.65 }}>
+                <strong style={{ color: 'var(--text-secondary)' }}>{detected?.def.name ?? ecuId}</strong> is a TriCore/MPC-based ECU.
+                These ECUs do not embed map names in the binary — maps can only be located using an
+                <strong style={{ color: 'var(--text-secondary)'}}> A2L</strong> or
+                <strong style={{ color: 'var(--text-secondary)'}}> DRT</strong> definition file
+                that provides exact memory addresses.
+              </div>
+              <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 8, fontWeight: 700 }}>
+                👇 Search the library below and load a matching A2L or DRT file to proceed.
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
       {(a2lResult || drtResult) && (
         <div style={{ marginBottom: 20, padding: '16px 18px', borderRadius: 10, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
