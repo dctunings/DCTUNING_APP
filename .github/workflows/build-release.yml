@@ -69,12 +69,9 @@ jobs:
             ## DCTuning Desktop v${{ steps.pkg.outputs.version }}
 
             ### What's new
-            - Remap Builder: DPF Off now works for all diesel ECUs (EDC16, EDC17, DCM35, DCM61, EMS3120, PCR21)
-            - Remap Builder: 6 new emissions add-ons — AdBlue/SCR Delete, DPF Sensors Off, EGR DTCs Delete, Cat Monitor Off, SAI Delete, EVAP Off
-            - Remap Builder: Improved ECU detection — requires ident string match, not just file size
-            - ME7: now covers NA variants (A4 1.6, Golf 1.6, Passat 1.6/1.8)
-            - Tune Manager: vehicle names properly formatted, cleaned up library card display
-            - Removed all PCMFlash references
+            - Remap Builder: Library search now auto-falls back to ECU family (e.g. EDC16) when no exact part number match found
+            - Remap Builder: Fallback note shown so tuner knows why results changed
+            - Remap Builder: Result count now shows total matches, not just current page count
 
             ### Installation
             Download and run the `.exe` installer. Administrator rights required.

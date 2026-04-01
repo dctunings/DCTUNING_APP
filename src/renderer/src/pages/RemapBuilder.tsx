@@ -205,6 +205,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [libLoadError, setLibLoadError] = useState('')
   const [libLoadingId, setLibLoadingId] = useState<string | null>(null)
   const [showLibrary, setShowLibrary] = useState(false)
+  const [libFallbackNote, setLibFallbackNote] = useState('')
   const LIB_PAGE_SIZE = 25
 
   const selectedEcu: EcuDef | undefined = ECU_DEFINITIONS.find(e => e.id === selectedEcuId)
@@ -365,9 +366,10 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   }
 
   // ─── Library search ───────────────────────────────────────────────────────
-  const searchLibrary = useCallback(async (query: string, page = 0) => {
-    if (!query.trim()) { setLibResults([]); setLibTotal(0); return }
+  const searchLibrary = useCallback(async (query: string, page = 0): Promise<number> => {
+    if (!query.trim()) { setLibResults([]); setLibTotal(0); return 0 }
     setLibLoading(true)
+    setLibFallbackNote('')
     try {
       const { data, count } = await supabase
         .from('definitions_index')
@@ -378,26 +380,33 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       setLibResults((data ?? []) as DefinitionEntry[])
       setLibTotal(count ?? 0)
       setLibPage(page)
+      return count ?? 0
     } finally {
       setLibLoading(false)
     }
   }, [LIB_PAGE_SIZE])
 
-  // When ECU is detected, pre-fill library search with part number extracted from filename
+  // When ECU is detected, pre-fill library search; fall back to ECU family if part number finds nothing
   useEffect(() => {
-    if (detected) {
-      // Use lookahead/lookbehind to find 5-9 digit number not adjacent to other digits
-      const partMatch = fileName.match(/(?<!\d)(\d{5,9})(?!\d)/)
-      if (partMatch) {
-        // Specific part number found — pre-fill and auto-search
-        setLibSearch(partMatch[1])
-        searchLibrary(partMatch[1])
-      } else {
-        // No part number — just pre-fill with family name, do NOT auto-search
-        setLibSearch(detected.def.family || detected.def.name)
-      }
+    if (!detected) return
+    const family = detected.def.family || detected.def.name
+    const partMatch = fileName.match(/(?<!\d)(\d{5,9})(?!\d)/)
+    if (partMatch) {
+      const part = partMatch[1]
+      setLibSearch(part)
+      searchLibrary(part).then(cnt => {
+        if (cnt === 0 && family) {
+          setLibSearch(family)
+          setLibFallbackNote(`No A2L found for "${part}" — showing all ${family} definitions`)
+          searchLibrary(family)
+        }
+      })
+    } else {
+      setLibSearch(family)
+      searchLibrary(family)
     }
-  }, [detected, fileName, searchLibrary])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detected, fileName])
 
   const loadDefinitionFromLibrary = async (entry: DefinitionEntry) => {
     setLibLoadingId(entry.id)
@@ -511,6 +520,12 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           {libLoadError && (
             <div style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 6, padding: '6px 10px', marginBottom: 8 }}>
               ⚠ {libLoadError}
+            </div>
+          )}
+
+          {libFallbackNote && (
+            <div style={{ fontSize: 11, color: 'rgba(251,191,36,0.85)', background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: 6, padding: '6px 10px', marginBottom: 8 }}>
+              ℹ {libFallbackNote}
             </div>
           )}
 
@@ -792,10 +807,15 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             Search
           </button>
         </div>
+        {libFallbackNote && (
+          <div style={{ fontSize: 11, color: 'rgba(251,191,36,0.85)', background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: 5, padding: '5px 8px', marginBottom: 6 }}>
+            ℹ {libFallbackNote}
+          </div>
+        )}
         {libLoading && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>Searching...</div>}
         {libResults.length > 0 && (
           <>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>{libResults.length} result{libResults.length > 1 ? 's' : ''}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>{libTotal.toLocaleString()} result{libTotal !== 1 ? 's' : ''} — showing top {Math.min(libResults.length, 8)}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5, maxHeight: 180, overflowY: 'auto' }}>
               {libResults.slice(0, 8).map(entry => (
                 <div key={entry.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', borderRadius: 6, background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
