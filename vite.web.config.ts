@@ -7,8 +7,7 @@ export default defineConfig({
   root: resolve(__dirname, 'src/renderer'),
   envDir: resolve(__dirname), // pick up .env from project root
   server: {
-    port: 5174,
-    open: true,
+    open: false,
   },
   build: {
     outDir: resolve(__dirname, 'web-dist'),
@@ -23,6 +22,7 @@ export default defineConfig({
     }
   },
   define: {
+    '__APP_VERSION__': JSON.stringify(process.env.npm_package_version || '1.5.15'),
     'import.meta.env.VITE_WEB_MODE': JSON.stringify('true'),
     'import.meta.env.VITE_DEMO_MODE': JSON.stringify('false'),
     'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL || 'https://eqfmeavkefflwmzihqkd.supabase.co'),

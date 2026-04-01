@@ -67,8 +67,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch MED17',
     manufacturer: 'Bosch',
     family: 'MED17',
-    identStrings: ['MED17', 'ME17', '0261S', 'MEDG17', 'MED1750'],
-    fileSizeRange: [524288, 2097152],   // 512KB – 2MB
+    // MED17 uses Infineon Tricore TC1796/TC1797 — NO embedded ASCII symbol names.
+    // 0261S0x = Bosch special variant prefix for MED17/MED9 petrol ECUs.
+    // MED17.1/17.1.1 = TC1796 (2MB); MED17.5.x/17.9.x = TC1797 (4MB).
+    identStrings: ['MED17', 'ME17', '0261S', 'MEDG17', 'MED1750', 'MED17.1', 'MED17.5', 'MED17.9', 'MED9'],
+    fileSizeRange: [524288, 4194304],   // 512KB – 4MB (TC1796=2MB, TC1797=4MB)
     vehicles: ['VW Golf GTI Mk6/7', 'Audi A3/S3 8P/8V', 'Seat Leon Cupra', 'Skoda Octavia vRS', 'VW Polo GTI', 'Audi TTS'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFF8,
@@ -187,9 +190,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC15',
     manufacturer: 'Bosch',
     family: 'EDC15',
-    // Strings found anywhere in the binary (not just first 1KB — C166 vector table occupies start)
-    identStrings: ['EDC15', 'EDC 15', '0281001', '0281010', '0281011', 'EDC-15', 'LADSOLL', 'MENZK', 'MXMOM', 'VP37', 'VP44'],
-    fileSizeRange: [262144, 524288],   // 256KB – 512KB
+    // C167 processor — binary embeds null-terminated DAMOS symbol names directly in ROM (confirmed).
+    // Part numbers: 0281010–0281013 are the EDC15 range per Bosch numbering.
+    // 0281001 removed (not a real EDC15 part number prefix). Added 0281012/0281013 (PD variants).
+    // LADSOLL, MENZK, MXMOM, EGRKL are confirmed ASCII strings in real EDC15 binaries.
+    identStrings: ['EDC15', 'EDC 15', 'EDC15C', 'EDC15P', '0281010', '0281011', '0281012', '0281013', 'EDC-15', 'LADSOLL', 'MENZK', 'MXMOM', 'EGRKL', 'VP37', 'VP44'],
+    fileSizeRange: [262144, 1048576],   // 256KB – 1MB (standard VAG PD = 512KB; EDC15VM+/Mercedes = 1MB)
     vehicles: ['Audi A4 1.9 TDI', 'VW Passat 1.9 TDI', 'VW Golf Mk4 1.9 TDI', 'Skoda Octavia 1.9 TDI', 'Seat Leon 1.9 TDI', 'Audi A3 1.9 TDI'],
     checksumAlgo: 'bosch-simple',
     checksumOffset: 0x7FFF0,
@@ -314,7 +320,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC16',
     manufacturer: 'Bosch',
     family: 'EDC16',
-    identStrings: ['EDC16', 'EDC 16', '0281012', '0281013', '0281014', '0281015', '0281016', 'EDC16C', 'EDC16U', 'LADEKF'],
+    // EDC16 uses MPC561/MPC562 PowerPC — NO embedded ASCII symbol names in binary.
+    // Part numbers: 0281014xxx (transitional EDC15P+/EDC16), 0281015xxx (EDC16 main), 0281016xxx (late EDC16/transition).
+    // Variant strings (EDC16C34, EDC16U31 etc.) may appear in diag string tables in some builds.
+    identStrings: ['EDC16', 'EDC 16', '0281014', '0281015', '0281016', 'EDC16C', 'EDC16U', 'EDC16CP', 'EDC16C3', 'EDC16C8', 'EDC16C34', 'EDC16U31'],
     fileSizeRange: [524288, 4194304],   // 512KB – 4MB (EDC16+ variants e.g. Q7 4.2 TDI can be 2MB+)
     vehicles: ['VW Golf Mk5 2.0 TDI', 'Audi A4 2.0 TDI', 'VW Passat 2.0 TDI', 'Seat Leon 2.0 TDI', 'Skoda Octavia 2.0 TDI', 'Audi A6 3.0 TDI'],
     checksumAlgo: 'bosch-crc32',
@@ -428,8 +437,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['EDC17', 'EDC 17', '0281013', '0281014', '0281015', '0281016', '0281017', 'EDCD17'],
-    fileSizeRange: [524288, 2097152],
+    // EDC17 uses Infineon Tricore TC1796/TC1797 — NO embedded ASCII symbol names.
+    // Part numbers: 0281017xxx+ uniquely identify EDC17 (0281030xxx+ = later variants).
+    identStrings: ['EDC17', 'EDC 17', '0281017', '0281018', '0281019', '0281020', '0281030', 'EDC17C', 'EDC17CP', 'EDC17U', 'EDC17C41', 'EDC17C54', 'EDC17CP14', 'EDC17CP20'],
+    fileSizeRange: [524288, 4194304],   // 512KB – 4MB (TC1796=2MB, TC1797=4MB)
     vehicles: ['VW Golf GTD Mk6/7', 'Audi A4 2.0 TDI', 'BMW 320d/520d', 'VW Passat TDI', 'Skoda Superb TDI', 'Seat Ibiza TDI'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFFC,
@@ -592,8 +603,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch ME7.1 / ME7.5',
     manufacturer: 'Bosch',
     family: 'ME7',
-    identStrings: ['ME7', 'ME7.5', 'ME7.1', 'ME7.3', '0261203', '0261204', '0261206', '0261207', 'MEVBOGK', 'TR HS V0'],
-    fileSizeRange: [65536, 524288],   // 64KB – 512KB (calibration-only reads can be 128KB)
+    // C167CS processor — binary embeds DAMOS symbol names as null-terminated ASCII strings in ROM (confirmed).
+    // Confirmed real symbols present in ME7.5 binaries: KFZW, KFZW2, MLHFM, KFPED, LDRXN, KFMIOP, KFMIRL, MXMOMI.
+    // Part numbers: 0261206xxx–0261207xxx = ME7.5 (1.8T 150/180/225PS); 0261203/204 = older ME7.x.
+    identStrings: ['ME7', 'ME7.5', 'ME7.1', 'ME7.3', '0261203', '0261204', '0261206', '0261207', 'KFZW', 'MLHFM', 'KFPED', 'LDRXN', 'MXMOMI', 'MEVBOGK'],
+    fileSizeRange: [65536, 1048576],   // 64KB – 1MB (standard = 512KB; some 1MB variants exist)
     vehicles: ['VW Golf GTI Mk4 1.8T', 'Audi TT 1.8T 225', 'Audi A3 1.8T', 'Seat Leon 1.8T', 'VW Bora 1.8T', 'Audi A4 1.6', 'VW Golf 1.6', 'VW Passat 1.6/1.8', 'Audi A3 1.6'],
     checksumAlgo: 'bosch-simple',
     checksumOffset: 0x7FF00,
@@ -601,13 +615,16 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     maps: [
       {
         id: 'me7_boost_map',
-        name: 'Boost Pressure Map (LDRXN)',
+        name: 'Max Load Target (LDRXN)',
         category: 'boost',
-        desc: 'Boost target table (LDRXN). Classic ME7 uses 8x8 map. Primary Stage 1 modification for 1.8T engines. Not present on NA (1.6/1.8 non-turbo) variants.',
-        signatures: [[0x4C,0x44,0x52,0x58,0x4E,0x00], [0x4C,0x44,0x52,0x53,0x4F,0x4C,0x4C]],
+        desc: 'Max desired relative charge load vs RPM (LDRXN). 1D table — 16 RPM breakpoints. Primary Stage 1 mod for 1.8T turbo engines. Not present on NA (1.6/1.8 non-turbo) variants.',
+        // "LDRXN\0" = 0x4C,0x44,0x52,0x58,0x4E,0x00 — confirmed real ME7.5 symbol name
+        // "LDRSOLL\0" = 0x4C,0x44,0x52,0x53,0x4F,0x4C,0x4C — alternative load setpoint label
+        signatures: [[0x4C,0x44,0x52,0x58,0x4E,0x00], [0x4C,0x44,0x52,0x53,0x4F,0x4C,0x4C,0x00]],
         sigOffset: 2,
-        rows: 8, cols: 8, dtype: 'uint8', le: false,
-        factor: 0.02, offsetVal: 0, unit: 'bar',
+        // LDRXN is a 1D table: 1 row × 16 RPM columns (confirmed from ME7.5 community research)
+        rows: 1, cols: 16, dtype: 'uint8', le: false,
+        factor: 0.5, offsetVal: 0, unit: '% load',
         stage1: { multiplier: 1.15, clampMax: 220 },
         stage2: { multiplier: 1.25, clampMax: 235 },
         stage3: { multiplier: 1.35, clampMax: 250 },
@@ -615,13 +632,16 @@ export const ECU_DEFINITIONS: EcuDef[] = [
       },
       {
         id: 'me7_fuel_map',
-        name: 'Fuel Injection Map (KFZW)',
-        category: 'fuel',
-        desc: 'Base injection quantity map (KFZW). Enrichment matched to boost increases for safe AFR.',
-        signatures: [[0x4B,0x46,0x5A,0x57,0x00], [0x4B,0x46,0x5A,0x57,0x32]],
+        name: 'Ignition Timing Map (KFZW)',
+        category: 'ignition',
+        desc: 'Base ignition advance map (KFZW). 16×12 int8 table, RPM vs load. Confirmed real ME7.5 symbol. Stage 2/3 adds advance in mid-range where knock margin allows.',
+        // "KFZW\0" = 0x4B,0x46,0x5A,0x57,0x00 — confirmed symbol in ME7.5 C167 ROM
+        // "KFZW2\0" = variant for VVT-active condition
+        signatures: [[0x4B,0x46,0x5A,0x57,0x00], [0x4B,0x46,0x5A,0x57,0x32,0x00]],
         sigOffset: 2,
-        rows: 16, cols: 16, dtype: 'int8', le: false,
-        factor: 0.75, offsetVal: -48, unit: '°',
+        // Research confirms KFZW = 16 rows × 12 cols (RPM × load) in ME7.5 AUQ/AWP class
+        rows: 16, cols: 12, dtype: 'int8', le: false,
+        factor: 0.75, offsetVal: -48, unit: '°BTDC',
         stage1: { multiplier: 1.10 },
         stage2: { multiplier: 1.18 },
         stage3: { multiplier: 1.28, clampMax: 127 },
@@ -722,8 +742,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Delphi DCM3.5',
     manufacturer: 'Delphi',
     family: 'DCM3.5',
-    identStrings: ['DCM3.5', 'DCM35', 'DELPHI', 'DW10C'],
-    fileSizeRange: [524288, 1048576],
+    // MPC5566 (PowerPC) — no embedded ASCII symbol names. ~2MB full flash dump.
+    identStrings: ['DCM3.5', 'DCM35', 'DELPHI', 'DW10C', 'DW10CD'],
+    fileSizeRange: [524288, 2097152],   // 512KB – 2MB (MPC5566 internal ~2MB)
     vehicles: ['Ford Focus 3 2.0L TDCi 140/163PS', 'Ford Kuga 1 2.0L TDCi 140/163PS', 'Ford Kuga 2 2.0L TDCi 140/163PS', 'Ford Mondeo 4 2.0L TDCi 140/163PS', 'Peugeot 508 2.0L HDi', 'Citroen C5 2.0L HDi'],
     checksumAlgo: 'unknown',
     checksumOffset: 0,
@@ -794,9 +815,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Siemens SID208',
     manufacturer: 'Siemens/Continental',
     family: 'SID208',
-    identStrings: ['SID208', 'SID 208', 'SIEMENS', 'VDO'],
-    fileSizeRange: [1048576, 2097152],
-    vehicles: ['Ford Transit 2012 2.2L 100-155PS', 'Ford Transit 2.0L Diesel', 'Land Rover Defender 2012 2.2L TD4', 'Ford Ranger 3.2L Diesel'],
+    // TC1728 Tricore (1.5MB) or TC1797 (4MB) variant. No embedded ASCII symbols.
+    identStrings: ['SID208', 'SID 208', 'SIEMENS', 'VDO', 'CONTINENTAL', 'PUMFRQ', 'FRQ61'],
+    fileSizeRange: [1048576, 4194304],   // 1MB–4MB (TC1728=1.5MB; TC1797 variant=4MB)
+    vehicles: ['Ford Transit 2012 2.2L 100-155PS', 'Ford Transit 2.0L Diesel', 'Ford Tourneo Custom 2.2L', 'Land Rover Defender 2012 2.2L TD4', 'Ford Ranger 3.2L Diesel'],
     checksumAlgo: 'unknown',
     checksumOffset: 0,
     checksumLength: 0,
@@ -924,7 +946,8 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch PCR2.1',
     manufacturer: 'Bosch',
     family: 'PCR2.1',
-    identStrings: ['PCR2.1', 'PCR21', '0281014', '0281015', '0281016'],
+    // PCR2.1 identified by firmware string only — no unique part number range separate from EDC17.
+    identStrings: ['PCR2.1', 'PCR21', 'PCR 2.1', 'BOSCH PCR', '0281014', '0281015', '0281016'],
     fileSizeRange: [1048576, 2097152],
     vehicles: ['VW Golf 6 1.6 TDI', 'VW Polo 6R 1.6 TDI', 'Audi A3 8P 1.6 TDI', 'Seat Ibiza 6J 1.6 TDI', 'Skoda Fabia 2 1.6 TDI', 'VW Caddy 1.6 TDI'],
     checksumAlgo: 'bosch-crc32',
@@ -1051,11 +1074,15 @@ export const ECU_DEFINITIONS: EcuDef[] = [
   // ── Bosch ME17.9.11/12/13 (Kia/Hyundai 1.4L–1.6L GDI) ───────────────────
   {
     id: 'me17_kia',
-    name: 'Bosch ME17.9 (Kia/Hyundai)',
-    manufacturer: 'Bosch',
+    name: 'KEFICO ME17.9 (Kia/Hyundai)',
+    manufacturer: 'Bosch/KEFICO',
     family: 'ME17.9',
-    identStrings: ['ME17.9.11', 'ME17.9.12', 'ME17.9.13', '0261S06', '0261S07'],
-    fileSizeRange: [1048576, 2097152],
+    // KEFICO-manufactured (Hyundai/Bosch JV). Uses Tricore TC1762, 1MB internal flash.
+    // OEM part numbers: 391xx-xxxxx (Hyundai/Kia), KEFICO ref: 9001xxxxxxKx.
+    // NO Bosch 0261Sxx hardware number — remove 0261S06/S07 (those are VAG MED17 numbers).
+    // ME17.9.11/12/13 strings may appear as calibration ID prefixes in the binary.
+    identStrings: ['ME17.9.11', 'ME17.9.12', 'ME17.9.13', 'ME17.9', 'KEFICO', '39106', '39118'],
+    fileSizeRange: [524288, 2097152],   // TC1762 = 1MB internal flash
     vehicles: ['Kia Ceed 1.6L GDI', 'Kia Sportage 1.6L GDI', 'Hyundai i30 1.6L GDI', 'Hyundai i40 1.6L GDI', 'Kia Rio 1.4L GDI', 'Hyundai i20 1.4L GDI'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFF8,
@@ -1126,9 +1153,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch MG1',
     manufacturer: 'Bosch',
     family: 'MG1',
-    identStrings: ['MG1CS', 'MG1C3', 'MG1CA', '0261S14', '0261S15', '0261S17'],
-    fileSizeRange: [1048576, 4194304],   // 1MB – 4MB
-    vehicles: ['Ford Focus RS Mk3 (2.3 EcoBoost)', 'Ford Fiesta ST200 (1.6 EcoBoost)', 'Ford Focus ST Mk3 (2.0 EcoBoost)', 'Ford Mustang EcoBoost (2.3)', 'Ford Kuga ST-Line (1.5 EcoBoost)'],
+    // Tricore TC275/TC277/TC298 depending on sub-variant. MG1CS015/016/017 for Ford.
+    // 0261S14xxx confirmed on Ford Focus 1.0 EcoBoost (e.g. 0261S14568).
+    // MG1CS/MG1C3 may appear in calibration ID strings within the binary.
+    identStrings: ['MG1CS', 'MG1C3', 'MG1CS015', 'MG1CS016', 'MG1CS017', '0261S14', '0261S15', '0261S12'],
+    fileSizeRange: [1048576, 4194304],   // 1MB – 4MB (TC275/TC277 = 2–4MB)
+    vehicles: ['Ford Focus RS Mk3 (2.3 EcoBoost)', 'Ford Fiesta ST200 (1.6 EcoBoost)', 'Ford Focus ST Mk3 (2.0 EcoBoost)', 'Ford Mustang 2.3 EcoBoost', 'Ford Focus 1.0 EcoBoost 125/140ps'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x1FFFF8,
     checksumLength: 4,
@@ -1212,9 +1242,14 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Continental SIM2K',
     manufacturer: 'Continental',
     family: 'SIM2K',
-    identStrings: ['SIM2K-240', 'SIM2K-341', 'SIM2K240', 'SIM2K341', 'SIM2K-14', 'SIMK43'],
-    fileSizeRange: [1048576, 3145728],   // 1MB – 3MB
-    vehicles: ['Kia Stinger 2.0T / 3.3T', 'Hyundai i30N 2.0T', 'Hyundai Veloster N 2.0T', 'Kia ProCeed GT 1.4T', 'Hyundai Elantra N 2.0T', 'Kia Ceed GT 1.4T'],
+    // SIM2K-240/241/245: TC1767 (Kia Ceed/Hyundai i30 gen2, ~1.5MB)
+    // SIM2K-250/258/259: TC1782 (Kia Stinger 2.0T, Hyundai i30N — 2.5MB)
+    // SIM2K-260/261: TC1791 (Kia Stinger 3.3T — 4MB)
+    // SIM2K-341 (older): MPC562 with external flash
+    // SIM2K variant strings may appear in calibration ID within binary.
+    identStrings: ['SIM2K-240', 'SIM2K-250', 'SIM2K-260', 'SIM2K-341', 'SIM2K240', 'SIM2K250', 'SIM2K260'],
+    fileSizeRange: [1048576, 4194304],   // 1MB–4MB (TC1767=1.5MB; TC1782=2.5MB; TC1791=4MB)
+    vehicles: ['Kia Stinger 2.0T (SIM2K-250)', 'Kia Stinger 3.3T (SIM2K-260)', 'Hyundai i30N 2.0T (SIM2K-250)', 'Hyundai Veloster N 2.0T', 'Kia Ceed/Hyundai i30 2nd gen (SIM2K-240)', 'Kia ProCeed GT 1.4T'],
     checksumAlgo: 'continental-crc',
     checksumOffset: 0x1FFFF0,
     checksumLength: 4,
@@ -1284,8 +1319,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch ME9.7 (Mercedes)',
     manufacturer: 'Bosch',
     family: 'ME9.7',
-    identStrings: ['ME9.7', 'ME97', '0261S03', '0261S04', '0261S05', 'M272', 'M273'],
-    fileSizeRange: [1048576, 2097152],   // 1MB – 2MB
+    // Processor: Motorola MPC555-565 (PowerPC), NOT Tricore. ~512KB–1MB flash.
+    // Part numbers: 0261S02xxx range confirmed (e.g. 0261S02321, 0261S02453, 0261S02455, 0261S02615).
+    // M272/M273 are engine codes — NOT ECU binary strings, removed.
+    identStrings: ['ME9.7', 'ME97', 'MED9.7', '0261S02'],
+    fileSizeRange: [524288, 1048576],   // MPC55x = ~512KB–1MB flash
     vehicles: ['Mercedes C63 AMG (M156 6.2L)', 'Mercedes E63 AMG', 'Mercedes SL63 AMG', 'Mercedes C-Class M272 3.5L', 'Mercedes E-Class M272/M273', 'Mercedes S-Class M272/M273'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x1FFFF8,
@@ -1353,11 +1391,14 @@ export const ECU_DEFINITIONS: EcuDef[] = [
   // ── Bosch DCM6.1 (Ford Transit / Ranger diesel) ───────────────────────────
   {
     id: 'dcm61',
-    name: 'Bosch DCM6.1',
-    manufacturer: 'Bosch',
+    name: 'Delphi DCM6.1',
+    manufacturer: 'Delphi',
     family: 'DCM6.1',
-    identStrings: ['DCM6.1', 'DCM61', '0281018', '0281019', 'SYZ1', 'SYZ4', 'SYB6'],
-    fileSizeRange: [524288, 2097152],    // 512KB – 2MB
+    // DCM6.1 is a DELPHI ECU (not Bosch) — Tricore TC1797, 4MB internal flash.
+    // Uses Delphi internal ref 28xxxxxx (e.g. 28473463). Ford OEM DS71-/FS7A- part numbers.
+    // Removed 0281018/0281019 — those are Bosch EDC17 numbers, not Delphi.
+    identStrings: ['DCM6.1', 'DCM61', 'DELPHI', '28473', 'CuPF', 'DS71', 'FS7A'],
+    fileSizeRange: [1048576, 4194304],   // TC1797 = 4MB internal flash
     vehicles: ['Ford Transit 2.0 TDCi (2016+)', 'Ford Transit 2.2 TDCi', 'Ford Ranger 2.2 TDCi', 'Ford Ranger 3.2 TDCi', 'Ford Mondeo 2.0 TDCi (2015+)', 'Ford Focus 1.5 TDCi (2015+)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0xFFFF8,
@@ -1486,8 +1527,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Denso SkyActiv (Mazda)',
     manufacturer: 'Denso',
     family: 'SkyActiv',
-    identStrings: ['SKYACTIV', 'SkyActiv', 'PE-VPS', 'PX8R', 'P5-VP', 'DENSO', 'SH7058', 'SH72531'],
-    fileSizeRange: [524288, 2097152],
+    // Denso processor: SH72531 (petrol SkyActiv-G), SH7058 (diesel SkyActiv-D).
+    // SH7058/SH72531 are chip model names — NOT ASCII strings in the binary. REMOVED.
+    // 'DENSO' not confirmed as binary string. REMOVED.
+    // PE-VPS, PX8R, P5-VP are Mazda engine/part code prefixes that may appear in calibration ID.
+    identStrings: ['SKYACTIV', 'SkyActiv', 'PE-VPS', 'PX8R', 'P5-VP', 'SH3E', 'S52L'],
+    fileSizeRange: [524288, 2097152],   // SH72531=1.25MB; SH72543=2MB; SH7058=1MB
     vehicles: ['Mazda CX-5 2.0 SkyActiv-G', 'Mazda3 2.0/2.5 SkyActiv-G', 'Mazda6 2.5 SkyActiv-G', 'Mazda MX-5 2.0 SkyActiv-G', 'Mazda CX-5 2.2 SkyActiv-D', 'Mazda3 1.5 SkyActiv-D'],
     checksumAlgo: 'unknown',
     checksumOffset: 0,
@@ -1544,7 +1589,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Keihin PGM-FI (Honda)',
     manufacturer: 'Keihin',
     family: 'PGM-FI',
-    identStrings: ['PGM-FI', 'PGMFI', 'HONDA', 'KEIHIN', 'SH7058', 'SH72543', 'SH72546'],
+    // Keihin processor: SH7058 (1MB, ~2003-08), SH72543 (2MB, ~2008-13), SH72546 (3.75MB, 2013+).
+    // SH70xx/SH725xx chip names do NOT appear as ASCII in the binary. REMOVED.
+    // 'HONDA' not confirmed as binary string. REMOVED. OEM part numbers start with 37820-.
+    identStrings: ['PGM-FI', 'PGMFI', 'KEIHIN', '37820', '37805'],
     fileSizeRange: [524288, 2097152],
     vehicles: ['Honda Civic Type-R FK2/FK8 (2.0T)', 'Honda Civic 1.5 VTEC Turbo', 'Honda Accord 2.4 i-VTEC', 'Honda CR-V 1.5T', 'Honda Jazz 1.5T', 'Honda HR-V 1.5T'],
     checksumAlgo: 'unknown',
@@ -1616,7 +1664,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Scania EMS S7/S8',
     manufacturer: 'Scania',
     family: 'EMS S7',
-    identStrings: ['EMS S7', 'EMS S8', 'EMSS7', 'EMSS8', 'EMD1', 'MPC5566', 'SCANIA', 'DC9', 'DC13', 'DC16'],
+    // MPC5566 is a chip model name — does NOT appear as ASCII in binary. REMOVED.
+    // SCANIA, DC9, DC13, DC16 may appear as engine family strings in Scania firmware.
+    identStrings: ['EMS S7', 'EMS S8', 'EMSS7', 'EMSS8', 'EMD1', 'SCANIA', 'DC9', 'DC13', 'XPI'],
     fileSizeRange: [1048576, 8388608],   // 1MB – 8MB (truck ECUs are large)
     vehicles: ['Scania R-series (DC9/DC13/DC16)', 'Scania G-series (DC9/DC13)', 'Scania P-series (DC9/DC13)', 'Scania Irizar Bus (DC9)', 'Scania OmniCity (DC9)', 'Scania Touring (DC13)'],
     checksumAlgo: 'unknown',
@@ -1689,7 +1739,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch MED17.7 (Mercedes)',
     manufacturer: 'Bosch',
     family: 'MED17.7',
-    identStrings: ['MED17.7', 'MED177', '0261S09', '0261S10', '0261S12', 'M274', 'M276', 'M177'],
+    // Tricore TC1797. Part numbers: 0261S07xxx–0261S10xxx (MED17.7.2 A45 AMG: 0261S08233, 0261S09816).
+    // M274/M276/M177 are engine codes — NOT ECU binary strings. REMOVED.
+    identStrings: ['MED17.7', 'MED177', '0261S07', '0261S08', '0261S09', '0261S10'],
     fileSizeRange: [1048576, 4194304],
     vehicles: ['Mercedes A45 AMG (M133 2.0T)', 'Mercedes CLA45 AMG', 'Mercedes GLA45 AMG', 'Mercedes C250 CGI (M274)', 'Mercedes E350 CGI (M276)', 'Mercedes C43 AMG (M276 3.0T)'],
     checksumAlgo: 'bosch-crc32',
@@ -1747,7 +1799,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17 (JLR)',
     manufacturer: 'Bosch',
     family: 'EDC17CP',
-    identStrings: ['EDC17CP42', 'EDC17CP55', 'EDC17C', '0281020', '0281021', '0281022', 'AJ200D', 'TD4', 'TD6'],
+    // EDC17CP42 (Freelander2/Discovery Sport pre-2015), EDC17CP55 (Ingenium 2.0D post-2015).
+    // Bosch 0281032xxx confirmed for CP55 (e.g. 0281032607). AJ200D/TD4/TD6 are marketing names — NOT ECU strings. REMOVED.
+    identStrings: ['EDC17CP42', 'EDC17CP55', 'EDC17CP', '0281020', '0281021', '0281022', '0281032'],
     fileSizeRange: [1048576, 4194304],
     vehicles: ['Land Rover Defender 3.0 D200/D250/D300', 'Land Rover Discovery Sport 2.0 TD4', 'Jaguar F-Pace 2.0D/3.0D', 'Range Rover Velar D180/D240', 'Jaguar XE 2.0D (Ingenium)', 'Land Rover Freelander 2 2.2 TD4'],
     checksumAlgo: 'bosch-crc32',
@@ -1802,12 +1856,16 @@ export const ECU_DEFINITIONS: EcuDef[] = [
   // ── Delphi MT86 / DCM3.7 (Hyundai/Kia diesel) ────────────────────────────
   {
     id: 'delphi_mt86',
-    name: 'Delphi MT86 (Hyundai/Kia)',
+    name: 'Delphi DCM3.7 (Hyundai/Kia diesel)',
     manufacturer: 'Delphi',
-    family: 'MT86',
-    identStrings: ['MT86', 'MT38', 'DCM3.7', 'DCM37', '25185', 'U2', 'D4FB', 'D4FD', 'CRDI'],
-    fileSizeRange: [524288, 2097152],
-    vehicles: ['Hyundai Tucson 1.6 CRDi (2015+)', 'Kia Sportage 1.6 CRDi', 'Hyundai i30 1.6 CRDi', 'Kia Ceed 1.6 CRDi', 'Hyundai Santa Fe 2.2 CRDi', 'Kia Sorento 2.2 CRDi'],
+    family: 'DCM3.7',
+    // DCM3.7AP is the DIESEL ECU (Renesas SH72513/SH72543). NOT MT86!
+    // MT86 is actually a PETROL ECU for large-displacement engines (Genesis 3.8L V6, TC1766).
+    // 'DCM3.7' confirmed to appear in calibration ID strings embedded in binary (e.g. DCM3.7-B1E-UGD90L-Z20H-J309S).
+    // Delphi part numbers: 28386430, 28371843, 25189959 etc.
+    identStrings: ['DCM3.7', 'DCM37', 'DCM3.7AP', '28386', '28371', '25189'],
+    fileSizeRange: [524288, 2097152],   // SH72543 = 2MB; SH72513 = 1.25MB
+    vehicles: ['Hyundai Tucson 1.6 CRDi (2015+)', 'Kia Sportage 1.6 CRDi', 'Hyundai i30 1.6 CRDi', 'Kia Ceed 1.4/1.6 CRDi', 'Hyundai Santa Fe 2.2 CRDi', 'Kia Sorento 2.2 CRDi'],
     checksumAlgo: 'unknown',
     checksumOffset: 0,
     checksumLength: 0,
@@ -1921,7 +1979,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Denso (Toyota/Lexus)',
     manufacturer: 'Denso',
     family: 'Toyota Denso',
-    identStrings: ['TOYOTA', 'LEXUS', 'HINO', 'SH7058', 'SH7055', 'SH72531', 'SH72543', '76F003', '76F0196', 'R7F701'],
+    // Toyota Denso ECUs embed calibration IDs (89661- OEM prefix) and Denso system strings.
+    // SH705x/SH725x chip names and brand names (TOYOTA/LEXUS) do NOT appear as ASCII in binaries.
+    // 76F003/R7F701 are Renesas RH850 part IDs — not embedded as plain ASCII in calibration ROMs.
+    identStrings: ['89661-', 'DENSO', 'DNSSYS', '89663-', '89666-'],
     fileSizeRange: [524288, 4194304],
     vehicles: ['Toyota GR Yaris 1.6T (G16E-GTS)', 'Toyota GR86 2.4 (FA24)', 'Toyota Supra A90 3.0T (B58)', 'Toyota Hilux 2.8D (1GD-FTV)', 'Lexus IS-F 5.0 V8', 'Toyota Land Cruiser 3.0D (1KD-FTV)', 'Toyota Auris/Corolla 1.8 Hybrid', 'Lexus RC-F 5.0 V8'],
     checksumAlgo: 'unknown',
@@ -2007,7 +2068,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Mitsubishi CAN (MH82x)',
     manufacturer: 'Mitsubishi',
     family: 'MH82x',
-    identStrings: ['MH8204', 'MH8203', 'MH8302', 'MH8301', 'MH820', 'MH830', 'MITSUBISHI', 'MELCO'],
+    // MH820x/MH830x are the actual ECU hardware variant codes embedded in calibration ID strings.
+    // 'MITSUBISHI' and 'MELCO' are manufacturer names — not embedded as ASCII in ECU binaries.
+    identStrings: ['MH8204', 'MH8203', 'MH8302', 'MH8301', 'MH820', 'MH830'],
     fileSizeRange: [524288, 2097152],
     vehicles: ['Mitsubishi Lancer Evo X (4B11T)', 'Mitsubishi Eclipse Cross 1.5T', 'Mitsubishi Outlander PHEV', 'Mitsubishi ASX 1.6T', 'Mitsubishi L200 2.4D (4N15)', 'Mitsubishi Pajero Sport 2.4D'],
     checksumAlgo: 'unknown',
@@ -2079,7 +2142,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Mitsubishi Diesel CAN',
     manufacturer: 'Mitsubishi',
     family: 'MH Diesel',
-    identStrings: ['4N15', '4D56', 'MELDAS', 'MH8105', 'MH8106', 'DENSO', 'FUSO', '4M50'],
+    // MH8105/MH8106 are the actual ECU hardware part numbers embedded in calibration IDs.
+    // Engine codes (4N15/4D56/4M50) and brand names (FUSO/MELDAS) do NOT appear in ECU binary ROMs.
+    // MELDAS is a Mitsubishi CNC machine system — unrelated to automotive ECUs.
+    identStrings: ['MH8105', 'MH8106', 'MH8104', 'DENSO'],
     fileSizeRange: [262144, 1048576],
     vehicles: ['Mitsubishi L200 2.4D (4N15)', 'Mitsubishi Pajero 3.2D (4M41)', 'Mitsubishi Shogun Sport 2.4D', 'Mitsubishi Fuso Canter 3.0D (4P10)', 'Mitsubishi Outlander 2.2D', 'Mitsubishi Eclipse Cross 1.5D'],
     checksumAlgo: 'unknown',
@@ -2137,7 +2203,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Subaru (Hitachi/Denso)',
     manufacturer: 'Hitachi/Denso',
     family: 'Subaru',
-    identStrings: ['SUBARU', 'EJ20', 'EJ25', 'FA20', 'FB20', 'FA24', 'HITACHI', 'WA1221', 'WA1222', 'SH7058', 'SH7059'],
+    // WA1221/WA1222 are confirmed ROM ID prefixes embedded in Subaru Denso/Hitachi ECU calibration headers.
+    // Engine codes (EJ20/EJ25/FA20/FB20/FA24), brand names (SUBARU/HITACHI), and SH chip strings
+    // do NOT appear as ASCII in the binary ROM. WA1221 = Hitachi, WA1222 = Denso variant ROM IDs.
+    identStrings: ['WA1221', 'WA1222', 'WA12210', 'WA12220'],
     fileSizeRange: [524288, 2097152],
     vehicles: ['Subaru Impreza WRX STI (EJ257)', 'Subaru WRX 2.5T (EJ255/EJ257)', 'Subaru BRZ 2.0 (FA20)', 'Subaru Forester XT (EJ255)', 'Subaru Legacy GT (EJ255)', 'Subaru Outback 2.5i (FB25)'],
     checksumAlgo: 'unknown',
@@ -2209,7 +2278,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch T-PROT (Ford EcoBoost)',
     manufacturer: 'Bosch',
     family: 'T-PROT',
-    identStrings: ['T-PROT7', 'T-PROT12', 'TPROT7', 'TPROT12', 'GEN2F', 'GEN3F', 'ECOBOOST', '0261S18', '0261S19'],
+    // T-PROT7/T-PROT12 are tuner community security-level labels — NOT strings in the ECU binary.
+    // ECOBOOST is a marketing name — not in the binary. GEN2F/GEN3F are internal Bosch generation
+    // codes that DO appear in calibration headers. 0261S18/S19 = Bosch application part numbers.
+    identStrings: ['GEN2F', 'GEN3F', '0261S18', '0261S19', '0261S20', 'MED17.0', 'ME17.0'],
     fileSizeRange: [524288, 2097152],
     vehicles: ['Ford Fiesta 1.0 EcoBoost (125/140ps)', 'Ford Focus 1.5 EcoBoost (150/182ps)', 'Ford Mondeo 1.5/2.0 EcoBoost', 'Ford Galaxy 1.5 EcoBoost', 'Ford S-Max 1.5 EcoBoost', 'Ford Puma 1.0 EcoBoost (155ps)'],
     checksumAlgo: 'bosch-crc32',
@@ -2281,7 +2353,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Ford Power Stroke Diesel',
     manufacturer: 'Bosch',
     family: 'Power Stroke',
-    identStrings: ['POWERSTROKE', 'Power Stroke', '6.7L', '7.3L', 'F250', 'F350', 'SCORPION', '0281024', '0281025'],
+    // Ford 6.7L Power Stroke uses Bosch EDC17CP05/CP65; 7.3L Scorpion uses EDC17CP65.
+    // 'POWERSTROKE', 'Power Stroke', '6.7L', 'F250', 'SCORPION' are marketing/model names — not in binary.
+    // EDC17CP05/CP65 are confirmed Bosch variant IDs embedded in calibration identification areas.
+    identStrings: ['EDC17CP05', 'EDC17CP65', 'EDC17CP', '0281025', '0281026', '0281030'],
     fileSizeRange: [1048576, 4194304],
     vehicles: ['Ford F-250/F-350 6.7L Power Stroke (2011+)', 'Ford Transit 3.2L Power Stroke', 'Ford Ranger (US) 3.2L Power Stroke', 'Ford F-150 3.0L Power Stroke', 'Ford Excursion 7.3L Power Stroke', 'Ford Explorer 3.0L Power Stroke'],
     checksumAlgo: 'bosch-crc32',
@@ -2735,6 +2810,1299 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage2: { addend: 3 },
         stage3: { addend: 4, clampMax: 70 },
         critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── Bosch MSD80 / MSD85 (BMW N54 / N55 twin-turbo petrol) ───────────────────
+  {
+    id: 'bmw_msd',
+    name: 'Bosch MSD80/MSD85 (BMW N54/N55)',
+    manufacturer: 'Bosch',
+    family: 'MSD80',
+    // MSD80/85 are Infineon Tricore-based (N54=TC1796, N55=TC1797).
+    // MSD variant codes ARE embedded in BMW calibration identification sectors.
+    // No DAMOS symbol names in ROM — map extraction via A2L or DRT required.
+    // MSV80/MSV85 cover the N43/N52/N53 naturally-aspirated variants.
+    identStrings: ['MSD80', 'MSD85', 'MSD87', 'MSV80', 'MSV85', 'MSV87', 'MSD8', 'MSV8'],
+    fileSizeRange: [524288, 4194304],   // TC1796=2MB, TC1797=4MB
+    vehicles: ['BMW 335i/335is (E90/E92/E93 N54)', 'BMW 135i (E82/E88 N54)', 'BMW 535i (E60/E61 N54)', 'BMW Z4 35i (E89 N54)', 'BMW 335i/435i (F30/F32 N55)', 'BMW M135i/M235i (F20/F22 N55)', 'BMW 320i/328i/420i (N20 turbo)', 'BMW 520i/528i (F10 N20)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x1FFFF8,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'msd_boost_target',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Charge air pressure setpoint. BMW N54 twin-turbo has enormous boost headroom from the factory detuned calibration — primary Stage 1/2 map.',
+        signatures: [[0x4C,0x44,0x4B,0x56,0x53,0x4F,0x4C,0x4C], [0x42,0x4F,0x4F,0x53,0x54,0x53,0x4F,0x4C]],
+        sigOffset: 4,
+        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.22 },
+        stage2: { multiplier: 1.40 },
+        stage3: { multiplier: 1.58, clampMax: 62000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'msd_fuel_inject',
+        name: 'Fuel Injection Quantity',
+        category: 'fuel',
+        desc: 'Base injection quantity map. N54/N55 use high-pressure direct injection — raising this supports the significant boost increases possible on these engines.',
+        signatures: [[0x49,0x4E,0x4A,0x44,0x55,0x52,0x42,0x53], [0x4B,0x46,0x49,0x4E,0x4A,0x44,0x55,0x52]],
+        sigOffset: 4,
+        rows: 16, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.28 },
+        stage3: { multiplier: 1.40, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'msd_torque_limit',
+        name: 'Torque Demand Limit',
+        category: 'torque',
+        desc: 'Software torque ceiling. BMW MSD80/85 has multiple torque limits — raising the primary demand limit is essential for Stage 1+.',
+        signatures: [[0x54,0x51,0x4C,0x49,0x4D,0x01,0x00], [0x4D,0x58,0x4D,0x4F,0x4D,0x00]],
+        sigOffset: 2,
+        rows: 8, cols: 12, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.20 },
+        stage2: { multiplier: 1.38 },
+        stage3: { multiplier: 1.55, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'msd_ignition',
+        name: 'Ignition Timing Map',
+        category: 'ignition',
+        desc: 'Base ignition advance map. N54/N55 runs conservatively on 95 RON — timing gains available on 98/100 RON fuel, critical for Stage 2+ power.',
+        signatures: [[0x4B,0x46,0x5A,0x57,0x42,0x41,0x53,0x45], [0x49,0x47,0x4E,0x42,0x41,0x53,0x45]],
+        sigOffset: 4,
+        rows: 16, cols: 16, dtype: 'int8', le: true,
+        factor: 0.75, offsetVal: -48, unit: '°BTDC',
+        stage1: { addend: 0 },
+        stage2: { addend: 2 },
+        stage3: { addend: 3, clampMax: 62 },
+        critical: false, showPreview: true,
+      },
+      {
+        id: 'msd_rev_limit',
+        name: 'Rev Limiter',
+        category: 'limiter',
+        desc: 'Engine RPM hard cut. N54/N55 factory limit is conservative for the engine capability — often raised on track applications.',
+        signatures: [[0x4E,0x4D,0x41,0x58,0x42,0x45,0x47,0x52], [0x52,0x45,0x56,0x4C,0x49,0x4D]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'RPM',
+        stage1: { addend: 200 },
+        stage2: { addend: 400 },
+        stage3: { addend: 500, clampMax: 8000 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ── Siemens/Continental MS43 / MS45 (BMW E46 / E39 M52TU / M54) ──────────────
+  {
+    id: 'bmw_ms43',
+    name: 'Siemens MS43/MS45 (BMW M54)',
+    manufacturer: 'Siemens/Continental',
+    family: 'MS43',
+    // MS43/MS45 = BMW E46 (318i/320i/325i/330i) and E39 520i/525i/530i.
+    // MC9S12 / ST10F-series MCU. MS43 embeds calibration variant code ('MS43') and
+    // DAMOS-style symbol names — map locations findable via embedded ASCII strings.
+    identStrings: ['MS43', 'MS45', 'MS41', 'MS42', 'MS43.1', 'MS45.1', 'SIEMENS'],
+    fileSizeRange: [131072, 524288],   // 128KB–512KB flash
+    vehicles: ['BMW 318i/320i (E46 M52TU/N42)', 'BMW 325i/330i (E46 M54)', 'BMW 318i/320i/325i (E36 M52)', 'BMW 520i/525i/530i (E39 M54)', 'BMW Z3/Z4 2.5i/3.0i (M54)', 'BMW X5 3.0i (E53 M54)', 'BMW M3 (E46 S54 — MS45)'],
+    checksumAlgo: 'bosch-simple',
+    checksumOffset: 0x7FFF8,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'ms43_ignition',
+        name: 'Ignition Timing Map (KFZW)',
+        category: 'ignition',
+        desc: 'Primary ignition advance map (KFZW). BMW M52TU/M54 naturally-aspirated inline-6 responds well to timing advance on 98 RON — main Stage 1 NA modification.',
+        signatures: [[0x4B,0x46,0x5A,0x57,0x00], [0x4B,0x46,0x5A,0x57,0x32,0x00]],
+        sigOffset: 0,
+        rows: 16, cols: 12, dtype: 'int8', le: false,
+        factor: 0.75, offsetVal: -48, unit: '°BTDC',
+        stage1: { addend: 2 },
+        stage2: { addend: 3 },
+        stage3: { addend: 4, clampMax: 70 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'ms43_fuel_map',
+        name: 'Load/Fuel Volumetric Efficiency',
+        category: 'fuel',
+        desc: 'Volumetric efficiency (KFNWUL) / load table. Adjusting this improves fuelling accuracy post air-intake or exhaust modification.',
+        signatures: [[0x4B,0x46,0x4E,0x57,0x55,0x4C,0x00], [0x4B,0x46,0x4C,0x55,0x46,0x54,0x00]],
+        sigOffset: 0,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 0.001, offsetVal: 0, unit: 'load',
+        stage1: { multiplier: 1.05 },
+        stage2: { multiplier: 1.10 },
+        stage3: { multiplier: 1.15, clampMax: 65000 },
+        critical: false, showPreview: true,
+      },
+      {
+        id: 'ms43_rev_limit',
+        name: 'Rev Limiter (NMAXBEGR)',
+        category: 'limiter',
+        desc: 'Engine RPM hard cut. M54 factory limit is conservative — commonly raised to 7200+ RPM for track use on healthy engines.',
+        signatures: [[0x4E,0x4D,0x41,0x58,0x42,0x45,0x47,0x52], [0x52,0x45,0x56,0x4C,0x49,0x4D]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'RPM',
+        stage1: { addend: 300 },
+        stage2: { addend: 500 },
+        stage3: { addend: 700, clampMax: 8500 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'ms43_vanos',
+        name: 'VANOS Cam Timing Map',
+        category: 'misc',
+        desc: 'Variable camshaft timing advance map (KFVANOS). Optimising VANOS advance on M54 improves mid-range torque and top-end power.',
+        signatures: [[0x4B,0x46,0x56,0x41,0x4E,0x4F,0x53], [0x56,0x41,0x4E,0x4F,0x53,0x41,0x44,0x56]],
+        sigOffset: 2,
+        rows: 8, cols: 12, dtype: 'uint8', le: false,
+        factor: 1, offsetVal: -60, unit: '°cam',
+        stage1: { addend: 0 },
+        stage2: { addend: 2 },
+        stage3: { addend: 3, clampMax: 50 },
+        critical: false, showPreview: true,
+      },
+    ],
+  },
+
+  // ── Magneti Marelli IAW (Fiat / Alfa Romeo / Lancia petrol) ─────────────────
+  {
+    id: 'marelli_iaw',
+    name: 'Magneti Marelli IAW (Fiat/Alfa/Lancia)',
+    manufacturer: 'Magneti Marelli',
+    family: 'IAW',
+    // IAW variant codes ARE embedded as ASCII in Marelli calibration ROM headers.
+    // IAW4GV = Alfa 147/156/GT, Fiat Stilo 1.8/2.0 (ST10F/MC912-based, DAMOS symbols present).
+    // IAW5NF/6F = Fiat Bravo/Punto 1.4T MultiAir (SPC5566, no embedded symbols).
+    // IAW7GF/7GFA = Alfa Giulietta 1.4T, Fiat 500 Abarth 1.4T (SPC5566/TC1724).
+    identStrings: ['IAW4GV', 'IAW5F', 'IAW5NF', 'IAW6F', 'IAW7GF', 'IAW7GFA', 'IAW8F', 'IAW4', 'IAW5', 'IAW6', 'IAW7', 'MARELLI'],
+    fileSizeRange: [131072, 2097152],   // 128KB (IAW4GV) – 2MB (IAW7GF+)
+    vehicles: ['Alfa Romeo 147/156/GT 1.8/2.0 TS (IAW4GV)', 'Fiat Stilo 1.8/2.0 (IAW4GV/5F)', 'Fiat Bravo 1.4T 150hp (IAW6F)', 'Fiat Punto Evo 1.4T Abarth (IAW5NF)', 'Alfa Romeo MiTo 1.4T (IAW5NF/6F)', 'Alfa Romeo Giulietta 1.4T 120/170hp (IAW7GF)', 'Fiat 500 Abarth 1.4T 135/160hp (IAW7GF/7GFA)', 'Lancia Delta 1.4T (IAW7GF)', 'Fiat 500 Abarth 595 (IAW8F)'],
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [
+      {
+        id: 'iaw_boost_target',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Charge air pressure setpoint. Fiat 1.4 MultiAir Turbo (IAW5NF/7GF) has excellent boost response — primary Stage 1 map on Abarth applications.',
+        signatures: [[0x4C,0x44,0x4B,0x56,0x53,0x4F,0x4C,0x4C], [0x42,0x4F,0x4F,0x53,0x54,0x53,0x4F,0x4C]],
+        sigOffset: 4,
+        rows: 10, cols: 14, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.18 },
+        stage2: { multiplier: 1.32 },
+        stage3: { multiplier: 1.48, clampMax: 55000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'iaw_fuel_inject',
+        name: 'Fuel Injection Duration',
+        category: 'fuel',
+        desc: 'Base injection duration map. IAW naturally-aspirated engines (147/156/GT) gain from fuelling adjustment to complement intake/exhaust modifications.',
+        signatures: [[0x49,0x4E,0x4A,0x44,0x55,0x52,0x42,0x53], [0x46,0x55,0x45,0x4C,0x4D,0x41,0x50]],
+        sigOffset: 4,
+        rows: 16, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'ms',
+        stage1: { multiplier: 1.08 },
+        stage2: { multiplier: 1.15 },
+        stage3: { multiplier: 1.22, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'iaw_ignition',
+        name: 'Ignition Timing Map',
+        category: 'ignition',
+        desc: 'Spark advance map. Alfa Romeo 147/156 twin-spark engines have timing headroom on 98 RON — significant NA gains available with careful advance.',
+        signatures: [[0x49,0x47,0x4E,0x4D,0x41,0x50,0x00], [0x4B,0x46,0x5A,0x57,0x00]],
+        sigOffset: 2,
+        rows: 16, cols: 16, dtype: 'int8', le: true,
+        factor: 0.75, offsetVal: -48, unit: '°BTDC',
+        stage1: { addend: 2 },
+        stage2: { addend: 3 },
+        stage3: { addend: 4, clampMax: 68 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'iaw_torque_limit',
+        name: 'Torque Demand Limit',
+        category: 'torque',
+        desc: 'Software torque ceiling. Must be raised on turbocharged IAW applications (Abarth/Giulietta 1.4T) to allow full Stage 1/2 power gains.',
+        signatures: [[0x54,0x51,0x4C,0x49,0x4D,0x01,0x00], [0x4D,0x58,0x4D,0x4F,0x4D,0x00]],
+        sigOffset: 2,
+        rows: 8, cols: 8, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.18 },
+        stage2: { multiplier: 1.32 },
+        stage3: { multiplier: 1.48, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'iaw_rev_limit',
+        name: 'Rev Limiter',
+        category: 'limiter',
+        desc: 'Engine RPM hard cut. Alfa Romeo twin-spark engines rev freely — raising the limiter benefits naturally-aspirated builds.',
+        signatures: [[0x52,0x45,0x56,0x4C,0x49,0x4D,0x01], [0x4E,0x4D,0x41,0x58,0x52,0x50,0x4D]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'RPM',
+        stage1: { addend: 200 },
+        stage2: { addend: 400 },
+        stage3: { addend: 500, clampMax: 8500 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ── Delphi CRD2.x (Fiat / Opel / Suzuki 1.3–1.9 diesel) ────────────────────
+  {
+    id: 'delphi_crd2',
+    name: 'Delphi CRD2.x (1.3–1.9 diesel)',
+    manufacturer: 'Delphi',
+    family: 'CRD2',
+    // CRD2.x variant codes ARE embedded in calibration identification area.
+    // CRD2.1x / CRD2.2x / CRD2.3x / CRD2.6x cover 1.3 JTD/CDTi and 1.9 JTD variants.
+    // HC12/HCS12X or ST10-based MCU (~256KB–512KB flash).
+    identStrings: ['CRD2.1', 'CRD2.2', 'CRD2.3', 'CRD2.6', 'CRD2', 'DELPHI'],
+    fileSizeRange: [131072, 524288],   // 128KB – 512KB
+    vehicles: ['Fiat Punto 1.3 JTD (199)', 'Fiat 500 1.3 JTD', 'Fiat Panda 1.3 JTD', 'Fiat Doblo 1.3 JTD', 'Opel/Vauxhall Corsa D 1.3 CDTi', 'Opel/Vauxhall Astra H 1.7 CDTi', 'Suzuki Swift 1.3 DDiS', 'Suzuki SX4 1.9 DDiS', 'Alfa Romeo MiTo 1.3/1.6 JTDm', 'Lancia Ypsilon 1.3 JTD'],
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [
+      {
+        id: 'crd2_boost_target',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Desired boost pressure map. CRD2 turbo diesel engines respond well to boost increases — primary Stage 1 calibration on 1.3/1.9 JTD.',
+        signatures: [[0x4C,0x41,0x44,0x53,0x4F,0x4C,0x4C,0x00], [0x42,0x4F,0x4F,0x53,0x54,0x53,0x4F,0x4C]],
+        sigOffset: 2,
+        rows: 8, cols: 10, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.12 },
+        stage2: { multiplier: 1.22 },
+        stage3: { multiplier: 1.32, clampMax: 48000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'crd2_fuel_quantity',
+        name: 'Injection Quantity Map',
+        category: 'fuel',
+        desc: 'Base fuel injection quantity. Increasing this on the 1.3 JTD/CDTi unlocks the torque the factory calibration deliberately restricts.',
+        signatures: [[0x4D,0x45,0x4E,0x5A,0x4B,0x00], [0x45,0x49,0x4E,0x53,0x50,0x52,0x5A]],
+        sigOffset: 2,
+        rows: 8, cols: 10, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.22 },
+        stage3: { multiplier: 1.28, clampMax: 55000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'crd2_torque_limit',
+        name: 'Max Torque Limit',
+        category: 'torque',
+        desc: 'Software torque ceiling. Raised alongside fuel and boost to allow Stage 1 gains on small displacement CRD2 applications.',
+        signatures: [[0x4D,0x58,0x4D,0x4F,0x4D,0x00], [0x54,0x51,0x4C,0x49,0x4D]],
+        sigOffset: 2,
+        rows: 1, cols: 8, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.35, clampMax: 55000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── Delphi CRD3.x (Opel / Ford / Renault 1.6–2.0 diesel) ───────────────────
+  {
+    id: 'delphi_crd3',
+    name: 'Delphi CRD3.x (1.6–2.0 diesel)',
+    manufacturer: 'Delphi',
+    family: 'CRD3',
+    // CRD3.x variant codes ARE embedded in calibration identification area.
+    // CRD3.1x / CRD3.3x / CRD3.5x / CRD3.7x cover 1.6 CDTi / 2.0 CDTi variants.
+    // MPC5566-based MCU (~1–2MB flash).
+    identStrings: ['CRD3.1', 'CRD3.3', 'CRD3.4', 'CRD3.5', 'CRD3.6', 'CRD3.7', 'CRD3', 'DELPHI'],
+    fileSizeRange: [524288, 2097152],   // 512KB – 2MB
+    vehicles: ['Opel/Vauxhall Astra J 1.6/2.0 CDTi (A16DTH/A20DTH)', 'Opel/Vauxhall Insignia 2.0 CDTi', 'Opel/Vauxhall Zafira 2.0 CDTi', 'Ford Focus Mk3 1.6/2.0 TDCi', 'Ford Mondeo Mk4 2.0 TDCi', 'Renault Megane 1.9/2.0 dCi', 'Renault Laguna 2.0 dCi', 'Saab 9-3/9-5 2.0 TTiD', 'Chevrolet Cruze 2.0 VCDi'],
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [
+      {
+        id: 'crd3_boost_target',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Desired boost pressure map. Opel 2.0 CDTi A20DTH responds well to boost — primary Stage 1/2 map on Insignia/Astra.',
+        signatures: [[0x4C,0x41,0x44,0x53,0x4F,0x4C,0x4C,0x00], [0x42,0x4F,0x4F,0x53,0x54,0x53,0x4F,0x4C]],
+        sigOffset: 2,
+        rows: 9, cols: 12, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.28 },
+        stage3: { multiplier: 1.40, clampMax: 55000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'crd3_fuel_quantity',
+        name: 'Injection Quantity Map',
+        category: 'fuel',
+        desc: 'Base fuel injection quantity. Raising this on the 2.0 CDTi significantly improves mid-range torque — key Stage 1/2 change.',
+        signatures: [[0x4D,0x45,0x4E,0x5A,0x4B,0x00], [0x45,0x49,0x4E,0x53,0x50,0x52,0x5A]],
+        sigOffset: 2,
+        rows: 9, cols: 12, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.22 },
+        stage3: { multiplier: 1.30, clampMax: 62000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'crd3_torque_limit',
+        name: 'Max Torque Limit',
+        category: 'torque',
+        desc: 'Software torque ceiling. Opel CDTi ECU limits torque aggressively from factory — raising this is essential for any meaningful Stage 1 result.',
+        signatures: [[0x4D,0x58,0x4D,0x4F,0x4D,0x00], [0x54,0x51,0x4C,0x49,0x4D]],
+        sigOffset: 2,
+        rows: 1, cols: 8, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.18 },
+        stage2: { multiplier: 1.30 },
+        stage3: { multiplier: 1.42, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'crd3_egr',
+        name: 'EGR Duty Cycle Map',
+        category: 'emission',
+        desc: 'EGR valve duty cycle. Reducing this on the 2.0 CDTi lowers intake temps and reduces carbon buildup in the intake manifold.',
+        signatures: [[0x45,0x47,0x52,0x44,0x55,0x54,0x59], [0x4B,0x46,0x45,0x47,0x52]],
+        sigOffset: 2,
+        rows: 8, cols: 10, dtype: 'uint8', le: true,
+        factor: 0.4, offsetVal: 0, unit: '%',
+        stage1: { multiplier: 0.8 },
+        stage2: { multiplier: 0.5 },
+        stage3: { multiplier: 0, clampMax: 100 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ── Magneti Marelli MJD (Alfa Romeo / Fiat / Jeep diesel) ───────────────────
+  {
+    id: 'marelli_mjd',
+    name: 'Magneti Marelli MJD (Fiat/Alfa diesel)',
+    manufacturer: 'Magneti Marelli',
+    family: 'MJD',
+    // MJD variant codes ARE embedded in calibration identification sectors.
+    // MJD6F3 = Alfa 159/Brera 2.0 JTDm, MJD6JF = Jeep/Dodge diesel.
+    // MJ8DF/MJ8F3/MJ8F2 = Fiat Bravo/Punto/MiTo 1.6 Multijet, Alfa Giulietta 2.0 JTDm.
+    identStrings: ['MJD6F3', 'MJD6JF', 'MJ8DF', 'MJ8F3', 'MJ8F2', 'MJD6', 'MJD8', 'MJ8', 'MARELLI'],
+    fileSizeRange: [262144, 2097152],   // SH7058/SPC564 = 256KB–2MB
+    vehicles: ['Alfa Romeo 159 2.0 JTDm 136/170hp', 'Alfa Romeo Brera 2.0 JTDm', 'Alfa Romeo Giulietta 2.0 JTDm 140/170hp', 'Alfa Romeo MiTo 1.3/1.6 JTDm', 'Fiat Bravo 1.6/2.0 Multijet', 'Fiat Punto 1.6 Multijet', 'Fiat Croma 1.9 JTDm', 'Jeep Renegade 1.6/2.0 JTD', 'Jeep Compass 2.0 JTD', 'Lancia Delta 2.0 Multijet'],
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [
+      {
+        id: 'mjd_boost_target',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Charge air pressure setpoint. Alfa 2.0 JTDm 170hp has excellent turbo headroom — primary Stage 1 map on MJD6F3 applications.',
+        signatures: [[0x4C,0x41,0x44,0x53,0x4F,0x4C,0x4C,0x00], [0x42,0x4F,0x4F,0x53,0x54,0x53,0x4F,0x4C]],
+        sigOffset: 2,
+        rows: 9, cols: 12, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.28 },
+        stage3: { multiplier: 1.42, clampMax: 55000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'mjd_fuel_quantity',
+        name: 'Injection Quantity Map',
+        category: 'fuel',
+        desc: 'Base injection quantity map. Increasing this on Alfa/Fiat JTDm engines significantly boosts torque across the full RPM range.',
+        signatures: [[0x4D,0x45,0x4E,0x5A,0x4B,0x00], [0x45,0x49,0x4E,0x53,0x50,0x52,0x5A]],
+        sigOffset: 2,
+        rows: 9, cols: 12, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.22 },
+        stage3: { multiplier: 1.30, clampMax: 62000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'mjd_torque_limit',
+        name: 'Max Torque Limit',
+        category: 'torque',
+        desc: 'Software torque ceiling. Must be raised on MJD diesel applications to allow Stage 1/2 gains — especially on the Alfa 159/Giulietta 2.0 JTDm.',
+        signatures: [[0x4D,0x58,0x4D,0x4F,0x4D,0x00], [0x54,0x51,0x4C,0x49,0x4D]],
+        sigOffset: 2,
+        rows: 1, cols: 8, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.18 },
+        stage2: { multiplier: 1.30 },
+        stage3: { multiplier: 1.42, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── Bosch MEVD17.2.x (BMW M2 / M3 / M4 / M5 / M6 / X5M / X6M) ─────────────
+  {
+    id: 'bmw_mevd17',
+    name: 'Bosch MEVD17.2 (BMW M performance)',
+    manufacturer: 'Bosch',
+    family: 'MEVD17',
+    // MEVD17.2 = BMW M performance variant of MED17 (Tricore TC1793/TC1797).
+    // MEVD17.2.G/H/P = S55 engine (M2 Comp/M3/M4 F8x).
+    // MEVD17.2.3/K = S63 engine (M5/M6/X5M/X6M F-series).
+    // MEVD17.2.9/8 = later S63TU/S63B44T4 variants.
+    // MSS60/MSS65 = older M5/M6 S85 V10 / S65 V8 (Bosch, pre-TC Tricore).
+    identStrings: ['MEVD17', 'MEVD17.2', 'MSS60', 'MSS65', 'MEVD17.2.G', 'MEVD17.2.H', 'MEVD17.2.3', 'MEVD17.2.K', 'MEVD17.2.9'],
+    fileSizeRange: [524288, 4194304],   // TC1793=2MB, TC1797=4MB
+    vehicles: ['BMW M2 Competition (F87 S55)', 'BMW M3 (F80 S55)', 'BMW M4 / M4 CS / M4 GTS (F82/F83 S55)', 'BMW M5 (F10 S63TU)', 'BMW M6 / M6 Gran Coupé (F12/F06 S63)', 'BMW X5M / X6M (F85/F86 S63)', 'BMW M5 (E60 S85 V10 — MSS60)', 'BMW M6 (E63 S85 V10 — MSS60)', 'BMW M3 (E90/E92 S65 V8 — MSS65)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x3FFFF8,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'mevd17_boost_target',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Charge air pressure setpoint. BMW S55 (M3/M4) is famously conservative from factory — significant boost headroom available. Primary Stage 1/2 map.',
+        signatures: [[0x4C,0x44,0x4B,0x56,0x53,0x4F,0x4C,0x4C], [0x42,0x4F,0x4F,0x53,0x54,0x53,0x4F,0x4C]],
+        sigOffset: 4,
+        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.25 },
+        stage2: { multiplier: 1.45 },
+        stage3: { multiplier: 1.62, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'mevd17_fuel_inject',
+        name: 'Fuel Injection Quantity',
+        category: 'fuel',
+        desc: 'Base injection quantity. S55/S63 use high-pressure direct injection — raising fuelling critical for Stage 2+ on both turbo BMW M engines.',
+        signatures: [[0x49,0x4E,0x4A,0x44,0x55,0x52,0x42,0x53], [0x4B,0x46,0x49,0x4E,0x4A,0x44,0x55,0x52]],
+        sigOffset: 4,
+        rows: 16, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.28 },
+        stage3: { multiplier: 1.42, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'mevd17_torque_limit',
+        name: 'Torque Demand Limit',
+        category: 'torque',
+        desc: 'Software torque ceiling. BMW M ECU has multiple torque limit layers — raising primary demand limit is essential for any Stage 1+ on M3/M4/M5.',
+        signatures: [[0x54,0x51,0x4C,0x49,0x4D,0x01,0x00], [0x4D,0x58,0x4D,0x4F,0x4D,0x00]],
+        sigOffset: 2,
+        rows: 8, cols: 12, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.22 },
+        stage2: { multiplier: 1.38 },
+        stage3: { multiplier: 1.55, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'mevd17_ignition',
+        name: 'Ignition Timing Map',
+        category: 'ignition',
+        desc: 'Base ignition advance. BMW S55 runs conservatively on 95 RON — timing gains on 98/100 RON are the primary NA-style improvement on M3/M4.',
+        signatures: [[0x4B,0x46,0x5A,0x57,0x42,0x41,0x53,0x45], [0x49,0x47,0x4E,0x42,0x41,0x53,0x45]],
+        sigOffset: 4,
+        rows: 16, cols: 16, dtype: 'int8', le: true,
+        factor: 0.75, offsetVal: -48, unit: '°BTDC',
+        stage1: { addend: 0 },
+        stage2: { addend: 2 },
+        stage3: { addend: 3, clampMax: 60 },
+        critical: false, showPreview: true,
+      },
+      {
+        id: 'mevd17_rev_limit',
+        name: 'Rev Limiter',
+        category: 'limiter',
+        desc: 'Engine RPM hard cut. BMW S55/S63 rev limit raised for high-revving track applications.',
+        signatures: [[0x4E,0x4D,0x41,0x58,0x42,0x45,0x47,0x52], [0x52,0x45,0x56,0x4C,0x49,0x4D]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'RPM',
+        stage1: { addend: 200 },
+        stage2: { addend: 400 },
+        stage3: { addend: 500, clampMax: 8500 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ── Continental EMS24xx (Ford Focus ST / RS / EcoBoost 2.0–2.3T) ────────────
+  {
+    id: 'ford_ems24',
+    name: 'Continental EMS24xx (Ford EcoBoost ST/RS)',
+    manufacturer: 'Continental',
+    family: 'EMS24',
+    // EMS24xx = Continental TC1791-based ECU for modern Ford EcoBoost petrol.
+    // EMS2400/EMS2411 = Ford Focus ST Mk3 / Focus RS Mk3 2.0T/2.3T EcoBoost.
+    // Also Ford Mondeo/S-Max 2.0T (2014+) and Ford Mustang 2.3 EcoBoost.
+    // EMS24 variant code IS embedded in calibration identification area.
+    identStrings: ['EMS24', 'EMS2400', 'EMS2411', 'EMS2511', 'EMS3155'],
+    fileSizeRange: [524288, 2097152],   // TC1791 = 2MB
+    vehicles: ['Ford Focus ST Mk3 2.0T EcoBoost (250ps)', 'Ford Focus RS Mk3 2.3T EcoBoost (350ps)', 'Ford Mondeo Mk5 2.0T EcoBoost (240ps)', 'Ford S-Max 2.0T EcoBoost (240ps)', 'Ford Galaxy 2.0T EcoBoost', 'Ford Mustang 2.3 EcoBoost (2015+)', 'Ford Edge 2.0T EcoBoost', 'Ford Kuga Mk2 2.0T EcoBoost (182ps)'],
+    checksumAlgo: 'continental-crc',
+    checksumOffset: 0x1FFFF0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'ems24_boost_target',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Charge air pressure setpoint. Ford 2.3T EcoBoost (Focus RS) and 2.0T (Focus ST) both have significant boost headroom — primary Stage 1 map.',
+        signatures: [[0x4C,0x44,0x4B,0x56,0x53,0x4F,0x4C,0x4C], [0x42,0x4F,0x4F,0x53,0x54,0x53,0x4F,0x4C]],
+        sigOffset: 4,
+        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.20 },
+        stage2: { multiplier: 1.38 },
+        stage3: { multiplier: 1.55, clampMax: 62000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'ems24_fuel_inject',
+        name: 'Fuel Injection Duration',
+        category: 'fuel',
+        desc: 'Base fuel injection duration. Ford RS 2.3T uses direct injection — enrichment essential for Stage 2+ to support increased boost and prevent knock.',
+        signatures: [[0x49,0x4E,0x4A,0x44,0x55,0x52,0x42,0x53], [0x4B,0x46,0x49,0x4E,0x4A,0x44,0x55,0x52]],
+        sigOffset: 4,
+        rows: 16, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'ms',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.28 },
+        stage3: { multiplier: 1.40, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'ems24_torque_limit',
+        name: 'Torque Demand Limit',
+        category: 'torque',
+        desc: 'Software torque ceiling. Ford EcoBoost ECU limits torque for transmission protection — raising this is mandatory for Stage 1+ on Focus ST/RS.',
+        signatures: [[0x54,0x51,0x4C,0x49,0x4D,0x01,0x00], [0x54,0x4F,0x52,0x51,0x4C,0x49,0x4D]],
+        sigOffset: 2,
+        rows: 8, cols: 8, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.25 },
+        stage2: { multiplier: 1.42 },
+        stage3: { multiplier: 1.58, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'ems24_ignition',
+        name: 'Ignition Timing Base',
+        category: 'ignition',
+        desc: 'Base ignition advance. Ford 2.3T EcoBoost is conservative on 95 RON — timing gains on 98 RON improve response and top-end on Focus RS.',
+        signatures: [[0x4B,0x46,0x5A,0x57,0x42,0x41,0x53,0x45], [0x49,0x47,0x4E,0x42,0x41,0x53,0x45]],
+        sigOffset: 4,
+        rows: 16, cols: 16, dtype: 'int8', le: true,
+        factor: 0.75, offsetVal: -48, unit: '°BTDC',
+        stage1: { addend: 0 },
+        stage2: { addend: 2 },
+        stage3: { addend: 3, clampMax: 62 },
+        critical: false, showPreview: true,
+      },
+    ],
+  },
+
+  // ── Delco E87 / E98 (Opel / Vauxhall / Chevrolet / GM petrol turbo) ─────────
+  {
+    id: 'delco_e87',
+    name: 'Delco E87/E98 (Opel/Vauxhall petrol)',
+    manufacturer: 'Delphi/ACDelco',
+    family: 'E87',
+    // E87 (MPC556/TC1797) and E98 (MPC5674F) are ACDelco/Delphi ECUs for GM petrol turbo.
+    // 'E87' and 'E98' calibration variant codes ARE embedded in ROM identification sector.
+    // E87: Opel Astra J/K 1.4T/2.0T, Insignia 2.0T, Cascada, Meriva B, Mokka 1.4T.
+    // E98: Opel Astra K 1.4T/1.6T (B14NET/D14NET) and Chevrolet Cruze/Trax 1.4T.
+    identStrings: ['E87', 'E98', 'DELCO', 'ACDelco'],
+    fileSizeRange: [524288, 4194304],   // MPC556=1MB, TC1797=4MB, MPC5674F=2MB
+    vehicles: ['Opel/Vauxhall Astra J 1.4T 140ps (A14NET)', 'Opel/Vauxhall Astra J 2.0T 280ps (A20NFT OPC)', 'Opel/Vauxhall Insignia 2.0T 220/260ps', 'Opel/Vauxhall Cascada 2.0T 220ps', 'Opel/Vauxhall Meriva B 1.4T', 'Opel/Vauxhall Mokka 1.4T 140ps', 'Opel/Vauxhall Astra K 1.4T/1.6T Turbo', 'Chevrolet Cruze 1.4T/1.6T', 'Chevrolet Trax 1.4T'],
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [
+      {
+        id: 'e87_boost_target',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Charge air pressure setpoint. Opel 1.4T and 2.0T engines have significant factory headroom — primary Stage 1/2 map on Astra OPC and Insignia OPC.',
+        signatures: [[0x4C,0x44,0x4B,0x56,0x53,0x4F,0x4C,0x4C], [0x42,0x4F,0x4F,0x53,0x54,0x53,0x4F,0x4C]],
+        sigOffset: 4,
+        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.18 },
+        stage2: { multiplier: 1.32 },
+        stage3: { multiplier: 1.48, clampMax: 58000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'e87_fuel_inject',
+        name: 'Fuel Injection Duration',
+        category: 'fuel',
+        desc: 'Base injection duration. Opel 2.0T A20NFT (OPC) responds significantly to fuelling enrichment — essential for Stage 2+ to support extra boost.',
+        signatures: [[0x49,0x4E,0x4A,0x44,0x55,0x52,0x42,0x53], [0x4B,0x46,0x49,0x4E,0x4A,0x44,0x55,0x52]],
+        sigOffset: 4,
+        rows: 16, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'ms',
+        stage1: { multiplier: 1.12 },
+        stage2: { multiplier: 1.22 },
+        stage3: { multiplier: 1.32, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'e87_torque_limit',
+        name: 'Torque Demand Limit',
+        category: 'torque',
+        desc: 'Software torque ceiling. ACDelco E87/E98 has aggressive factory torque limits — raising this is the single most important change for any Opel/Vauxhall tune.',
+        signatures: [[0x54,0x51,0x4C,0x49,0x4D,0x01,0x00], [0x4D,0x58,0x4D,0x4F,0x4D,0x00]],
+        sigOffset: 2,
+        rows: 8, cols: 12, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.22 },
+        stage2: { multiplier: 1.38 },
+        stage3: { multiplier: 1.55, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'e87_ignition',
+        name: 'Ignition Timing Map',
+        category: 'ignition',
+        desc: 'Base ignition advance. Opel A14NET/A20NFT is conservative on 95 RON — timing advance on 98 RON fuel improves response and power on both 1.4T and 2.0T.',
+        signatures: [[0x4B,0x46,0x5A,0x57,0x42,0x41,0x53,0x45], [0x49,0x47,0x4E,0x42,0x41,0x53,0x45]],
+        sigOffset: 4,
+        rows: 16, cols: 16, dtype: 'int8', le: true,
+        factor: 0.75, offsetVal: -48, unit: '°BTDC',
+        stage1: { addend: 0 },
+        stage2: { addend: 2 },
+        stage3: { addend: 3, clampMax: 62 },
+        critical: false, showPreview: true,
+      },
+    ],
+  },
+
+  // ── Delphi DCM3.4 / Toyota diesel (1KD-FTV / 2KD-FTV Land Cruiser / Hilux) ──
+  {
+    id: 'toyota_dcm34',
+    name: 'Delphi DCM3.4 (Toyota diesel)',
+    manufacturer: 'Delphi',
+    family: 'DCM3.4',
+    // DCM3.4 is a Delphi common-rail diesel ECU on Renesas SH7059 MCU (~512KB flash).
+    // 'DCM3.4' calibration variant code IS embedded in Toyota diesel ECU ROM.
+    // 1KD-FTV = 3.0L D-4D turbodiesel (166–173ps) in Land Cruiser/Prado/Hilux.
+    // 2KD-FTV = 2.5L D-4D turbodiesel (102–144ps) in Hilux/Innova/Fortuner.
+    identStrings: ['DCM3.4', 'DCM34', '1KD', '2KD', 'D-4D'],
+    fileSizeRange: [262144, 524288],   // SH7059 = 256KB–512KB
+    vehicles: ['Toyota Land Cruiser 100/200 3.0D (1KD-FTV)', 'Toyota Land Cruiser Prado 3.0D (1KD-FTV)', 'Toyota Hilux 3.0D 163ps (1KD-FTV)', 'Toyota Hilux 2.5D 102/144ps (2KD-FTV)', 'Toyota HiAce 2.5D (2KD-FTV)', 'Toyota Fortuner 2.5D/3.0D', 'Toyota Innova 2.5D (2KD-FTV)', 'Lexus GX470 4.7D'],
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [
+      {
+        id: 'dcm34_boost_target',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Desired boost pressure for the Toyota 1KD/2KD diesel. These engines have good turbo headroom from the factory conservative calibration — primary Stage 1 map.',
+        signatures: [[0x4C,0x41,0x44,0x53,0x4F,0x4C,0x4C,0x00], [0x42,0x4F,0x4F,0x53,0x54,0x53,0x4F,0x4C]],
+        sigOffset: 2,
+        rows: 8, cols: 10, dtype: 'uint16', le: false,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.35, clampMax: 52000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'dcm34_fuel_quantity',
+        name: 'Injection Quantity Map',
+        category: 'fuel',
+        desc: 'Base fuel injection quantity. Raising this on the 1KD-FTV 3.0D improves torque significantly — used heavily in Hilux/Land Cruiser off-road builds.',
+        signatures: [[0x4D,0x45,0x4E,0x5A,0x4B,0x00], [0x45,0x49,0x4E,0x53,0x50,0x52,0x5A]],
+        sigOffset: 2,
+        rows: 8, cols: 10, dtype: 'uint16', le: false,
+        factor: 0.001, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.22 },
+        stage3: { multiplier: 1.28, clampMax: 60000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'dcm34_torque_limit',
+        name: 'Max Torque Limit',
+        category: 'torque',
+        desc: 'Software torque ceiling. Toyota diesel ECU has conservative torque limits — raising this allows full use of increased fuel and boost quantities.',
+        signatures: [[0x4D,0x58,0x4D,0x4F,0x4D,0x00], [0x54,0x51,0x4C,0x49,0x4D]],
+        sigOffset: 2,
+        rows: 1, cols: 8, dtype: 'uint16', le: false,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.35, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'dcm34_speed_limit',
+        name: 'Vehicle Speed Limit',
+        category: 'limiter',
+        desc: 'Factory vehicle speed limiter. Often raised or removed on commercial/off-road variants of Hilux and Land Cruiser.',
+        signatures: [[0x56,0x4D,0x41,0x58,0x00], [0x53,0x50,0x44,0x4C,0x49,0x4D]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'km/h',
+        stage1: { addend: 20 },
+        stage2: { addend: 40 },
+        stage3: { addend: 60, clampMax: 280 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ── Continental SID803A / SID206 (Ford Focus/Mondeo/C-Max + PSA 2.0 TDCi/HDi) ─
+  {
+    id: 'ford_sid803',
+    name: 'Continental SID803A/SID206 (Ford/PSA diesel)',
+    manufacturer: 'Continental',
+    family: 'SID803',
+    // SID803A (MPC562) and SID206 (MPC563) are Continental diesel ECUs for Ford and PSA.
+    // SID803A: Ford Focus Mk2/C-Max/Mondeo Mk4 1.6/2.0 TDCi + Peugeot 307/407/607 2.0 HDi.
+    // SID206: Ford Focus/Mondeo/Galaxy/S-Max 1.8/2.0 TDCi (2002–2008).
+    // SID802/SID804: older C167-based variants (Ford 1.8 TDCi pre-2005, PSA 1.6/2.0 HDi).
+    // SID8xx variant codes ARE embedded in Continental diesel calibration identification area.
+    identStrings: ['SID803A', 'SID803', 'SID206', 'SID802', 'SID804', 'SID8'],
+    fileSizeRange: [262144, 1048576],   // C167 = 256KB, MPC5xx = 512KB–1MB
+    vehicles: ['Ford Focus Mk2 1.6/2.0 TDCi (2004–2011)', 'Ford Mondeo Mk4 1.6/2.0 TDCi (2007–2014)', 'Ford C-Max 1.6/2.0 TDCi (2007–2010)', 'Ford Galaxy/S-Max 2.0 TDCi (2006–2010)', 'Ford Kuga Mk1 2.0 TDCi (2008–2012)', 'Peugeot 307/308 2.0 HDi (DW10)', 'Peugeot 407/607 2.0 HDi', 'Citroën C5/C6 2.0 HDi', 'Citroën Berlingo/Dispatch 2.0 HDi'],
+    checksumAlgo: 'continental-crc',
+    checksumOffset: 0x7FFF0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'sid803_boost_target',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Desired boost pressure map. Ford 2.0 TDCi DW10 engine has good boost headroom from the conservative factory calibration — primary Stage 1 map.',
+        signatures: [[0x4C,0x41,0x44,0x53,0x4F,0x4C,0x4C,0x00], [0x42,0x4F,0x4F,0x53,0x54,0x53,0x4F,0x4C]],
+        sigOffset: 2,
+        rows: 8, cols: 10, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.12 },
+        stage2: { multiplier: 1.22 },
+        stage3: { multiplier: 1.32, clampMax: 52000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'sid803_fuel_quantity',
+        name: 'Injection Quantity Map',
+        category: 'fuel',
+        desc: 'Base fuel injection quantity. Ford 2.0 TDCi and PSA 2.0 HDi both respond well to injection increases — significant torque gains available on Stage 1.',
+        signatures: [[0x4D,0x45,0x4E,0x5A,0x4B,0x00], [0x45,0x49,0x4E,0x53,0x50,0x52,0x5A]],
+        sigOffset: 2,
+        rows: 8, cols: 10, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.22 },
+        stage3: { multiplier: 1.28, clampMax: 60000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'sid803_torque_limit',
+        name: 'Max Torque Limit',
+        category: 'torque',
+        desc: 'Software torque ceiling. Continental SID803A limits torque to protect the 6-speed gearbox — raising this is required for full Stage 1 power delivery.',
+        signatures: [[0x4D,0x58,0x4D,0x4F,0x4D,0x00], [0x54,0x51,0x4C,0x49,0x4D]],
+        sigOffset: 2,
+        rows: 1, cols: 8, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.35, clampMax: 62000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'sid803_egr',
+        name: 'EGR Duty Cycle Map',
+        category: 'emission',
+        desc: 'EGR valve duty cycle. Reducing this on Ford TDCi and PSA HDi engines lowers intake temps and reduces carbon buildup in the swirl flaps and inlet manifold.',
+        signatures: [[0x45,0x47,0x52,0x44,0x55,0x54,0x59], [0x4B,0x46,0x45,0x47,0x52]],
+        sigOffset: 2,
+        rows: 8, cols: 10, dtype: 'uint8', le: true,
+        factor: 0.4, offsetVal: 0, unit: '%',
+        stage1: { multiplier: 0.8 },
+        stage2: { multiplier: 0.5 },
+        stage3: { multiplier: 0, clampMax: 100 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ─── Delphi MT80/MT80.1 (Opel/Vauxhall 2.0 CDTi) ─────────────────────────
+  {
+    id: 'delphi_mt80',
+    name: 'Delphi MT80/MT80.1 (Opel/Vauxhall 2.0 CDTi)',
+    manufacturer: 'Delphi',
+    family: 'MT80',
+    // MT80 and MT80.1 are Delphi diesel ECUs on Renesas SH72543 used in Opel/Vauxhall
+    // Zafira B, Astra H/J, and Vectra C 2.0 CDTi (Z20DTH / Z20DTJ engines).
+    // "MT80" and "MT80.1" are embedded as ASCII in the calibration identification header
+    // of these ECUs — confirmed present in PDFs and known tuning databases.
+    identStrings: ['MT80.1', 'MT80', 'DELPHI'],
+    fileSizeRange: [524288, 2097152],   // SH72543 = 512KB–2MB flash
+    vehicles: [
+      'Opel/Vauxhall Zafira B 2.0 CDTi 100/120ps (Z20DTH/Z20DTJ)',
+      'Opel/Vauxhall Astra H 2.0 CDTi 100/120ps',
+      'Opel/Vauxhall Vectra C 2.0 CDTi 100/120ps',
+      'Opel/Vauxhall Signum 2.0 CDTi 120ps',
+    ],
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [
+      {
+        id: 'mt80_boost_target',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Desired boost pressure map (turbo setpoint). Delphi MT80 on the 2.0 CDTi has conservative factory boost limits — Stage 1 gains 20–35ps from boost and fuelling increases.',
+        signatures: [[0x42,0x4F,0x4F,0x53,0x54,0x54,0x52], [0x4D,0x41,0x50,0x42,0x4F,0x4F]],
+        sigOffset: 2,
+        rows: 8, cols: 10, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.12 },
+        stage2: { multiplier: 1.20 },
+        stage3: { multiplier: 1.30, clampMax: 52000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'mt80_fuel_quantity',
+        name: 'Injection Quantity Map',
+        category: 'fuel',
+        desc: 'Base fuel injection quantity. The Z20DTH engine on MT80 calibration has significant headroom — fuelling increases yield strong torque gains with minimal smoke.',
+        signatures: [[0x49,0x4E,0x4A,0x51,0x54,0x59,0x00], [0x4D,0x41,0x50,0x46,0x55,0x45,0x4C]],
+        sigOffset: 2,
+        rows: 8, cols: 10, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.12 },
+        stage2: { multiplier: 1.20 },
+        stage3: { multiplier: 1.28, clampMax: 60000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'mt80_torque_limit',
+        name: 'Max Torque Limit',
+        category: 'torque',
+        desc: 'Software torque ceiling. MT80 torque limiting is applied to protect the gearbox — must be raised alongside boost and fuelling for full Stage 1 results.',
+        signatures: [[0x4D,0x58,0x54,0x52,0x51,0x00], [0x54,0x51,0x4C,0x49,0x4D,0x53]],
+        sigOffset: 2,
+        rows: 1, cols: 8, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.35, clampMax: 60000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ─── Bosch PPD1.x (VW/Audi 1.9/2.0 TDI Pumpe Düse) ──────────────────────
+  {
+    id: 'vag_ppd1',
+    name: 'Bosch PPD1.x (VW/Audi TDI Pumpe Düse)',
+    manufacturer: 'Bosch',
+    family: 'PPD1',
+    // PPD1.1, PPD1.2, PPD1.3, PPD1.5 are Bosch ECUs for VW/Audi Pumpe Düse (unit injector)
+    // 1.9 TDI and 2.0 TDI engines — NOT common-rail (no EDC16/EDC17). Used in Golf IV/V,
+    // Passat B5/B6, Octavia Mk1/Mk2, A3 8P, A4 B5/B6, Seat Leon/Toledo 1.9 TDI (BKD/BXE/BKP/BMR).
+    // PPD1.x calibration variant codes ARE embedded as ASCII in the ROM identification header.
+    identStrings: ['PPD1.1', 'PPD1.2', 'PPD1.3', 'PPD1.5', 'PPD1'],
+    fileSizeRange: [524288, 1048576],
+    vehicles: [
+      'VW Golf IV/V 1.9 TDI 100/105/130ps (BKD/BXE/AXR)',
+      'VW Golf V 2.0 TDI 140ps (BMM/BKD)',
+      'VW Passat B5/B6 1.9/2.0 TDI 100/130/140ps',
+      'VW Touran 1.9 TDI 105ps / 2.0 TDI 140ps',
+      'Skoda Octavia Mk1/Mk2 1.9 TDI 100/105/130ps',
+      'Audi A3 8P 2.0 TDI 140ps (BKD)',
+      'Audi A4 B6/B7 1.9/2.0 TDI 115/130/140ps',
+      'Seat Leon/Toledo 1.9 TDI 100/130ps',
+    ],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'ppd1_fuel_quantity',
+        name: 'Injection Quantity Map',
+        category: 'fuel',
+        desc: 'Base fuel injection quantity. Pumpe Düse TDI is highly fuel quantity sensitive — this is the primary Stage 1 map. PD engines respond exceptionally well to injection increases with the right EGR strategy.',
+        signatures: [[0x4B,0x4D,0x45,0x4E,0x47,0x00], [0x4D,0x41,0x50,0x4B,0x4D]],
+        sigOffset: 2,
+        rows: 8, cols: 12, dtype: 'uint16', le: false,
+        factor: 0.001, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.35, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'ppd1_boost_target',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Turbo setpoint pressure map. PPD TDI uses VNT (variable nozzle turbo) — boost control is critical. The 1.9 TDI BKD/BXE has conservative factory boost allowing significant safe gains.',
+        signatures: [[0x4C,0x4C,0x44,0x52,0x55,0x43,0x4B], [0x42,0x4F,0x4F,0x53,0x54,0x53,0x4F]],
+        sigOffset: 2,
+        rows: 8, cols: 10, dtype: 'uint16', le: false,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.10 },
+        stage2: { multiplier: 1.18 },
+        stage3: { multiplier: 1.28, clampMax: 50000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'ppd1_torque_limit',
+        name: 'Max Torque Limit',
+        category: 'torque',
+        desc: 'Software torque ceiling. PPD1 torque limits protect the mechatronic DSG or 02Q gearbox — must be raised for full Stage 1 power delivery without drivetrain hesitation.',
+        signatures: [[0x4D,0x58,0x54,0x52,0x51,0x00], [0x4D,0x4F,0x4D,0x45,0x4E,0x54]],
+        sigOffset: 2,
+        rows: 1, cols: 8, dtype: 'uint16', le: false,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.18 },
+        stage2: { multiplier: 1.28 },
+        stage3: { multiplier: 1.40, clampMax: 70000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'ppd1_egr',
+        name: 'EGR Duty Cycle Map',
+        category: 'emission',
+        desc: 'EGR valve duty cycle. Pumpe Düse TDI heavily benefits from EGR reduction — lower EGR improves combustion efficiency, reduces oil dilution, and raises EGT for regen. Key for EGR delete.',
+        signatures: [[0x45,0x47,0x52,0x44,0x55,0x54], [0x41,0x47,0x52,0x52,0x41,0x54]],
+        sigOffset: 2,
+        rows: 8, cols: 10, dtype: 'uint8', le: false,
+        factor: 0.4, offsetVal: 0, unit: '%',
+        stage1: { multiplier: 0.75 },
+        stage2: { multiplier: 0.4 },
+        stage3: { multiplier: 0, clampMax: 100 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ─── Denso Volvo petrol (SH705x/SH72543/SH72544/SH72546) ─────────────────
+  {
+    id: 'volvo_denso',
+    name: 'Denso Volvo Petrol (SH72544/SH72546)',
+    manufacturer: 'Denso',
+    family: 'Volvo Denso',
+    // Denso SH-series ECUs used in Volvo petrol engines (not the Bosch ME7/ME9 variants).
+    // Calibration ROM headers embed Denso project codes: V40, V46, V50, VD46.1, V46.11, S3000.
+    // Used in Volvo S40/V40/V50/C30/S60 T5/T6 D5 petrol variants (B4164T/B5204T/B6324S).
+    // PDF confirms: "ECM SH72543 V50", "ECM SH72546 VD46.1", "ECM SH705x V40".
+    identStrings: ['VD46.1', 'V46.11', 'V46', 'V40', 'V50', 'S3000'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: [
+      'Volvo S40/V40 2.0T/T5 (B4204T/B5204T2)',
+      'Volvo S40/V50/C30 2.4i/T5 (B5244S/B5254T2)',
+      'Volvo S60/V70 T5 250ps (B5244T3)',
+      'Volvo S60/V70 T6 AWD 272ps (B6294T)',
+      'Volvo XC70 2.5T 210ps (B5254T2)',
+    ],
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [
+      {
+        id: 'volvo_denso_boost',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Turbo setpoint map. Volvo T5/T6 petrol is well-suited for boost increases — conservative from factory. Primary Stage 1 map for Denso Volvo calibrations.',
+        signatures: [[0x42,0x4F,0x4F,0x53,0x54,0x4D,0x41], [0x54,0x52,0x42,0x4F,0x4F,0x53]],
+        sigOffset: 2,
+        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.12 },
+        stage2: { multiplier: 1.20 },
+        stage3: { multiplier: 1.28, clampMax: 55000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'volvo_denso_fuel',
+        name: 'Fuel Injection Map',
+        category: 'fuel',
+        desc: 'Base fuel injection quantity for Volvo petrol Denso ECU. Works in conjunction with boost map for Stage 1 power gains.',
+        signatures: [[0x46,0x55,0x45,0x4C,0x4D,0x41,0x50], [0x49,0x4E,0x4A,0x51,0x54,0x59]],
+        sigOffset: 2,
+        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'ms',
+        stage1: { multiplier: 1.08 },
+        stage2: { multiplier: 1.14 },
+        stage3: { multiplier: 1.20, clampMax: 60000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'volvo_denso_torque',
+        name: 'Max Torque Limit',
+        category: 'torque',
+        desc: 'Software torque ceiling. Volvo AWD models use the rear diff torque transfer limit as a secondary ceiling — both must be raised for Stage 2+ AWD tunes.',
+        signatures: [[0x4D,0x58,0x54,0x52,0x51,0x56,0x4C], [0x54,0x51,0x4C,0x49,0x4D,0x56]],
+        sigOffset: 2,
+        rows: 1, cols: 8, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.35, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ─── Continental EMS3110/3125/3150/3155 (Renault/Nissan petrol) ───────────
+  {
+    id: 'renault_ems31',
+    name: 'Continental EMS311x/315x (Renault/Nissan petrol)',
+    manufacturer: 'Continental',
+    family: 'EMS3110',
+    // EMS3110, EMS3125, EMS3150, EMS3155 are Continental TC1766/TC1767/TC1782-based petrol ECUs.
+    // Used in Renault Clio IV/V RS/RS Trophy, Megane RS IV, Twingo GT, Captur TCe, and Nissan
+    // Juke/Qashqai/Note 1.2/1.3/1.6 turbo petrol. Later successor to EMS3120.
+    // EMS311x/315x calibration variant codes ARE embedded as ASCII in ROM identification area.
+    identStrings: ['EMS3155', 'EMS3150', 'EMS3125', 'EMS3110', 'EMS315', 'EMS311'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: [
+      'Renault Clio IV RS 200/220 Trophy (M5Mt)',
+      'Renault Megane RS IV 280/300 Trophy (M5Pt)',
+      'Renault Twingo GT 110ps (H4B 0.9 TCe)',
+      'Renault Captur 1.2 TCe 120ps (H5Ft)',
+      'Renault Kadjar 1.2/1.6 TCe 130/165ps',
+      'Nissan Juke 1.6T 190ps DIG-T (MR16DDT)',
+      'Nissan Qashqai 1.2/1.6 DIG-T 115/163ps',
+      'Nissan Note/Pulsar 1.2T DIG-T 98ps',
+    ],
+    checksumAlgo: 'continental-crc',
+    checksumOffset: 0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'ems31_boost_target',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Boost setpoint map. Renault RS and Nissan DIG-T are very boost-responsive — EMS3155 (Megane RS IV) allows large Stage 1 gains from boost alone without mechanical changes.',
+        signatures: [[0x42,0x4F,0x4F,0x53,0x54,0x54,0x47], [0x54,0x52,0x42,0x54,0x47,0x54]],
+        sigOffset: 2,
+        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.12 },
+        stage2: { multiplier: 1.20 },
+        stage3: { multiplier: 1.30, clampMax: 55000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'ems31_fuel_map',
+        name: 'Fuel Injection Map',
+        category: 'fuel',
+        desc: 'Base fuel injection quantity. Continental EMS315x petrol ECU requires fuel matched to boost — Renault H5Ft and Nissan MR16DDT both respond well on pump fuel.',
+        signatures: [[0x46,0x55,0x45,0x4C,0x4D,0x41,0x50], [0x49,0x4E,0x4A,0x42,0x41,0x53,0x45]],
+        sigOffset: 2,
+        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'ms',
+        stage1: { multiplier: 1.08 },
+        stage2: { multiplier: 1.14 },
+        stage3: { multiplier: 1.20, clampMax: 60000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'ems31_torque_limit',
+        name: 'Max Torque Limit',
+        category: 'torque',
+        desc: 'Software torque ceiling. Continental EMS3155 torque limiting on the Megane RS IV 280 is conservative — raising this reveals the engine potential on the EDC16-derived platform.',
+        signatures: [[0x4D,0x58,0x54,0x52,0x51,0x52,0x4E], [0x54,0x51,0x4C,0x49,0x4D,0x52,0x4E]],
+        sigOffset: 2,
+        rows: 1, cols: 8, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.22 },
+        stage3: { multiplier: 1.30, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ─── Continental SDI9/SDI21 (Porsche petrol) ──────────────────────────────
+  {
+    id: 'porsche_sdi',
+    name: 'Continental SDI9/SDI21 (Porsche)',
+    manufacturer: 'Continental',
+    family: 'SDI',
+    // SDI9 (TC1797) and SDI21/SDI21.1/SDI21.2 (TC1791) are Continental ECUs used exclusively
+    // in Porsche vehicles. SDI9: Cayenne S/GTS/Turbo (4.8L), Panamera (3.6/4.8L).
+    // SDI21: 911 991 (3.8L flat-six), Macan 2.0/3.0T, Panamera 2.9T, Cayenne 3.0T.
+    // SDI calibration variant codes ARE embedded as ASCII in Continental ROM ID area.
+    identStrings: ['SDI21.2', 'SDI21.1', 'SDI21', 'SDI9'],
+    fileSizeRange: [1048576, 4194304],
+    vehicles: [
+      'Porsche 911 991 Carrera 3.4/3.8 (H6 flat-six)',
+      'Porsche 911 991 Carrera S 3.8 400ps',
+      'Porsche Cayenne 3.6/4.8S/GTS/Turbo (92A)',
+      'Porsche Panamera 3.6/4.8 S/GTS/Turbo (970)',
+      'Porsche Macan 2.0T 245ps / 3.0T S 340ps (95B)',
+      'Porsche Panamera 2.9T 440ps (971)',
+    ],
+    checksumAlgo: 'continental-crc',
+    checksumOffset: 0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'sdi_boost_target',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Boost setpoint map. Porsche turbocharged flat-six and V8 are very responsive — SDI21 on the 911 Turbo has significant factory headroom. Primary Stage 1 map.',
+        signatures: [[0x42,0x4F,0x4F,0x53,0x54,0x53,0x44], [0x54,0x52,0x42,0x53,0x44,0x49]],
+        sigOffset: 2,
+        rows: 16, cols: 20, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.10 },
+        stage2: { multiplier: 1.18 },
+        stage3: { multiplier: 1.26, clampMax: 55000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'sdi_fuel_map',
+        name: 'Fuel Injection Map',
+        category: 'fuel',
+        desc: 'Base fuel injection. Porsche SDI direct injection requires fuel matched to boost. Works with ignition timing for full Stage 1 power on both turbo and NA variants.',
+        signatures: [[0x46,0x55,0x45,0x4C,0x53,0x44,0x49], [0x49,0x4E,0x4A,0x53,0x44,0x49]],
+        sigOffset: 2,
+        rows: 16, cols: 20, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'ms',
+        stage1: { multiplier: 1.06 },
+        stage2: { multiplier: 1.12 },
+        stage3: { multiplier: 1.18, clampMax: 60000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'sdi_torque_limit',
+        name: 'Max Torque Limit',
+        category: 'torque',
+        desc: 'Software torque ceiling. SDI9/SDI21 applies a conservative torque limit protecting the PDK gearbox on Cayenne and Macan — must be raised alongside boost for Stage 1.',
+        signatures: [[0x4D,0x58,0x54,0x52,0x51,0x50,0x53], [0x54,0x51,0x4C,0x49,0x4D,0x50]],
+        sigOffset: 2,
+        rows: 1, cols: 8, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.12 },
+        stage2: { multiplier: 1.20 },
+        stage3: { multiplier: 1.30, clampMax: 80000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ─── Continental SIMOS11.1 (VAG petrol, older DI) ─────────────────────────
+  {
+    id: 'continental_simos11',
+    name: 'Continental SIMOS11.x (VAG direct injection petrol)',
+    manufacturer: 'Continental',
+    family: 'SIMOS11',
+    // SIMOS11.1 and SIMOS11.2 are Continental TC1738-based petrol ECUs for older VAG
+    // direct injection engines (pre-SIMOS18). Used in Golf VI/Jetta/Tiguan/Passat B6/B7
+    // with TSI/TFSI 1.4/1.8/2.0 engines (CAWB/CDAA/CPTA/CBZA variants).
+    // SIMOS11 calibration variant codes ARE embedded as ASCII in the ROM identification header.
+    identStrings: ['SIMOS11.2', 'SIMOS11.1', 'SIMOS11', 'SIM11'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: [
+      'VW Golf VI 1.4 TSI 122/160ps (CAVD/CAXA)',
+      'VW Golf VI 2.0 TSI 200/211ps GTI (CCZA/CCZB)',
+      'VW Passat B6/B7 1.8/2.0 TSI 160/200ps',
+      'VW Tiguan Mk1 1.4/2.0 TSI 122/200ps',
+      'VW Jetta VI 1.4/2.0 TSI 122/200ps',
+      'Audi A1/A3 1.4 TFSI 122ps (CAXA)',
+      'Skoda Octavia Mk2 1.4/1.8/2.0 TSI',
+      'Seat Leon Mk2 FR 1.8/2.0 TSI 160/200ps',
+    ],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'simos11_boost_target',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Boost setpoint map. SIMOS11 Golf GTI 2.0 TSI CCZA is very boost-responsive — significant Stage 1 gains from boost map alone without hardware changes. Critical primary map.',
+        signatures: [[0x42,0x4F,0x4F,0x53,0x54,0x53,0x49], [0x54,0x52,0x42,0x53,0x49,0x4D]],
+        sigOffset: 2,
+        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.12 },
+        stage2: { multiplier: 1.22 },
+        stage3: { multiplier: 1.32, clampMax: 55000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'simos11_fuel_map',
+        name: 'Fuel Injection Map',
+        category: 'fuel',
+        desc: 'Base fuel injection. SIMOS11 direct injection requires fuel matched to boost — TSI engines run stratified charge at low load, homogeneous at full load. Stage 1 targets full-load region.',
+        signatures: [[0x46,0x55,0x45,0x4C,0x53,0x49,0x4D], [0x49,0x4E,0x4A,0x53,0x49,0x4D,0x31]],
+        sigOffset: 2,
+        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'ms',
+        stage1: { multiplier: 1.08 },
+        stage2: { multiplier: 1.14 },
+        stage3: { multiplier: 1.20, clampMax: 60000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'simos11_torque_limit',
+        name: 'Max Torque Limit',
+        category: 'torque',
+        desc: 'Software torque ceiling. SIMOS11 DSG torque limiting is very conservative on the Golf GTI — raising this unlocks the full Stage 1 power band and eliminates DSG hesitation under load.',
+        signatures: [[0x4D,0x58,0x54,0x52,0x51,0x53,0x49], [0x54,0x51,0x4C,0x49,0x4D,0x53,0x31]],
+        sigOffset: 2,
+        rows: 1, cols: 8, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.18 },
+        stage2: { multiplier: 1.28 },
+        stage3: { multiplier: 1.38, clampMax: 68000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'simos11_ignition',
+        name: 'Ignition Timing Map',
+        category: 'ignition',
+        desc: 'Spark advance map. TSI direct injection tolerates additional advance well on 98 RON — ignition timing increases are recommended alongside boost and fuel for Stage 2+ tunes.',
+        signatures: [[0x49,0x47,0x4E,0x54,0x49,0x4D,0x53], [0x5A,0x5A,0x57,0x53,0x49,0x4D]],
+        sigOffset: 2,
+        rows: 12, cols: 16, dtype: 'int16', le: true,
+        factor: 0.1, offsetVal: 0, unit: '°',
+        stage1: { addend: 2 },
+        stage2: { addend: 3 },
+        stage3: { addend: 4, clampMax: 400 },
+        critical: false, showPreview: false,
       },
     ],
   },
