@@ -314,8 +314,8 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC16',
     manufacturer: 'Bosch',
     family: 'EDC16',
-    identStrings: ['EDC16', 'EDC 16', '0281010', '0281011', '0281012'],
-    fileSizeRange: [524288, 1048576],   // 512KB – 1MB
+    identStrings: ['EDC16', 'EDC 16', '0281010', '0281011', '0281012', '0281013', '0281014', '0281015'],
+    fileSizeRange: [524288, 4194304],   // 512KB – 4MB (EDC16+ variants e.g. Q7 4.2 TDI can be 2MB+)
     vehicles: ['VW Golf Mk5 2.0 TDI', 'Audi A4 2.0 TDI', 'VW Passat 2.0 TDI', 'Seat Leon 2.0 TDI', 'Skoda Octavia 2.0 TDI', 'Audi A6 3.0 TDI'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFF4,
@@ -1616,7 +1616,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Scania EMS S7/S8',
     manufacturer: 'Scania',
     family: 'EMS S7',
-    identStrings: ['EMS S7', 'EMS S8', 'EMSS7', 'EMSS8', 'EMD1', 'MPC5566', 'MPC563', 'MPC555'],
+    identStrings: ['EMS S7', 'EMS S8', 'EMSS7', 'EMSS8', 'EMD1', 'MPC5566', 'SCANIA', 'DC9', 'DC13', 'DC16'],
     fileSizeRange: [1048576, 8388608],   // 1MB – 8MB (truck ECUs are large)
     vehicles: ['Scania R-series (DC9/DC13/DC16)', 'Scania G-series (DC9/DC13)', 'Scania P-series (DC9/DC13)', 'Scania Irizar Bus (DC9)', 'Scania OmniCity (DC9)', 'Scania Touring (DC13)'],
     checksumAlgo: 'unknown',
