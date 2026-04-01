@@ -504,10 +504,15 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     }
   }, [LIB_PAGE_SIZE])
 
-  // When ECU is detected, pre-fill library search; fall back to ECU family if part number finds nothing
+  // When ECU is detected, pre-fill library search; fall back to ECU family if part number finds nothing.
+  // For TriCore/MPC ECUs (EDC16/EDC17/MED17/SIMOS etc.) auto-open the library panel — these ECUs
+  // require a definition file and the user must see matching results immediately without any clicks.
+  const SIG_SUPPORTED = ['edc15', 'me7', 'me9', 'me9_merc', 'bmw_ms43']
   useEffect(() => {
     if (!detected) return
     const family = detected.def.family || detected.def.name
+    const needsDef = !SIG_SUPPORTED.includes(detected.def.id)
+    if (needsDef) setShowLibrary(true)   // auto-open for TriCore ECUs
     const partMatch = fileName.match(/(?<!\d)(\d{5,9})(?!\d)/)
     if (partMatch) {
       const part = partMatch[1]
@@ -801,7 +806,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         ) : (
           <>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
-              Optional: Drop definition file or search library
+              {SIG_SUPPORTED.includes(selectedEcuId || detected?.def.id || '')
+                ? 'Optional: Drop definition file or search library'
+                : '⚠ Required: Drop an A2L or DRT file, or load one from the library above'}
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', fontWeight: 700 }}>
