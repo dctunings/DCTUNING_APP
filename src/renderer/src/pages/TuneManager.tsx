@@ -251,7 +251,7 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
       const buffer = await data.arrayBuffer()
       const api = (window as any).api
       if (api?.saveEcuFile) {
-        await api.saveEcuFile(buffer, tune.filename)
+        await api.saveEcuFile({ defaultName: tune.filename, buffer: Array.from(new Uint8Array(buffer)) })
       } else {
         const blob = new Blob([buffer], { type: 'application/octet-stream' })
         const url = URL.createObjectURL(blob)

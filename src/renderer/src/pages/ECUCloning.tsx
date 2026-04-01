@@ -198,14 +198,18 @@ export default function ECUCloning({ connected, activeVehicle }: Props) {
         return
       }
 
-      // The file data may not be returned from openEcuFile — we need a readFile IPC
-      // Since openEcuFile only returns {path, name, size}, we use a workaround:
-      // Ask the user to re-select; in practice main/index.ts must return data too.
-      // For now, indicate that write requires the data buffer.
-      // (The existing open-ecu-file handler returns size but not the bytes array)
-      addLog('Note: openEcuFile does not return file bytes. Please implement a readEcuFileBytes IPC handler or use the drag-and-drop approach.', 'warn')
-      addLog('Write aborted — file bytes not available via current IPC API', 'error')
-      setStep('error')
+      // Read the file bytes via read-file-bytes IPC (available since hex inspector update)
+      addLog(`Reading file: ${fileResult.name} (${formatSize(fileResult.size)})`, 'info')
+      const bytesResult = await api.readFileBytes(fileResult.path, fileResult.size)
+      if (!bytesResult?.ok) {
+        addLog(`Failed to read file bytes: ${bytesResult?.error || 'unknown error'}`, 'error')
+        setStep('error')
+        return
+      }
+      setWriteFileData(new Uint8Array(bytesResult.bytes))
+      setWriteFile({ name: fileResult.name, size: fileResult.size })
+      addLog(`Loaded ${formatSize(fileResult.size)} — ready to write`, 'success')
+      setStep('write-ready')
     } catch (err: unknown) {
       addLog(`Write exception: ${err instanceof Error ? err.message : String(err)}`, 'error')
       setStep('error')

@@ -247,7 +247,18 @@ export default function J2534PassThru({ connected, setConnected, activeVehicle }
     const api = (window as any).api
 
     if (op === 'READ ECU ID') {
-      addLog('Use "ECU Scanner" tab for full diagnostics', 'info')
+      if (api?.j2534ReadECUID) {
+        addLog('Reading ECU identity via UDS 0x22...', 'info')
+        const result = await api.j2534ReadECUID()
+        if (result?.ecuPart || result?.swVersion) {
+          addLog(`Part: ${result.ecuPart || '—'}  SW: ${result.swVersion || '—'}  HW: ${result.hwVersion || '—'}`, 'success')
+          if (result.flashSize) addLog(`Flash size: ${Math.round(result.flashSize / 1024)} KB`, 'info')
+        } else {
+          addLog(`ECU ID read failed: ${result?.error || 'no response'}`, 'error')
+        }
+      } else {
+        addLog('j2534ReadECUID not available — J2534 device required', 'warn')
+      }
       return
     }
 
@@ -295,7 +306,24 @@ export default function J2534PassThru({ connected, setConnected, activeVehicle }
     }
 
     if (op === 'LIVE DATA') {
-      addLog('Navigate to ECU Scanner → Live Data tab for real-time PIDs', 'info')
+      const proto = PROTOCOL_OPTIONS[protocolIdx]
+      if (api?.j2534IsConnected && await api.j2534IsConnected()) {
+        addLog('Reading live PIDs via J2534 DLL...', 'info')
+        const result = await api.j2534ReadLivePIDs(proto.protocolId)
+        if (result?.ok && result.pids) {
+          const entries = Object.entries(result.pids as Record<string, unknown>)
+          if (entries.length) {
+            entries.forEach(([k, v]) => addLog(`${k}: ${v}`, 'info'))
+            addLog(`${entries.length} PIDs read`, 'success')
+          } else {
+            addLog('No PID data returned', 'warn')
+          }
+        } else {
+          addLog(`Live data failed: ${result?.error || 'no response'}`, 'error')
+        }
+      } else {
+        addLog('J2534 DLL not connected — connect a J2534 device first', 'warn')
+      }
       return
     }
 
