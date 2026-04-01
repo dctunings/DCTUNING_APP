@@ -34,7 +34,8 @@ export function detectEcu(buffer: ArrayBuffer): DetectedEcu | null {
     }
     // Also check file size range
     const sizeOk = buffer.byteLength >= def.fileSizeRange[0] && buffer.byteLength <= def.fileSizeRange[1]
-    if (matched.length === 0 && !sizeOk) continue
+    // Require at least one ident string match — size alone is not sufficient
+    if (matched.length === 0) continue
 
     const score = (matched.length / def.identStrings.length) * 0.7 + (sizeOk ? 0.3 : 0)
     if (score > bestScore) {
@@ -43,7 +44,7 @@ export function detectEcu(buffer: ArrayBuffer): DetectedEcu | null {
     }
   }
 
-  return bestScore > 0.29 ? best : null
+  return bestScore > 0.10 ? best : null
 }
 
 // ─── Signature search ─────────────────────────────────────────────────────────
