@@ -1,0 +1,96 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Create .env
+        shell: bash
+        run: |
+          echo "VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}" > .env
+          echo "VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}" >> .env
+
+      - name: Build Electron app
+        run: npm run build:win
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get version
+        id: pkg
+        shell: bash
+        run: echo "version=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.pkg.outputs.version }}
+          name: DCTuning Desktop v${{ steps.pkg.outputs.version }}
+          body: |
+            ## DCTuning Desktop v${{ steps.pkg.outputs.version }}
+
+            ### What's new
+            - Remap Builder: DPF Off now works for all diesel ECUs (EDC16, EDC17, DCM35, DCM61, EMS3120, PCR21)
+            - Remap Builder: 6 new emissions add-ons — AdBlue/SCR Delete, DPF Sensors Off, EGR DTCs Delete, Cat Monitor Off, SAI Delete, EVAP Off
+            - Remap Builder: ECU detection now requires ident string match (no more false size-only detections)
+            - ME7: covers 1.6 NA variants (A4 1.6, Golf 1.6, Passat 1.6/1.8)
+            - Tune Manager: vehicle names properly capitalised, raw workshop filenames removed from library cards
+            - Removed all PCMFlash references — replaced with Autotuner throughout
+
+            ### Installation
+            Download and run the `.exe` installer below. Administrator rights required.
+          files: release/*.exe
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-web:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build web app
+        run: npm run build:web
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_WEB_MODE: "true"
+          VITE_APP_URL: "https://app.dctuning.ie"
+          VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
+
+      - name: Deploy web app to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./web-dist
+          publish_branch: web-deploy
