@@ -123,9 +123,13 @@ function MiniHeatmap({ data, label, mapCategory }: { data: number[][], label: st
   // values equal physicalOffset (e.g. -1.0 for boost, -10.0 for fuel). Range is tiny AND max < 0.
   // Strict every() alone breaks when factor=0.001 and one byte = 1 → diff = exactly 0.001, fails < check.
   const positiveExpected = ['boost', 'fuel', 'torque', 'limiter', 'emission'].includes(mapCategory ?? '')
+  // sampleAllNegative: all 20 preview cells from mid-map are negative for a positive-expected category.
+  // Catches A2L addresses that point to wrong binary regions with real (but wrong) data — the full map
+  // may have a few positive outlier bytes near the edges, but the operating region is all negative.
+  const sampleAllNegative = positiveExpected && allVals.length > 0 && allVals.every(v => v < 0)
   const isUniform = allMapVals.length > 4 && (
     positiveExpected
-      ? mapRange < 0.5 && mapMax < 0   // all values clustered near physicalOffset and negative
+      ? (mapRange < 0.5 && mapMax < 0) || sampleAllNegative
       : mapRange < 0.001               // strict check for ignition/misc/other
   )
   const mn = Math.min(...allVals)
