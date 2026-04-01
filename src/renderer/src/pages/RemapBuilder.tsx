@@ -114,7 +114,11 @@ function MiniHeatmap({ data, label }: { data: number[][], label: string }) {
   const colStart = Math.max(0, Math.floor((data[0]?.length ?? 0) * 0.3))
   const rows = data.slice(rowStart, rowStart + PREVIEW_ROWS)
   const allVals = rows.flatMap(r => r.slice(colStart, colStart + PREVIEW_COLS))
-  const isUniform = allVals.length > 1 && allVals.every(v => Math.abs(v - allVals[0]) < 0.001)
+  // Check the ENTIRE map for uniformity, not just the preview cells.
+  // A calibration plateau can make 4 sample cells look identical even when data is valid.
+  // Only warn when every cell across the whole map is the same value (raw=0 everywhere).
+  const allMapVals = data.flatMap(r => r)
+  const isUniform = allMapVals.length > 4 && allMapVals.every(v => Math.abs(v - allMapVals[0]) < 0.001)
   const mn = Math.min(...allVals)
   const mx = Math.max(...allVals)
   const range = mx - mn || 1
