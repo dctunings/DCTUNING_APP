@@ -723,7 +723,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         critical: false, showPreview: true,
       },
       {
-        id: 'me7_fuel_map',
+        id: 'me7_kfzw',
         name: 'Ignition Timing Map (KFZW)',
         category: 'ignition',
         desc: 'Base ignition advance map (KFZW). 16×12 int8 table, RPM vs load. Confirmed real ME7.5 symbol. Stage 2/3 adds advance in mid-range where knock margin allows.',

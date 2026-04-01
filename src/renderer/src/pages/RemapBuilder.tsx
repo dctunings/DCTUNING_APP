@@ -1355,7 +1355,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           </span>
         )}
         <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
-          {extractedMaps.filter(m => m.found).length} / {extractedMaps.length} maps found
+          {extractedMaps.filter(m => m.found && m.mapDef.showPreview).length} / {extractedMaps.filter(m => m.mapDef.showPreview).length} maps found
           {a2lFallbackCount > 0 && (
             <span style={{ marginLeft: 8, color: '#22c55e', fontWeight: 700 }}>
               ({a2lFallbackCount} via A2L/DRT ✓)
@@ -1418,7 +1418,11 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           // These are located and modified by the engine but don't need a heatmap card shown to the tuner.
           if (!m.mapDef.showPreview) return null
           const params = m.mapDef[`stage${stage}` as 'stage1' | 'stage2' | 'stage3']
-          const expectedPct = params.multiplier ? (params.multiplier - 1) * 100 : (params.addend ? 0 : 0)
+          // Badge label: multiplier maps show "+X%", addend maps show physical delta (e.g. "+1.0°")
+          const expectedPct = params.multiplier ? (params.multiplier - 1) * 100 : 0
+          const expectedAddend = (!params.multiplier && params.addend)
+            ? params.addend * m.mapDef.factor  // convert raw addend → physical units
+            : 0
 
           return (
             <div
@@ -1449,6 +1453,11 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                     {expectedPct > 0 && (
                       <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--accent)', padding: '2px 7px', borderRadius: 4, background: 'rgba(0,174,200,0.1)' }}>
                         +{expectedPct.toFixed(0)}%
+                      </span>
+                    )}
+                    {expectedAddend !== 0 && (
+                      <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--accent)', padding: '2px 7px', borderRadius: 4, background: 'rgba(0,174,200,0.1)' }}>
+                        {expectedAddend > 0 ? '+' : ''}{expectedAddend.toFixed(1)}{m.mapDef.unit ? ` ${m.mapDef.unit}` : ''}
                       </span>
                     )}
                     <span style={{ fontSize: 10, color: '#22c55e', fontWeight: 600 }}>Found</span>
