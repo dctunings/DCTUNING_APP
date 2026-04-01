@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { ECU_DEFINITIONS, ADDONS } from '../lib/ecuDefinitions'
 import type { EcuDef } from '../lib/ecuDefinitions'
-import { detectEcu, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L } from '../lib/binaryParser'
+import { detectEcu, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, syntheticMapDefFromDRT } from '../lib/binaryParser'
 import type { DetectedEcu, ExtractedMap, A2LValidationResult } from '../lib/binaryParser'
 import { buildRemap, buildFilename } from '../lib/remapEngine'
 import type { Stage, AddonId, RemapResult } from '../lib/remapEngine'
@@ -333,6 +333,29 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         return em
       })
       setA2lFallbackCount(fallbackCount)
+    }
+
+    // DRT fallback: DRT files provide direct file offsets (no signature needed).
+    // Match DRT maps to unfound ecuDef maps by category + closest dimensions.
+    // Category bridge: DRT 'egr'/'dpf' → ecuDef 'emission'
+    if (drtMaps.length > 0) {
+      const normCat = (c: string) => (c === 'egr' || c === 'dpf') ? 'emission' : c
+      let drtCount = 0
+      maps = maps.map(em => {
+        if (em.found) return em
+        const candidates = drtMaps.filter(dm => normCat(dm.category) === em.mapDef.category)
+        if (candidates.length === 0) return em
+        // Pick DRT map with closest row×col dimensions to the ecuDef map
+        const best = candidates.reduce((a, b) =>
+          Math.abs(a.rows - em.mapDef.rows) + Math.abs(a.cols - em.mapDef.cols) <=
+          Math.abs(b.rows - em.mapDef.rows) + Math.abs(b.cols - em.mapDef.cols) ? a : b
+        )
+        const synthDef = syntheticMapDefFromDRT(best, em.mapDef)
+        const result = extractMap(fileBuffer, synthDef)
+        if (result.found) { drtCount++; return result }
+        return em
+      })
+      setA2lFallbackCount(c => c + drtCount)
     }
 
     setExtractedMaps(maps)
@@ -1197,7 +1220,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           {extractedMaps.filter(m => m.found).length} / {extractedMaps.length} maps found
           {a2lFallbackCount > 0 && (
             <span style={{ marginLeft: 8, color: '#22c55e', fontWeight: 700 }}>
-              ({a2lFallbackCount} via A2L ✓)
+              ({a2lFallbackCount} via A2L/DRT ✓)
             </span>
           )}
         </span>
@@ -1209,12 +1232,12 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         const uCount = a2lValidation.filter(v => v.status === 'uncertain').length
         return (
           <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 8, background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.25)', fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>
-            <strong style={{ color: '#f87171' }}>⚠ No maps found</strong> — binary signatures don't match this ECU variant
+            <strong style={{ color: '#f87171' }}>⚠ No maps found</strong> — binary signatures don't match this ECU variant and no A2L/DRT was loaded.{' '}
             {vCount === 0 && uCount === 0
-              ? ' and A2L addresses are all out of range for this binary. The A2L may be for a completely different ECU.'
+              ? 'Load an A2L or DRT file from the library (go Back → ECU Detected) to locate maps by address.'
               : vCount === 0
-                ? ` and A2L validation found only ${uCount} uncertain address${uCount !== 1 ? 'es' : ''} — the A2L may be for a slightly different software version. Try loading a more specific A2L from the library.`
-                : '. A2L fallback also failed to extract data at the validated addresses.'}
+                ? `A2L validation found only ${uCount} uncertain address${uCount !== 1 ? 'es' : ''} — the A2L may be for a different software version. Try loading a DRT file from the library instead.`
+                : 'A2L fallback failed to read valid data at the validated addresses. Try a DRT file from the library.'}
           </div>
         )
       })()}

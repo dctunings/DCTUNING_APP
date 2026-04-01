@@ -230,6 +230,25 @@ export function syntheticMapDefFromA2L(a2lMap: A2LMapDef, baseDef: MapDef): MapD
   }
 }
 
+// ─── Build a MapDef from a DRT map ──────────────────────────────────────────
+// DRT files provide direct file offsets and dimensions but no scaling.
+// Keep ecuDef scaling (factor/offsetVal/unit) — only take location and shape from DRT.
+export function syntheticMapDefFromDRT(
+  drtMap: { fileOffset: number; rows: number; cols: number; dataType: string },
+  baseDef: MapDef
+): MapDef {
+  return {
+    ...baseDef,                        // keep ecuDef factor, offsetVal, unit
+    rows:        drtMap.rows,
+    cols:        drtMap.cols,
+    dtype:       drtMap.dataType as DataType,
+    le:          true,
+    signatures:  [],
+    sigOffset:   0,
+    fixedOffset: drtMap.fileOffset,    // DRT-supplied file offset
+  }
+}
+
 // ─── Write map back into buffer ───────────────────────────────────────────────
 export function writeMap(buffer: ArrayBuffer, extracted: ExtractedMap, newRaw: number[][]): ArrayBuffer {
   if (!extracted.found || extracted.offset < 0) return buffer
