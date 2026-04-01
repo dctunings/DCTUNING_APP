@@ -15,6 +15,7 @@ export interface ExtractedMap {
   rawData: number[][]   // raw integer values as stored in binary
   offset: number        // byte offset where map was found (-1 = not found)
   found: boolean
+  source: 'signature' | 'a2l' | 'drt' | 'none'  // how the map was located
 }
 
 // ─── ECU Detection ────────────────────────────────────────────────────────────
@@ -189,20 +190,20 @@ export function extractMap(buffer: ArrayBuffer, mapDef: MapDef): ExtractedMap {
     pos += mapDef.sigOffset
     const result = readAt(pos)
     if (!result) continue
-    return { mapDef, data: result.phys, rawData: result.raw, offset: pos, found: true }
+    return { mapDef, data: result.phys, rawData: result.raw, offset: pos, found: true, source: 'signature' }
   }
 
   // Fallback: use fixedOffset if provided (known variant-specific location)
   if (mapDef.fixedOffset !== undefined && mapDef.fixedOffset >= 0) {
     const result = readAt(mapDef.fixedOffset)
     if (result) {
-      return { mapDef, data: result.phys, rawData: result.raw, offset: mapDef.fixedOffset, found: true }
+      return { mapDef, data: result.phys, rawData: result.raw, offset: mapDef.fixedOffset, found: true, source: 'signature' }
     }
   }
 
   // Not found — return zeroed placeholder
   const empty = Array.from({ length: mapDef.rows }, () => Array(mapDef.cols).fill(0))
-  return { mapDef, data: empty, rawData: empty, offset: -1, found: false }
+  return { mapDef, data: empty, rawData: empty, offset: -1, found: false, source: 'none' }
 }
 
 // ─── Extract all maps for an ECU ─────────────────────────────────────────────

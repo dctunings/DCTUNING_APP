@@ -365,31 +365,51 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     if (!fileBuffer || !selectedEcu) return
     let maps = extractAllMaps(fileBuffer, selectedEcu)
 
-    // A2L fallback: for each map not found via binary signatures, try the best
-    // validated A2L address for that category.
+    // A2L fallback: for each map not found via binary signatures, try A2L-validated addresses.
     // Category bridge: A2L uses 'egr'/'dpf'; ecuDefinitions uses 'emission'.
     if (a2lValidation.length > 0) {
-      // Normalise A2L category to ecuDef category namespace
       const normCat = (c: string) => (c === 'egr' || c === 'dpf') ? 'emission' : c
-
-      // Pass 1: prefer 'valid' (≥70% confidence); Pass 2: accept 'uncertain' (≥35%) as last resort
-      const bestByCategory = new Map<string, A2LValidationResult>()
-      for (const pass of ['valid', 'uncertain'] as const) {
-        for (const v of a2lValidation) {
-          if (v.status !== pass) continue
-          const cat = normCat(v.map.category)
-          const prev = bestByCategory.get(cat)
-          if (!prev || v.confidence > prev.confidence) bestByCategory.set(cat, v)
-        }
-      }
+      // Build sorted pool: valid first (by confidence desc), then uncertain.
+      const validPool = a2lValidation.filter(v => v.status === 'valid').sort((a, b) => b.confidence - a.confidence)
+      const uncertainPool = a2lValidation.filter(v => v.status === 'uncertain').sort((a, b) => b.confidence - a.confidence)
+      const allPool = [...validPool, ...uncertainPool]
+      // usedOffsets prevents two maps claiming the same binary address.
+      // This was the root bug: bestByCategory stored ONE address per category so all
+      // 3 fuel maps (Torque→IQ, IQ, Rail Pressure) got the same fallback address.
+      const usedOffsets = new Set<number>()
+      for (const em of maps) { if (em.found && em.offset >= 0) usedOffsets.add(em.offset) }
       let fallbackCount = 0
       maps = maps.map(em => {
         if (em.found) return em
-        const best = bestByCategory.get(em.mapDef.category)
-        if (!best) return em
-        const synthDef = syntheticMapDefFromA2L(best.map, em.mapDef)
-        const result = extractMap(fileBuffer, synthDef)
-        if (result.found) { fallbackCount++; return result }
+        // Pass 1 — name-first: match by known DAMOS/A2L characteristic names (a2lNames field).
+        // This is the most precise match: 'Qmain_MAP' → edc17_fuel_quantity, not just any fuel map.
+        if (em.mapDef.a2lNames?.length) {
+          for (const v of allPool) {
+            if (usedOffsets.has(v.map.fileOffset)) continue
+            if (em.mapDef.a2lNames.some(n => n.toLowerCase() === v.map.name.toLowerCase())) {
+              const synthDef = syntheticMapDefFromA2L(v.map, em.mapDef)
+              const result = extractMap(fileBuffer, synthDef)
+              if (result.found) {
+                usedOffsets.add(v.map.fileOffset)
+                fallbackCount++
+                return { ...result, source: 'a2l' as const }
+              }
+            }
+          }
+        }
+        // Pass 2 — category fallback: any unused address in the same category.
+        for (const v of allPool) {
+          if (usedOffsets.has(v.map.fileOffset)) continue
+          if (normCat(v.map.category) === em.mapDef.category) {
+            const synthDef = syntheticMapDefFromA2L(v.map, em.mapDef)
+            const result = extractMap(fileBuffer, synthDef)
+            if (result.found) {
+              usedOffsets.add(v.map.fileOffset)
+              fallbackCount++
+              return { ...result, source: 'a2l' as const }
+            }
+          }
+        }
         return em
       })
       setA2lFallbackCount(fallbackCount)
@@ -400,19 +420,28 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     // Category bridge: DRT 'egr'/'dpf' → ecuDef 'emission'
     if (drtMaps.length > 0) {
       const normCat = (c: string) => (c === 'egr' || c === 'dpf') ? 'emission' : c
+      const drtUsedOffsets = new Set<number>()
+      // Mark all addresses already claimed by signature or A2L matches
+      for (const em of maps) { if (em.found && em.offset >= 0) drtUsedOffsets.add(em.offset) }
       let drtCount = 0
       maps = maps.map(em => {
         if (em.found) return em
         const candidates = drtMaps.filter(dm => normCat(dm.category) === em.mapDef.category)
         if (candidates.length === 0) return em
-        // Pick DRT map with closest row×col dimensions to the ecuDef map
-        const best = candidates.reduce((a, b) =>
-          Math.abs(a.rows - em.mapDef.rows) + Math.abs(a.cols - em.mapDef.cols) <=
-          Math.abs(b.rows - em.mapDef.rows) + Math.abs(b.cols - em.mapDef.cols) ? a : b
+        // Sort by closest row×col dimensions so best-matching DRT map is tried first
+        const sorted = [...candidates].sort((a, b) =>
+          (Math.abs(a.rows - em.mapDef.rows) + Math.abs(a.cols - em.mapDef.cols)) -
+          (Math.abs(b.rows - em.mapDef.rows) + Math.abs(b.cols - em.mapDef.cols))
         )
-        const synthDef = syntheticMapDefFromDRT(best, em.mapDef)
-        const result = extractMap(fileBuffer, synthDef)
-        if (result.found) { drtCount++; return result }
+        for (const dm of sorted) {
+          const synthDef = syntheticMapDefFromDRT(dm, em.mapDef)
+          const result = extractMap(fileBuffer, synthDef)
+          if (result.found && !drtUsedOffsets.has(result.offset)) {
+            drtUsedOffsets.add(result.offset)
+            drtCount++
+            return { ...result, source: 'drt' as const }
+          }
+        }
         return em
       })
       setA2lFallbackCount(c => c + drtCount)
@@ -1351,6 +1380,38 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         )
       })()}
 
+      {/* ── Map chain dependency warnings ─────────────────────────────────────
+           EDC17 tune chain: Drivers Wish → Torque Limit → Torque→IQ → IQ →
+           Smoke Limiter (parallel cap). Boost chain: N75 duty → Boost Target.
+           If a downstream map is found but its upstream guard is missing, warn the tuner.
+      */}
+      {extractedMaps.length > 0 && (() => {
+        const foundId = (id: string) => extractedMaps.find(m => m.mapDef.id === id)?.found ?? false
+        const warnings: { key: string; msg: string }[] = []
+        // Smoke limiter is the most-missed EDC17 map: IQ gains are silently capped without it
+        if (foundId('edc17_fuel_quantity') && !foundId('edc17_smoke_limiter')) {
+          warnings.push({ key: 'smoke', msg: '⚠ Smoke Limiter not found — fuel quantity gains will be silently capped at low airflow. Load an A2L with Qsmk_MAP / SmkLim_MAP to unlock full IQ range.' })
+        }
+        // Torque→IQ bridge: without it, torque demand can't reach the injector
+        if (foundId('edc17_fuel_quantity') && !foundId('edc17_torque_iq')) {
+          warnings.push({ key: 'trq2iq', msg: '⚠ Torque→IQ map not found — injector demand disconnected from driver torque request. Stage gains will be incomplete without this bridge map.' })
+        }
+        // N75 without boost target: duty cycle change won't raise boost ceiling
+        if (foundId('edc17_n75') && !foundId('edc17_boost_target')) {
+          warnings.push({ key: 'boosttgt', msg: '⚠ Boost Target map not found — N75 duty cycle was raised but the boost ceiling (pBoostSet) is unchanged. Actual boost gain will be limited.' })
+        }
+        if (warnings.length === 0) return null
+        return (
+          <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {warnings.map(w => (
+              <div key={w.key} style={{ padding: '9px 14px', borderRadius: 8, background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.25)', fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.55 }}>
+                {w.msg}
+              </div>
+            ))}
+          </div>
+        )
+      })()}
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
         {extractedMaps.map(m => {
           if (!m.mapDef.showPreview && m.mapDef.category === 'emission') return null
@@ -1367,13 +1428,20 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <CatBadge cat={m.mapDef.category} />
-                {a2lMaps.some(am => am.name === m.mapDef.name) && (
+                {m.source === 'a2l' && (
                   <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: 'rgba(34,197,94,0.12)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)' }}>A2L</span>
                 )}
-                {drtMaps.some(dm => dm.category === m.mapDef.category) && !a2lMaps.some(am => am.name === m.mapDef.name) && (
+                {m.source === 'drt' && (
                   <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: 'rgba(59,130,246,0.12)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.3)' }}>DRT</span>
                 )}
-                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', flex: 1 }}>{m.mapDef.name}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', flex: 1 }}>
+                  {m.mapDef.name}
+                  {m.found && m.offset >= 0 && (
+                    <span style={{ fontSize: 10, fontWeight: 500, color: 'rgba(255,255,255,0.22)', fontFamily: 'monospace', marginLeft: 10 }}>
+                      0x{m.offset.toString(16).toUpperCase().padStart(6, '0')}
+                    </span>
+                  )}
+                </span>
                 {m.found ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     {expectedPct > 0 && (
@@ -1384,7 +1452,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                     <span style={{ fontSize: 10, color: '#22c55e', fontWeight: 600 }}>Found</span>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
                     {m.mapDef.critical && (
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
@@ -1393,12 +1461,29 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                     <span style={{ fontSize: 10, color: m.mapDef.critical ? '#ef4444' : '#6b7280', fontWeight: 600 }}>
                       {m.mapDef.critical ? 'Not Found (Critical)' : 'Not Found'}
                     </span>
+                    {!a2lResult && !drtResult && (
+                      <span style={{ fontSize: 9, color: 'rgba(0,174,200,0.65)', fontWeight: 700 }}>
+                        → Load A2L/DRT
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, lineHeight: 1.4 }}>
                 {m.mapDef.desc}
               </div>
+              {m.found && (() => {
+                const allVals = m.data.flatMap(r => r)
+                if (allVals.length === 0) return null
+                const mn = Math.min(...allVals)
+                const mx = Math.max(...allVals)
+                const unit = m.mapDef.unit ?? ''
+                return (
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.28)', fontFamily: 'monospace', marginBottom: 4, letterSpacing: '0.2px' }}>
+                    {mn.toFixed(1)} – {mx.toFixed(1)}{unit ? ` ${unit}` : ''}
+                  </div>
+                )
+              })()}
               {(() => {
                 const a2lMap = a2lMaps.find(am => am.name === m.mapDef.name)
                 return a2lMap ? (

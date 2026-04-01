@@ -20,6 +20,9 @@ export interface MapDef {
   name: string
   category: MapCategory
   desc: string
+  // Known DAMOS / A2L characteristic names for this map — used for name-first A2L matching.
+  // Multiple names listed in priority order (most common first).
+  a2lNames?: string[]
   // Binary location - array of candidate signatures (bytes), map starts sigOffset bytes after match end
   signatures: number[][]
   sigOffset: number
@@ -454,6 +457,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: "Driver's Wish Map",
         category: 'torque',
         desc: "Converts pedal position to torque request (Nm). First map in the EDC17 torque chain — raising this sharpens throttle response and increases the torque the driver can demand from the engine.",
+        a2lNames: ['DRVWSH_MAP', 'DrvWish_MAP', 'Fahrerwunsch_MAP', 'FahrWunsch_MAP', 'MIFAS_MAP', 'MrDriver_MAP', 'mifas_MAP'],
         signatures: [[0x44,0x52,0x56,0x57,0x49,0x53,0x48,0x44], [0x44,0x52,0x56,0x57,0x53,0x48,0x44,0x43]],
         sigOffset: 4,
         rows: 8, cols: 16, dtype: 'uint16', le: true,
@@ -468,6 +472,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Torque Limitation Map',
         category: 'torque',
         desc: 'Maximum torque ceiling by RPM and atmospheric pressure. Must be raised before anything else — this is the master ceiling for all power gains. Leaving it stock silently caps every other map change.',
+        a2lNames: ['Trq_trqMax_MAP', 'TrqLim_MAP', 'MQBEGR_MAP', 'TrqMaxDrv_MAP', 'mxmot_MAP', 'MXMOT_MAP'],
         signatures: [[0x54,0x51,0x4C,0x49,0x4D,0x44,0x43], [0x54,0x4F,0x52,0x51,0x4C,0x44,0x43,0x01]],
         sigOffset: 2,
         rows: 8, cols: 8, dtype: 'uint16', le: true,
@@ -483,6 +488,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Torque to IQ Conversion',
         category: 'fuel',
         desc: 'Converts torque request (Nm) into injection quantity (mg/stroke). The critical link between the torque model and the injectors — if this is not raised with the torque limiter, extra torque demand produces no extra fuel and gains are lost.',
+        a2lNames: ['CnvSet_trq2qRgn1_MAP', 'Trq2IQ_MAP', 'TrqToQ_MAP', 'MISOLKF_MAP', 'misolkf_MAP', 'Trq_trq2InjQMain_MAP'],
         signatures: [[0x54,0x51,0x49,0x51,0x43,0x4F,0x4E,0x56], [0x43,0x4E,0x56,0x54,0x52,0x51,0x49,0x51]],
         sigOffset: 4,
         rows: 16, cols: 16, dtype: 'uint16', le: true,
@@ -497,6 +503,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Injection Quantity Map',
         category: 'fuel',
         desc: 'Fuel injection quantity in mg/stroke vs RPM and load. Primary power map for diesel — raising this increases torque across all RPM.',
+        a2lNames: ['Qmain_MAP', 'InjQty_MAP', 'QKENNFELD_MAP', 'Qfuel_MAP', 'QMain_MAP', 'Inj_qSetPoint_MAP', 'qmain_MAP'],
         signatures: [[0x49,0x4E,0x4A,0x51,0x54,0x59,0x44,0x43], [0x46,0x55,0x45,0x4C,0x51,0x54,0x59,0x01]],
         sigOffset: 4,
         rows: 16, cols: 16, dtype: 'uint16', le: true,
@@ -511,6 +518,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Smoke Limiter Map',
         category: 'smoke',
         desc: 'Maximum fuel quantity allowed at each MAF airflow reading. The most commonly missed map on EDC17 — without raising this, any IQ increase above stock is silently cut to prevent black smoke. Stage 1 gains require this raised in step.',
+        a2lNames: ['Qsmk_MAP', 'SmokeLimit_MAP', 'RKBEGRENZ_MAP', 'Qmax_smk_MAP', 'SmkLim_MAP', 'Inj_qMaxSmkLim_MAP', 'qsmk_MAP'],
         signatures: [[0x53,0x4D,0x4B,0x4C,0x49,0x4D,0x44,0x43], [0x51,0x4D,0x41,0x58,0x53,0x4D,0x4B,0x01]],
         sigOffset: 4,
         rows: 16, cols: 11, dtype: 'uint16', le: true,
@@ -525,6 +533,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Rail Pressure Setpoint',
         category: 'fuel',
         desc: 'Common rail fuel pressure target vs RPM and IQ. Higher pressure enables finer atomisation and supports increased injection quantity — essential when raising fuel delivery to maintain combustion quality and avoid smoke.',
+        a2lNames: ['Rail_pSetPointMax_MAP', 'RailPres_MAP', 'RDSOLLKF_MAP', 'pRailSetMax_MAP', 'Rail_MAP', 'CRpres_MAP', 'rdsoll_MAP'],
         signatures: [[0x52,0x41,0x49,0x4C,0x50,0x52,0x53,0x50], [0x43,0x52,0x50,0x52,0x45,0x53,0x53]],
         sigOffset: 4,
         rows: 12, cols: 16, dtype: 'uint16', le: true,
@@ -540,6 +549,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'N75 Wastegate Map',
         category: 'boost',
         desc: 'Wastegate solenoid duty cycle vs RPM and IQ. Controls how quickly boost builds and prevents overshoot spikes. Must be recalibrated after raising boost targets — mismatched N75 causes boost spikes and turbo hunting.',
+        a2lNames: ['N75_MAP', 'LDTV_MAP', 'WGduty_MAP', 'Boost_WG_MAP', 'Turb_dcWgSet_MAP', 'wgdc_MAP', 'WGDC_MAP'],
         signatures: [[0x4E,0x37,0x35,0x44,0x55,0x54,0x59,0x44], [0x57,0x47,0x44,0x55,0x54,0x59,0x4D,0x41]],
         sigOffset: 4,
         rows: 13, cols: 16, dtype: 'uint16', le: true,
@@ -554,6 +564,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Boost Pressure Target',
         category: 'boost',
         desc: 'Desired boost pressure vs RPM and IQ. Raising this tells the ECU how much boost to build — must be paired with N75 adjustment to prevent spikes and smoke limiter raise to allow the extra airflow to carry more fuel.',
+        a2lNames: ['Turb_pSetPoint_MAP', 'BoostTarget_MAP', 'LDESOLL_MAP', 'Boost_MAP', 'pBoostSet_MAP', 'ldesoll_MAP', 'LDESOLLKF_MAP'],
         signatures: [[0x4C,0x4C,0x53,0x4F,0x4C,0x4C,0x44,0x52], [0x42,0x53,0x54,0x47,0x54,0x44,0x43]],
         sigOffset: 4,
         rows: 12, cols: 16, dtype: 'uint16', le: true,
@@ -569,6 +580,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Start of Injection (SOI)',
         category: 'ignition',
         desc: 'Injection timing advance vs RPM and IQ in degrees before TDC. Advancing SOI improves combustion efficiency and power — standard Stage 2/3 mod. Too much advance raises exhaust gas temperature (EGT) and triggers the EGT limiter.',
+        a2lNames: ['InjCrv_phiMI1Bas_MAP', 'SOI_MAP', 'SOIKF_MAP', 'InjTiming_MAP', 'phi_SOI_MAP', 'soi_MAP', 'SPRKF_MAP'],
         signatures: [[0x53,0x4F,0x49,0x4D,0x41,0x50,0x44,0x43], [0x49,0x4E,0x4A,0x54,0x49,0x4D,0x44,0x43]],
         sigOffset: 4,
         rows: 10, cols: 12, dtype: 'int16', le: true,
@@ -730,6 +742,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Torque Limit (MXMOMI)',
         category: 'torque',
         desc: 'Maximum torque table (MXMOMI). Raise to prevent software torque cap from limiting power gains.',
+        a2lNames: ['MXMOMI', 'MXMOM', 'MXMOMI\0'],
         signatures: [[0x4D,0x58,0x4D,0x4F,0x4D,0x49,0x00], [0x4D,0x58,0x54,0x51,0x4C,0x49,0x4D]],
         sigOffset: 2,
         rows: 1, cols: 8, dtype: 'uint16', le: false,
@@ -738,6 +751,38 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage2: { multiplier: 1.35 },
         stage3: { multiplier: 1.50, clampMax: 65000 },
         critical: true, showPreview: true,
+      },
+      {
+        id: 'me7_kfped',
+        name: 'Pedal Demand Map (KFPED)',
+        category: 'torque',
+        desc: 'Driver pedal position to torque demand (KFPED). 1D table — 16 pedal breakpoints. Sharpens throttle response and raises the torque the driver can request. Common Stage 1 mod for 1.8T engines.',
+        // "KFPED\0" = 0x4B,0x46,0x50,0x45,0x44,0x00 — confirmed ME7 DAMOS symbol
+        a2lNames: ['KFPED', 'KFPEDG', 'KFPEDW'],
+        signatures: [[0x4B,0x46,0x50,0x45,0x44,0x00], [0x4B,0x46,0x50,0x45,0x44,0x47,0x00]],
+        sigOffset: 2,
+        rows: 1, cols: 16, dtype: 'uint8', le: false,
+        factor: 0.39216, offsetVal: 0, unit: '% torque',
+        stage1: { multiplier: 1.10, clampMax: 255 },
+        stage2: { multiplier: 1.18, clampMax: 255 },
+        stage3: { multiplier: 1.25, clampMax: 255 },
+        critical: false, showPreview: true,
+      },
+      {
+        id: 'me7_lamfa',
+        name: 'Full-Load Lambda (LAMFA)',
+        category: 'fuel',
+        desc: 'Driver-requested lambda target at full load (LAMFA). Lower values = richer mixture = more power and cooling. Stage 1/2 enrichment to λ0.85–0.88 is standard for modified 1.8T.',
+        // "LAMFA\0" = 0x4C,0x41,0x4D,0x46,0x41,0x00 — confirmed ME7 DAMOS symbol
+        a2lNames: ['LAMFA', 'LAMFAW', 'LFASOLLL'],
+        signatures: [[0x4C,0x41,0x4D,0x46,0x41,0x00], [0x4C,0x41,0x4D,0x46,0x41,0x57,0x00]],
+        sigOffset: 2,
+        rows: 1, cols: 8, dtype: 'uint8', le: false,
+        factor: 0.003906, offsetVal: 0, unit: 'λ',
+        stage1: { multiplier: 0.97 },  // slightly richer
+        stage2: { multiplier: 0.95 },
+        stage3: { multiplier: 0.93, clampMin: 178 },  // λ0.70 floor — don't go dangerously rich
+        critical: false, showPreview: false,
       },
     ],
   },
