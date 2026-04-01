@@ -20,10 +20,13 @@ export interface ExtractedMap {
 // ─── ECU Detection ────────────────────────────────────────────────────────────
 export function detectEcu(buffer: ArrayBuffer): DetectedEcu | null {
   const bytes = new Uint8Array(buffer)
-  // Search up to 512KB (or full file if smaller) for ECU identification strings
-  const searchLen = Math.min(524288, bytes.length)
-  const searchSlice = bytes.slice(0, searchLen)
-  const ascii = Array.from(searchSlice).map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : ' ').join('')
+
+  // Build two search strings from the full binary:
+  // 1. ascii_spaced  — non-printable → space  (catches strings with byte separators like 0x20/0xFF padding)
+  // 2. ascii_compact — non-printable → ''     (catches null-terminated strings like "EDC17\x00C46")
+  // Searching both doubles detection coverage for Bosch/Continental/Delphi ID sectors.
+  const ascii_spaced  = Array.from(bytes).map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : ' ').join('')
+  const ascii_compact = Array.from(bytes).map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : '' ).join('')
 
   let best: DetectedEcu | null = null
   let bestScore = 0
@@ -31,21 +34,25 @@ export function detectEcu(buffer: ArrayBuffer): DetectedEcu | null {
   for (const def of ECU_DEFINITIONS) {
     const matched: string[] = []
     for (const s of def.identStrings) {
-      if (ascii.includes(s)) matched.push(s)
+      if (ascii_spaced.includes(s) || ascii_compact.includes(s)) matched.push(s)
     }
     // Also check file size range
     const sizeOk = buffer.byteLength >= def.fileSizeRange[0] && buffer.byteLength <= def.fileSizeRange[1]
     // Require at least one ident string match — size alone is not sufficient
     if (matched.length === 0) continue
 
-    const score = (matched.length / def.identStrings.length) * 0.7 + (sizeOk ? 0.3 : 0)
+    // Score: reward any match heavily; additional matches increase confidence.
+    // Using min(matched, 3)/3 so 3+ matches = full string score — avoids penalising
+    // ECUs that have fewer identStrings vs ones that have many.
+    const stringScore = Math.min(matched.length, 3) / 3
+    const score = stringScore * 0.7 + (sizeOk ? 0.3 : 0)
     if (score > bestScore) {
       bestScore = score
       best = { def, confidence: score, matchedStrings: matched, fileSize: buffer.byteLength }
     }
   }
 
-  return bestScore > 0.10 ? best : null
+  return bestScore > 0.15 ? best : null
 }
 
 // ─── Signature search ─────────────────────────────────────────────────────────
