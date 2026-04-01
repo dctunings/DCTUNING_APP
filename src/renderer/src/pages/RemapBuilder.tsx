@@ -108,8 +108,13 @@ function heatColor(pct: number): string {
 function MiniHeatmap({ data, label }: { data: number[][], label: string }) {
   const PREVIEW_ROWS = 5
   const PREVIEW_COLS = 4
-  const rows = data.slice(0, PREVIEW_ROWS)
-  const allVals = rows.flatMap(r => r.slice(0, PREVIEW_COLS))
+  // Show mid-map region (60% down rows, 30% across cols) — avoids the low-load
+  // corner (row 0 = idle/fuel-cut) which shows near-zero values and is misleading.
+  const rowStart = Math.max(0, Math.floor(data.length * 0.6) - Math.floor(PREVIEW_ROWS / 2))
+  const colStart = Math.max(0, Math.floor((data[0]?.length ?? 0) * 0.3))
+  const rows = data.slice(rowStart, rowStart + PREVIEW_ROWS)
+  const allVals = rows.flatMap(r => r.slice(colStart, colStart + PREVIEW_COLS))
+  const isUniform = allVals.length > 1 && allVals.every(v => Math.abs(v - allVals[0]) < 0.001)
   const mn = Math.min(...allVals)
   const mx = Math.max(...allVals)
   const range = mx - mn || 1
@@ -117,24 +122,30 @@ function MiniHeatmap({ data, label }: { data: number[][], label: string }) {
   return (
     <div>
       <div style={{ fontSize: 9, color: 'var(--text-muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>{label}</div>
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${PREVIEW_COLS}, 1fr)`, gap: 2 }}>
-        {rows.map((row, r) =>
-          row.slice(0, PREVIEW_COLS).map((val, c) => (
-            <div
-              key={`${r}-${c}`}
-              title={val.toFixed(3)}
-              style={{
-                width: 22, height: 14, borderRadius: 2,
-                background: heatColor((val - mn) / range),
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 7, color: 'rgba(255,255,255,0.6)', fontWeight: 700,
-              }}
-            >
-              {val > 99 ? Math.round(val) : val.toFixed(1)}
-            </div>
-          ))
-        )}
-      </div>
+      {isUniform ? (
+        <div style={{ fontSize: 9, color: '#f59e0b', padding: '4px 6px', borderRadius: 4, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
+          ⚠ Uniform — definition may not match this binary. Try an A2L.
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${PREVIEW_COLS}, 1fr)`, gap: 2 }}>
+          {rows.map((row, r) =>
+            row.slice(colStart, colStart + PREVIEW_COLS).map((val, c) => (
+              <div
+                key={`${r}-${c}`}
+                title={val.toFixed(3)}
+                style={{
+                  width: 22, height: 14, borderRadius: 2,
+                  background: heatColor((val - mn) / range),
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 7, color: 'rgba(255,255,255,0.6)', fontWeight: 700,
+                }}
+              >
+                {val > 99 ? Math.round(val) : val.toFixed(1)}
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -500,11 +511,11 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       setDrtResult(result)
       setDrtMaps(converted)
       setDrtFileName(file.name)
-      // Clear any A2L if DRT loaded
+      // Clear A2L definition — but KEEP a2lValidation so validated addresses
+      // remain available as primary fallback (A2L addresses run before DRT fallback)
       setA2lResult(null)
       setA2lMaps([])
       setA2lFileName('')
-      setA2lValidation([])
       // Share with Performance page
       if (fileBuffer) onEcuLoaded?.({ fileName, fileBuffer, detected, a2lMaps: [], drtMaps: converted })
     } catch (e) {
@@ -595,7 +606,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         setDrtResult(result)
         setDrtMaps(converted)
         setDrtFileName(entry.filename)
-        setA2lResult(null); setA2lMaps([]); setA2lFileName(''); setA2lValidation([])
+        // Keep a2lValidation so A2L-validated addresses remain as primary fallback
+        setA2lResult(null); setA2lMaps([]); setA2lFileName('')
       }
       setShowLibrary(false)
       // If binary is already loaded, advance to step 1 automatically
@@ -984,8 +996,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             <div style={{ marginTop: 8, fontSize: 11, color: '#f59e0b' }}>{a2lResult.warnings[0]}</div>
           )}
 
-          {/* A2L address validation panel */}
-          {a2lValidation.length > 0 && (() => {
+          {/* A2L address validation panel — only shown when A2L is the active definition */}
+          {a2lValidation.length > 0 && a2lFileName && (() => {
             const vCount = a2lValidation.filter(v => v.status === 'valid').length
             const uCount = a2lValidation.filter(v => v.status === 'uncertain').length
             const iCount = a2lValidation.filter(v => v.status === 'invalid' || v.status === 'outofrange').length
