@@ -306,15 +306,21 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     let maps = extractAllMaps(fileBuffer, selectedEcu)
 
     // A2L fallback: for each map not found via binary signatures, try the best
-    // validated A2L address for that category (confidence >= 0.70 = data in range).
-    // This is safe because validation confirmed the data at that address is realistic.
+    // validated A2L address for that category.
+    // Category bridge: A2L uses 'egr'/'dpf'; ecuDefinitions uses 'emission'.
     if (a2lValidation.length > 0) {
-      // Pick highest-confidence valid result per category
+      // Normalise A2L category to ecuDef category namespace
+      const normCat = (c: string) => (c === 'egr' || c === 'dpf') ? 'emission' : c
+
+      // Pass 1: prefer 'valid' (≥70% confidence); Pass 2: accept 'uncertain' (≥35%) as last resort
       const bestByCategory = new Map<string, A2LValidationResult>()
-      for (const v of a2lValidation) {
-        if (v.status !== 'valid') continue
-        const prev = bestByCategory.get(v.map.category)
-        if (!prev || v.confidence > prev.confidence) bestByCategory.set(v.map.category, v)
+      for (const pass of ['valid', 'uncertain'] as const) {
+        for (const v of a2lValidation) {
+          if (v.status !== pass) continue
+          const cat = normCat(v.map.category)
+          const prev = bestByCategory.get(cat)
+          if (!prev || v.confidence > prev.confidence) bestByCategory.set(cat, v)
+        }
       }
       let fallbackCount = 0
       maps = maps.map(em => {
@@ -1196,6 +1202,22 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           )}
         </span>
       </div>
+
+      {/* A2L fallback diagnostic — shown when all maps fail */}
+      {extractedMaps.length > 0 && extractedMaps.filter(m => m.found).length === 0 && a2lValidation.length > 0 && (() => {
+        const vCount = a2lValidation.filter(v => v.status === 'valid').length
+        const uCount = a2lValidation.filter(v => v.status === 'uncertain').length
+        return (
+          <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 8, background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.25)', fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>
+            <strong style={{ color: '#f87171' }}>⚠ No maps found</strong> — binary signatures don't match this ECU variant
+            {vCount === 0 && uCount === 0
+              ? ' and A2L addresses are all out of range for this binary. The A2L may be for a completely different ECU.'
+              : vCount === 0
+                ? ` and A2L validation found only ${uCount} uncertain address${uCount !== 1 ? 'es' : ''} — the A2L may be for a slightly different software version. Try loading a more specific A2L from the library.`
+                : '. A2L fallback also failed to extract data at the validated addresses.'}
+          </div>
+        )
+      })()}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
         {extractedMaps.map(m => {
