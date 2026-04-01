@@ -194,7 +194,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // Part numbers: 0281010–0281013 are the EDC15 range per Bosch numbering.
     // 0281001 removed (not a real EDC15 part number prefix). Added 0281012/0281013 (PD variants).
     // LADSOLL, MENZK, MXMOM, EGRKL are confirmed ASCII strings in real EDC15 binaries.
-    identStrings: ['EDC15', 'EDC 15', 'EDC15C', 'EDC15P', '0281010', '0281011', '0281012', '0281013', 'EDC-15', 'LADSOLL', 'MENZK', 'MXMOM', 'EGRKL', 'VP37', 'VP44'],
+    // LADSOLL/MENZK/MXMOM/EGRKL/VP37/VP44 removed — these are generic Bosch map names shared
+    // across EDC16/EDC17/ME7 families and cause false-positive EDC15 detection on any Bosch binary.
+    identStrings: ['EDC15', 'EDC 15', 'EDC15C', 'EDC15P', 'EDC15VM', 'EDC15M+', 'EDC-15', '0281010', '0281011', '0281012', '0281013'],
     fileSizeRange: [262144, 1048576],   // 256KB – 1MB (standard VAG PD = 512KB; EDC15VM+/Mercedes = 1MB)
     vehicles: ['Audi A4 1.9 TDI', 'VW Passat 1.9 TDI', 'VW Golf Mk4 1.9 TDI', 'Skoda Octavia 1.9 TDI', 'Seat Leon 1.9 TDI', 'Audi A3 1.9 TDI'],
     checksumAlgo: 'bosch-simple',
@@ -606,7 +608,8 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // C167CS processor — binary embeds DAMOS symbol names as null-terminated ASCII strings in ROM (confirmed).
     // Confirmed real symbols present in ME7.5 binaries: KFZW, KFZW2, MLHFM, KFPED, LDRXN, KFMIOP, KFMIRL, MXMOMI.
     // Part numbers: 0261206xxx–0261207xxx = ME7.5 (1.8T 150/180/225PS); 0261203/204 = older ME7.x.
-    identStrings: ['ME7', 'ME7.5', 'ME7.1', 'ME7.3', '0261203', '0261204', '0261206', '0261207', 'KFZW', 'MLHFM', 'KFPED', 'LDRXN', 'MXMOMI', 'MEVBOGK'],
+    // KFZW/MLHFM/KFPED/LDRXN/MXMOMI/MEVBOGK removed — Bosch map names shared with ME9/ME17 families.
+    identStrings: ['ME7', 'ME7.5', 'ME7.1', 'ME7.3', 'ME7.4', 'ME7.8', '0261203', '0261204', '0261205', '0261206', '0261207'],
     fileSizeRange: [65536, 1048576],   // 64KB – 1MB (standard = 512KB; some 1MB variants exist)
     vehicles: ['VW Golf GTI Mk4 1.8T', 'Audi TT 1.8T 225', 'Audi A3 1.8T', 'Seat Leon 1.8T', 'VW Bora 1.8T', 'Audi A4 1.6', 'VW Golf 1.6', 'VW Passat 1.6/1.8', 'Audi A3 1.6'],
     checksumAlgo: 'bosch-simple',
@@ -743,7 +746,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     manufacturer: 'Delphi',
     family: 'DCM3.5',
     // MPC5566 (PowerPC) — no embedded ASCII symbol names. ~2MB full flash dump.
-    identStrings: ['DCM3.5', 'DCM35', 'DELPHI', 'DW10C', 'DW10CD'],
+    identStrings: ['DCM3.5', 'DCM35', 'DCM3.5AP', 'DW10C', 'DW10CD'],
     fileSizeRange: [524288, 2097152],   // 512KB – 2MB (MPC5566 internal ~2MB)
     vehicles: ['Ford Focus 3 2.0L TDCi 140/163PS', 'Ford Kuga 1 2.0L TDCi 140/163PS', 'Ford Kuga 2 2.0L TDCi 140/163PS', 'Ford Mondeo 4 2.0L TDCi 140/163PS', 'Peugeot 508 2.0L HDi', 'Citroen C5 2.0L HDi'],
     checksumAlgo: 'unknown',
@@ -816,7 +819,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     manufacturer: 'Siemens/Continental',
     family: 'SID208',
     // TC1728 Tricore (1.5MB) or TC1797 (4MB) variant. No embedded ASCII symbols.
-    identStrings: ['SID208', 'SID 208', 'SIEMENS', 'VDO', 'CONTINENTAL', 'PUMFRQ', 'FRQ61'],
+    identStrings: ['SID208', 'SID 208', 'SID208EVO', 'PUMFRQ', 'FRQ61'],
     fileSizeRange: [1048576, 4194304],   // 1MB–4MB (TC1728=1.5MB; TC1797 variant=4MB)
     vehicles: ['Ford Transit 2012 2.2L 100-155PS', 'Ford Transit 2.0L Diesel', 'Ford Tourneo Custom 2.2L', 'Land Rover Defender 2012 2.2L TD4', 'Ford Ranger 3.2L Diesel'],
     checksumAlgo: 'unknown',
@@ -874,7 +877,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Continental EMS3120',
     manufacturer: 'Continental',
     family: 'EMS3120',
-    identStrings: ['EMS3120', 'EMS312', 'CONTINENTAL', 'TC1738'],
+    identStrings: ['EMS3120', 'EMS3121', 'EMS3122', 'EMS312'],
     fileSizeRange: [1048576, 2097152],
     vehicles: ['Renault Megane 2/3 1.5 dCi', 'Renault Clio 3 1.5 dCi', 'Renault Logan 1.5 dCi', 'Renault Sandero 1.5 dCi', 'Renault Fluence 1.5 dCi', 'Nissan Almera 1.5 dCi'],
     checksumAlgo: 'continental-crc',
@@ -947,7 +950,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     manufacturer: 'Bosch',
     family: 'PCR2.1',
     // PCR2.1 identified by firmware string only — no unique part number range separate from EDC17.
-    identStrings: ['PCR2.1', 'PCR21', 'PCR 2.1', 'BOSCH PCR', '0281014', '0281015', '0281016'],
+    identStrings: ['PCR2.1', 'PCR21', 'PCR 2.1', 'PCR2.1-DHP', '0281007', '0281008', '0281009'],
     fileSizeRange: [1048576, 2097152],
     vehicles: ['VW Golf 6 1.6 TDI', 'VW Polo 6R 1.6 TDI', 'Audi A3 8P 1.6 TDI', 'Seat Ibiza 6J 1.6 TDI', 'Skoda Fabia 2 1.6 TDI', 'VW Caddy 1.6 TDI'],
     checksumAlgo: 'bosch-crc32',
@@ -1397,7 +1400,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // DCM6.1 is a DELPHI ECU (not Bosch) — Tricore TC1797, 4MB internal flash.
     // Uses Delphi internal ref 28xxxxxx (e.g. 28473463). Ford OEM DS71-/FS7A- part numbers.
     // Removed 0281018/0281019 — those are Bosch EDC17 numbers, not Delphi.
-    identStrings: ['DCM6.1', 'DCM61', 'DELPHI', '28473', 'CuPF', 'DS71', 'FS7A'],
+    identStrings: ['DCM6.1', 'DCM61', 'DCM6.1AP', '28473', 'CuPF', 'DS71', 'FS7A'],
     fileSizeRange: [1048576, 4194304],   // TC1797 = 4MB internal flash
     vehicles: ['Ford Transit 2.0 TDCi (2016+)', 'Ford Transit 2.2 TDCi', 'Ford Ranger 2.2 TDCi', 'Ford Ranger 3.2 TDCi', 'Ford Mondeo 2.0 TDCi (2015+)', 'Ford Focus 1.5 TDCi (2015+)'],
     checksumAlgo: 'bosch-crc32',
@@ -1469,7 +1472,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Siemens SID807 EVO',
     manufacturer: 'Continental/VDO',
     family: 'SID807EVO',
-    identStrings: ['SID807', 'SID807EVO', 'SID8', '5WS40', '5WS4', 'SID206', 'SID211'],
+    identStrings: ['SID807EVO', 'SID807', 'SID211', 'SID209', '5WS40119'],
     fileSizeRange: [524288, 1048576],
     vehicles: ['Ford Mondeo 2.0 TDCi (2010–2014)', 'Ford Focus 2.0 TDCi (2010–2014)', 'Ford Galaxy 2.0 TDCi', 'Ford S-Max 2.0 TDCi', 'PSA Peugeot 508 2.0 BlueHDi', 'Volvo S60/V60 D4'],
     checksumAlgo: 'continental-crc',
@@ -2472,7 +2475,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Delphi DCM6.2 (VAG TDI)',
     manufacturer: 'Delphi',
     family: 'DCM6.2',
-    identStrings: ['DCM6.2', 'DCM62', 'DCM6.2A', 'DCM6.2C', 'DCM7.1', 'DELPHI', 'EA288', 'CLHA', 'CRKB'],
+    identStrings: ['DCM6.2', 'DCM62', 'DCM6.2A', 'DCM7.1', 'EA288', 'CLHA', 'CRKB'],
     fileSizeRange: [524288, 2097152],
     vehicles: ['VW Golf Mk7 1.6 TDI', 'VW Passat B8 1.6 TDI', 'Audi A3 1.6 TDI (2013+)', 'Skoda Octavia 1.6 TDI (2013+)', 'Seat Leon 1.6 TDI', 'VW Tiguan 2.0 TDI (2017+)'],
     checksumAlgo: 'unknown',
@@ -2530,7 +2533,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Mercedes CRD3/CRD3P',
     manufacturer: 'Continental',
     family: 'CRD3',
-    identStrings: ['CRD3', 'CRD3P', 'OM651', 'OM654', 'OM642', 'OM626', 'A0009008700', 'MERCEDES'],
+    identStrings: ['CRD3', 'CRD3P', 'CRD3.10', 'CRD3.20', 'OM651', 'OM642', 'A0009008700'],
     fileSizeRange: [1048576, 4194304],
     vehicles: ['Mercedes C220d / C250d (OM651)', 'Mercedes E220d / E250d (OM651)', 'Mercedes GLC 220d (OM654)', 'Mercedes A200d / B200d (OM651)', 'Mercedes Sprinter 2.2 CDI (OM651)', 'Mercedes V-Class 2.2 CDI (OM651)'],
     checksumAlgo: 'continental-crc',
@@ -2588,7 +2591,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17 (Jeep/FCA)',
     manufacturer: 'Bosch',
     family: 'EDC17 FCA',
-    identStrings: ['JEEP', 'FCA', 'FIAT', 'ALFA', 'EDC17C49', 'EDC17C69', 'VM2.8', '0281030', '0281031', 'MultiJet'],
+    identStrings: ['EDC17C49', 'EDC17C69', 'EDC17C79', 'VM2.8', '0281033', '0281034'],
     fileSizeRange: [1048576, 4194304],
     vehicles: ['Jeep Wrangler 2.8 CRD (VM Motori)', 'Jeep Grand Cherokee 3.0 CRD (OM642)', 'Fiat Ducato 2.3 Multijet', 'Alfa Romeo Stelvio 2.2 JTD', 'Alfa Romeo Giulia 2.2 JTD', 'Fiat 500X 1.6 Multijet'],
     checksumAlgo: 'bosch-crc32',
@@ -2646,7 +2649,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Delphi DCM6.2 (PSA/Stellantis)',
     manufacturer: 'Delphi',
     family: 'PSA DCM6.2',
-    identStrings: ['DCM6.2', 'DCM6.2A', 'DCM6.2C', 'DW10', 'DW12', 'BlueHDi', 'HDi', 'PSA', 'PEUGEOT', 'CITROEN'],
+    identStrings: ['DCM6.2A', 'DCM6.2C', 'DCM6.2', 'DCM62', 'DW10F', 'DW12C'],
     fileSizeRange: [524288, 2097152],
     vehicles: ['Peugeot 508 2.0 BlueHDi 180', 'Citroën C5 Aircross 2.0 BlueHDi', 'Peugeot 3008/5008 2.0 BlueHDi', 'DS7 Crossback 2.0 BlueHDi', 'Peugeot Expert 2.0 BlueHDi', 'Citroën SpaceTourer 2.0 BlueHDi'],
     checksumAlgo: 'unknown',
@@ -2704,7 +2707,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Renault DC4 (RS Petrol)',
     manufacturer: 'Continental',
     family: 'DC4',
-    identStrings: ['DC4', 'RENAULT', 'RS SPORT', 'M5P', 'M5MT', 'TCe300', 'TCe205', '0261S16', 'S101'],
+    identStrings: ['DC4', 'M5P', 'M5MT', 'M5PT', '0261S16', '0261S17', 'S101'],
     fileSizeRange: [524288, 2097152],
     vehicles: ['Renault Mégane RS 300 Trophy (1.8T M5P)', 'Renault Mégane RS 280 Cup (1.8T M5P)', 'Renault Clio RS 200 EDC (1.6T)', 'Renault Zoe (motor calibration)', 'Alpine A110 1.8T M5P (300ps)', 'Alpine A110S 1.8T M5P (252ps)'],
     checksumAlgo: 'continental-crc',
@@ -2762,7 +2765,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch ME7.9 (Nissan)',
     manufacturer: 'Bosch',
     family: 'Nissan ME7',
-    identStrings: ['ME7.9.20', 'ME7.9', 'NISSAN', 'VQ35', 'VQ37', 'RB26', 'SR20', 'VK56', '0261207'],
+    identStrings: ['ME7.9.20', 'ME7.9', 'ME79', '0261208', '0261S00', '0261S01'],
     fileSizeRange: [524288, 2097152],
     vehicles: ['Nissan 350Z 3.5 V6 (VQ35DE)', 'Nissan 370Z 3.7 V6 (VQ37VHR)', 'Nissan Skyline V35/V36 (VQ35/VQ37)', 'Nissan GT-R R34 (RB26DETT)', 'Nissan Patrol 5.6 V8 (VK56)', 'Nissan Stagea 2.5T (RB25DET)'],
     checksumAlgo: 'bosch-crc32',
@@ -2989,7 +2992,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // IAW4GV = Alfa 147/156/GT, Fiat Stilo 1.8/2.0 (ST10F/MC912-based, DAMOS symbols present).
     // IAW5NF/6F = Fiat Bravo/Punto 1.4T MultiAir (SPC5566, no embedded symbols).
     // IAW7GF/7GFA = Alfa Giulietta 1.4T, Fiat 500 Abarth 1.4T (SPC5566/TC1724).
-    identStrings: ['IAW4GV', 'IAW5F', 'IAW5NF', 'IAW6F', 'IAW7GF', 'IAW7GFA', 'IAW8F', 'IAW4', 'IAW5', 'IAW6', 'IAW7', 'MARELLI'],
+    identStrings: ['IAW4GV', 'IAW5F', 'IAW5NF', 'IAW6F', 'IAW7GF', 'IAW7GFA', 'IAW8F', 'IAW4', 'IAW5', 'IAW6', 'IAW7'],
     fileSizeRange: [131072, 2097152],   // 128KB (IAW4GV) – 2MB (IAW7GF+)
     vehicles: ['Alfa Romeo 147/156/GT 1.8/2.0 TS (IAW4GV)', 'Fiat Stilo 1.8/2.0 (IAW4GV/5F)', 'Fiat Bravo 1.4T 150hp (IAW6F)', 'Fiat Punto Evo 1.4T Abarth (IAW5NF)', 'Alfa Romeo MiTo 1.4T (IAW5NF/6F)', 'Alfa Romeo Giulietta 1.4T 120/170hp (IAW7GF)', 'Fiat 500 Abarth 1.4T 135/160hp (IAW7GF/7GFA)', 'Lancia Delta 1.4T (IAW7GF)', 'Fiat 500 Abarth 595 (IAW8F)'],
     checksumAlgo: 'unknown',
@@ -3078,7 +3081,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // CRD2.x variant codes ARE embedded in calibration identification area.
     // CRD2.1x / CRD2.2x / CRD2.3x / CRD2.6x cover 1.3 JTD/CDTi and 1.9 JTD variants.
     // HC12/HCS12X or ST10-based MCU (~256KB–512KB flash).
-    identStrings: ['CRD2.1', 'CRD2.2', 'CRD2.3', 'CRD2.6', 'CRD2', 'DELPHI'],
+    identStrings: ['CRD2.1', 'CRD2.2', 'CRD2.3', 'CRD2.6', 'CRD2'],
     fileSizeRange: [131072, 524288],   // 128KB – 512KB
     vehicles: ['Fiat Punto 1.3 JTD (199)', 'Fiat 500 1.3 JTD', 'Fiat Panda 1.3 JTD', 'Fiat Doblo 1.3 JTD', 'Opel/Vauxhall Corsa D 1.3 CDTi', 'Opel/Vauxhall Astra H 1.7 CDTi', 'Suzuki Swift 1.3 DDiS', 'Suzuki SX4 1.9 DDiS', 'Alfa Romeo MiTo 1.3/1.6 JTDm', 'Lancia Ypsilon 1.3 JTD'],
     checksumAlgo: 'unknown',
@@ -3139,7 +3142,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // CRD3.x variant codes ARE embedded in calibration identification area.
     // CRD3.1x / CRD3.3x / CRD3.5x / CRD3.7x cover 1.6 CDTi / 2.0 CDTi variants.
     // MPC5566-based MCU (~1–2MB flash).
-    identStrings: ['CRD3.1', 'CRD3.3', 'CRD3.4', 'CRD3.5', 'CRD3.6', 'CRD3.7', 'CRD3', 'DELPHI'],
+    identStrings: ['CRD3.1', 'CRD3.3', 'CRD3.4', 'CRD3.5', 'CRD3.6', 'CRD3.7', 'CRD3'],
     fileSizeRange: [524288, 2097152],   // 512KB – 2MB
     vehicles: ['Opel/Vauxhall Astra J 1.6/2.0 CDTi (A16DTH/A20DTH)', 'Opel/Vauxhall Insignia 2.0 CDTi', 'Opel/Vauxhall Zafira 2.0 CDTi', 'Ford Focus Mk3 1.6/2.0 TDCi', 'Ford Mondeo Mk4 2.0 TDCi', 'Renault Megane 1.9/2.0 dCi', 'Renault Laguna 2.0 dCi', 'Saab 9-3/9-5 2.0 TTiD', 'Chevrolet Cruze 2.0 VCDi'],
     checksumAlgo: 'unknown',
@@ -3214,7 +3217,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // MJD variant codes ARE embedded in calibration identification sectors.
     // MJD6F3 = Alfa 159/Brera 2.0 JTDm, MJD6JF = Jeep/Dodge diesel.
     // MJ8DF/MJ8F3/MJ8F2 = Fiat Bravo/Punto/MiTo 1.6 Multijet, Alfa Giulietta 2.0 JTDm.
-    identStrings: ['MJD6F3', 'MJD6JF', 'MJ8DF', 'MJ8F3', 'MJ8F2', 'MJD6', 'MJD8', 'MJ8', 'MARELLI'],
+    identStrings: ['MJD6F3', 'MJD6JF', 'MJ8DF', 'MJ8F3', 'MJ8F2', 'MJD6', 'MJD8', 'MJ8'],
     fileSizeRange: [262144, 2097152],   // SH7058/SPC564 = 256KB–2MB
     vehicles: ['Alfa Romeo 159 2.0 JTDm 136/170hp', 'Alfa Romeo Brera 2.0 JTDm', 'Alfa Romeo Giulietta 2.0 JTDm 140/170hp', 'Alfa Romeo MiTo 1.3/1.6 JTDm', 'Fiat Bravo 1.6/2.0 Multijet', 'Fiat Punto 1.6 Multijet', 'Fiat Croma 1.9 JTDm', 'Jeep Renegade 1.6/2.0 JTD', 'Jeep Compass 2.0 JTD', 'Lancia Delta 2.0 Multijet'],
     checksumAlgo: 'unknown',
@@ -3443,7 +3446,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // 'E87' and 'E98' calibration variant codes ARE embedded in ROM identification sector.
     // E87: Opel Astra J/K 1.4T/2.0T, Insignia 2.0T, Cascada, Meriva B, Mokka 1.4T.
     // E98: Opel Astra K 1.4T/1.6T (B14NET/D14NET) and Chevrolet Cruze/Trax 1.4T.
-    identStrings: ['E87', 'E98', 'DELCO', 'ACDelco'],
+    identStrings: ['E87MCA', 'E98MCA', 'E87', 'E98', '12622290', '12655908'],
     fileSizeRange: [524288, 4194304],   // MPC556=1MB, TC1797=4MB, MPC5674F=2MB
     vehicles: ['Opel/Vauxhall Astra J 1.4T 140ps (A14NET)', 'Opel/Vauxhall Astra J 2.0T 280ps (A20NFT OPC)', 'Opel/Vauxhall Insignia 2.0T 220/260ps', 'Opel/Vauxhall Cascada 2.0T 220ps', 'Opel/Vauxhall Meriva B 1.4T', 'Opel/Vauxhall Mokka 1.4T 140ps', 'Opel/Vauxhall Astra K 1.4T/1.6T Turbo', 'Chevrolet Cruze 1.4T/1.6T', 'Chevrolet Trax 1.4T'],
     checksumAlgo: 'unknown',
@@ -3519,7 +3522,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // 'DCM3.4' calibration variant code IS embedded in Toyota diesel ECU ROM.
     // 1KD-FTV = 3.0L D-4D turbodiesel (166–173ps) in Land Cruiser/Prado/Hilux.
     // 2KD-FTV = 2.5L D-4D turbodiesel (102–144ps) in Hilux/Innova/Fortuner.
-    identStrings: ['DCM3.4', 'DCM34', '1KD', '2KD', 'D-4D'],
+    identStrings: ['DCM3.4', 'DCM34', 'DCM3.4AP', '89871-'],
     fileSizeRange: [262144, 524288],   // SH7059 = 256KB–512KB
     vehicles: ['Toyota Land Cruiser 100/200 3.0D (1KD-FTV)', 'Toyota Land Cruiser Prado 3.0D (1KD-FTV)', 'Toyota Hilux 3.0D 163ps (1KD-FTV)', 'Toyota Hilux 2.5D 102/144ps (2KD-FTV)', 'Toyota HiAce 2.5D (2KD-FTV)', 'Toyota Fortuner 2.5D/3.0D', 'Toyota Innova 2.5D (2KD-FTV)', 'Lexus GX470 4.7D'],
     checksumAlgo: 'unknown',
@@ -3596,7 +3599,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // SID206: Ford Focus/Mondeo/Galaxy/S-Max 1.8/2.0 TDCi (2002–2008).
     // SID802/SID804: older C167-based variants (Ford 1.8 TDCi pre-2005, PSA 1.6/2.0 HDi).
     // SID8xx variant codes ARE embedded in Continental diesel calibration identification area.
-    identStrings: ['SID803A', 'SID803', 'SID206', 'SID802', 'SID804', 'SID8'],
+    identStrings: ['SID803A', 'SID803', 'SID802', 'SID804'],
     fileSizeRange: [262144, 1048576],   // C167 = 256KB, MPC5xx = 512KB–1MB
     vehicles: ['Ford Focus Mk2 1.6/2.0 TDCi (2004–2011)', 'Ford Mondeo Mk4 1.6/2.0 TDCi (2007–2014)', 'Ford C-Max 1.6/2.0 TDCi (2007–2010)', 'Ford Galaxy/S-Max 2.0 TDCi (2006–2010)', 'Ford Kuga Mk1 2.0 TDCi (2008–2012)', 'Peugeot 307/308 2.0 HDi (DW10)', 'Peugeot 407/607 2.0 HDi', 'Citroën C5/C6 2.0 HDi', 'Citroën Berlingo/Dispatch 2.0 HDi'],
     checksumAlgo: 'continental-crc',
@@ -3672,7 +3675,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // Zafira B, Astra H/J, and Vectra C 2.0 CDTi (Z20DTH / Z20DTJ engines).
     // "MT80" and "MT80.1" are embedded as ASCII in the calibration identification header
     // of these ECUs — confirmed present in PDFs and known tuning databases.
-    identStrings: ['MT80.1', 'MT80', 'DELPHI'],
+    identStrings: ['MT80.1', 'MT80', 'MT80A', 'MT80B'],
     fileSizeRange: [524288, 2097152],   // SH72543 = 512KB–2MB flash
     vehicles: [
       'Opel/Vauxhall Zafira B 2.0 CDTi 100/120ps (Z20DTH/Z20DTJ)',
@@ -3824,7 +3827,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // Calibration ROM headers embed Denso project codes: V40, V46, V50, VD46.1, V46.11, S3000.
     // Used in Volvo S40/V40/V50/C30/S60 T5/T6 D5 petrol variants (B4164T/B5204T/B6324S).
     // PDF confirms: "ECM SH72543 V50", "ECM SH72546 VD46.1", "ECM SH705x V40".
-    identStrings: ['VD46.1', 'V46.11', 'V46', 'V40', 'V50', 'S3000'],
+    identStrings: ['VD46.1', 'V46.11', 'VD46', 'S3000'],
     fileSizeRange: [524288, 2097152],
     vehicles: [
       'Volvo S40/V40 2.0T/T5 (B4204T/B5204T2)',
