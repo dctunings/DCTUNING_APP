@@ -26,6 +26,24 @@ interface DefinitionEntry {
   curve_count: number
 }
 
+// ─── Calibration proximity helper ─────────────────────────────────────────────
+// Given a filename like "7L0907401F_0040_387060_P397.a2l" and a target number
+// like 387808, extracts all 5-9 digit numbers from the filename and returns
+// the closest one with its delta so the tuner can spot the best match at a glance.
+function closestCalNum(filename: string, targetStr: string): { num: number; delta: number } | null {
+  const target = parseInt(targetStr, 10)
+  if (isNaN(target) || target === 0) return null
+  const matches = [...filename.matchAll(/(?<!\d)(\d{5,9})(?!\d)/g)].map(m => parseInt(m[1], 10))
+  if (matches.length === 0) return null
+  let best = matches[0]
+  let bestDelta = Math.abs(best - target)
+  for (const n of matches) {
+    const d = Math.abs(n - target)
+    if (d < bestDelta) { best = n; bestDelta = d }
+  }
+  return { num: best, delta: bestDelta }
+}
+
 // ─── Color helpers ────────────────────────────────────────────────────────────
 function hexToRgb(hex: string): [number, number, number] {
   return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)]
@@ -206,6 +224,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [libLoadingId, setLibLoadingId] = useState<string | null>(null)
   const [showLibrary, setShowLibrary] = useState(false)
   const [libFallbackNote, setLibFallbackNote] = useState('')
+  const [libOriginalNum, setLibOriginalNum] = useState('')  // the numeric query before fallback
   const LIB_PAGE_SIZE = 25
 
   // A2L validation state
@@ -435,9 +454,10 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
 
   // ─── Library search ───────────────────────────────────────────────────────
   const searchLibrary = useCallback(async (query: string, page = 0): Promise<number> => {
-    if (!query.trim()) { setLibResults([]); setLibTotal(0); return 0 }
+    if (!query.trim()) { setLibResults([]); setLibTotal(0); setLibOriginalNum(''); return 0 }
     setLibLoading(true)
     setLibFallbackNote('')
+    setLibOriginalNum('')
     try {
       const { data, count } = await supabase
         .from('definitions_index')
@@ -465,7 +485,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       searchLibrary(part).then(cnt => {
         if (cnt === 0 && family) {
           setLibSearch(family)
-          setLibFallbackNote(`No A2L found for "${part}" — showing all ${family} definitions`)
+          setLibOriginalNum(part)
+          setLibFallbackNote(`No exact match for "${part}" — showing ${family} definitions sorted by closest calibration number`)
           searchLibrary(family)
         }
       })
@@ -629,16 +650,36 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             </div>
           )}
 
-          {libResults.map(entry => (
+          {[...libResults]
+            .sort((a, b) => {
+              if (!libOriginalNum) return 0
+              const ca = closestCalNum(a.filename, libOriginalNum)
+              const cb = closestCalNum(b.filename, libOriginalNum)
+              return (ca?.delta ?? 999999) - (cb?.delta ?? 999999)
+            })
+            .map(entry => {
+            const cal = libOriginalNum ? closestCalNum(entry.filename, libOriginalNum) : null
+            const isClose = cal && cal.delta < 2000
+            return (
             <div
               key={entry.id}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, marginBottom: 4, background: 'rgba(255,255,255,0.03)', border: '1px solid transparent' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, marginBottom: 4, background: isClose ? 'rgba(184,240,42,0.04)' : 'rgba(255,255,255,0.03)', border: `1px solid ${isClose ? 'rgba(184,240,42,0.2)' : 'transparent'}` }}
             >
               <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: entry.file_type === 'a2l' ? 'rgba(34,197,94,0.15)' : 'rgba(59,130,246,0.15)', color: entry.file_type === 'a2l' ? '#22c55e' : '#3b82f6', flexShrink: 0 }}>
                 {entry.file_type.toUpperCase()}
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.filename}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {cal && (
+                    <span style={{ fontSize: 12, fontWeight: 800, color: cal.delta === 0 ? '#22c55e' : cal.delta < 2000 ? '#b8f02a' : cal.delta < 10000 ? '#f59e0b' : 'rgba(255,255,255,0.35)', flexShrink: 0 }}>
+                      {cal.num.toLocaleString()}
+                      <span style={{ fontSize: 10, fontWeight: 400, marginLeft: 4 }}>
+                        {cal.delta === 0 ? '✓ exact' : `±${cal.delta.toLocaleString()}`}
+                      </span>
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.filename}</div>
                 <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
                   {[entry.ecu_family, entry.make, entry.model].filter(Boolean).join(' · ')}
                   {entry.map_count > 0 && ` · ${entry.map_count}M ${entry.curve_count}C`}
@@ -652,7 +693,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                 {libLoadingId === entry.id ? '⏳' : 'Load →'}
               </button>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -953,14 +995,32 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           <>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>{libTotal.toLocaleString()} result{libTotal !== 1 ? 's' : ''} — showing top {Math.min(libResults.length, 8)}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5, maxHeight: 180, overflowY: 'auto' }}>
-              {libResults.slice(0, 8).map(entry => (
-                <div key={entry.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', borderRadius: 6, background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                  <div style={{ minWidth: 0, overflow: 'hidden' }}>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{entry.filename}</span>
-                    {entry.driver_name && <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8 }}>{entry.driver_name}</span>}
-                    <span style={{ fontSize: 10, marginLeft: 8, padding: '1px 5px', borderRadius: 3, background: entry.file_type === 'a2l' ? 'rgba(34,197,94,0.1)' : 'rgba(59,130,246,0.1)', color: entry.file_type === 'a2l' ? '#22c55e' : '#3b82f6', fontWeight: 700 }}>
-                      .{entry.file_type}
-                    </span>
+              {[...libResults]
+                .sort((a, b) => {
+                  if (!libOriginalNum) return 0
+                  const ca = closestCalNum(a.filename, libOriginalNum)
+                  const cb = closestCalNum(b.filename, libOriginalNum)
+                  return (ca?.delta ?? 999999) - (cb?.delta ?? 999999)
+                })
+                .slice(0, 8).map(entry => {
+                const cal = libOriginalNum ? closestCalNum(entry.filename, libOriginalNum) : null
+                return (
+                <div key={entry.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', borderRadius: 6, background: 'var(--bg-card)', border: `1px solid ${cal && cal.delta < 2000 ? 'rgba(184,240,42,0.25)' : 'var(--border)'}` }}>
+                  <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      {cal && (
+                        <span style={{ fontSize: 11, fontWeight: 800, color: cal.delta < 2000 ? '#b8f02a' : cal.delta < 10000 ? '#f59e0b' : 'rgba(255,255,255,0.3)', flexShrink: 0 }}>
+                          {cal.num.toLocaleString()}
+                          <span style={{ fontWeight: 400, fontSize: 10, marginLeft: 3 }}>
+                            {cal.delta === 0 ? '✓ exact' : `±${cal.delta.toLocaleString()}`}
+                          </span>
+                        </span>
+                      )}
+                      <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, background: entry.file_type === 'a2l' ? 'rgba(34,197,94,0.1)' : 'rgba(59,130,246,0.1)', color: entry.file_type === 'a2l' ? '#22c55e' : '#3b82f6', fontWeight: 700, flexShrink: 0 }}>
+                        .{entry.file_type}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.filename}</div>
                   </div>
                   <button
                     className="btn-primary"
@@ -971,7 +1031,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                     {libLoadingId === entry.id ? '⏳' : 'Load'}
                   </button>
                 </div>
-              ))}
+                )
+              })}
             </div>
           </>
         )}
