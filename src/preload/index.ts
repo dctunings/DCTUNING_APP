@@ -44,6 +44,9 @@ const api = {
   // ─── Watch Folder (tool integration) ─────────────────────────────────────
   selectWatchFolder: () => ipcRenderer.invoke('select-watch-folder'),
   scanFolderForBins: (folderPath: string) => ipcRenderer.invoke('scan-folder-for-bins', folderPath),
+
+  // ─── File Utilities ───────────────────────────────────────────────────────
+  readFileBytes: (filePath: string, maxBytes: number) => ipcRenderer.invoke('read-file-bytes', filePath, maxBytes),
 }
 
 if (process.contextIsolated) {

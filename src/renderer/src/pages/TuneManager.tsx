@@ -63,6 +63,9 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
   const watchIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   // Browser File System Access API handle (when not in Electron)
   const watchFolderHandleRef = useRef<any>(null)
+  // Hex inspector state
+  const [hexInspect, setHexInspect] = useState<{ name: string; bytes: number[]; size: number } | null>(null)
+  const [hexInspecting, setHexInspecting] = useState<string | null>(null) // path currently loading
 
   const fetchTunes = useCallback(async () => {
     if (!user) return
@@ -652,7 +655,23 @@ CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id
                     <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.path}</div>
                     <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                       <button className="btn btn-primary" style={{ flex: 1, fontSize: 11 }}>Write to ECU</button>
-                      <button className="btn btn-secondary" style={{ fontSize: 11 }}>Inspect</button>
+                      <button
+                        className="btn btn-secondary"
+                        style={{ fontSize: 11 }}
+                        disabled={hexInspecting === f.path}
+                        onClick={async () => {
+                          const api = (window as any).api
+                          if (!api?.readFileBytes) return
+                          setHexInspecting(f.path)
+                          const res = await api.readFileBytes(f.path, 1024)
+                          setHexInspecting(null)
+                          if (res?.ok) {
+                            setHexInspect({ name: f.name, bytes: res.bytes, size: res.size })
+                          }
+                        }}
+                      >
+                        {hexInspecting === f.path ? '…' : 'Inspect'}
+                      </button>
                     </div>
                   </div>
                 ))
@@ -672,9 +691,31 @@ CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id
                     </svg>
                   </div>
                   <div style={{ fontWeight: 700, marginBottom: 8 }}>Watch Folder — Auto Import</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.7, maxWidth: 380, margin: '0 auto 20px' }}>
-                    Point to the output folder of your tuning tool (KESS3, K-TAG, Flex, Autotuner, KT200, PCMFlash…).
-                    DCTuning will scan it every 3 seconds and show any new .bin / .hex / .ori / .sgo files instantly.
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.7, maxWidth: 420, margin: '0 auto 16px' }}>
+                    Point to the output folder of your tuning tool. DCTuning scans it every 3 seconds and shows any
+                    new .bin / .hex / .ori / .sgo / .damos files instantly.
+                  </div>
+                  {/* Tool folder path hints */}
+                  <div style={{ maxWidth: 460, margin: '0 auto 20px', textAlign: 'left' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                      Common tool output folders:
+                    </div>
+                    {[
+                      { tool: 'Autotuner Tool',       path: 'C:\\Autotuner\\Files' },
+                      { tool: 'KESS3 / KSuite 3',     path: 'C:\\MyFiles\\Kess3' },
+                      { tool: 'K-TAG / KSuite 2',     path: 'C:\\MyFiles\\Ktag' },
+                      { tool: 'Flex (Magic Motorsp.)', path: '%AppData%\\MagicMM\\FlexSuite' },
+                      { tool: 'CMDFlash',              path: 'C:\\CMDFlash\\Backup' },
+                      { tool: 'BFlash',                path: 'C:\\BFlash\\Files' },
+                      { tool: 'PCMTuner (Scanmatik)',  path: 'C:\\PCMTuner\\Files' },
+                      { tool: 'KT200 / KT200 Plus',   path: 'C:\\KT200\\USER' },
+                      { tool: 'Autoflasher',           path: 'C:\\Autoflasher\\Files' },
+                    ].map(({ tool, path }) => (
+                      <div key={tool} style={{ display: 'flex', gap: 8, alignItems: 'baseline', marginBottom: 5 }}>
+                        <span style={{ fontSize: 11, color: 'var(--text-secondary)', minWidth: 160, flexShrink: 0 }}>{tool}</span>
+                        <span style={{ fontSize: 10, fontFamily: 'monospace', color: 'var(--accent)', opacity: 0.8, wordBreak: 'break-all' }}>{path}</span>
+                      </div>
+                    ))}
                   </div>
                   <button className="btn btn-primary" onClick={pickWatchFolder}>Set Watch Folder</button>
                 </div>
@@ -761,7 +802,23 @@ CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id
                               >
                                 Open in Local
                               </button>
-                              <button className="btn btn-secondary" style={{ fontSize: 11 }}>Inspect Hex</button>
+                              <button
+                                className="btn btn-secondary"
+                                style={{ fontSize: 11 }}
+                                disabled={hexInspecting === f.path}
+                                onClick={async () => {
+                                  const api = (window as any).api
+                                  if (!api?.readFileBytes) return
+                                  setHexInspecting(f.path)
+                                  const res = await api.readFileBytes(f.path, 1024)
+                                  setHexInspecting(null)
+                                  if (res?.ok) {
+                                    setHexInspect({ name: f.name, bytes: res.bytes, size: res.size })
+                                  }
+                                }}
+                              >
+                                {hexInspecting === f.path ? '…' : 'Inspect Hex'}
+                              </button>
                             </div>
                           </div>
                         )
@@ -819,6 +876,81 @@ CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id
           </div>
         )}
       </div>
+
+      {/* ── HEX INSPECTOR MODAL ─────────────────────────────────────────────── */}
+      {hexInspect && (() => {
+        const { name, bytes, size } = hexInspect
+        const bytesPerRow = 16
+        const rows: number[][] = []
+        for (let i = 0; i < bytes.length; i += bytesPerRow) {
+          rows.push(bytes.slice(i, i + bytesPerRow))
+        }
+        return (
+          <div
+            style={{
+              position: 'fixed', inset: 0, zIndex: 999,
+              background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: 24,
+            }}
+            onClick={() => setHexInspect(null)}
+          >
+            <div
+              style={{
+                background: 'var(--bg-card)', border: '1px solid var(--border)',
+                borderRadius: 14, width: '100%', maxWidth: 780,
+                maxHeight: '85vh', display: 'flex', flexDirection: 'column',
+                overflow: 'hidden',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: 'var(--accent)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                    {(size / 1024).toFixed(1)} KB total · showing first {bytes.length} bytes
+                  </div>
+                </div>
+                <button className="btn btn-secondary" style={{ fontSize: 12, flexShrink: 0 }} onClick={() => setHexInspect(null)}>✕ Close</button>
+              </div>
+
+              {/* Hex grid */}
+              <div style={{ overflowY: 'auto', padding: '14px 18px' }}>
+                {/* Column headers */}
+                <div style={{ display: 'flex', gap: 0, marginBottom: 6, paddingBottom: 6, borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'rgba(255,255,255,.2)', minWidth: 72 }}>Offset</span>
+                  <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'rgba(255,255,255,.2)', flex: 1 }}>
+                    {Array.from({ length: 16 }, (_, i) => i.toString(16).toUpperCase().padStart(2, '0')).join(' ')}
+                  </span>
+                  <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'rgba(255,255,255,.2)', minWidth: 24, marginLeft: 12 }}>ASCII</span>
+                </div>
+
+                {rows.map((row, rowIdx) => {
+                  const baseOffset = rowIdx * bytesPerRow
+                  const hexCells = row.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(' ')
+                  const ascii = row.map(b => (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.').join('')
+                  return (
+                    <div key={rowIdx} style={{ display: 'flex', gap: 0, lineHeight: '1.85', fontFamily: 'monospace', fontSize: 12 }}>
+                      <span style={{ color: 'rgba(255,255,255,.25)', minWidth: 72, flexShrink: 0 }}>
+                        {('0x' + baseOffset.toString(16).toUpperCase().padStart(6, '0'))}
+                      </span>
+                      <span style={{ color: 'var(--text-primary)', flex: 1, wordSpacing: 2 }}>{hexCells}</span>
+                      <span style={{ color: 'rgba(255,255,255,.35)', marginLeft: 12, minWidth: 18, letterSpacing: 1 }}>{ascii}</span>
+                    </div>
+                  )
+                })}
+
+                {size > bytes.length && (
+                  <div style={{ marginTop: 12, padding: '8px 12px', background: 'rgba(255,255,255,.04)', borderRadius: 6, fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>
+                    … {((size - bytes.length) / 1024).toFixed(1)} KB more not shown (file is {(size / 1024).toFixed(1)} KB total)
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }

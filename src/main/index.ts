@@ -313,6 +313,21 @@ app.whenReady().then(() => {
     return { ok: false }
   })
 
+  // Read first N bytes of a file — used by Tune Manager hex inspector
+  ipcMain.handle('read-file-bytes', async (_, filePath: string, maxBytes: number) => {
+    try {
+      const stat = fs.statSync(filePath)
+      const readLen = Math.min(maxBytes, stat.size)
+      const buf = Buffer.alloc(readLen)
+      const fd = fs.openSync(filePath, 'r')
+      fs.readSync(fd, buf, 0, readLen, 0)
+      fs.closeSync(fd)
+      return { ok: true, bytes: Array.from(buf), size: stat.size }
+    } catch (e: any) {
+      return { ok: false, error: e.message }
+    }
+  })
+
   // List which bundled drivers are available on disk
   ipcMain.handle('driver-list-bundled', async () => {
     const driversDir = is.dev

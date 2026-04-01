@@ -21,6 +21,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
   const [heat, setHeat] = useState(genMap)
   const [counts, setCounts] = useState({ files: 0, drt: 0 })
   const [yearly, setYearly] = useState(false)
+  const [activePage, setActivePage] = useState<'home' | 'docs'>('home')
   const ran = useRef(false)
 
   useEffect(() => {
@@ -174,13 +175,37 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
           <span style={{fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:4,background:'rgba(0,174,200,.12)',color:'#00aec8',border:'1px solid rgba(0,174,200,.25)',letterSpacing:'1px',textTransform:'uppercase'}}>PRO</span>
         </div>
         <div className="nav-links-d">
-          {['Features','Pricing','Docs'].map(l=><a key={l} href={`#${l.toLowerCase()}`} className="nav-link">{l}</a>)}
+          {(['Features','Pricing','Docs'] as const).map(l => {
+            const isActive = l === 'Docs' && activePage === 'docs'
+            return (
+              <a
+                key={l}
+                href="#"
+                className="nav-link"
+                style={isActive ? {color:'#00aec8'} : undefined}
+                onClick={e => {
+                  e.preventDefault()
+                  if (l === 'Docs') {
+                    setActivePage('docs')
+                    window.scrollTo({ top: 0 })
+                  } else {
+                    setActivePage('home')
+                    setTimeout(() => {
+                      document.getElementById(l.toLowerCase())?.scrollIntoView({ behavior: 'smooth' })
+                    }, 50)
+                  }
+                }}
+              >{l}</a>
+            )
+          })}
         </div>
         <div style={{display:'flex',gap:10}}>
           <button className="nav-signin" onClick={onSignIn} style={{padding:'9px 20px',borderRadius:9,fontSize:13,fontFamily:'inherit',fontWeight:600,background:'transparent',border:'1.5px solid rgba(0,0,0,.18)',color:'rgba(0,0,0,.6)',cursor:'pointer',transition:'all .18s'}}>Sign In</button>
           <button className="btn-cta" onClick={onSignUp} style={{padding:'9px 20px',borderRadius:9,fontSize:13,animation:'glowBtn 3s ease infinite'}}>Try Free — Limited Time</button>
         </div>
       </nav>
+
+      {activePage === 'home' && <>
 
       {/* ── HERO ──────────────────────────────────────── */}
       <section style={{position:'relative',zIndex:1,overflow:'hidden'}}>
@@ -458,8 +483,20 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
         </p>
       </section>
 
-      {/* ── DOCS ──────────────────────────────────────── */}
-      <section id="docs" style={{position:'relative',zIndex:1,maxWidth:1100,margin:'0 auto',padding:'60px max(24px,calc(50% - 550px)) 80px'}}>
+      </>}{/* end home — docs page below */}
+
+      {/* ── DOCS PAGE ─────────────────────────────────── */}
+      {activePage === 'docs' && (
+      <section style={{position:'relative',zIndex:1,maxWidth:1100,margin:'0 auto',padding:'40px max(24px,calc(50% - 550px)) 80px'}}>
+
+        {/* Back button */}
+        <button
+          onClick={() => { setActivePage('home'); window.scrollTo({ top: 0 }) }}
+          style={{display:'flex',alignItems:'center',gap:6,background:'none',border:'none',cursor:'pointer',color:'rgba(0,0,0,.45)',fontSize:13,fontWeight:600,fontFamily:'inherit',marginBottom:32,padding:0,transition:'color .15s'}}
+          onMouseEnter={e=>(e.currentTarget.style.color='#000')}
+          onMouseLeave={e=>(e.currentTarget.style.color='rgba(0,0,0,.45)')}
+        >← Back to Home</button>
+
         <div style={{textAlign:'center',marginBottom:52}}>
           <div style={{fontSize:11,fontWeight:700,color:'#00aec8',letterSpacing:'2.5px',textTransform:'uppercase',marginBottom:12}}>Documentation</div>
           <h2 style={{fontSize:'clamp(28px,3.5vw,48px)',fontWeight:800,letterSpacing:'-1.5px',lineHeight:1.05,color:'#0a0a0a',marginBottom:16}}>Get up and running fast</h2>
@@ -523,7 +560,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
         </div>
 
         {/* System requirements */}
-        <div className="gc" style={{padding:'24px 26px'}}>
+        <div className="gc" style={{padding:'24px 26px',marginBottom:20}}>
           <div style={{fontSize:12,fontWeight:700,color:'#00aec8',letterSpacing:'1.5px',textTransform:'uppercase',marginBottom:16}}>System Requirements</div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:16}}>
             {[
@@ -541,9 +578,241 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
             ))}
           </div>
         </div>
+
+        {/* ── FEATURE GUIDE ── */}
+        <div style={{marginBottom:8}}>
+          <div style={{fontSize:12,fontWeight:700,color:'rgba(0,0,0,.35)',letterSpacing:'2px',textTransform:'uppercase',marginBottom:20,marginTop:48}}>Feature Guide</div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(320px,1fr))',gap:16}}>
+            {[
+              {
+                icon:'📁', title:'Tune Manager',
+                body:'Browse, search and download from 21,000+ professionally tuned ECU files. Filter by make, model, fuel type, ECU family and remap type (Stage 1/2/3, DPF Off, EGR Off). Use Smart Match to instantly find files that match your connected vehicle. Download any file directly to your machine for writing back to the ECU.'
+              },
+              {
+                icon:'🔧', title:'Remap Builder',
+                body:'Build custom ECU maps from scratch using DRT (map definition) files and A2L calibration data. Load a base binary, select maps from the definition list (fuelling, boost, ignition, torque limiters etc.), adjust values in the built-in map editor with colour heat mapping, then export the modified binary ready to flash.'
+              },
+              {
+                icon:'📡', title:'J2534 PassThru',
+                body:'The app auto-detects any registered J2534 PassThru adapter (Scanmatik, PCMTuner, KT200 Plus, ELM327 and more). Read and clear DTCs, monitor live PIDs (RPM, boost, coolant temp, lambda, fuelling), check battery voltage and run a full OBD2 diagnostic without leaving the app.'
+              },
+              {
+                icon:'⚡', title:'ECU Flash',
+                body:'Read and write ECU binaries directly via your J2534 adapter over OBD2. Supports full read, full write and checksum correction for compatible ECU families. Use this alongside Tune Manager or Remap Builder — read the original, edit the map, write back the modified file.'
+              },
+              {
+                icon:'♻️', title:'ECU Cloning',
+                body:'Clone an ECU binary from a donor unit to a replacement module. Useful when replacing a faulty ECU with a second-hand unit — clone the original data across to retain vehicle-specific calibration, IMMO data and odometer. Requires bench access to both ECUs.'
+              },
+              {
+                icon:'🚫', title:'Emissions Delete',
+                body:'DPF Off — removes the diesel particulate filter regen cycles and warning lights from the ECU map. Requires the DPF to be physically removed or gutted first. EGR Off — disables exhaust gas recirculation in the map. Requires the EGR valve to be blanked or removed. Both are for off-road/track use only.'
+              },
+              {
+                icon:'🔍', title:'ECU Scanner',
+                body:'Full OBD2 diagnostic scanner. Read all fault codes across engine, gearbox, ABS, airbag and body modules. Live data stream for all PIDs the ECU broadcasts. Freeze frame data. Clear codes after repair. Supports ISO 15765 (CAN), ISO 14230 (KWP2000), ISO 9141 and J1850 protocols.'
+              },
+              {
+                icon:'🔌', title:'VIN Decoder',
+                body:'Decode any 17-digit VIN to get full vehicle spec — make, model, year, engine code, gearbox type, factory options and ECU family. Useful for identifying the correct remap file before ordering or confirming ECU type before bench work.'
+              },
+              {
+                icon:'🗺️', title:'Wiring Diagrams',
+                body:'Access OBD2 pinout and ECU connector diagrams for common vehicles. Useful for bench flashing setup — find the correct power, ground, CAN H/L and K-Line pins without hunting through factory manuals.'
+              },
+              {
+                icon:'🏎️', title:'Performance',
+                body:'Log and compare performance data before and after a remap. Track 0–100 km/h, 0–60 mph, quarter mile times and rolling road style torque/power curves using live OBD2 data. Give customers visual proof of the gains.'
+              },
+              {
+                icon:'🔓', title:'ECU Unlock',
+                body:'Check and manage ECU protection status. Identify TPROT (Tricore protection), boot mode availability and read protection flags for supported ECU families before attempting a flash. Prevents bricking a protected ECU by warning you upfront.'
+              },
+              {
+                icon:'🛠️', title:'Driver Setup',
+                body:'One-click driver installation for supported devices. KessV2 USB driver and Scanmatik v2.21.22 (covers PCMTuner clones and KT200 Plus) are bundled directly in the app installer. No hunting for drivers online — plug in, click Install, done.'
+              },
+            ].map(f=>(
+              <div key={f.title} className="gc" style={{padding:'22px 22px'}}>
+                <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+                  <span style={{fontSize:20}}>{f.icon}</span>
+                  <span style={{fontSize:14,fontWeight:700,color:'#fff'}}>{f.title}</span>
+                </div>
+                <div style={{fontSize:13,color:'rgba(255,255,255,.42)',lineHeight:1.7,fontWeight:500}}>{f.body}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── A2L & DRT EXPLAINED ── */}
+        <div style={{marginTop:48,marginBottom:20}}>
+          <div style={{fontSize:12,fontWeight:700,color:'rgba(0,0,0,.35)',letterSpacing:'2px',textTransform:'uppercase',marginBottom:20}}>Map Formats Explained</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+            <div className="gc" style={{padding:'26px 24px'}}>
+              <div style={{fontSize:13,fontWeight:800,color:'#00aec8',marginBottom:4,letterSpacing:'.3px'}}>A2L — ASAP2 Calibration Description</div>
+              <div style={{fontSize:11,color:'rgba(255,255,255,.25)',fontWeight:600,marginBottom:14,letterSpacing:'.5px'}}>AUTOSAR STANDARD FORMAT</div>
+              <div style={{fontSize:13,color:'rgba(255,255,255,.5)',lineHeight:1.75,fontWeight:500}}>
+                A2L is the industry-standard format used by OEM calibration engineers to describe ECU maps. It defines every measurement and calibration object inside an ECU binary — map names, memory addresses, axis descriptions, units, data types and scaling factors.
+                <br/><br/>
+                In DCTuning Remap Builder, A2L files are used to locate maps precisely inside the binary. When you load an A2L alongside a binary, the app knows exactly where the boost map starts, how many rows and columns it has, and what unit each cell is in (mg/stroke, bar, °C etc.).
+                <br/><br/>
+                <span style={{color:'rgba(255,255,255,.3)'}}>Supported ECUs: Bosch EDC17, MED17, MD1/MG1, Continental SIMOS, Delphi DCM6/DCM7 and more.</span>
+              </div>
+            </div>
+            <div className="gc" style={{padding:'26px 24px'}}>
+              <div style={{fontSize:13,fontWeight:800,color:'#00aec8',marginBottom:4,letterSpacing:'.3px'}}>DRT — ECM Titanium Map Definitions</div>
+              <div style={{fontSize:11,color:'rgba(255,255,255,.25)',fontWeight:600,marginBottom:14,letterSpacing:'.5px'}}>16,000+ DEFINITIONS IN DATABASE</div>
+              <div style={{fontSize:13,color:'rgba(255,255,255,.5)',lineHeight:1.75,fontWeight:500}}>
+                DRT files are the map definition format used by ECM Titanium. Each DRT contains the byte offset, row/column count, data type and scaling for every map in a specific ECU variant. DCTuning has parsed 16,000+ DRT files into its database, covering virtually every common European ECU.
+                <br/><br/>
+                In the Remap Builder, DRT definitions load automatically when you open a binary — the app matches the file to the correct DRT by ECU signature and immediately shows all available maps: fuelling, boost, ignition timing, torque limiters, rev limiters, speed limiters and more.
+                <br/><br/>
+                <span style={{color:'rgba(255,255,255,.3)'}}>No ECM Titanium software required — DCTuning reads DRT files natively with its own built-in parser.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── FILE SERVICE WORKFLOW ── */}
+        <div style={{marginTop:48,marginBottom:20}}>
+          <div style={{fontSize:12,fontWeight:700,color:'rgba(0,0,0,.35)',letterSpacing:'2px',textTransform:'uppercase',marginBottom:20}}>File Service Workflow</div>
+          <div className="gc" style={{padding:'28px 26px'}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:0}}>
+              {[
+                { n:'1', t:'Read the ECU', d:'Use your tool (KessV2, KT200, Scanmatik etc.) to read the original ECU binary from the car. Save the file.' },
+                { n:'2', t:'Submit the File', d:'Upload the .bin via the File Service page. Select vehicle details, remap type (Stage 1/2/3, DPF Off etc.) and any notes.' },
+                { n:'3', t:'We Process It', d:'A tuner reviews and modifies the file. Turnaround is typically same-day. You get a notification when ready.' },
+                { n:'4', t:'Download & Write', d:'Download the modified file. Write it back to the ECU using your tool. Supported formats: .bin, .hex, .kp (KessV2).' },
+              ].map((s,i,arr)=>(
+                <div key={s.n} style={{display:'flex',alignItems:'flex-start',gap:16,padding:'0 24px 0 0',borderRight:i<arr.length-1?'1px solid rgba(255,255,255,.07)':'none',paddingLeft:i>0?24:0}}>
+                  <div style={{width:32,height:32,borderRadius:'50%',background:'rgba(0,174,200,.15)',border:'1px solid rgba(0,174,200,.3)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:13,fontWeight:800,color:'#00aec8'}}>{s.n}</div>
+                  <div>
+                    <div style={{fontSize:14,fontWeight:700,color:'#fff',marginBottom:6}}>{s.t}</div>
+                    <div style={{fontSize:13,color:'rgba(255,255,255,.4)',lineHeight:1.65,fontWeight:500}}>{s.d}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── WATCH FOLDER — TOOL INTEGRATION ── */}
+        <div style={{marginTop:48,marginBottom:20}}>
+          <div style={{fontSize:12,fontWeight:700,color:'rgba(0,0,0,.35)',letterSpacing:'2px',textTransform:'uppercase',marginBottom:20}}>Watch Folder — Auto Import from Any Tool</div>
+          <div className="gc" style={{padding:'26px 26px',marginBottom:20}}>
+            <div style={{fontSize:13,color:'rgba(255,255,255,.5)',lineHeight:1.8,fontWeight:500,marginBottom:18}}>
+              The <strong style={{color:'#00aec8'}}>Watch Folder</strong> feature in Tune Manager automatically picks up ECU binary files the moment your tuning tool saves them to disk — no manual browsing needed. It scans every 3 seconds and highlights files saved in the last minute as <span style={{color:'#00aec8',fontWeight:700}}>NEW</span>. Files can then be opened in the editor or written back to the ECU with one click.
+            </div>
+            <div style={{fontSize:12,fontWeight:700,color:'rgba(255,255,255,.25)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:12}}>Supported file types</div>
+            <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:22}}>
+              {['.bin','.hex','.ori','.sgo','.damos','.kp','.frf','.mot','.srec'].map(ext=>(
+                <span key={ext} style={{fontFamily:'monospace',fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:5,background:'rgba(255,255,255,.06)',border:'1px solid rgba(255,255,255,.1)',color:'rgba(255,255,255,.55)'}}>{ext}</span>
+              ))}
+            </div>
+            <div style={{fontSize:12,fontWeight:700,color:'rgba(255,255,255,.25)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:12}}>Default output folder paths by tool</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:0}}>
+              {[
+                { tool:'Autotuner Tool',          path:'C:\\Autotuner\\Files',                        notes:'Reads/backups saved here automatically' },
+                { tool:'KESS3 / KSuite 3',         path:'C:\\MyFiles\\Kess3',                          notes:'Configurable in KSuite 3 settings' },
+                { tool:'K-TAG / KSuite 2',         path:'C:\\MyFiles\\Ktag',                           notes:'Configurable in KSuite 2 settings' },
+                { tool:'Flex (Magic Motorsport)',   path:'%AppData%\\MagicMM\\FlexSuite',               notes:'Usually inside AppData\\Roaming' },
+                { tool:'CMDFlash',                 path:'C:\\CMDFlash\\Backup',                        notes:'Default backup location' },
+                { tool:'BFlash',                   path:'C:\\BFlash\\Files',                           notes:'Set in BFlash preferences' },
+                { tool:'PCMTuner / Scanmatik',     path:'C:\\PCMTuner\\Files',                         notes:'Via KTflash or PCMTuner software' },
+                { tool:'KT200 / KT200 Plus',       path:'C:\\KT200\\USER',                             notes:'KTflash also saves here' },
+                { tool:'Autoflasher',              path:'C:\\Autoflasher\\Files',                      notes:'Default save location' },
+                { tool:'KessV2 (KESS v2)',         path:'C:\\MyFiles\\Kess',                           notes:'Files-only workflow — no live J2534' },
+              ].map(({tool,path,notes},i,arr)=>(
+                <div key={tool} style={{padding:'12px 16px',borderBottom:i<arr.length-1?'1px solid rgba(255,255,255,.05)':'none'}}>
+                  <div style={{fontWeight:700,fontSize:13,color:'#fff',marginBottom:3}}>{tool}</div>
+                  <div style={{fontFamily:'monospace',fontSize:11,color:'#00aec8',marginBottom:3}}>{path}</div>
+                  <div style={{fontSize:11,color:'rgba(255,255,255,.3)'}}>{notes}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="gc" style={{padding:'20px 24px'}}>
+            <div style={{fontSize:12,fontWeight:700,color:'rgba(255,255,255,.25)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:14}}>How to set up Watch Folder</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:0}}>
+              {[
+                { n:'1', t:'Open Tune Manager', d:'Launch DCTuning Desktop and click Tune Manager in the left sidebar.' },
+                { n:'2', t:'Go to Watch Tab', d:'Click the Watch Folder tab at the top of Tune Manager.' },
+                { n:'3', t:'Set Folder', d:'Click Set Watch Folder and browse to your tool\'s output folder (see paths above). Click Select Folder.' },
+                { n:'4', t:'Use Your Tool', d:'Read or save an ECU with your tuning tool. The file appears in Watch Folder automatically within 3 seconds. Click Open in Local to work with it.' },
+              ].map((s,i,arr)=>(
+                <div key={s.n} style={{display:'flex',alignItems:'flex-start',gap:14,padding:'0 20px 0 0',borderRight:i<arr.length-1?'1px solid rgba(255,255,255,.07)':'none',paddingLeft:i>0?20:0}}>
+                  <div style={{width:28,height:28,borderRadius:'50%',background:'rgba(0,174,200,.15)',border:'1px solid rgba(0,174,200,.3)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:12,fontWeight:800,color:'#00aec8'}}>{s.n}</div>
+                  <div>
+                    <div style={{fontSize:13,fontWeight:700,color:'#fff',marginBottom:5}}>{s.t}</div>
+                    <div style={{fontSize:12,color:'rgba(255,255,255,.4)',lineHeight:1.65,fontWeight:500}}>{s.d}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── TROUBLESHOOTING ── */}
+        <div style={{marginTop:48,marginBottom:20}}>
+          <div style={{fontSize:12,fontWeight:700,color:'rgba(0,0,0,.35)',letterSpacing:'2px',textTransform:'uppercase',marginBottom:20}}>Troubleshooting</div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(320px,1fr))',gap:14}}>
+            {[
+              { prob:'App won\'t launch / crashes on startup', fix:'Right-click the installer and select Run as Administrator. Windows requires admin rights for the J2534 helper and driver access. Check Windows Event Viewer if the crash persists.' },
+              { prob:'Device shows as Unknown in Device Manager', fix:'Go to Driver Setup in the sidebar and click Install for your device. After installing, unplug and re-plug the device. If still unknown, try a different USB port or USB hub.' },
+              { prob:'J2534 PassThru shows no devices found', fix:'Make sure your device driver is installed (Driver Setup page). Unplug and replug the device. The J2534 DLL must be registered in the Windows registry under PassThruSupport.04.04 — reinstalling the Scanmatik or PCMTuner driver usually fixes this.' },
+              { prob:'Remap Builder shows no maps for my binary', fix:'The ECU may not have a DRT definition in the database yet. Try loading an A2L file manually if you have one. Contact support with the ECU type and we can add the definition.' },
+              { prob:'.bin file won\'t import into Tune Manager', fix:'Check the file is at least 128KB. Files smaller than 128KB are pre-OBD ECUs and are not supported. Make sure the file extension is .bin, .hex or .ori. Rename if needed.' },
+              { prob:'Live data / OBD scanner shows no PIDs', fix:'Confirm your J2534 device is connected and detected. Turn the ignition ON (engine running for full PID list). Some PIDs are only available with engine running. Try a different protocol in the scanner settings (CAN / KWP2000 / ISO9141).' },
+              { prob:'KessV2 not detected after driver install', fix:'The KessV2 uses VID_0BF8. After installing the bundled driver, check Device Manager for the device. If it shows with a yellow exclamation, right-click → Update Driver → Use driver installed from app. Restart Windows if prompted.' },
+              { prob:'PCMTuner clone not working after Scanmatik install', fix:'Make sure you have Scanmatik v2.21.22 installed (not v2.21.32). The PCMTuner clone uses the same VID_20A2&PID_0001 hardware as Scanmatik SM2. The bundled driver in this app is already v2.21.22 — uninstall any newer Scanmatik version first.' },
+            ].map(t=>(
+              <div key={t.prob} className="gc" style={{padding:'18px 20px'}}>
+                <div style={{display:'flex',alignItems:'flex-start',gap:10,marginBottom:8}}>
+                  <span style={{color:'#ef4444',fontWeight:800,fontSize:15,flexShrink:0,marginTop:1}}>!</span>
+                  <span style={{fontSize:13,fontWeight:700,color:'#fff'}}>{t.prob}</span>
+                </div>
+                <div style={{fontSize:12.5,color:'rgba(255,255,255,.4)',lineHeight:1.7,fontWeight:500,paddingLeft:24}}>{t.fix}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── GLOSSARY ── */}
+        <div style={{marginTop:48}}>
+          <div style={{fontSize:12,fontWeight:700,color:'rgba(0,0,0,.35)',letterSpacing:'2px',textTransform:'uppercase',marginBottom:20}}>Glossary</div>
+          <div className="gc" style={{padding:'26px 26px'}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:0}}>
+              {[
+                { term:'ECU', def:'Engine Control Unit. The computer that controls fuelling, ignition, boost and other engine parameters. Remapping modifies the data tables (maps) inside the ECU.' },
+                { term:'OBD2', def:'On-Board Diagnostics version 2. The standardised diagnostic port fitted to all cars since 1996. Used for reading fault codes, live data and flashing ECUs.' },
+                { term:'J2534', def:'SAE standard that defines how a PC communicates with a vehicle ECU via a hardware interface. Any J2534-certified adapter works with any J2534-compatible software.' },
+                { term:'DPF', def:'Diesel Particulate Filter. A filter in the exhaust that captures soot. DPF Off removes the regen cycles and warning lights from the ECU map after the DPF is physically removed.' },
+                { term:'EGR', def:'Exhaust Gas Recirculation. Routes exhaust gases back into the intake to reduce NOx emissions. EGR Off disables this in the ECU map after the valve is blanked or removed.' },
+                { term:'A2L', def:'ASAP2 file format (standardised by AUTOSAR). Describes every calibration and measurement object in an ECU binary — addresses, scaling, units, axis labels. Used by OEM calibration tools.' },
+                { term:'DRT', def:'Map definition file format from ECM Titanium. Contains byte offsets, row/column counts and scaling for all maps in a specific ECU variant. DCTuning has 16,000+ DRT definitions built in.' },
+                { term:'BDM', def:'Background Debug Mode. A hardware debug interface on older Motorola/Freescale ECUs (MPC5xx, SPC5xx). Requires a physical BDM probe soldered to the ECU board to read/write locked ECUs.' },
+                { term:'Tricore / BSL', def:'Infineon Tricore is the processor family used in modern Bosch ECUs (EDC17, MED17, MD1/MG1). BSL (Boot System Loader) is a hardware boot mode that allows reading protected ECUs via bench connection.' },
+                { term:'Stage 1', def:'OBD remap only — no hardware modifications required. Optimises fuelling, boost and ignition timing within the limits of the factory hardware. Typical gains: 15–30% power.' },
+                { term:'Stage 2', def:'Remap that requires supporting hardware upgrades — usually a performance air intake, uprated intercooler and sports exhaust. Pushes beyond Stage 1 limits safely.' },
+                { term:'Stage 3', def:'Full performance build — uprated turbo, injectors, fuelling system and engine internals. ECU map is built around the specific hardware fitted. Not a bolt-on tune.' },
+                { term:'Smart Match', def:'DCTuning\'s AI-powered file matching engine. Reads your ECU signature and instantly finds the closest matching tuned file in the 21,000+ file library.' },
+                { term:'PassThru', def:'Another name for J2534. A PassThru device acts as the bridge between the PC software and the vehicle CAN/K-Line bus. "PassThru support" in the Windows registry means the device is J2534 registered.' },
+                { term:'VIN', def:'Vehicle Identification Number. A 17-character code unique to every vehicle. Encodes manufacturer, model, year, engine and production sequence. Used to verify vehicle spec before remapping.' },
+              ].map((g,i,arr)=>(
+                <div key={g.term} style={{padding:'14px 20px 14px 0',borderBottom:i<arr.length-1?'1px solid rgba(255,255,255,.05)':'none',display:'flex',gap:16}}>
+                  <div style={{minWidth:110,fontSize:13,fontWeight:800,color:'#00aec8',flexShrink:0,paddingTop:1}}>{g.term}</div>
+                  <div style={{fontSize:13,color:'rgba(255,255,255,.42)',lineHeight:1.65,fontWeight:500}}>{g.def}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
       </section>
+      )}{/* end docs page */}
 
       {/* ── CTA SECTION ───────────────────────────────── */}
+      {activePage === 'home' && <>
       <section style={{position:'relative',zIndex:1,maxWidth:1100,margin:'0 auto',padding:'0 max(24px,calc(50% - 550px)) 64px'}}>
         <div className="gc" style={{padding:'60px 28px',textAlign:'center'}}>
           <h2 style={{fontSize:'clamp(30px,4.2vw,58px)',fontWeight:800,letterSpacing:'-2px',lineHeight:.98,marginBottom:18,position:'relative',color:'#fff'}}>Ready to remap?</h2>
@@ -555,6 +824,8 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
           </button>
         </div>
       </section>
+
+      </>}{/* end home CTA */}
 
       {/* ── FOOTER ────────────────────────────────────── */}
       <footer className="site-footer" style={{borderTop:'1px solid rgba(0,0,0,.1)',padding:'22px max(24px,calc(50% - 660px))',display:'flex',justifyContent:'space-between',alignItems:'center',position:'relative',zIndex:1}}>
