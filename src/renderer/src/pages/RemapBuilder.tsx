@@ -1102,8 +1102,14 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         {libLoading && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>Searching...</div>}
         {libResults.length > 0 && (
           <>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>{libTotal.toLocaleString()} result{libTotal !== 1 ? 's' : ''} — showing top {Math.min(libResults.length, 8)}</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 5, maxHeight: 180, overflowY: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{libTotal.toLocaleString()} result{libTotal !== 1 ? 's' : ''} — showing {libResults.length} (page {libPage + 1} of {Math.ceil(libTotal / LIB_PAGE_SIZE)})</span>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {libPage > 0 && <button onClick={() => searchLibrary(libSearch, libPage - 1)} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, border: '1px solid var(--border)', background: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'inherit' }}>← Prev</button>}
+                {(libPage + 1) * LIB_PAGE_SIZE < libTotal && <button onClick={() => searchLibrary(libSearch, libPage + 1)} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, border: '1px solid var(--border)', background: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'inherit' }}>Next →</button>}
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5, maxHeight: 340, overflowY: 'auto' }}>
               {[...libResults]
                 .sort((a, b) => {
                   if (!libOriginalNum) return 0
@@ -1111,7 +1117,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                   const cb = closestCalNum(b.filename, libOriginalNum)
                   return (ca?.delta ?? 999999) - (cb?.delta ?? 999999)
                 })
-                .slice(0, 8).map(entry => {
+                .map(entry => {
                 const cal = libOriginalNum ? closestCalNum(entry.filename, libOriginalNum) : null
                 return (
                 <div key={entry.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', borderRadius: 6, background: 'var(--bg-card)', border: `1px solid ${cal && cal.delta < 2000 ? 'rgba(184,240,42,0.25)' : 'var(--border)'}` }}>
