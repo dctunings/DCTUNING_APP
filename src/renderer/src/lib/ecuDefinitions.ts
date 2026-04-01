@@ -188,7 +188,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     manufacturer: 'Bosch',
     family: 'EDC15',
     // Strings found anywhere in the binary (not just first 1KB — C166 vector table occupies start)
-    identStrings: ['EDC15', 'EDC 15', '0281001', 'EDC-15', 'LADSOLL', 'MENZK', 'MXMOM', '1C', 'VP37', 'VP44'],
+    identStrings: ['EDC15', 'EDC 15', '0281001', '0281010', '0281011', 'EDC-15', 'LADSOLL', 'MENZK', 'MXMOM', 'VP37', 'VP44'],
     fileSizeRange: [262144, 524288],   // 256KB – 512KB
     vehicles: ['Audi A4 1.9 TDI', 'VW Passat 1.9 TDI', 'VW Golf Mk4 1.9 TDI', 'Skoda Octavia 1.9 TDI', 'Seat Leon 1.9 TDI', 'Audi A3 1.9 TDI'],
     checksumAlgo: 'bosch-simple',
@@ -314,7 +314,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC16',
     manufacturer: 'Bosch',
     family: 'EDC16',
-    identStrings: ['EDC16', 'EDC 16', '0281010', '0281011', '0281012', '0281013', '0281014', '0281015'],
+    identStrings: ['EDC16', 'EDC 16', '0281012', '0281013', '0281014', '0281015', '0281016', 'EDC16C', 'EDC16U', 'LADEKF'],
     fileSizeRange: [524288, 4194304],   // 512KB – 4MB (EDC16+ variants e.g. Q7 4.2 TDI can be 2MB+)
     vehicles: ['VW Golf Mk5 2.0 TDI', 'Audi A4 2.0 TDI', 'VW Passat 2.0 TDI', 'Seat Leon 2.0 TDI', 'Skoda Octavia 2.0 TDI', 'Audi A6 3.0 TDI'],
     checksumAlgo: 'bosch-crc32',
