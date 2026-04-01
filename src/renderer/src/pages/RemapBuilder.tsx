@@ -533,6 +533,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         setA2lResult(null); setA2lMaps([]); setA2lFileName('')
       }
       setShowLibrary(false)
+      // If binary is already loaded, advance to step 1 automatically
+      if (fileBuffer) setStep(1)
     } catch (e: any) {
       setLibLoadError(`Failed to load ${entry.filename}: ${e?.message ?? 'Unknown error'}`)
     } finally {
@@ -588,6 +590,13 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           <div style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--accent)', background: 'rgba(0,0,0,0.3)', padding: '8px 10px', borderRadius: 6, wordBreak: 'break-all', letterSpacing: '0.5px' }}>
             {hexPreview}
           </div>
+          <button
+            className="btn-primary"
+            style={{ marginTop: 12, width: '100%' }}
+            onClick={() => setStep(1)}
+          >
+            Continue →
+          </button>
         </div>
       )}
       {/* Library search panel */}
