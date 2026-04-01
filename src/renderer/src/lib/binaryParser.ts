@@ -21,12 +21,13 @@ export interface ExtractedMap {
 export function detectEcu(buffer: ArrayBuffer): DetectedEcu | null {
   const bytes = new Uint8Array(buffer)
 
-  // Build two search strings from the full binary:
-  // 1. ascii_spaced  — non-printable → space  (catches strings with byte separators like 0x20/0xFF padding)
-  // 2. ascii_compact — non-printable → ''     (catches null-terminated strings like "EDC17\x00C46")
-  // Searching both doubles detection coverage for Bosch/Continental/Delphi ID sectors.
-  const ascii_spaced  = Array.from(bytes).map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : ' ').join('')
-  const ascii_compact = Array.from(bytes).map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : '' ).join('')
+  // Build three search strings from the full binary:
+  // 1. ascii_spaced    — non-printable → space  (standard string matching with separators)
+  // 2. ascii_compact   — non-printable → ''     (catches null-padded strings: "EDC17\x00C46")
+  // 3. ascii_nounderscore — underscores removed  (Bosch embeds "EDC17_CP20" but identStrings use "EDC17CP20")
+  const ascii_spaced       = Array.from(bytes).map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : ' ').join('')
+  const ascii_compact      = Array.from(bytes).map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : '' ).join('')
+  const ascii_nounderscore = Array.from(bytes).map(b => b === 95 ? '' : b >= 32 && b < 127 ? String.fromCharCode(b) : '').join('')
 
   let best: DetectedEcu | null = null
   let bestScore = 0
@@ -34,7 +35,8 @@ export function detectEcu(buffer: ArrayBuffer): DetectedEcu | null {
   for (const def of ECU_DEFINITIONS) {
     const matched: string[] = []
     for (const s of def.identStrings) {
-      if (ascii_spaced.includes(s) || ascii_compact.includes(s)) matched.push(s)
+      if (s.length < 4) continue  // ignore any string too short to be meaningful
+      if (ascii_spaced.includes(s) || ascii_compact.includes(s) || ascii_nounderscore.includes(s)) matched.push(s)
     }
     // Also check file size range
     const sizeOk = buffer.byteLength >= def.fileSizeRange[0] && buffer.byteLength <= def.fileSizeRange[1]

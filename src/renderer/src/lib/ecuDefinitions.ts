@@ -2417,7 +2417,8 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'VAG DSG / ZF 8HP TCU',
     manufacturer: 'Bosch/ZF',
     family: 'DSG/TCU',
-    identStrings: ['DQ250', 'DQ380', 'DQ381', 'DQ500', 'ZF8HP', '8HP', 'DSG', 'S-TRONIC', '0AM', '0GC', '0BH'],
+    // Short strings (8HP, DSG, 0AM, 0GC, 0BH) removed — 3 chars, match randomly in any 2MB binary.
+    identStrings: ['DQ250', 'DQ380', 'DQ381', 'DQ500', 'ZF8HP', 'ZF6HP', 'S-TRONIC', 'DQ200', 'DQ500MQ'],
     fileSizeRange: [524288, 2097152],
     vehicles: ['VW Golf R / GTI DSG (DQ250/DQ381)', 'Audi S3/RS3 S-Tronic (DQ381/DQ500)', 'VW Passat 4Motion (DQ500)', 'Audi A4/A5/A6 S-Tronic', 'Porsche Panamera ZF 8HP', 'Audi Q7/Q8 ZF 8HP'],
     checksumAlgo: 'bosch-crc32',
