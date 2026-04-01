@@ -504,6 +504,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       setA2lResult(null)
       setA2lMaps([])
       setA2lFileName('')
+      setA2lValidation([])
       // Share with Performance page
       if (fileBuffer) onEcuLoaded?.({ fileName, fileBuffer, detected, a2lMaps: [], drtMaps: converted })
     } catch (e) {
@@ -594,7 +595,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         setDrtResult(result)
         setDrtMaps(converted)
         setDrtFileName(entry.filename)
-        setA2lResult(null); setA2lMaps([]); setA2lFileName('')
+        setA2lResult(null); setA2lMaps([]); setA2lFileName(''); setA2lValidation([])
       }
       setShowLibrary(false)
       // If binary is already loaded, advance to step 1 automatically

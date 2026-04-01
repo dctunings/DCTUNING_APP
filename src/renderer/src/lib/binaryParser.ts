@@ -310,21 +310,23 @@ export function syntheticMapDefFromA2L(a2lMap: A2LMapDef, baseDef: MapDef): MapD
 }
 
 // ─── Build a MapDef from a DRT map ──────────────────────────────────────────
-// DRT files provide direct file offsets and dimensions but no scaling.
-// Keep ecuDef scaling (factor/offsetVal/unit) — only take location and shape from DRT.
+// DRT files provide direct file offsets, dimensions, AND scaling (factor/physicalOffset).
+// Use DRT scaling for correct physical display; keep ecuDef for metadata/remap params only.
 export function syntheticMapDefFromDRT(
-  drtMap: { fileOffset: number; rows: number; cols: number; dataType: string },
+  drtMap: { fileOffset: number; rows: number; cols: number; dataType: string; factor: number; physicalOffset: number },
   baseDef: MapDef
 ): MapDef {
   return {
-    ...baseDef,                        // keep ecuDef factor, offsetVal, unit
+    ...baseDef,                          // keep ecuDef metadata (name, category, remap params)
     rows:        drtMap.rows,
     cols:        drtMap.cols,
     dtype:       drtMap.dataType as DataType,
+    factor:      drtMap.factor,          // use DRT-supplied scaling
+    offsetVal:   drtMap.physicalOffset,  // use DRT-supplied offset
     le:          true,
     signatures:  [],
     sigOffset:   0,
-    fixedOffset: drtMap.fileOffset,    // DRT-supplied file offset
+    fixedOffset: drtMap.fileOffset,      // DRT-supplied file offset
   }
 }
 

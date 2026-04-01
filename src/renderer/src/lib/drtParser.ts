@@ -21,6 +21,10 @@ export interface DRTMapDef {
   axisAddress: number
   axisDataType: 'uint8' | 'uint16' | 'int8' | 'int16' | 'float32'
   dataType: 'uint8' | 'uint16' | 'int8' | 'int16' | 'float32'
+  factor: number          // physical = raw * factor + physicalOffset
+  physicalOffset: number
+  min: number             // declared physical minimum
+  max: number             // declared physical maximum
 }
 
 export interface DRTParseResult {
@@ -93,6 +97,16 @@ function inferDataType(desc: string): DRTMapDef['dataType'] {
     case 'F':           return 'float32'
     default:            return 'uint16'
   }
+}
+
+// Parse a DRT value/axis descriptor: "TYPE,FACTOR,OFFSET[,ADDRESS]"
+// e.g. "G,0.1,-10.0" → uint8, factor=0.1, offset=-10.0
+function parseDescriptor(desc: string): { dataType: DRTMapDef['dataType'], factor: number, physicalOffset: number } {
+  const parts = desc.split(',')
+  const dataType = inferDataType(parts[0] ?? '')
+  const factor = parts.length >= 2 ? (parseFloat(parts[1]) || 1) : 1
+  const physicalOffset = parts.length >= 3 ? (parseFloat(parts[2]) ?? 0) : 0
+  return { dataType, factor, physicalOffset }
 }
 
 function isMapCode(s: string): boolean {
@@ -196,9 +210,19 @@ export function parseDRT(buffer: ArrayBuffer, driverName = 'unknown'): DRTParseR
             ? inferDataType(axisDescParts[0])
             : 'uint8'
 
-          // Extract value descriptor (index 2)
+          // Extract value descriptor (index 2): "TYPE,FACTOR,OFFSET"
           const valDesc = parts[2] ?? ''
-          const dataType = valDesc ? inferDataType(valDesc) : 'uint16'
+          const { dataType, factor, physicalOffset } = valDesc
+            ? parseDescriptor(valDesc)
+            : { dataType: 'uint16' as const, factor: 1, physicalOffset: 0 }
+
+          // Derive plausible physical min/max from the declared offset + datatype range
+          const rawMax = dataType === 'uint8' ? 255 : dataType === 'uint16' ? 65535
+            : dataType === 'int8' ? 127 : dataType === 'int16' ? 32767 : 3.4e38
+          const rawMin = dataType === 'uint8' || dataType === 'uint16' ? 0
+            : dataType === 'int8' ? -128 : dataType === 'int16' ? -32768 : -3.4e38
+          const physMin = rawMin * factor + physicalOffset
+          const physMax = rawMax * factor + physicalOffset
 
           const info: CodeInfo = CODE_CATALOGUE[currentCode] ?? {
             name: `Map ${currentCode}`,
@@ -218,6 +242,10 @@ export function parseDRT(buffer: ArrayBuffer, driverName = 'unknown'): DRTParseR
             axisAddress,
             axisDataType,
             dataType,
+            factor,
+            physicalOffset,
+            min: Math.min(physMin, physMax),
+            max: Math.max(physMin, physMax),
           })
         }
       }
@@ -281,10 +309,10 @@ export function convertDRTMaps(result: DRTParseResult): DRTConvertedMap[] {
     rows: m.rows,
     cols: m.cols,
     dataType: m.dataType,
-    factor: 1,
-    physicalOffset: 0,
-    min: 0,
-    max: m.dataType === 'uint8' ? 255 : m.dataType === 'uint16' ? 65535 : 127,
+    factor: m.factor,
+    physicalOffset: m.physicalOffset,
+    min: m.min,
+    max: m.max,
     axisX: { size: m.cols, min: 0, max: 100, label: `${m.cols} pts` },
     axisY: m.rows > 1 ? { size: m.rows, min: 0, max: 100, label: `${m.rows} pts` } : undefined,
     source: 'DRT' as const,
