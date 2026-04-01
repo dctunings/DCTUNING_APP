@@ -122,10 +122,15 @@ export function buildRemap(
     })
   }
 
-  // Summary
-  const boostChange = changes.find(c => c.mapDef.category === 'boost')?.avgChangePct ?? 0
-  const fuelChange = changes.find(c => c.mapDef.category === 'fuel')?.avgChangePct ?? 0
-  const torqueChange = changes.find(c => c.mapDef.category === 'torque')?.avgChangePct ?? 0
+  // Summary — average across ALL found maps in each category (EDC17 has 2 boost, 3 fuel, 2 torque)
+  const avgCat = (cat: string) => {
+    const relevant = changes.filter(c => c.mapDef.category === cat && c.found && c.avgChangePct > 0)
+    if (relevant.length === 0) return 0
+    return relevant.reduce((s, c) => s + c.avgChangePct, 0) / relevant.length
+  }
+  const boostChange = avgCat('boost')
+  const fuelChange = avgCat('fuel')
+  const torqueChange = avgCat('torque')
   const mapsModified = changes.filter(c => c.avgChangePct > 0 && c.found).length
   const mapsNotFound = changes.filter(c => !c.found && c.mapDef.critical).length
 

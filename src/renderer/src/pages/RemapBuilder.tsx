@@ -1414,7 +1414,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
         {extractedMaps.map(m => {
-          if (!m.mapDef.showPreview && m.mapDef.category === 'emission') return null
+          // Hide any map where showPreview is false (N75, DPF/EGR emission maps, misc internal maps).
+          // These are located and modified by the engine but don't need a heatmap card shown to the tuner.
+          if (!m.mapDef.showPreview) return null
           const params = m.mapDef[`stage${stage}` as 'stage1' | 'stage2' | 'stage3']
           const expectedPct = params.multiplier ? (params.multiplier - 1) * 100 : (params.addend ? 0 : 0)
 
@@ -1498,8 +1500,11 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                   <div style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)', fontSize: 14 }}>→</div>
                   <MiniHeatmap
                     data={m.data.map(row => row.map(v => {
+                      // params work on raw values in the engine. For preview we work in physical:
+                      // multiplier: same result regardless of raw/physical domain (linear scale)
+                      // addend: raw addend × factor converts to physical delta for display
                       if (params.multiplier) return v * params.multiplier
-                      if (params.addend) return v + params.addend
+                      if (params.addend) return v + params.addend * m.mapDef.factor
                       return v
                     }))}
                     label={`After (Stage ${stage})`}
@@ -1562,6 +1567,24 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             </div>
           </div>
         </div>
+
+        {/* Block-based checksum warning — EDC17/EDC16/SIMOS use multi-region block checksums.
+            Our CRC32 corrects the single header word but NOT the per-block segment checksums.
+            Flashing with mismatched segment checksums will cause the ECU to reject the file. */}
+        {['edc17', 'edc16', 'simos18', 'simos10', 'simos11', 'pcr21', 'med17'].includes(selectedEcu?.id ?? '') && (
+          <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 8, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.3)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>⚠️</span>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#f59e0b', marginBottom: 3 }}>Block Checksum — External Tool Required</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
+                {selectedEcu?.name} uses block-based segment checksums that require a dedicated tool to recalculate.
+                Use <strong style={{ color: 'rgba(255,255,255,0.75)' }}>WinOLS</strong>, <strong style={{ color: 'rgba(255,255,255,0.75)' }}>BDM100</strong>, or
+                your flashing tool's built-in checksum correction before writing this file to the ECU.
+                Flashing without correct block checksums will cause the ECU to reject or brick the calibration.
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Maps modified warning */}
         {summary.mapsNotFound > 0 && (

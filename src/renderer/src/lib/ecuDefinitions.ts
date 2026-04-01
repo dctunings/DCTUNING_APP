@@ -585,9 +585,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 4,
         rows: 10, cols: 12, dtype: 'int16', le: true,
         factor: 0.021809, offsetVal: 0, unit: '°DBTC',
+        // addend is in raw units. factor ≈ 0.021809 °/unit → 1° ≈ 46 units, 3° ≈ 138 units.
+        // Stage 1 = no SOI change (safe for daily driver). Stage 2 = +1°, Stage 3 = +3°.
         stage1: { addend: 0 },
-        stage2: { addend: 1.0 },
-        stage3: { addend: 3.0 },
+        stage2: { addend: 46 },
+        stage3: { addend: 138 },
         critical: false, showPreview: true,
       },
       // ── EMISSIONS — addon-controlled, zeroed on DPF/EGR delete ───────────────
