@@ -105,7 +105,7 @@ function heatColor(pct: number): string {
 }
 
 // ─── Mini heatmap grid ────────────────────────────────────────────────────────
-function MiniHeatmap({ data, label }: { data: number[][], label: string }) {
+function MiniHeatmap({ data, label, mapCategory }: { data: number[][], label: string, mapCategory?: string }) {
   const PREVIEW_ROWS = 5
   const PREVIEW_COLS = 4
   // Show mid-map region (60% down rows, 30% across cols) — avoids the low-load
@@ -114,11 +114,20 @@ function MiniHeatmap({ data, label }: { data: number[][], label: string }) {
   const colStart = Math.max(0, Math.floor((data[0]?.length ?? 0) * 0.3))
   const rows = data.slice(rowStart, rowStart + PREVIEW_ROWS)
   const allVals = rows.flatMap(r => r.slice(colStart, colStart + PREVIEW_COLS))
-  // Check the ENTIRE map for uniformity, not just the preview cells.
-  // A calibration plateau can make 4 sample cells look identical even when data is valid.
-  // Only warn when every cell across the whole map is the same value (raw=0 everywhere).
   const allMapVals = data.flatMap(r => r)
-  const isUniform = allMapVals.length > 4 && allMapVals.every(v => Math.abs(v - allMapVals[0]) < 0.001)
+  const mapMin = Math.min(...allMapVals)
+  const mapMax = Math.max(...allMapVals)
+  const mapRange = mapMax - mapMin
+  // Positive-expected categories: boost, fuel, torque, limiter, emission values should be > 0.
+  // When DRT addresses point to wrong/zeroed binary regions, all raw bytes = 0 so physical
+  // values equal physicalOffset (e.g. -1.0 for boost, -10.0 for fuel). Range is tiny AND max < 0.
+  // Strict every() alone breaks when factor=0.001 and one byte = 1 → diff = exactly 0.001, fails < check.
+  const positiveExpected = ['boost', 'fuel', 'torque', 'limiter', 'emission'].includes(mapCategory ?? '')
+  const isUniform = allMapVals.length > 4 && (
+    positiveExpected
+      ? mapRange < 0.5 && mapMax < 0   // all values clustered near physicalOffset and negative
+      : mapRange < 0.001               // strict check for ignition/misc/other
+  )
   const mn = Math.min(...allVals)
   const mx = Math.max(...allVals)
   const range = mx - mn || 1
@@ -1393,7 +1402,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
               })()}
               {m.found && m.mapDef.showPreview && (
                 <div style={{ display: 'flex', gap: 20, marginTop: 8 }}>
-                  <MiniHeatmap data={m.data} label="Before (stock)" />
+                  <MiniHeatmap data={m.data} label="Before (stock)" mapCategory={m.mapDef.category} />
                   <div style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)', fontSize: 14 }}>→</div>
                   <MiniHeatmap
                     data={m.data.map(row => row.map(v => {
@@ -1402,6 +1411,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                       return v
                     }))}
                     label={`After (Stage ${stage})`}
+                    mapCategory={m.mapDef.category}
                   />
                 </div>
               )}
