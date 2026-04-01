@@ -380,7 +380,7 @@ export default function WebLanding({ onSignIn, onSignUp }: Props) {
               {icon:'🔍',title:'VIN Decoder',            sub:null,   desc:'Full vehicle spec from any VIN — make, model, engine, ECU type.'},
               {icon:'📄',title:'16k DRT Drivers',        sub:null,   desc:'Every ECM Titanium .drt driver parsed — exact map addresses and axis scaling.'},
               {icon:'📐',title:'A2L / ASAP2 Support',    sub:null,   desc:'OEM A2L files from Bosch, Continental and Siemens — precise map addresses.'},
-              {icon:'🔌',title:'Device Library',         sub:null,   desc:'PCMFlash, KT200, KESS3, K-TAG — compatibility ratings for every tool.'},
+              {icon:'🔌',title:'Device Library',         sub:null,   desc:'KT200 Plus, Autotuner, KESS3, K-TAG — compatibility ratings for every tool.'},
             ].map(f=>(
               <div key={f.title} className="fr">
                 <div style={{width:42,height:42,borderRadius:11,background:'rgba(255,255,255,.06)',border:'1px solid rgba(255,255,255,.09)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>{f.icon}</div>

@@ -266,11 +266,11 @@ export default function Home({ setPage }: Props) {
       <div style={{ padding: '20px 28px 0' }}>
         <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>All Tools</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 8 }}>
-          <ToolCard page="tunes"     icon={I.tunes}     setPage={setPage} title="Tune Manager"     desc="Import and manage ECU binaries from KESS3, Flex, PCMFlash and all major flash tools." />
+          <ToolCard page="tunes"     icon={I.tunes}     setPage={setPage} title="Tune Manager"     desc="Import and manage ECU binaries from KESS3, Flex, Autotuner and all major flash tools." />
           <ToolCard page="vin"       icon={I.vin}       setPage={setPage} title="VIN Decoder"      desc="Full 17-character VIN lookup. Returns make, model, year, engine and ECU family." />
           <ToolCard page="voltage"   icon={I.voltage}   setPage={setPage} title="Voltage Meter"    desc="Live battery voltage via OBD2. Animated chart with charging / healthy / low / critical states." />
           <ToolCard page="j2534"     icon={I.j2534}     setPage={setPage} title="J2534 PassThru"   desc="Scans Windows registry for J2534 devices. Reads ECU version and battery on connect." />
-          <ToolCard page="devices"   icon={I.devices}   setPage={setPage} title="Device Library"   desc="20 devices covered — KESS3, Flex, PCMFlash, SM2 Pro, KT200 II. Protocol reference & ECU matrix." />
+          <ToolCard page="devices"   icon={I.devices}   setPage={setPage} title="Device Library"   desc="20+ devices covered — KESS3, Flex, Autotuner, SM2 Pro, KT200 Plus. Protocol reference & ECU matrix." />
           <ToolCard page="cloning"   icon={I.cloning}   setPage={setPage} title="ECU Cloning"      desc="Full ECU image backup before every flash. Clone between matching ECUs. One-click restore." />
           <ToolCard page="unlock"    icon={I.unlock}    setPage={setPage} title="ECU Unlock"       desc="Tricore BSL, BDM and JTAG unlock for locked Bosch MED17/EDC17 and MPC5xx processors." />
           <ToolCard page="emissions" icon={I.emissions} setPage={setPage} title="Emissions Delete" desc="DPF, EGR and EGT software delete reference for supported ECU families." />
@@ -292,10 +292,10 @@ export default function Home({ setPage }: Props) {
             { name: 'KESS3',          sub: 'Alientech · Pro',       badge: 'Files',  bc: '#60a5fa' },
             { name: 'K-TAG',          sub: 'Alientech · Pro',       badge: 'Files',  bc: '#60a5fa' },
             { name: 'Flex',           sub: 'Magic Motorsport',      badge: 'Files',  bc: '#60a5fa' },
-            { name: 'PCMFlash v1.27', sub: 'J2534 application',     badge: 'J2534',  bc: '#a78bfa' },
+            { name: 'Autotuner',       sub: 'J2534 / Files',         badge: 'J2534',  bc: '#a78bfa' },
             { name: 'Tactrix OP 2.0', sub: 'Subaru / Toyota',       badge: 'J2534',  bc: '#a78bfa' },
             { name: 'SM2 Pro',        sub: 'Scanmatik · €80–130',   badge: 'J2534',  bc: '#a78bfa' },
-            { name: 'PCMTuner',       sub: 'PCMFlash bundle',       badge: 'J2534',  bc: '#a78bfa' },
+            { name: 'PCMTuner',       sub: 'J2534 flash suite',     badge: 'J2534',  bc: '#a78bfa' },
             { name: 'KT200 II',       sub: 'Tricore BSL',           badge: 'Files',  bc: '#60a5fa' },
             { name: 'OBDLink MX+',    sub: 'STN2120 chip',          badge: 'OBD2',   bc: 'var(--accent)' },
             { name: 'ELM327',         sub: 'Diagnostics only',      badge: 'OBD2',   bc: 'var(--accent)' },
