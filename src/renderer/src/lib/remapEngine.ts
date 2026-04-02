@@ -4,7 +4,7 @@ import type { ExtractedMap } from './binaryParser'
 import { writeMap } from './binaryParser'
 
 export type Stage = 1 | 2 | 3
-export type AddonId = 'popbang' | 'dpf' | 'egr' | 'launchcontrol' | 'speedlimiter' | 'adblue' | 'dpf_sensors' | 'egr_dtcs' | 'cat' | 'sai' | 'evap'
+export type AddonId = 'popbang' | 'dpf' | 'egr' | 'launchcontrol' | 'speedlimiter' | 'revlimit' | 'overboost' | 'popcorn' | 'adblue' | 'dpf_sensors' | 'egr_dtcs' | 'cat' | 'sai' | 'evap'
 
 export interface MapChange {
   mapDef: MapDef
@@ -34,22 +34,31 @@ export interface RemapResult {
 }
 
 // ─── Apply stage params to raw values ────────────────────────────────────────
+// Supports lastNRows / lastNCols masking: only the last N rows or cols are modified.
+// Used for popcorn limiter — retards timing only in the highest-RPM cells.
 function applyParams(raw: number[][], params: StageParams, mapDef: MapDef): number[][] {
-  return raw.map(row => row.map(v => {
-    let result = v
-    if (params.multiplier !== undefined) result *= params.multiplier
-    if (params.addend !== undefined) result += params.addend
-    if (params.clampMax !== undefined) result = Math.min(result, params.clampMax)
-    if (params.clampMin !== undefined) result = Math.max(result, params.clampMin)
-    // Respect data type limits
-    switch (mapDef.dtype) {
-      case 'uint8':  result = Math.max(0, Math.min(255, result)); break
-      case 'int8':   result = Math.max(-128, Math.min(127, result)); break
-      case 'uint16': result = Math.max(0, Math.min(65535, result)); break
-      case 'int16':  result = Math.max(-32768, Math.min(32767, result)); break
-    }
-    return Math.round(result)
-  }))
+  const rowStart = params.lastNRows !== undefined ? Math.max(0, raw.length - params.lastNRows) : 0
+  return raw.map((row, r) => {
+    const colStart = params.lastNCols !== undefined ? Math.max(0, row.length - params.lastNCols) : 0
+    return row.map((v, c) => {
+      // Outside the target zone — leave raw value completely untouched
+      if (r < rowStart || c < colStart) return v
+      let result = v
+      if (params.multiplier !== undefined) result *= params.multiplier
+      if (params.addend !== undefined) result += params.addend
+      if (params.clampMax !== undefined) result = Math.min(result, params.clampMax)
+      if (params.clampMin !== undefined) result = Math.max(result, params.clampMin)
+      // Respect data type limits (float32 is never rounded — preserve precision)
+      switch (mapDef.dtype) {
+        case 'uint8':   result = Math.max(0, Math.min(255, result)); break
+        case 'int8':    result = Math.max(-128, Math.min(127, result)); break
+        case 'uint16':  result = Math.max(0, Math.min(65535, result)); break
+        case 'int16':   result = Math.max(-32768, Math.min(32767, result)); break
+        case 'float32': return result  // no integer rounding for floats
+      }
+      return Math.round(result)
+    })
+  })
 }
 
 // ─── Get params for a map given stage + addons ────────────────────────────────
@@ -65,6 +74,9 @@ function getParams(mapDef: MapDef, stage: Stage, addons: AddonId[]): StageParams
 }
 
 // ─── Calculate percent change ─────────────────────────────────────────────────
+// Handles raw value 0 correctly for signed maps (int8/int16) where 0 is a valid
+// and meaningful stored value (e.g. KFZWMN raw 0 = -48°BTDC, CWSAWE raw 0 = disabled flag).
+// When before=0 and after≠0, treat as 100% change rather than silently skipping.
 function calcChangePct(before: number[][], after: number[][]): { avg: number; max: number } {
   let totalPct = 0
   let maxPct = 0
@@ -72,8 +84,13 @@ function calcChangePct(before: number[][], after: number[][]): { avg: number; ma
   for (let r = 0; r < before.length; r++) {
     for (let c = 0; c < before[r].length; c++) {
       const b = before[r][c]
-      if (b === 0) continue
-      const pct = Math.abs((after[r][c] - b) / b) * 100
+      const a = after[r][c]
+      if (b === 0) {
+        // Avoid division by zero: treat 0→nonzero as 100% change, 0→0 as no change
+        if (a !== 0) { totalPct += 100; maxPct = Math.max(maxPct, 100); count++ }
+        continue
+      }
+      const pct = Math.abs((a - b) / b) * 100
       totalPct += pct
       maxPct = Math.max(maxPct, pct)
       count++
@@ -97,10 +114,12 @@ export function buildRemap(
     const { mapDef, rawData, data: physBefore, found } = extracted
     const params = getParams(mapDef, stage, addons)
 
-    // If no modification needed, record as unchanged
+    // If no modification needed, record as unchanged.
+    // A masked param (lastNRows/lastNCols) is never identity even with neutral multiplier/addend.
     const isIdentity = (params.multiplier === undefined || params.multiplier === 1) &&
                        (params.addend === undefined || params.addend === 0) &&
-                       params.clampMax === undefined && params.clampMin === undefined
+                       params.clampMax === undefined && params.clampMin === undefined &&
+                       params.lastNRows === undefined && params.lastNCols === undefined
 
     const newRaw = isIdentity ? rawData : applyParams(rawData, params, mapDef)
     const physAfter = newRaw.map((row, r) =>

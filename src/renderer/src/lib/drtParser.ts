@@ -299,24 +299,51 @@ export interface DRTConvertedMap {
   source: 'DRT'
 }
 
+// ─── Infer meaningful axis labels from map category ──────────────────────────
+// X axis is almost always engine RPM for ECU 2D/3D maps.
+// Y axis depends on the map's role in the ECU control chain.
+function inferDRTAxes(category: string, cols: number, rows: number): {
+  axisX: { size: number; min: number; max: number; label: string }
+  axisY: { size: number; min: number; max: number; label: string } | undefined
+} {
+  const rpmMax = category === 'limiter' ? 7000 : 5000
+  const axisX = { size: cols, min: 750, max: rpmMax, label: 'RPM' }
+  if (rows <= 1) return { axisX, axisY: undefined }
+  const yDefs: Record<string, { min: number; max: number; label: string }> = {
+    boost:    { min: 0,   max: 120,  label: 'IQ mg/st'  },
+    fuel:     { min: 0,   max: 100,  label: 'Load %'    },
+    torque:   { min: 900, max: 1050, label: 'Baro hPa'  },
+    ignition: { min: 0,   max: 120,  label: 'IQ mg/st'  },
+    smoke:    { min: 0,   max: 800,  label: 'MAF mg/st' },
+    emission: { min: 0,   max: 120,  label: 'IQ mg/st'  },
+    limiter:  { min: 0,   max: 100,  label: 'Load %'    },
+    misc:     { min: 0,   max: rows, label: `${rows} pts` },
+  }
+  const yDef = yDefs[category] ?? { min: 0, max: rows, label: `${rows} pts` }
+  return { axisX, axisY: { size: rows, ...yDef } }
+}
+
 export function convertDRTMaps(result: DRTParseResult): DRTConvertedMap[] {
-  return result.maps.map(m => ({
-    name: `${m.code}_${m.address.toString(16).toUpperCase().padStart(6, '0')}`,
-    description: `${m.name} (${m.code})`,
-    category: m.category,
-    address: m.address,
-    fileOffset: m.address,
-    rows: m.rows,
-    cols: m.cols,
-    dataType: m.dataType,
-    factor: m.factor,
-    physicalOffset: m.physicalOffset,
-    min: m.min,
-    max: m.max,
-    axisX: { size: m.cols, min: 0, max: 100, label: `${m.cols} pts` },
-    axisY: m.rows > 1 ? { size: m.rows, min: 0, max: 100, label: `${m.rows} pts` } : undefined,
-    source: 'DRT' as const,
-  }))
+  return result.maps.map(m => {
+    const { axisX, axisY } = inferDRTAxes(m.category, m.cols, m.rows)
+    return {
+      name: `${m.code}_${m.address.toString(16).toUpperCase().padStart(6, '0')}`,
+      description: `${m.name} (${m.code})`,
+      category: m.category,
+      address: m.address,
+      fileOffset: m.address,
+      rows: m.rows,
+      cols: m.cols,
+      dataType: m.dataType,
+      factor: m.factor,
+      physicalOffset: m.physicalOffset,
+      min: m.min,
+      max: m.max,
+      axisX,
+      axisY,
+      source: 'DRT' as const,
+    }
+  })
 }
 
 // ─── Guess ECU family from DRT content ───────────────────────────────────────

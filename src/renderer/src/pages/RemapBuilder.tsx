@@ -5,7 +5,8 @@ import { detectEcu, detectEcuFromFilename, extractAllMaps, extractMap, validateA
 import type { DetectedEcu, ExtractedMap, A2LValidationResult } from '../lib/binaryParser'
 import { buildRemap, buildFilename } from '../lib/remapEngine'
 import type { Stage, AddonId, RemapResult } from '../lib/remapEngine'
-import { verifyChecksum, correctChecksum } from '../lib/checksumEngine'
+import { verifyChecksum, correctChecksum, correctBlockChecksums } from '../lib/checksumEngine'
+import type { BlockCorrectionResult } from '../lib/checksumEngine'
 import { parseA2L, extractMapsFromA2L, detectBaseAddress } from '../lib/a2lParser'
 import type { A2LParseResult, A2LMapDef } from '../lib/a2lParser'
 import { parseDRT, convertDRTMaps, guessEcuFamilyFromDRT } from '../lib/drtParser'
@@ -263,6 +264,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
 
   // Step 4 state
   const [remapResult, setRemapResult] = useState<RemapResult | null>(null)
+  const [blockResult, setBlockResult] = useState<BlockCorrectionResult | null>(null)
 
   // A2L state
   const [a2lResult, setA2lResult] = useState<A2LParseResult | null>(null)
@@ -282,7 +284,6 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [libLoading, setLibLoading] = useState(false)
   const [libLoadError, setLibLoadError] = useState('')
   const [libLoadingId, setLibLoadingId] = useState<string | null>(null)
-  const [showLibrary, setShowLibrary] = useState(false)
   const [libFallbackNote, setLibFallbackNote] = useState('')
   const [libOriginalNum, setLibOriginalNum] = useState('')  // the numeric query before fallback
   const LIB_PAGE_SIZE = 25
@@ -298,6 +299,15 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   // ─── File loading ─────────────────────────────────────────────────────────
   const processFile = useCallback((buf: ArrayBuffer, name: string) => {
     setLoadError('')
+    // ── File size sanity check ──────────────────────────────────────────────
+    if (buf.byteLength < 4096) {
+      setLoadError(`File too small (${buf.byteLength} bytes) — this doesn't look like a valid ECU binary.`)
+      return
+    }
+    if (buf.byteLength > 8 * 1024 * 1024) {
+      setLoadError(`File too large (${(buf.byteLength / 1048576).toFixed(1)} MB) — ECU binaries are typically under 4 MB. Check for corruption or wrong file.`)
+      return
+    }
     setFileName(name)
     setFileSize(buf.byteLength)
     setFileBuffer(buf)
@@ -315,10 +325,17 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     } else {
       setSelectedEcuId('')
     }
-    // Clear any previously loaded A2L validation when a new binary is loaded
+    // Clear ALL previously loaded A2L/DRT state when a new binary is loaded.
+    // Without this, a second binary load retains the first binary's A2L addresses
+    // and writes map data at completely wrong offsets into the new binary.
+    setA2lResult(null); setA2lMaps([]); setA2lFileName('')
+    setDrtResult(null); setDrtMaps([]); setDrtFileName('')
     setA2lValidation([])
     setA2lFallbackCount(0)
     setShowSigExport(false)
+    setSigExportText('')
+    setLibSearch(''); setLibResults([]); setLibTotal(0); setLibPage(0)
+    setLibFallbackNote(''); setLibOriginalNum(''); setLibLoadError('')
     setStep(1)
     // Share file state with Performance page (a2l/drt maps not loaded yet — updated later)
     onEcuLoaded?.({ fileName: name, fileBuffer: buf, detected: det, a2lMaps: [], drtMaps: [] })
@@ -482,8 +499,12 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const handleBuildRemap = () => {
     if (!fileBuffer || !selectedEcu || extractedMaps.length === 0) return
     const result = buildRemap(fileBuffer, selectedEcu, stage, addons, extractedMaps)
-    // Auto-correct checksum
+    // Step 1: correct header checksum (works for all ECU families)
     const corrected = correctChecksum(result.modifiedBuffer, selectedEcu)
+    // Step 2: attempt block-level checksum correction (EDC17/EDC16/MED17/SIMOS)
+    // correctBlockChecksums modifies the buffer in-place and returns a result report.
+    const blockRes = correctBlockChecksums(corrected)
+    setBlockResult(blockRes)
     setRemapResult({ ...result, modifiedBuffer: corrected })
     setStep(4)
   }
@@ -511,8 +532,18 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   }
 
   // ─── Addon toggle ─────────────────────────────────────────────────────────
+  // Mutually exclusive pairs: selecting one from a pair auto-deselects the other.
+  const ADDON_MUTEX: Partial<Record<AddonId, AddonId>> = {
+    popbang:  'popcorn',   // Pop & Bang ↔ Popcorn Limiter (can't have both)
+    popcorn:  'popbang',
+  }
   const toggleAddon = (id: AddonId) => {
-    setAddons(prev => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id])
+    setAddons(prev => {
+      if (prev.includes(id)) return prev.filter(a => a !== id)          // deselect
+      const mutual = ADDON_MUTEX[id]
+      const filtered = mutual ? prev.filter(a => a !== mutual) : prev   // drop the paired addon
+      return [...filtered, id]
+    })
   }
 
   // ─── A2L load ─────────────────────────────────────────────────────────────
@@ -604,7 +635,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     if (!detected) return
     const family = detected.def.family || detected.def.name
     const needsDef = !SIG_SUPPORTED.includes(detected.def.id)
-    if (needsDef) setShowLibrary(true)   // auto-open — A2L/DRT required for this ECU
+    void needsDef  // library panel in step 1 is always visible; no toggle needed
     const partMatch = fileName.match(/(?<!\d)(\d{5,9})(?!\d)/)
     if (partMatch) {
       const part = partMatch[1]
@@ -658,7 +689,6 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         // Keep a2lValidation so A2L-validated addresses remain as primary fallback
         setA2lResult(null); setA2lMaps([]); setA2lFileName('')
       }
-      setShowLibrary(false)
       // If binary is already loaded, advance to step 1 automatically
       if (fileBuffer) setStep(1)
     } catch (e: any) {
@@ -725,115 +755,6 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           </button>
         </div>
       )}
-      {/* Library search panel */}
-      {showLibrary && (
-        <div style={{ marginTop: 16, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)', flex: 1 }}>Search A2L / DRT Library</span>
-            <button onClick={() => setShowLibrary(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 0 }}>×</button>
-          </div>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            <input
-              value={libSearch}
-              onChange={e => setLibSearch(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && searchLibrary(libSearch, 0)}
-              placeholder="Search by ECU family, make, model, filename…"
-              style={{ flex: 1, padding: '8px 12px', borderRadius: 7, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 12, fontFamily: 'inherit', outline: 'none' }}
-            />
-            <button
-              onClick={() => searchLibrary(libSearch, 0)}
-              style={{ padding: '8px 14px', borderRadius: 7, border: 'none', background: 'var(--accent)', color: '#000', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}
-            >
-              {libLoading ? '…' : 'Search'}
-            </button>
-          </div>
-
-          {libLoadError && (
-            <div style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 6, padding: '6px 10px', marginBottom: 8 }}>
-              ⚠ {libLoadError}
-            </div>
-          )}
-
-          {libFallbackNote && (
-            <div style={{ fontSize: 11, color: 'rgba(251,191,36,0.85)', background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: 6, padding: '6px 10px', marginBottom: 8 }}>
-              ℹ {libFallbackNote}
-            </div>
-          )}
-
-          {libTotal > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
-              <span>{libTotal.toLocaleString()} results</span>
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                {libPage > 0 && (
-                  <button onClick={() => searchLibrary(libSearch, libPage - 1)} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)', borderRadius: 5, padding: '2px 8px', cursor: 'pointer', fontSize: 11, fontFamily: 'inherit' }}>← Prev</button>
-                )}
-                <span>Page {libPage + 1} of {Math.ceil(libTotal / LIB_PAGE_SIZE)}</span>
-                {(libPage + 1) * LIB_PAGE_SIZE < libTotal && (
-                  <button onClick={() => searchLibrary(libSearch, libPage + 1)} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)', borderRadius: 5, padding: '2px 8px', cursor: 'pointer', fontSize: 11, fontFamily: 'inherit' }}>Next →</button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {libResults.length === 0 && !libLoading && libSearch && (
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>
-              No definitions found
-            </div>
-          )}
-          {libResults.length === 0 && !libLoading && !libSearch && (
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>
-              Search 4,400+ A2L files and 16,000+ DRT driver files
-            </div>
-          )}
-
-          {[...libResults]
-            .sort((a, b) => {
-              if (!libOriginalNum) return 0
-              const ca = closestCalNum(a.filename, libOriginalNum)
-              const cb = closestCalNum(b.filename, libOriginalNum)
-              return (ca?.delta ?? 999999) - (cb?.delta ?? 999999)
-            })
-            .map(entry => {
-            const cal = libOriginalNum ? closestCalNum(entry.filename, libOriginalNum) : null
-            const isClose = cal && cal.delta < 2000
-            return (
-            <div
-              key={entry.id}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, marginBottom: 4, background: isClose ? 'rgba(184,240,42,0.04)' : 'rgba(255,255,255,0.03)', border: `1px solid ${isClose ? 'rgba(184,240,42,0.2)' : 'transparent'}` }}
-            >
-              <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: entry.file_type === 'a2l' ? 'rgba(34,197,94,0.15)' : 'rgba(59,130,246,0.15)', color: entry.file_type === 'a2l' ? '#22c55e' : '#3b82f6', flexShrink: 0 }}>
-                {entry.file_type.toUpperCase()}
-              </span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {cal && (
-                    <span style={{ fontSize: 12, fontWeight: 800, color: cal.delta === 0 ? '#22c55e' : cal.delta < 2000 ? '#b8f02a' : cal.delta < 10000 ? '#f59e0b' : 'rgba(255,255,255,0.35)', flexShrink: 0 }}>
-                      {cal.num.toLocaleString()}
-                      <span style={{ fontSize: 10, fontWeight: 400, marginLeft: 4 }}>
-                        {cal.delta === 0 ? '✓ exact' : `±${cal.delta.toLocaleString()}`}
-                      </span>
-                    </span>
-                  )}
-                </div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.filename}</div>
-                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-                  {[entry.ecu_family, entry.make, entry.model].filter(Boolean).join(' · ')}
-                  {entry.map_count > 0 && ` · ${entry.map_count}M ${entry.curve_count}C`}
-                </div>
-              </div>
-              <button
-                onClick={() => loadDefinitionFromLibrary(entry)}
-                disabled={libLoadingId === entry.id}
-                style={{ fontSize: 10, fontWeight: 700, color: libLoadingId === entry.id ? 'var(--text-muted)' : 'var(--accent)', background: 'none', border: '1px solid', borderColor: libLoadingId === entry.id ? 'var(--border)' : 'rgba(0,174,200,0.3)', borderRadius: 5, padding: '3px 10px', cursor: libLoadingId === entry.id ? 'default' : 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-              >
-                {libLoadingId === entry.id ? '⏳' : 'Load →'}
-              </button>
-            </div>
-            )
-          })}
-        </div>
-      )}
-
       {/* Definition file drop zone — A2L or DRT */}
       <div
         style={{
@@ -908,12 +829,6 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
               </span>
               <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.3)', fontWeight: 700 }}>
                 .drt — ECM Titanium
-              </span>
-              <span
-                onClick={e => { e.stopPropagation(); setShowLibrary(v => !v) }}
-                style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(0,174,200,0.1)', color: 'var(--accent)', border: '1px solid rgba(0,174,200,0.3)', fontWeight: 700, cursor: 'pointer' }}
-              >
-                🔍 Search Library
               </span>
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, opacity: 0.7 }}>
@@ -1288,6 +1203,10 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             const active = addons.includes(addon.id as AddonId)
             // Check ECU compatibility
             const compatible = !addon.compatEcus || addon.compatEcus.some(c => selectedEcuId === c || selectedEcuId.startsWith(c + '_'))
+            // Check mutual exclusion — dimmed (but still clickable to swap) when its paired addon is active
+            const mutualId = ADDON_MUTEX[addon.id as AddonId]
+            const mutuallyBlocked = !!mutualId && addons.includes(mutualId)
+            const canInteract = compatible && !mutuallyBlocked || active
             return (
               <div
                 key={addon.id}
@@ -1296,7 +1215,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                   padding: '12px 14px', borderRadius: 8, cursor: compatible ? 'pointer' : 'not-allowed',
                   border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
                   background: active ? 'rgba(0,174,200,0.06)' : 'var(--bg-card)',
-                  opacity: compatible ? 1 : 0.4,
+                  opacity: compatible ? (mutuallyBlocked ? 0.35 : 1) : 0.4,
                   transition: 'all 0.12s ease',
                   display: 'flex', alignItems: 'flex-start', gap: 10,
                 }}
@@ -1317,6 +1236,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
                     <span style={{ fontSize: 12.5, fontWeight: 700, color: active ? 'var(--accent)' : 'var(--text-primary)' }}>{addon.name}</span>
                     {!compatible && <span style={{ fontSize: 9, color: '#ef4444', fontWeight: 700, padding: '1px 5px', borderRadius: 3, border: '1px solid rgba(239,68,68,0.4)' }}>Incompatible ECU</span>}
+                    {mutuallyBlocked && <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', fontWeight: 700, padding: '1px 5px', borderRadius: 3, border: '1px solid rgba(255,255,255,0.12)' }}>Select to swap</span>}
                   </div>
                   <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginBottom: 4, lineHeight: 1.4 }}>{addon.desc}</div>
                   {addon.warning && (
@@ -1386,20 +1306,60 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
            If a downstream map is found but its upstream guard is missing, warn the tuner.
       */}
       {extractedMaps.length > 0 && (() => {
-        const foundId = (id: string) => extractedMaps.find(m => m.mapDef.id === id)?.found ?? false
+        // ── Generalised map chain warnings — works for any ECU family ──────────
+        // Uses category-based checks so EDC16, MED17, SIMOS all get warnings too.
+        const pfx = selectedEcu?.id ?? ''
+        const foundId  = (id: string)  => extractedMaps.find(m => m.mapDef.id === id)?.found ?? false
+        const hasCat   = (cat: string) => extractedMaps.some(m => m.mapDef.category === cat && m.found)
+        const defExists = (id: string) => extractedMaps.some(m => m.mapDef.id === id)
         const warnings: { key: string; msg: string }[] = []
-        // Smoke limiter is the most-missed EDC17 map: IQ gains are silently capped without it
-        if (foundId('edc17_fuel_quantity') && !foundId('edc17_smoke_limiter')) {
-          warnings.push({ key: 'smoke', msg: '⚠ Smoke Limiter not found — fuel quantity gains will be silently capped at low airflow. Load an A2L with Qsmk_MAP / SmkLim_MAP to unlock full IQ range.' })
+
+        // Smoke limiter: any diesel with fuel maps found but smoke category missing
+        if (hasCat('fuel') && defExists(`${pfx}_smoke_limiter`) && !foundId(`${pfx}_smoke_limiter`)) {
+          warnings.push({ key: 'smoke', msg: '⚠ Smoke Limiter not found — fuel quantity gains will be silently capped at low airflow. Load an A2L/DRT with LmbdSmkLow / Qsmk_MAP to unlock full IQ range.' })
         }
-        // Torque→IQ bridge: without it, torque demand can't reach the injector
-        if (foundId('edc17_fuel_quantity') && !foundId('edc17_torque_iq')) {
+        // Torque→IQ bridge: needed on any ECU that has this map defined
+        if (hasCat('fuel') && defExists(`${pfx}_torque_iq`) && !foundId(`${pfx}_torque_iq`)) {
           warnings.push({ key: 'trq2iq', msg: '⚠ Torque→IQ map not found — injector demand disconnected from driver torque request. Stage gains will be incomplete without this bridge map.' })
         }
-        // N75 without boost target: duty cycle change won't raise boost ceiling
-        if (foundId('edc17_n75') && !foundId('edc17_boost_target')) {
+        // Driver's Wish: if torque limit is found but pedal mapping is missing
+        if (foundId(`${pfx}_torque_limit`) && defExists(`${pfx}_drivers_wish`) && !foundId(`${pfx}_drivers_wish`)) {
+          warnings.push({ key: 'drvwsh', msg: "⚠ Driver's Wish map not found — pedal-to-torque conversion unchanged. Throttle response and peak torque demand will remain at stock values despite torque limit raise." })
+        }
+        // N75/boost chain: duty raised but ceiling unchanged
+        if (extractedMaps.some(m => m.found && m.mapDef.id.includes('n75')) && !hasCat('boost')) {
           warnings.push({ key: 'boosttgt', msg: '⚠ Boost Target map not found — N75 duty cycle was raised but the boost ceiling (pBoostSet) is unchanged. Actual boost gain will be limited.' })
         }
+
+        // ── ME7-specific map chain warnings ──────────────────────────────────
+        // LDRXN raised but invisible sub-chain limiters not found
+        if (foundId('me7_boost_map') && defExists('me7_kfldhbn') && !foundId('me7_kfldhbn')) {
+          warnings.push({ key: 'me7kfldhbn', msg: '⚠ ME7 KFLDHBN (Max Boost Pressure Ratio) not found — raising LDRXN without KFLDHBN leaves an invisible load ceiling that overrides the boost target. Car will feel like it has a boost leak. Must be raised alongside LDRXN.' })
+        }
+        if (foundId('me7_boost_map') && defExists('me7_ldrxnzk') && !foundId('me7_ldrxnzk')) {
+          warnings.push({ key: 'me7ldrxnzk', msg: '⚠ ME7 LDRXNZK (Knock Fallback Boost) not found — under sustained knock the ECU drops to the stock low-boost fallback instead of the tuned value. Appears as intermittent boost drop on hard pulls.' })
+        }
+        if (foundId('me7_boost_map') && defExists('me7_kfldrl') && !foundId('me7_kfldrl')) {
+          warnings.push({ key: 'me7kfldrl', msg: '⚠ ME7 KFLDRL (Wastegate Pre-Control) not found — the ECU has no feed-forward WGDC correction for the raised boost target. Boost build will be slow and the I-regulator will saturate, causing overshoot. Load an A2L to locate KFLDRL.' })
+        }
+        if (foundId('me7_kfldrl') && defExists('me7_kfldimx') && !foundId('me7_kfldimx')) {
+          warnings.push({ key: 'me7kfldimx', msg: '⚠ ME7 KFLDIMX (Boost PID I-Limit) not found — the integral regulator ceiling is unchanged, limiting how much the PID can correct above the stock pre-control. Boost will fall short of the new target under load.' })
+        }
+        // KFMIRL raised without KFMIOP — torque model inconsistency
+        if (foundId('me7_kfmirl') && defExists('me7_kfmiop') && !foundId('me7_kfmiop')) {
+          warnings.push({ key: 'me7kfmiop', msg: '⚠ ME7 KFMIOP (Load→Torque forward map) not found — KFMIRL was raised but KFMIOP was not. The ECU torque model is now internally inconsistent. Closed-loop torque monitoring may oscillate or limit power unexpectedly.' })
+        }
+        // MLHFM not calibrated — all downstream calcs wrong
+        if (foundId('me7_mlhfm') && defExists('me7_kfkhfm') && !foundId('me7_kfkhfm')) {
+          warnings.push({ key: 'me7kfkhfm', msg: '⚠ ME7 KFKHFM (MAF Correction) not found — if the MAF sensor reading has errors at this load/RPM, the ECU will not correct for them. Fuelling and load accuracy depends on MLHFM + KFKHFM both being calibrated.' })
+        }
+        // ── Addon conflict warnings ──────────────────────────────────────────
+        // Note: Pop & Bang / Popcorn Limiter are mutually exclusive in the UI (toggleAddon enforces this).
+        // Launch Control + Rev Limiter Raise can both be selected — warn since LC takes precedence on rev limit maps.
+        if (addons.includes('launchcontrol') && addons.includes('revlimit')) {
+          warnings.push({ key: 'lc_revlimit_conflict', msg: '⚠ Launch Control and Rev Limiter Raise both active — Launch Control overrides the rev limit map (sets 2-step RPM). Rev Limiter Raise will have no effect while Launch Control is active. Select one or the other.' })
+        }
+
         if (warnings.length === 0) return null
         return (
           <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1417,11 +1377,23 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           // Hide any map where showPreview is false (N75, DPF/EGR emission maps, misc internal maps).
           // These are located and modified by the engine but don't need a heatmap card shown to the tuner.
           if (!m.mapDef.showPreview) return null
-          const params = m.mapDef[`stage${stage}` as 'stage1' | 'stage2' | 'stage3']
-          // Badge label: multiplier maps show "+X%", addend maps show physical delta (e.g. "+1.0°")
-          const expectedPct = params.multiplier ? (params.multiplier - 1) * 100 : 0
-          const expectedAddend = (!params.multiplier && params.addend)
-            ? params.addend * m.mapDef.factor  // convert raw addend → physical units
+          // Effective params: addon override takes precedence over stage params —
+          // matches remapEngine.ts getParams() exactly so badge and preview are accurate.
+          let effectiveParams = m.mapDef[`stage${stage}` as 'stage1' | 'stage2' | 'stage3']
+          for (const addonId of addons) {
+            if (m.mapDef.addonOverrides?.[addonId]) {
+              effectiveParams = m.mapDef.addonOverrides[addonId]
+              break
+            }
+          }
+          const params = effectiveParams
+          // Badge: multiplier != 1 → show %; multiplier 0 with addend → show "SET"; addend-only → show physical delta
+          const isSet = params.multiplier === 0 && params.addend !== undefined  // full replacement (e.g. popbang)
+          const expectedPct = !isSet && params.multiplier !== undefined && params.multiplier !== 1
+            ? (params.multiplier - 1) * 100
+            : 0
+          const expectedAddend = !isSet && params.multiplier === undefined && params.addend
+            ? params.addend * m.mapDef.factor
             : 0
 
           return (
@@ -1440,6 +1412,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                 {m.source === 'drt' && (
                   <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: 'rgba(59,130,246,0.12)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.3)' }}>DRT</span>
                 )}
+                {m.source === 'fixedOffset' && (
+                  <span title="Located by hardcoded offset — lower confidence than signature match" style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)' }}>OFFSET</span>
+                )}
                 <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', flex: 1 }}>
                   {m.mapDef.name}
                   {m.found && m.offset >= 0 && (
@@ -1450,12 +1425,17 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                 </span>
                 {m.found ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {expectedPct > 0 && (
+                    {isSet && (
+                      <span style={{ fontSize: 11, fontWeight: 800, color: '#a855f7', padding: '2px 7px', borderRadius: 4, background: 'rgba(168,85,247,0.1)' }}>
+                        SET {((params.addend ?? 0) * m.mapDef.factor + m.mapDef.offsetVal).toFixed(1)}{m.mapDef.unit ? m.mapDef.unit : ''}
+                      </span>
+                    )}
+                    {!isSet && expectedPct > 0 && (
                       <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--accent)', padding: '2px 7px', borderRadius: 4, background: 'rgba(0,174,200,0.1)' }}>
                         +{expectedPct.toFixed(0)}%
                       </span>
                     )}
-                    {expectedAddend !== 0 && (
+                    {!isSet && expectedAddend !== 0 && (
                       <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--accent)', padding: '2px 7px', borderRadius: 4, background: 'rgba(0,174,200,0.1)' }}>
                         {expectedAddend > 0 ? '+' : ''}{expectedAddend.toFixed(1)}{m.mapDef.unit ? ` ${m.mapDef.unit}` : ''}
                       </span>
@@ -1508,15 +1488,26 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                   <MiniHeatmap data={m.data} label="Before (stock)" mapCategory={m.mapDef.category} />
                   <div style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)', fontSize: 14 }}>→</div>
                   <MiniHeatmap
-                    data={m.data.map(row => row.map(v => {
-                      // params work on raw values in the engine. For preview we work in physical:
-                      // multiplier: same result regardless of raw/physical domain (linear scale)
-                      // addend: raw addend × factor converts to physical delta for display
-                      if (params.multiplier) return v * params.multiplier
-                      if (params.addend) return v + params.addend * m.mapDef.factor
-                      return v
+                    data={m.data.map((row, r) => row.map((v, c) => {
+                      // Mirror remapEngine.ts applyParams exactly: operate in RAW space,
+                      // then convert back to physical. This is critical for maps with non-zero
+                      // offsetVal (KFZW, KFZWOP, KFZWMN, KFMIRL) where multiplying physical
+                      // values directly gives wrong results (e.g. 15°×1.1 = 16.5° instead of 21.3°).
+                      // Also handles multiplier=0 correctly (falsy check was broken before).
+                      // lastNRows/lastNCols masking: cells outside the target zone keep physical value as-is.
+                      const rowStart = params.lastNRows !== undefined ? Math.max(0, m.data.length - params.lastNRows) : 0
+                      const colStart = params.lastNCols !== undefined ? Math.max(0, row.length - params.lastNCols) : 0
+                      if (r < rowStart || c < colStart) return v
+                      const f   = m.mapDef.factor   || 1
+                      const off = m.mapDef.offsetVal ?? 0
+                      const oldRaw = f !== 0 ? (v - off) / f : 0
+                      let newRaw = params.multiplier !== undefined ? oldRaw * params.multiplier : oldRaw
+                      if (params.addend   !== undefined) newRaw += params.addend
+                      if (params.clampMax !== undefined) newRaw  = Math.min(newRaw, params.clampMax)
+                      if (params.clampMin !== undefined) newRaw  = Math.max(newRaw, params.clampMin)
+                      return newRaw * f + off
                     }))}
-                    label={`After (Stage ${stage})`}
+                    label={`After (Stage ${stage}${addons.length > 0 ? ' + addons' : ''})`}
                     mapCategory={m.mapDef.category}
                   />
                 </div>
@@ -1538,20 +1529,24 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const renderStep4 = () => {
     if (!remapResult || !selectedEcu) return null
     const { summary } = remapResult
+    // Verify on the OUTPUT buffer — correctChecksum was already applied in handleBuildRemap.
+    // valid=true means the correction succeeded. valid=false only occurs for algo='none' (SIMOS18)
+    // or an ECU whose checksum algo we don't handle — in that case warn the tuner.
     const cksm = verifyChecksum(remapResult.modifiedBuffer, selectedEcu)
+    const checksumHandled = selectedEcu.checksumAlgo !== 'none' && selectedEcu.checksumAlgo !== 'unknown'
 
     return (
       <div>
         {/* Summary stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
           {[
-            { label: 'Maps Modified', value: summary.mapsModified, unit: '', color: 'var(--accent)' },
-            { label: 'Boost Change', value: `+${summary.boostChangePct.toFixed(1)}`, unit: '%', color: '#3b82f6' },
-            { label: 'Torque Change', value: `+${summary.torqueChangePct.toFixed(1)}`, unit: '%', color: '#f59e0b' },
-            { label: 'Fuel Change', value: `+${summary.fuelChangePct.toFixed(1)}`, unit: '%', color: '#a855f7' },
+            { label: 'Maps Modified', value: String(summary.mapsModified), unit: '', color: 'var(--accent)', zero: summary.mapsModified === 0 },
+            { label: 'Boost Change', value: summary.boostChangePct > 0 ? `+${summary.boostChangePct.toFixed(1)}` : '–', unit: summary.boostChangePct > 0 ? '%' : '', color: '#3b82f6', zero: summary.boostChangePct === 0 },
+            { label: 'Torque Change', value: summary.torqueChangePct > 0 ? `+${summary.torqueChangePct.toFixed(1)}` : '–', unit: summary.torqueChangePct > 0 ? '%' : '', color: '#f59e0b', zero: summary.torqueChangePct === 0 },
+            { label: 'Fuel Change', value: summary.fuelChangePct > 0 ? `+${summary.fuelChangePct.toFixed(1)}` : '–', unit: summary.fuelChangePct > 0 ? '%' : '', color: '#a855f7', zero: summary.fuelChangePct === 0 },
           ].map(stat => (
-            <div key={stat.label} style={{ padding: '14px 12px', borderRadius: 10, background: 'var(--bg-card)', border: '1px solid var(--border)', textAlign: 'center' }}>
-              <div style={{ fontSize: 22, fontWeight: 900, color: stat.color, marginBottom: 2 }}>
+            <div key={stat.label} style={{ padding: '14px 12px', borderRadius: 10, background: 'var(--bg-card)', border: '1px solid var(--border)', textAlign: 'center', opacity: stat.zero ? 0.45 : 1 }}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: stat.zero ? 'var(--text-muted)' : stat.color, marginBottom: 2 }}>
                 {stat.value}{stat.unit}
               </div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>{stat.label}</div>
@@ -1562,37 +1557,58 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         {/* Checksum status */}
         <div style={{
           padding: '12px 16px', borderRadius: 10, marginBottom: 20,
-          background: cksm.valid ? 'rgba(34,197,94,0.08)' : 'rgba(245,158,11,0.08)',
-          border: `1px solid ${cksm.valid ? 'rgba(34,197,94,0.25)' : 'rgba(245,158,11,0.25)'}`,
+          background: !checksumHandled ? 'rgba(245,158,11,0.08)' : cksm.valid ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
+          border: `1px solid ${!checksumHandled ? 'rgba(245,158,11,0.25)' : cksm.valid ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
           display: 'flex', alignItems: 'center', gap: 10,
         }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: cksm.valid ? '#22c55e' : '#f59e0b', flexShrink: 0 }} />
+          <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+            background: !checksumHandled ? '#f59e0b' : cksm.valid ? '#22c55e' : '#ef4444' }} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: cksm.valid ? '#22c55e' : '#f59e0b', marginBottom: 2 }}>
-              Checksum {cksm.valid ? 'Valid — Auto-corrected' : 'Recalculated'}
+            <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2,
+              color: !checksumHandled ? '#f59e0b' : cksm.valid ? '#22c55e' : '#ef4444' }}>
+              {!checksumHandled
+                ? 'Checksum — Manual Correction Required'
+                : cksm.valid
+                  ? '✓ Checksum Corrected and Verified'
+                  : '✗ Checksum Correction Failed — Do Not Flash'}
             </div>
             <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>
               Algorithm: {cksm.algo} · Offset: 0x{cksm.offset.toString(16).toUpperCase()}
+              {!checksumHandled && ' · Use WinOLS or your flashing tool to correct before writing to ECU'}
             </div>
           </div>
         </div>
 
-        {/* Block-based checksum warning — EDC17/EDC16/SIMOS use multi-region block checksums.
-            Our CRC32 corrects the single header word but NOT the per-block segment checksums.
-            Flashing with mismatched segment checksums will cause the ECU to reject the file. */}
+        {/* Block-level checksum — show result or warning depending on whether auto-correction succeeded */}
         {['edc17', 'edc16', 'simos18', 'simos10', 'simos11', 'pcr21', 'med17'].includes(selectedEcu?.id ?? '') && (
-          <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 8, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.3)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-            <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>⚠️</span>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#f59e0b', marginBottom: 3 }}>Block Checksum — External Tool Required</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
-                {selectedEcu?.name} uses block-based segment checksums that require a dedicated tool to recalculate.
-                Use <strong style={{ color: 'rgba(255,255,255,0.75)' }}>WinOLS</strong>, <strong style={{ color: 'rgba(255,255,255,0.75)' }}>BDM100</strong>, or
-                your flashing tool's built-in checksum correction before writing this file to the ECU.
-                Flashing without correct block checksums will cause the ECU to reject or brick the calibration.
+          blockResult && blockResult.blocksFixed > 0 ? (
+            // Block table was found and corrected automatically
+            <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 8, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 15, flexShrink: 0, marginTop: 1 }}>✅</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: '#22c55e', marginBottom: 3 }}>
+                  Block Checksums Auto-Corrected — {blockResult.blocksFixed} segment{blockResult.blocksFixed > 1 ? 's' : ''} fixed
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>
+                  Block descriptor table found at 0x{blockResult.tableOffset.toString(16).toUpperCase()} · Algorithm: {blockResult.initMode === 'blockid' ? 'Bosch block-ID CRC32' : 'Standard CRC32'} · File is ready to flash.
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            // Block table not found — fall back to external tool warning
+            <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 8, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.3)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>⚠️</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: '#f59e0b', marginBottom: 3 }}>Block Checksums — Verify Before Flashing</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
+                  Block descriptor table not found automatically for this {selectedEcu?.name} variant.
+                  Use <strong style={{ color: 'rgba(255,255,255,0.75)' }}>WinOLS</strong>, <strong style={{ color: 'rgba(255,255,255,0.75)' }}>BDM100</strong>, or
+                  your flashing tool's built-in checksum correction before writing to the ECU.
+                  Flashing without correct block checksums will cause the ECU to reject the calibration.
+                </div>
+              </div>
+            </div>
+          )
         )}
 
         {/* Maps modified warning */}
@@ -1636,7 +1652,18 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           </button>
           <button
             className="btn-secondary"
-            onClick={() => { setStep(0); setFileName(''); setFileBuffer(null); setHexPreview(''); setDetected(null); setSelectedEcuId(''); setAddons([]); setStage(1); setExtractedMaps([]); setRemapResult(null) }}
+            onClick={() => {
+              setStep(0); setFileName(''); setFileBuffer(null); setHexPreview(''); setLoadError('')
+              setDetected(null); setSelectedEcuId(''); setAddons([]); setStage(1)
+              setExtractedMaps([]); setRemapResult(null); setBlockResult(null)
+              // Clear A2L / DRT definition state — old definition must not bleed into a new file
+              setA2lResult(null); setA2lMaps([]); setA2lFileName('')
+              setDrtResult(null); setDrtMaps([]); setDrtFileName('')
+              setA2lValidation([]); setA2lFallbackCount(0); setShowSigExport(false); setSigExportText('')
+              // Clear library search state
+              setLibSearch(''); setLibResults([]); setLibTotal(0); setLibPage(0)
+              setLibFallbackNote(''); setLibOriginalNum(''); setLibLoadError('')
+            }}
           >
             New File
           </button>

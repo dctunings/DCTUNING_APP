@@ -15,7 +15,7 @@ export interface ExtractedMap {
   rawData: number[][]   // raw integer values as stored in binary
   offset: number        // byte offset where map was found (-1 = not found)
   found: boolean
-  source: 'signature' | 'a2l' | 'drt' | 'none'  // how the map was located
+  source: 'signature' | 'fixedOffset' | 'a2l' | 'drt' | 'none'  // how the map was located
 }
 
 // ─── ECU Detection ────────────────────────────────────────────────────────────
@@ -197,7 +197,7 @@ export function extractMap(buffer: ArrayBuffer, mapDef: MapDef): ExtractedMap {
   if (mapDef.fixedOffset !== undefined && mapDef.fixedOffset >= 0) {
     const result = readAt(mapDef.fixedOffset)
     if (result) {
-      return { mapDef, data: result.phys, rawData: result.raw, offset: mapDef.fixedOffset, found: true, source: 'signature' }
+      return { mapDef, data: result.phys, rawData: result.raw, offset: mapDef.fixedOffset, found: true, source: 'fixedOffset' }
     }
   }
 
@@ -301,7 +301,7 @@ export function syntheticMapDefFromA2L(a2lMap: A2LMapDef, baseDef: MapDef): MapD
     rows:       a2lMap.rows,
     cols:       a2lMap.cols,
     dtype:      a2lMap.dataType as DataType,
-    le:         true,  // Bosch/Continental ECUs are little-endian
+    le:         baseDef.le,  // inherit endianness from ecuDefinitions — ME7/SID/MS43 etc. are big-endian (le:false)
     factor:     a2lMap.factor,
     offsetVal:  a2lMap.physicalOffset,
     signatures: [],    // skip signature search
@@ -324,7 +324,7 @@ export function syntheticMapDefFromDRT(
     dtype:       drtMap.dataType as DataType,
     factor:      drtMap.factor,          // use DRT-supplied scaling
     offsetVal:   drtMap.physicalOffset,  // use DRT-supplied offset
-    le:          true,
+    le:          baseDef.le,  // inherit endianness from ecuDefinitions — big-endian ECUs (ME7, SID, MS43) use le:false
     signatures:  [],
     sigOffset:   0,
     fixedOffset: drtMap.fileOffset,      // DRT-supplied file offset
@@ -338,6 +338,11 @@ export function writeMap(buffer: ArrayBuffer, extracted: ExtractedMap, newRaw: n
   const view = new DataView(copy)
   const elSize = dtypeSize(extracted.mapDef.dtype)
   const { rows, cols, dtype, le } = extracted.mapDef
+  // Bounds check: ensure the entire map fits within the buffer before writing any cell.
+  // extractMap already validates this via readAt, but guard here too — a corrupt ExtractedMap
+  // (e.g. from a DRT/A2L source) could have an offset that would cause DataView RangeError.
+  const needed = rows * cols * elSize
+  if (extracted.offset + needed > copy.byteLength) return buffer
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const off = extracted.offset + (r * cols + c) * elSize

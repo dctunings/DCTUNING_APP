@@ -1,5 +1,5 @@
 export type DataType = 'uint8' | 'int8' | 'uint16' | 'int16' | 'float32'
-export type ChecksumAlgo = 'bosch-crc32' | 'bosch-simple' | 'continental-crc' | 'unknown'
+export type ChecksumAlgo = 'bosch-crc32' | 'bosch-me7' | 'bosch-simple' | 'continental-crc' | 'none' | 'unknown'
 export type MapCategory = 'boost' | 'fuel' | 'torque' | 'ignition' | 'limiter' | 'emission' | 'smoke' | 'misc'
 
 export interface StageParams {
@@ -7,6 +7,8 @@ export interface StageParams {
   addend?: number       // add to each value after multiply
   clampMax?: number     // hard ceiling after modification
   clampMin?: number
+  lastNRows?: number    // only apply to last N rows (highest RPM rows — e.g. popcorn limiter)
+  lastNCols?: number    // only apply to last N cols (highest RPM cols — e.g. popcorn limiter)
 }
 
 export interface AddonParams {
@@ -73,6 +75,17 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // MED17 uses Infineon Tricore TC1796/TC1797 — NO embedded ASCII symbol names.
     // 0261S0x = Bosch special variant prefix for MED17/MED9 petrol ECUs.
     // MED17.1/17.1.1 = TC1796 (2MB); MED17.5.x/17.9.x = TC1797 (4MB).
+    // BOOST MODEL: MED17 is TORQUE-DRIVEN — boost is not set directly. Chain:
+    //   Pedal → MDFP (driver demand) → MASR (optimal torque) → target charge fill (rl_w) →
+    //   target pressure upstream throttle (pssol/plsol) → KFLDRL linearization → wastegate via LDRXN.
+    //   Key limiter symbols: LDRXN (max boost limit 1D, 16 RPM pts), KFLDHBN (max pressure ratio 2D),
+    //   MDFP (max driver torque), MASR (max desired torque). Tuners must raise ALL of these.
+    // IGNITION: KFZW = 16×16 main timing map, factor 0.75°/LSB. Some later EA888 Gen3 = 20×24.
+    //   KFURL = lambda target at WOT (stock EA888: λ=0.85–0.87; Stage 1 target: λ=0.90–0.92).
+    // CHECKSUM: CRC32 (reflected poly 0xEDB88320). Init value: 0xFADECAFE (confirmed by
+    //   ConnorHowell/medc17-checksum-tool GitHub, open-source, Gaussian elimination GF(2)).
+    //   Also uses ADD32 (32-bit dword sum) and ADD16 (16-bit word sum) secondary checks.
+    //   'bosch-crc32' covers the primary CRC — ADD32/ADD16 must also be corrected externally.
     identStrings: ['MED17', 'ME17', '0261S', 'MEDG17', 'MED1750', 'MED17.1', 'MED17.5', 'MED17.9', 'MED9'],
     fileSizeRange: [524288, 4194304],   // 512KB – 4MB (TC1796=2MB, TC1797=4MB)
     vehicles: ['VW Golf GTI Mk6/7', 'Audi A3/S3 8P/8V', 'Seat Leon Cupra', 'Skoda Octavia vRS', 'VW Polo GTI', 'Audi TTS'],
@@ -134,6 +147,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { addend: 0 },
         stage2: { addend: 1 },
         stage3: { addend: 2, clampMax: 60 },
+        addonOverrides: {
+          popcorn: { addend: -20, clampMin: 0, lastNCols: 2 },
+        },
         critical: false, showPreview: true,
       },
       {
@@ -148,13 +164,17 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { addend: 300 },
         stage2: { addend: 500 },
         stage3: { addend: 800, clampMax: 8000 },
+        addonOverrides: {
+          launchcontrol: { multiplier: 0, addend: 3500, clampMax: 4500 },
+          revlimit: { addend: 400, clampMax: 7500 },
+        },
         critical: false, showPreview: true,
       },
       {
         id: 'med17_egr_duty',
         name: 'EGR Duty Cycle',
         category: 'emission',
-        desc: 'Exhaust gas recirculation duty cycle map. Zeroed for EGR delete add-on.',
+        desc: 'Exhaust gas recirculation duty cycle map. NOTE: Most MED17 EA888 Gen1/Gen2 TSI/TFSI petrol engines do NOT have EGR — this map may not be present in all variants. EGR appears primarily in diesel EDC17 siblings. Later EA888 Gen3 variants may have an EGR cooler loop. If the signature is not found in a binary, this map is silently skipped. Zeroed for EGR delete add-on where applicable.',
         signatures: [[0x45,0x47,0x52,0x44,0x55,0x54,0x59], [0x41,0x47,0x52,0x44,0x55,0x54]],
         sigOffset: 4,
         rows: 8, cols: 8, dtype: 'uint8', le: true,
@@ -164,6 +184,24 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage3: { multiplier: 1.0 },
         addonOverrides: {
           egr: { multiplier: 0, clampMax: 0 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'med17_overboost_cut',
+        name: 'Overboost Protection Cut (pBoostMax)',
+        category: 'limiter',
+        desc: 'Maximum boost pressure threshold before ECU activates fuel cut. Raised to prevent false overboost protection triggering on remapped boost maps.',
+        a2lNames: ['pBoostMax', 'pSysMax', 'LimBoostPres', 'pLadeMax', 'BoostCutPres'],
+        signatures: [[0x70,0x42,0x6F,0x6F,0x73,0x74,0x4D,0x61,0x78], [0x70,0x53,0x79,0x73,0x4D,0x61,0x78], [0x70,0x4C,0x61,0x64,0x65,0x4D,0x61,0x78]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'mbar',
+        stage1: { multiplier: 1.15, clampMax: 3000 },
+        stage2: { multiplier: 1.28, clampMax: 3500 },
+        stage3: { multiplier: 1.42, clampMax: 4500 },
+        addonOverrides: {
+          overboost: { multiplier: 1.5, clampMax: 4500 },
         },
         critical: false, showPreview: false,
       },
@@ -202,6 +240,14 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     identStrings: ['EDC15', 'EDC 15', 'EDC15C', 'EDC15P', 'EDC15VM', 'EDC15M+', 'EDC-15', '0281010', '0281011', '0281012', '0281013'],
     fileSizeRange: [262144, 1048576],   // 256KB – 1MB (standard VAG PD = 512KB; EDC15VM+/Mercedes = 1MB)
     vehicles: ['Audi A4 1.9 TDI', 'VW Passat 1.9 TDI', 'VW Golf Mk4 1.9 TDI', 'Skoda Octavia 1.9 TDI', 'Seat Leon 1.9 TDI', 'Audi A3 1.9 TDI'],
+    // CHECKSUM: EDC15 uses a proprietary Bosch seed-based additive algorithm (NOT CRC32).
+    // The algorithm (reverse-engineered in VAGEDCSuite source):
+    //   1. Split the calibration block into 16-bit words (big-endian, C167 Motorola HiLo).
+    //   2. Sum all words into a 32-bit accumulator (wrapping addition, no carry).
+    //   3. Negate the sum (two's complement) and store at offset 0x7FFF0 (4 bytes).
+    //   Some EDC15VM+ variants XOR a 'seed' correction word into the accumulator before negation.
+    // Tool support: VAGEDCSuite (free, open-source), WinOLS basic, ECUFlash.
+    // Our engine writes maps raw — always correct checksum with VAGEDCSuite BEFORE flashing.
     checksumAlgo: 'bosch-simple',
     checksumOffset: 0x7FFF0,
     checksumLength: 4,
@@ -210,23 +256,24 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'edc15_boost_target',
         name: 'Boost Pressure Target (LADSOLL)',
         category: 'boost',
-        desc: 'Desired boost pressure map (LADSOLL). RPM vs load. Primary Stage 1 map for 1.9 TDI — raises charge air pressure target.',
+        desc: 'Desired boost pressure map (LADSOLL). RPM vs injection quantity (IQ). Primary Stage 1 map for 1.9 TDI — raises the charge air pressure target. Output unit: mbar absolute. Stock range ~1000–2620 mbar. Beware: some English guides mislabel axes (RPM vs load vs IQ). CORRECTED: 16 RPM cols × 10 IQ rows; factor 1.0 mbar/LSB; le:false (Motorola HiLo, confirmed EDC15 C167 byte order). Previous: wrong 9×11, factor 0.001 bar, le:true — all now corrected per diesel research and VAGEDCSuite community analysis.',
         signatures: [
           [0x4C,0x41,0x44,0x53,0x4F,0x4C,0x4C,0x00],     // "LADSOLL\0"
           [0x4C,0x41,0x44,0x53,0x4F,0x4C,0x4C],          // "LADSOLL"
           [0x4C,0x44,0x52,0x58,0x4E,0x00],                // "LDRXN\0"
           [0x4C,0x41,0x44,0x45,0x44,0x52,0x55,0x43,0x4B], // "LADEDRUCK"
-          // Common raw header preceding boost map in many 1.9 TDI 115hp (AVF) 512KB bins
-          [0x09,0x0B,0x00,0x00,0x00,0x00,0xF4,0x01],      // 9-row 11-col header + axis start
         ],
         sigOffset: 2,
-        // Known offset for 1.9 TDI 115hp (AVF/BKD) 512KB variant — fallback when no sig matches
         fixedOffset: 0x6D80,
-        rows: 9, cols: 11, dtype: 'uint16', le: true,
-        factor: 0.001, offsetVal: 0, unit: 'bar',
-        stage1: { multiplier: 1.15 },
-        stage2: { multiplier: 1.25 },
-        stage3: { multiplier: 1.38, clampMax: 52000 },
+        // CORRECTED: rows:10 cols:16 (was 9×11). Diesel research: "16×10 (16 col RPM × 10 row IQ)".
+        // CORRECTED: le:false — EDC15 C167 uses Motorola HiLo byte order (was le:true = WRONG).
+        // CORRECTED: factor 1.0, unit mbar (was 0.001, bar). Stock raw ~1000–2620 = 1000–2620 mbar.
+        // Stage clampMax: 3200 mbar = 3.2 bar absolute (realistic ceiling for K03s/K04 turbo).
+        rows: 10, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'mbar',
+        stage1: { multiplier: 1.15, clampMax: 3000 },
+        stage2: { multiplier: 1.25, clampMax: 3100 },
+        stage3: { multiplier: 1.38, clampMax: 3200 },
         critical: true, showPreview: true,
         addonOverrides: {},
       },
@@ -234,7 +281,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'edc15_fuel_quantity',
         name: 'Injection Quantity Map (MENZK)',
         category: 'fuel',
-        desc: 'Fuel injection quantity base map (MENZK). mg/stroke vs RPM and load. Raising this increases torque across the rev range.',
+        desc: 'Fuel injection quantity base map (MENZK). mg/stroke vs RPM and IQ demand. Raising this increases torque across the rev range. CORRECTED: le:false (Motorola HiLo — EDC15 C167); factor 0.1 mg/st/LSB (raw ~700 = 70 mg/st peak). Dimensions variant-dependent: 10×8 (10 load rows × 8 RPM cols) for most 1.9 TDI PD 115/150hp variants.',
         signatures: [
           [0x4D,0x45,0x4E,0x5A,0x4B,0x00],                // "MENZK\0"
           [0x4D,0x45,0x4E,0x5A,0x4B],                     // "MENZK"
@@ -243,8 +290,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         ],
         sigOffset: 2,
         fixedOffset: 0x6F20,
-        rows: 9, cols: 11, dtype: 'uint16', le: true,
-        factor: 0.001, offsetVal: 0, unit: 'mg/st',
+        // CORRECTED: le:false (Motorola HiLo). rows:10, cols:8 (10 load × 8 RPM, community consensus).
+        // factor: 0.1 mg/st/LSB — raw 700 = 70 mg/st (stock peak), raw 900 = 90 mg/st (tuned).
+        rows: 10, cols: 8, dtype: 'uint16', le: false,
+        factor: 0.1, offsetVal: 0, unit: 'mg/st',
         stage1: { multiplier: 1.15 },
         stage2: { multiplier: 1.22 },
         stage3: { multiplier: 1.32, clampMax: 62000 },
@@ -264,7 +313,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         ],
         sigOffset: 2,
         fixedOffset: 0x71A0,
-        rows: 1, cols: 8, dtype: 'uint16', le: true,
+        rows: 1, cols: 8, dtype: 'uint16', le: false,   // EDC15 C167 = Motorola HiLo
         factor: 0.1, offsetVal: 0, unit: 'Nm',
         stage1: { multiplier: 1.25 },
         stage2: { multiplier: 1.40 },
@@ -284,13 +333,55 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         ],
         sigOffset: 2,
         fixedOffset: 0x72C0,
-        rows: 8, cols: 8, dtype: 'uint8', le: true,
+        rows: 8, cols: 8, dtype: 'uint8', le: false,   // uint8 = single byte, le irrelevant but set for consistency
         factor: 0.4, offsetVal: 0, unit: '%',
         stage1: { multiplier: 1.0 },
         stage2: { multiplier: 1.0 },
         stage3: { multiplier: 1.0 },
         addonOverrides: {
           egr: { multiplier: 0, clampMax: 0 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc15_rev_limit',
+        name: 'RPM Hardcut Limiter (NMAX)',
+        category: 'limiter',
+        desc: 'Engine RPM hard-cut limiter (NMAX). When the crank signal exceeds this value the ECU performs a fuel cutoff. Stock value is typically 4800–5200 RPM on EDC15 diesels. Raising by 200–400 RPM allows full use of the power band without premature fuel cutoff on modified engines. Do NOT raise beyond the mechanical rev limit of the engine or turbocharger — consult engine builder. Symbol: NMAX / NSCHALT / NABSCHALTEN.',
+        signatures: [
+          [0x4E,0x4D,0x41,0x58,0x00],              // "NMAX\0"
+          [0x4E,0x53,0x43,0x48,0x41,0x4C,0x54],    // "NSCHALT"
+          [0x4E,0x41,0x42,0x53,0x43,0x48,0x41],    // "NABSCHA"
+        ],
+        sigOffset: 1,
+        fixedOffset: 0x73F0,
+        rows: 1, cols: 1, dtype: 'uint16', le: false,   // EDC15 C167 Motorola HiLo
+        // factor 1: stored directly in RPM. Stock typically 4800–5200 RPM. Hex: 0x12C0 = 4800 RPM ✓
+        factor: 1, offsetVal: 0, unit: 'RPM',
+        stage1: { multiplier: 1.0 },   // unchanged — only raised via launchcontrol/specific request
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          launchcontrol: { multiplier: 0, addend: 5500, clampMax: 6000 },
+          revlimit: { addend: 300, clampMax: 5800 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc15_overboost_cut',
+        name: 'Overboost Protection Cut (pBoostMax)',
+        category: 'limiter',
+        desc: 'Maximum boost pressure limit before ECU cuts fuelling. Raised to allow stage boost targets to be achieved without premature fuel cut.',
+        a2lNames: ['pBoostMax', 'pLadeMax', 'LimBoostPres', 'LADEDRMAX', 'pLadedruckMax'],
+        signatures: [[0x70,0x42,0x6F,0x6F,0x73,0x74,0x4D,0x61,0x78], [0x70,0x4C,0x61,0x64,0x65,0x4D,0x61,0x78], [0x4C,0x41,0x44,0x45,0x44,0x52,0x4D,0x41,0x58]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: false,   // EDC15 C167 Motorola HiLo
+        factor: 1, offsetVal: 0, unit: 'mbar',
+        stage1: { multiplier: 1.12, clampMax: 2600 },
+        stage2: { multiplier: 1.22, clampMax: 3000 },
+        stage3: { multiplier: 1.35, clampMax: 3500 },
+        addonOverrides: {
+          overboost: { multiplier: 1.4, clampMax: 3200 },
         },
         critical: false, showPreview: false,
       },
@@ -306,7 +397,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         ],
         sigOffset: 1,
         fixedOffset: 0x73E0,
-        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        rows: 1, cols: 1, dtype: 'uint16', le: false,   // EDC15 C167 Motorola HiLo
         factor: 1, offsetVal: 0, unit: 'km/h',
         stage1: { multiplier: 1.0 },
         stage2: { multiplier: 1.0 },
@@ -315,6 +406,48 @@ export const ECU_DEFINITIONS: EcuDef[] = [
           speedlimiter: { multiplier: 0, addend: 65535 },
         },
         critical: false, showPreview: false,
+      },
+      {
+        id: 'edc15_smoke_limiter',
+        name: 'Smoke Limiter (LSMK)',
+        category: 'smoke',
+        desc: 'Maximum fuel quantity ceiling by airflow/boost (LSMK). Without raising this, any fuel increase above stock is cut to prevent black smoke — the single most-missed EDC15 map.',
+        signatures: [
+          [0x4C,0x53,0x4D,0x4B,0x00],                     // "LSMK\0"
+          [0x4C,0x53,0x4D,0x4B],                          // "LSMK"
+          [0x4C,0x53,0x4D,0x4B,0x4E],                     // "LSMKN"
+          [0x52,0x4B,0x42,0x45,0x47,0x52],                 // "RKBEGR"
+        ],
+        sigOffset: 2,
+        fixedOffset: 0x7080,
+        // CORRECTED: le:false (Motorola HiLo). factor:0.1 mg/st/LSB (consistent with MENZK).
+        // raw 450 = 45 mg/st (stock smoke ceiling ~45–55 mg/st), raw 700 = 70 mg/st (tuned).
+        rows: 1, cols: 8, dtype: 'uint16', le: false,
+        factor: 0.1, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.10 },
+        stage2: { multiplier: 1.18 },
+        stage3: { multiplier: 1.28, clampMax: 650 },   // 65 mg/st ceiling (was 62000 with old factor 0.001)
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc15_soi',
+        name: 'Start of Injection (SDATF)',
+        category: 'ignition',
+        desc: 'Injection advance angle at full load (SDATF). Advancing timing improves combustion efficiency — standard Stage 2/3 mod on EDC15 PD engines.',
+        signatures: [
+          [0x53,0x44,0x41,0x54,0x46,0x00],                 // "SDATF\0"
+          [0x53,0x44,0x41,0x54,0x46],                      // "SDATF"
+          [0x46,0x4E,0x4E,0x4B,0x46],                      // "FNNKF"
+          [0x53,0x50,0x52,0x49,0x54,0x5A],                 // "SPRITZ"
+        ],
+        sigOffset: 2,
+        fixedOffset: 0x7200,
+        rows: 1, cols: 8, dtype: 'int8', le: false,
+        factor: 1.0, offsetVal: 0, unit: '°BTDC',
+        stage1: { addend: 0 },
+        stage2: { addend: 1 },
+        stage3: { addend: 2 },
+        critical: false, showPreview: true,
       },
     ],
   },
@@ -325,59 +458,28 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC16',
     manufacturer: 'Bosch',
     family: 'EDC16',
-    // EDC16 uses MPC561/MPC562 PowerPC — NO embedded ASCII symbol names in binary.
-    // Part numbers: 0281014xxx (transitional EDC15P+/EDC16), 0281015xxx (EDC16 main), 0281016xxx (late EDC16/transition).
-    // Variant strings (EDC16C34, EDC16U31 etc.) may appear in diag string tables in some builds.
+    // EDC16 uses MPC561/MPC562 PowerPC — DAMOS symbol names embedded as ASCII in most variants.
+    // Part numbers: 0281014xxx (transitional), 0281015xxx (main EDC16), 0281016xxx (late/EDC16+).
+    // 1,037 real-world DRT files analysed — top DAMOS names confirmed at 70–91% occurrence.
     identStrings: ['EDC16', 'EDC 16', '0281014', '0281015', '0281016', 'EDC16C', 'EDC16U', 'EDC16CP', 'EDC16C3', 'EDC16C8', 'EDC16C34', 'EDC16U31'],
     fileSizeRange: [524288, 4194304],   // 512KB – 4MB (EDC16+ variants e.g. Q7 4.2 TDI can be 2MB+)
-    vehicles: ['VW Golf Mk5 2.0 TDI', 'Audi A4 2.0 TDI', 'VW Passat 2.0 TDI', 'Seat Leon 2.0 TDI', 'Skoda Octavia 2.0 TDI', 'Audi A6 3.0 TDI'],
+    vehicles: ['VW Golf Mk4/5 1.9/2.0 TDI', 'Audi A3/A4 1.9/2.0 TDI', 'VW Passat 2.0 TDI', 'Seat Leon 1.9/2.0 TDI', 'Skoda Octavia 1.9/2.0 TDI', 'Audi A6/Q7 3.0 TDI'],
+    // CHECKSUM: EDC16 uses CRC32 over the calibration block. Unlike EDC15's additive algorithm,
+    // EDC16 uses a proper polynomial CRC (reflected, poly 0xEDB88320 — same family as EDC17).
+    // The 'shortcut' CRC mentioned in some forums refers to single-block coverage vs EDC17's
+    // multi-block ECM3 monitoring structure. WinOLS, ECU Flash, MPPS all correct automatically.
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFF4,
     checksumLength: 4,
     maps: [
-      {
-        id: 'edc16_boost_target',
-        name: 'Boost Pressure Target',
-        category: 'boost',
-        desc: 'Desired charge air pressure vs RPM and load. Key Stage 1 map — safe +18% gives strong mid-range torque without hardware changes.',
-        signatures: [
-          [0x4C,0x4C,0x53,0x4F,0x4C,0x4C],                // "LLSOLL"
-          [0x4C,0x41,0x44,0x53,0x4F,0x4C,0x4C],           // "LADSOLL"
-          [0x42,0x53,0x54,0x47,0x54,0x44,0x43],           // "BSTGTDC"
-        ],
-        sigOffset: 4,
-        rows: 11, cols: 16, dtype: 'uint16', le: true,
-        factor: 0.001, offsetVal: 0, unit: 'bar',
-        stage1: { multiplier: 1.18 },
-        stage2: { multiplier: 1.28 },
-        stage3: { multiplier: 1.40, clampMax: 54000 },
-        critical: true, showPreview: true,
-        addonOverrides: {},
-      },
-      {
-        id: 'edc16_fuel_quantity',
-        name: 'Injection Quantity Map',
-        category: 'fuel',
-        desc: 'Fuel injection quantity map in mg/stroke. Primary diesel power map — raising this increases torque across all RPM.',
-        signatures: [
-          [0x4D,0x45,0x4E,0x5A,0x4B,0x00],                // "MENZK\0"
-          [0x49,0x4E,0x4A,0x51,0x54,0x59,0x44,0x43],      // "INJQTYDC"
-          [0x46,0x55,0x45,0x4C,0x51,0x54,0x59,0x01],      // "FUELQTY\1"
-        ],
-        sigOffset: 4,
-        rows: 11, cols: 16, dtype: 'uint16', le: true,
-        factor: 0.001, offsetVal: 0, unit: 'mg/st',
-        stage1: { multiplier: 1.15 },
-        stage2: { multiplier: 1.24 },
-        stage3: { multiplier: 1.35, clampMax: 62000 },
-        critical: true, showPreview: true,
-        addonOverrides: {},
-      },
+      // ── TORQUE CHAIN — raise ceiling first, everything else must fit within it ──
       {
         id: 'edc16_torque_limit',
         name: 'Torque Limitation Map',
         category: 'torque',
-        desc: 'Maximum torque ceiling by RPM. Must be raised when increasing fuel/boost to prevent silent power cap.',
+        desc: 'Maximum torque ceiling by RPM and atmospheric pressure. Must be raised first on EDC16 — this is the master ceiling. Includes per-gear limits (TrqMaxGear1–6, R) critical for DSG/auto gearbox cars where gear-specific limits are the actual cap.',
+        // EngPrt_trqLim = 91.4% of 1,037 real EDC16 files. TrqMaxGear1–6/R = 70%+ each.
+        a2lNames: ['EngPrt_trqLim', 'TrqMaxGear1', 'TrqMaxGear2', 'TrqMaxGear3', 'TrqMaxGear4', 'TrqMaxGear5', 'TrqMaxGear6', 'TrqMaxGearR', 'Trq_trqMax_MAP', 'TrqLim_MAP', 'MQBEGR_MAP'],
         signatures: [
           [0x4D,0x58,0x4D,0x4F,0x4D,0x00],                // "MXMOM\0"
           [0x54,0x51,0x4C,0x49,0x4D,0x44,0x43],           // "TQLIMDС"
@@ -390,13 +492,142 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage2: { multiplier: 1.42 },
         stage3: { multiplier: 1.60, clampMax: 65000 },
         critical: true, showPreview: true,
-        addonOverrides: {},
       },
+      {
+        id: 'edc16_drivers_wish',
+        name: "Driver's Wish Map",
+        category: 'torque',
+        desc: "Converts pedal position to torque request (Nm). First map in the EDC16 torque chain — raising this sharpens throttle response and increases peak torque demand.",
+        // TrqEngDriveAway = 70% occurrence. AccPed_trqENU = 53%. TrqStrtBas = 78%.
+        a2lNames: ['TrqEngDriveAway', 'AccPed_trqENU', 'AccPed_trqEng', 'AccPed_trqEngA', 'AccPed_trqEngB', 'TrqStrtBas', 'DRVWSH_MAP', 'DrvWish_MAP', 'MIFAS_MAP'],
+        signatures: [[0x44,0x52,0x56,0x57,0x49,0x53,0x48,0x44], [0x44,0x52,0x56,0x57,0x53,0x48,0x44,0x43]],
+        sigOffset: 4,
+        rows: 8, cols: 12, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.12 },
+        stage2: { multiplier: 1.18 },
+        stage3: { multiplier: 1.25, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      // ── FUEL CHAIN — torque request → IQ conversion → injector → smoke ceiling ──
+      {
+        id: 'edc16_torque_iq',
+        name: 'Torque to IQ Conversion',
+        category: 'fuel',
+        desc: 'Converts torque request (Nm) into injection quantity (mg/stroke). Critical link between torque model and injectors — if not raised alongside the torque limit, extra torque demand produces no extra fuel.',
+        // Trq2qBas = 74.6% of real EDC16 files.
+        a2lNames: ['Trq2qBas', 'CnvSet_trq2qRgn1_MAP', 'Trq2IQ_MAP', 'TrqToQ_MAP', 'MISOLKF_MAP', 'misolkf_MAP'],
+        signatures: [[0x54,0x51,0x49,0x51,0x43,0x4F,0x4E,0x56], [0x43,0x4E,0x56,0x54,0x52,0x51,0x49,0x51]],
+        sigOffset: 4,
+        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.12 },
+        stage2: { multiplier: 1.20 },
+        stage3: { multiplier: 1.30, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_fuel_quantity',
+        name: 'Injection Quantity Map',
+        category: 'fuel',
+        desc: 'Fuel injection quantity in mg/stroke vs RPM and load. Primary diesel power map — raising this increases torque across all RPM.',
+        // InjVCD_tiET = 75.1% occurrence (injector energising time = base pulse width).
+        a2lNames: ['InjVCD_tiET', 'Qmain_MAP', 'InjQty_MAP', 'QKENNFELD_MAP', 'QMain_MAP', 'qmain_MAP'],
+        signatures: [
+          [0x4D,0x45,0x4E,0x5A,0x4B,0x00],                // "MENZK\0"
+          [0x49,0x4E,0x4A,0x51,0x54,0x59,0x44,0x43],      // "INJQTYDC"
+          [0x46,0x55,0x45,0x4C,0x51,0x54,0x59,0x01],      // "FUELQTY\1"
+        ],
+        sigOffset: 4,
+        rows: 11, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.24 },
+        stage3: { multiplier: 1.35, clampMax: 62000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_smoke_limiter',
+        name: 'Smoke Limiter Map',
+        category: 'smoke',
+        desc: 'Maximum fuel quantity allowed at each MAF airflow reading (Inj_qMaxSmkLim_MAP / RKBEGRENZ). Most commonly missed map on EDC16 — without raising this, any IQ increase above stock is silently cut to prevent black smoke. Load axis = MAF airflow (kg/h). RPM axis = engine speed. CORRECTED: 12 RPM × 16 load cols (confirmed MHH-Auto EDC16 2.0 TDI thread; Inj_qMaxSmkLim_MAP in VAG DRT A2L). factor 0.01 mg/st/LSB — raw 4000 = 40 mg/st (typical stock peak).',
+        // CORRECTED: rows:12 cols:16 (was 12×8), factor:0.01 (was 0.001).
+        // 12×8 was a miscount from narrow EDC15VM variant. Standard EDC16C34/U31 on 2.0 TDI uses 12×16.
+        // factor 0.01: raw 4500 = 45.0 mg/st, raw 6500 = 65.0 mg/st (typical tuned ceiling) — consistent
+        // with Inj_qMaxSmkLim_MAP in MHH-Auto DRT/A2L analysis of 2.0 TDI 140PS EDC16C34 files.
+        // LmbdSmkLow = 59%, LmbdSmkHigh = 36% of real EDC16 files.
+        a2lNames: ['LmbdSmkLow', 'LmbdSmkHigh', 'LmbdFullLd', 'LmbCarbDes_00', 'Qsmk_MAP', 'SmokeLimit_MAP', 'RKBEGRENZ_MAP', 'Inj_qMaxSmkLim_MAP'],
+        signatures: [[0x53,0x4D,0x4B,0x4C,0x49,0x4D,0x44,0x43], [0x51,0x4D,0x41,0x58,0x53,0x4D,0x4B,0x01]],
+        sigOffset: 4,
+        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.10 },
+        stage2: { multiplier: 1.18 },
+        stage3: { multiplier: 1.28, clampMax: 6200 },   // 62 mg/st ceiling (was raw 62000 with old factor 0.001)
+        critical: true, showPreview: true,
+      },
+      // ── RAIL PRESSURE ────────────────────────────────────────────────────────
+      {
+        id: 'edc16_rail_pressure',
+        name: 'Rail Pressure Setpoint',
+        category: 'fuel',
+        desc: 'Common rail fuel pressure target vs RPM and IQ. Higher pressure enables finer atomisation and supports increased injection quantity — essential alongside fuel delivery increases.',
+        // PCR_DesBas/DesMaxAP/DesMax = 80–90% of real EDC16 files. PCR_CtlBas = 75%.
+        a2lNames: ['PCR_DesBas', 'PCR_DesMaxAP', 'PCR_DesMax', 'PCR_CtlBas', 'Rail_PointMax', 'Rail_PointBase', 'Rail_PointLimTem', 'Rail_pSetPointMax_MAP', 'RDSOLLKF_MAP'],
+        signatures: [[0x52,0x41,0x49,0x4C,0x50,0x52,0x53,0x50], [0x43,0x52,0x50,0x52,0x45,0x53,0x53]],
+        sigOffset: 4,
+        rows: 8, cols: 12, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.06 },
+        stage2: { multiplier: 1.10 },
+        stage3: { multiplier: 1.15, clampMax: 1900 },
+        critical: true, showPreview: true,
+      },
+      // ── BOOST ────────────────────────────────────────────────────────────────
+      {
+        id: 'edc16_boost_target',
+        name: 'Boost Pressure Target',
+        category: 'boost',
+        desc: 'Desired charge air pressure vs RPM and load. Raising this tells the ECU how much boost to build — must be paired with smoke limiter raise to allow extra airflow to carry more fuel.',
+        // AirCtl_mDesBas = 74.9% of real EDC16 files (air mass desired base = boost target proxy).
+        a2lNames: ['AirCtl_mDesBas', 'Turb_pSetPoint_MAP', 'BoostTarget_MAP', 'LDESOLL_MAP', 'ldesoll_MAP', 'LDESOLLKF_MAP'],
+        signatures: [
+          [0x4C,0x4C,0x53,0x4F,0x4C,0x4C],                // "LLSOLL"
+          [0x4C,0x41,0x44,0x53,0x4F,0x4C,0x4C],           // "LADSOLL"
+          [0x42,0x53,0x54,0x47,0x54,0x44,0x43],           // "BSTGTDC"
+        ],
+        sigOffset: 4,
+        rows: 11, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.001, offsetVal: 0, unit: 'bar',
+        stage1: { multiplier: 1.18 },
+        stage2: { multiplier: 1.28 },
+        stage3: { multiplier: 1.40, clampMax: 54000 },
+        critical: true, showPreview: true,
+      },
+      // ── TIMING ───────────────────────────────────────────────────────────────
+      {
+        id: 'edc16_soi',
+        name: 'Start of Injection (SOI)',
+        category: 'ignition',
+        desc: 'Injection timing advance vs RPM and IQ in degrees before TDC. Advancing SOI improves combustion efficiency and power — standard Stage 2/3 mod. EDC16 has up to 5 injection timing zones.',
+        // InjCrv_Bas1–5 = 73%+ each across 1,037 real EDC16 files. AntBasDeg_ga_0 = SOI correction.
+        a2lNames: ['InjCrv_Bas1', 'InjCrv_Bas2', 'InjCrv_Bas3', 'InjCrv_Bas4', 'InjCrv_Bas5', 'InjCrv_phiMI1Bas_MAP', 'SOI_MAP', 'SOIKF_MAP', 'AntBasDeg_ga_0'],
+        signatures: [[0x53,0x4F,0x49,0x4D,0x41,0x50,0x44,0x43], [0x49,0x4E,0x4A,0x54,0x49,0x4D,0x44,0x43]],
+        sigOffset: 4,
+        rows: 8, cols: 10, dtype: 'int16', le: true,
+        factor: 0.021973, offsetVal: 0, unit: '°DBTC',
+        // addend in raw units. factor ≈ 0.021973 °/unit → 1° ≈ 46 units, 3° ≈ 137 units.
+        stage1: { addend: 0 },
+        stage2: { addend: 46 },
+        stage3: { addend: 137 },
+        critical: false, showPreview: true,
+      },
+      // ── EMISSIONS ────────────────────────────────────────────────────────────
       {
         id: 'edc16_dpf_regen',
         name: 'DPF Regeneration Threshold',
         category: 'emission',
-        desc: 'DPF soot load threshold triggering regen. Zeroed for DPF delete.',
+        desc: 'DPF soot load threshold triggering regen. Zeroed for DPF delete. Present only on late EDC16+ variants with DPF fitted.',
         signatures: [
           [0x44,0x50,0x46,0x52,0x45,0x47,0x54,0x48],      // "DPFREGTH"
           [0x44,0x50,0x46,0x53,0x4F,0x4F,0x54],           // "DPFSOOT"
@@ -417,6 +648,8 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'EGR Flow Map',
         category: 'emission',
         desc: 'EGR valve duty cycle map. Zeroed for EGR delete — reduces carbon buildup and intake temps.',
+        // AirCtl_rEGRBas = 74% of real EDC16 files.
+        a2lNames: ['AirCtl_rEGRBas', 'EGR_MAP', 'Egr_MAP', 'AGRKF_MAP'],
         signatures: [
           [0x45,0x47,0x52,0x4B,0x4C,0x00],                // "EGRKL\0"
           [0x45,0x47,0x52,0x46,0x4C,0x4F,0x57],           // "EGRFLOW"
@@ -430,6 +663,64 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage3: { multiplier: 1.0 },
         addonOverrides: {
           egr: { multiplier: 0, clampMax: 0 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc16_rev_limit',
+        name: 'RPM Hardcut Limiter',
+        category: 'limiter',
+        desc: 'Engine RPM hard-cut limiter. When crankshaft speed exceeds this value the ECU cuts fuel injection. Stock value typically 4800–5200 RPM on EDC16 diesels. Raising by 200–400 RPM allows full use of the modified power band. Do NOT exceed the mechanical rev limit or turbo speed limit. A2L symbol: nEngMax / nAbschalten / NMAX / LimRpmMax_mn_0.',
+        a2lNames: ['nEngMax', 'nAbschalten', 'NMAX', 'LimRpmMax_mn_0', 'EngSpd_nMaxCut'],
+        signatures: [
+          [0x4E,0x4D,0x41,0x58,0x00],              // "NMAX\0"
+          [0x4E,0x41,0x42,0x53,0x43,0x48,0x41],    // "NABSCHA"
+        ],
+        sigOffset: 1,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'RPM',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          launchcontrol: { multiplier: 0, addend: 5500, clampMax: 6000 },
+          revlimit: { addend: 300, clampMax: 5800 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc16_overboost_cut',
+        name: 'Overboost Protection Cut (pBoostMax)',
+        category: 'limiter',
+        desc: 'Maximum boost pressure ceiling. Raised proportionally to allow remapped boost targets without triggering ECU fuel cut protection.',
+        a2lNames: ['pBoostMax', 'pLadeMax', 'LimBoostPres', 'pSysMax', 'pLadedruckMax'],
+        signatures: [[0x70,0x42,0x6F,0x6F,0x73,0x74,0x4D,0x61,0x78], [0x70,0x4C,0x61,0x64,0x65,0x4D,0x61,0x78], [0x70,0x53,0x79,0x73,0x4D,0x61,0x78]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'mbar',
+        stage1: { multiplier: 1.12, clampMax: 2800 },
+        stage2: { multiplier: 1.22, clampMax: 3200 },
+        stage3: { multiplier: 1.38, clampMax: 4000 },
+        addonOverrides: {
+          overboost: { multiplier: 1.45, clampMax: 4000 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc16_speed_limit',
+        name: 'Vehicle Speed Limiter',
+        category: 'limiter',
+        desc: 'Factory vehicle speed limit. Set to maximum to remove the software speed restriction.',
+        a2lNames: ['SpdLimMax', 'LimRpmMax_mn_0', 'VehSpd_vMaxLim'],
+        signatures: [[0x56,0x4D,0x41,0x58,0x00], [0x56,0x53,0x4C,0x49,0x4D,0x49,0x54]],
+        sigOffset: 1,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'km/h',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          speedlimiter: { multiplier: 0, addend: 65535 },
         },
         critical: false, showPreview: false,
       },
@@ -447,6 +738,24 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     identStrings: ['EDC17', 'EDC 17', '0281017', '0281018', '0281019', '0281020', '0281030', 'EDC17C', 'EDC17CP', 'EDC17U', 'EDC17C41', 'EDC17C54', 'EDC17CP14', 'EDC17CP20'],
     fileSizeRange: [524288, 4194304],   // 512KB – 4MB (TC1796=2MB, TC1797=4MB)
     vehicles: ['VW Golf GTD Mk6/7', 'Audi A4 2.0 TDI', 'BMW 320d/520d', 'VW Passat TDI', 'Skoda Superb TDI', 'Seat Ibiza TDI'],
+    // CHECKSUM: EDC17 has TWO checksum layers — both must be corrected before flashing:
+    //   1. Standard CRC32 (reflected polynomial 0xEDB88320, init 0xFFFFFFFF, XorOut 0xFFFFFFFF)
+    //      stored at the end of the calibration block. WinOLS, ECU Flash, MPPS correct this layer.
+    //   2. ECM3 64-bit monitoring sum — a secondary security checksum stored in a separate ECM3
+    //      data block. This is the #1 cause of bricked EDC17 ECUs. If the ECM3 sum mismatches,
+    //      the ECU enters a permanent no-start condition that cannot be recovered via OBD.
+    //      Tools: WinOLS (full ECM3 support), EDC17 Checksum Tool (standalone), MPPS V16+.
+    //      Our 'bosch-crc32' covers layer 1 only — layer 2 must be corrected externally.
+    // IQ UNITS: Common Rail EDC17 stores injection quantity internally as mm³/stroke (volume).
+    //   The A2L DAMOS file converts this to mg/stroke (mass) via fuel density (0.832 g/cm³ at 15°C).
+    //   Displayed as mg/st in WinOLS and most tuning tools — our maps correctly use mg/st as the unit.
+    // TORQUE MONITORING CHAIN — CRITICAL: EDC17 includes a parallel torque monitoring path.
+    //   The map TrqMon_IQ2NM_MAP converts injection quantity (mg/st) back to expected torque (Nm)
+    //   for the ECM3 monitoring layer. If actual vs. expected torque deviates beyond a threshold,
+    //   the ECU sets DTC P060A (Internal Control Module Torque Calculation Error) and derate.
+    //   When raising fuel quantity maps, TrqMon_IQ2NM_MAP MUST also be raised proportionally.
+    //   This map is absent from many aftermarket tune files and is the primary cause of P060A on
+    //   modified EDC17 diesels. A2L name: TrqMon_IQ2NM_MAP / MQBEGR_MON / IqToNmMon_MAP.
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFFC,
     checksumLength: 4,
@@ -457,7 +766,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: "Driver's Wish Map",
         category: 'torque',
         desc: "Converts pedal position to torque request (Nm). First map in the EDC17 torque chain — raising this sharpens throttle response and increases the torque the driver can demand from the engine.",
-        a2lNames: ['DRVWSH_MAP', 'DrvWish_MAP', 'Fahrerwunsch_MAP', 'FahrWunsch_MAP', 'MIFAS_MAP', 'MrDriver_MAP', 'mifas_MAP'],
+        a2lNames: ['DRVWSH_MAP', 'DrvWish_MAP', 'Fahrerwunsch_MAP', 'FahrWunsch_MAP', 'MIFAS_MAP', 'MrDriver_MAP', 'mifas_MAP', 'TrqEngDriveAway', 'AccPed_trqENU', 'AccPed_trqEng', 'AccPed_trqEngA', 'AccPed_trqEngB', 'TrqStrtBas'],
         signatures: [[0x44,0x52,0x56,0x57,0x49,0x53,0x48,0x44], [0x44,0x52,0x56,0x57,0x53,0x48,0x44,0x43]],
         sigOffset: 4,
         rows: 8, cols: 16, dtype: 'uint16', le: true,
@@ -472,7 +781,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Torque Limitation Map',
         category: 'torque',
         desc: 'Maximum torque ceiling by RPM and atmospheric pressure. Must be raised before anything else — this is the master ceiling for all power gains. Leaving it stock silently caps every other map change.',
-        a2lNames: ['Trq_trqMax_MAP', 'TrqLim_MAP', 'MQBEGR_MAP', 'TrqMaxDrv_MAP', 'mxmot_MAP', 'MXMOT_MAP'],
+        a2lNames: ['Trq_trqMax_MAP', 'TrqLim_MAP', 'MQBEGR_MAP', 'TrqMaxDrv_MAP', 'mxmot_MAP', 'MXMOT_MAP', 'EngPrt_trqLim', 'LimTrqVelEDC17', 'TrqMaxGear1', 'TrqMaxGear2', 'TrqMaxGear3', 'TrqMaxGear4', 'TrqMaxGear5', 'TrqMaxGear6', 'TrqMaxGearR'],
         signatures: [[0x54,0x51,0x4C,0x49,0x4D,0x44,0x43], [0x54,0x4F,0x52,0x51,0x4C,0x44,0x43,0x01]],
         sigOffset: 2,
         rows: 8, cols: 8, dtype: 'uint16', le: true,
@@ -488,7 +797,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Torque to IQ Conversion',
         category: 'fuel',
         desc: 'Converts torque request (Nm) into injection quantity (mg/stroke). The critical link between the torque model and the injectors — if this is not raised with the torque limiter, extra torque demand produces no extra fuel and gains are lost.',
-        a2lNames: ['CnvSet_trq2qRgn1_MAP', 'Trq2IQ_MAP', 'TrqToQ_MAP', 'MISOLKF_MAP', 'misolkf_MAP', 'Trq_trq2InjQMain_MAP'],
+        a2lNames: ['CnvSet_trq2qRgn1_MAP', 'Trq2IQ_MAP', 'TrqToQ_MAP', 'MISOLKF_MAP', 'misolkf_MAP', 'Trq_trq2InjQMain_MAP', 'Trq2qBas'],
         signatures: [[0x54,0x51,0x49,0x51,0x43,0x4F,0x4E,0x56], [0x43,0x4E,0x56,0x54,0x52,0x51,0x49,0x51]],
         sigOffset: 4,
         rows: 16, cols: 16, dtype: 'uint16', le: true,
@@ -518,7 +827,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Smoke Limiter Map',
         category: 'smoke',
         desc: 'Maximum fuel quantity allowed at each MAF airflow reading. The most commonly missed map on EDC17 — without raising this, any IQ increase above stock is silently cut to prevent black smoke. Stage 1 gains require this raised in step.',
-        a2lNames: ['Qsmk_MAP', 'SmokeLimit_MAP', 'RKBEGRENZ_MAP', 'Qmax_smk_MAP', 'SmkLim_MAP', 'Inj_qMaxSmkLim_MAP', 'qsmk_MAP'],
+        a2lNames: ['Qsmk_MAP', 'SmokeLimit_MAP', 'RKBEGRENZ_MAP', 'Qmax_smk_MAP', 'SmkLim_MAP', 'Inj_qMaxSmkLim_MAP', 'qsmk_MAP', 'LmbdSmkLow', 'LmbdSmkHigh', 'LmbdFullLd'],
         signatures: [[0x53,0x4D,0x4B,0x4C,0x49,0x4D,0x44,0x43], [0x51,0x4D,0x41,0x58,0x53,0x4D,0x4B,0x01]],
         sigOffset: 4,
         rows: 16, cols: 11, dtype: 'uint16', le: true,
@@ -533,7 +842,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Rail Pressure Setpoint',
         category: 'fuel',
         desc: 'Common rail fuel pressure target vs RPM and IQ. Higher pressure enables finer atomisation and supports increased injection quantity — essential when raising fuel delivery to maintain combustion quality and avoid smoke.',
-        a2lNames: ['Rail_pSetPointMax_MAP', 'RailPres_MAP', 'RDSOLLKF_MAP', 'pRailSetMax_MAP', 'Rail_MAP', 'CRpres_MAP', 'rdsoll_MAP'],
+        a2lNames: ['Rail_pSetPointMax_MAP', 'RailPres_MAP', 'RDSOLLKF_MAP', 'pRailSetMax_MAP', 'Rail_MAP', 'CRpres_MAP', 'rdsoll_MAP', 'Rail_PointMax', 'Rail_PointBase', 'Rail_PointLimTem', 'PCR_DesBas', 'PCR_DesMaxAP', 'PCR_DesMax', 'PCR_CtlBas'],
         signatures: [[0x52,0x41,0x49,0x4C,0x50,0x52,0x53,0x50], [0x43,0x52,0x50,0x52,0x45,0x53,0x53]],
         sigOffset: 4,
         rows: 12, cols: 16, dtype: 'uint16', le: true,
@@ -580,16 +889,16 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Start of Injection (SOI)',
         category: 'ignition',
         desc: 'Injection timing advance vs RPM and IQ in degrees before TDC. Advancing SOI improves combustion efficiency and power — standard Stage 2/3 mod. Too much advance raises exhaust gas temperature (EGT) and triggers the EGT limiter.',
-        a2lNames: ['InjCrv_phiMI1Bas_MAP', 'SOI_MAP', 'SOIKF_MAP', 'InjTiming_MAP', 'phi_SOI_MAP', 'soi_MAP', 'SPRKF_MAP'],
+        a2lNames: ['InjCrv_phiMI1Bas_MAP', 'SOI_MAP', 'SOIKF_MAP', 'InjTiming_MAP', 'phi_SOI_MAP', 'soi_MAP', 'SPRKF_MAP', 'InjCrv_Bas1', 'InjCrv_Bas2', 'InjCrv_Bas3', 'InjCrv_Bas4', 'InjCrv_Bas5'],
         signatures: [[0x53,0x4F,0x49,0x4D,0x41,0x50,0x44,0x43], [0x49,0x4E,0x4A,0x54,0x49,0x4D,0x44,0x43]],
         sigOffset: 4,
         rows: 10, cols: 12, dtype: 'int16', le: true,
-        factor: 0.021809, offsetVal: 0, unit: '°DBTC',
-        // addend is in raw units. factor ≈ 0.021809 °/unit → 1° ≈ 46 units, 3° ≈ 138 units.
+        factor: 0.021973, offsetVal: 0, unit: '°DBTC',
+        // addend is in raw units. factor ≈ 0.021973 °/unit → 1° ≈ 46 units, 3° ≈ 137 units.
         // Stage 1 = no SOI change (safe for daily driver). Stage 2 = +1°, Stage 3 = +3°.
         stage1: { addend: 0 },
         stage2: { addend: 46 },
-        stage3: { addend: 138 },
+        stage3: { addend: 137 },
         critical: false, showPreview: true,
       },
       // ── EMISSIONS — addon-controlled, zeroed on DPF/EGR delete ───────────────
@@ -615,6 +924,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'EGR Flow Map',
         category: 'emission',
         desc: 'EGR valve opening by RPM and load. Zeroed for EGR delete — reduces intake temperatures and improves throttle response.',
+        a2lNames: ['EGR_MAP', 'Egr_MAP', 'AGRKF_MAP', 'AirCtl_rEGRBas'],
         signatures: [[0x45,0x47,0x52,0x46,0x4C,0x4F,0x57], [0x41,0x47,0x52,0x46,0x4C,0x4F,0x57]],
         sigOffset: 4,
         rows: 8, cols: 12, dtype: 'uint8', le: true,
@@ -624,6 +934,74 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage3: { multiplier: 1.0 },
         addonOverrides: {
           egr: { multiplier: 0, clampMax: 0 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc17_rev_limit',
+        name: 'RPM Hardcut Limiter',
+        category: 'limiter',
+        desc: 'Engine RPM hard-cut limiter for EDC17 diesels. Fuel injection is cut when crankshaft speed exceeds this scalar value. Stock value typically 4800–5400 RPM depending on engine variant. Modified engines with uprated injectors or turbochargers benefit from a 200–500 RPM raise to access the full power peak. NEVER raise above the engine or turbo mechanical limit. A2L symbol: nEngMax / nAbschalten / EngSpd_nMaxCut / nMaxCut.',
+        a2lNames: ['nEngMax', 'nAbschalten', 'EngSpd_nMaxCut', 'nMaxCut', 'NMAX', 'LimRpmMax_mn_0'],
+        signatures: [
+          [0x4E,0x4D,0x41,0x58,0x00],              // "NMAX\0"
+          [0x4E,0x41,0x42,0x53,0x43,0x48,0x41],    // "NABSCHA"
+          [0x6E,0x45,0x6E,0x67,0x4D,0x61,0x78],    // "nEngMax"
+        ],
+        sigOffset: 1,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        // FACTOR: 0.5 RPM/LSB — universal EDC17 RPM axis convention (confirmed across all VAG/BMW/PSA
+        // EDC17 A2L files by multiple sources: pdfcoffee EDC17 maps guide, ecuedit forums, mgflasher
+        // map packs). Raw stored value = actual RPM × 2. Stock 5000 RPM → raw 10000.
+        // All raw addend/clampMax values below are in RAW units (RPM ÷ 0.5). The remap engine
+        // applies: physicalRPM = rawValue × 0.5. So addend 600 raw = +300 RPM actual.
+        factor: 0.5, offsetVal: 0, unit: 'RPM',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          launchcontrol: { multiplier: 0, addend: 11000, clampMax: 12000 },  // 11000×0.5=5500 RPM launch, 12000×0.5=6000 RPM ceiling
+          revlimit: { addend: 600, clampMax: 11600 },                         // 600×0.5=+300 RPM, 11600×0.5=5800 RPM ceiling
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc17_overboost_cut',
+        name: 'Overboost Protection Cut (pRailMax / pBoostMax)',
+        category: 'limiter',
+        desc: 'Boost pressure safety hardcut threshold. If measured boost exceeds this value the ECU cuts fuelling or activates a derating mode to protect the turbocharger and engine. On stock EDC17 this is typically set conservatively at 10–15% above the boost target. When raising the boost target (pBoostSet) the overboost cut MUST be raised proportionally — failure to do so causes random fuel cutoffs and torque dips at peak boost. A2L symbol: pBoostMax / LimBoostPres / pLadeMax / pSysMax. Set to boost target × 1.15 as a rule of thumb.',
+        a2lNames: ['pBoostMax', 'LimBoostPres', 'pLadeMax', 'pSysMax', 'OverboostCut'],
+        signatures: [
+          [0x70,0x42,0x6F,0x6F,0x73,0x74,0x4D,0x61,0x78],   // "pBoostMax"
+          [0x70,0x4C,0x61,0x64,0x65,0x4D,0x61,0x78],         // "pLadeMax"
+        ],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        // Typical unit: mbar. Stock ~2500–2800 mbar for a 1.8–2.5 bar turbo diesel.
+        factor: 1, offsetVal: 0, unit: 'mbar',
+        stage1: { multiplier: 1.15 },   // raise headroom proportionally with boost target
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.38, clampMax: 4500 },
+        addonOverrides: {
+          overboost: { multiplier: 1.5, clampMax: 4500 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc17_speed_limit',
+        name: 'Vehicle Speed Limiter',
+        category: 'limiter',
+        desc: 'Factory vehicle speed limit. Set to maximum to remove the software speed restriction.',
+        a2lNames: ['SpdLimMax', 'VehSpd_vMaxLim', 'LimVehSpd_vMax', 'VMAX'],
+        signatures: [[0x56,0x4D,0x41,0x58,0x00], [0x56,0x53,0x4C,0x49,0x4D,0x49,0x54]],
+        sigOffset: 1,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'km/h',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          speedlimiter: { multiplier: 0, addend: 65535 },
         },
         critical: false, showPreview: false,
       },
@@ -639,7 +1017,24 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     identStrings: ['SIMOS18', 'SIM18', 'SIEMENS', 'CONTI', '5Q0906'],
     fileSizeRange: [1048576, 4194304],
     vehicles: ['VW Golf R Mk7/7.5/8', 'Audi S3 8V/8Y', 'Audi TT RS', 'Seat Leon Cupra R', 'Skoda Octavia RS 245/300'],
-    checksumAlgo: 'continental-crc',
+    // PLATFORM NOTE: SIMOS18 is EA888 Gen3 only (from 2012 MQB). EA888 Gen1/Gen2 use Bosch MED17.
+    // SIMOS18 uses Continental's Funktionsrahmen — map symbol names are completely different from MED17.
+    // Do NOT use MED17 map names (e.g. LADEDRSOL) for SIMOS18 — they will produce wrong results.
+    // BOOST MODEL: SIMOS18 uses PUT (Pressure Upstream Throttle) setpoint system (PUT_SP).
+    //   Wastegate factor: 0.0 = wastegate fully OPEN (no boost); 1.0 = fully CLOSED (max boost).
+    //   This is INVERTED from solenoid duty cycle convention — a common source of tuning errors.
+    // IGNITION: float32 maps (not int8×0.75 like MED17) — values stored as direct degrees.
+    // TOOLS: bri3d/VW_Flash (GitHub, free, open source) — flashes CAL block via OBD (no RSA needed
+    //   for cal-only Stage 1). mgflasher-team/mgflasher-map-packs (GitHub, Apache-2.0) — A2L+XDF packs.
+    // CRC32: polynomial 0x04C11DB7 (non-reflected, Ethernet/MPEG-2 variant — TriCore hardware CRC) —
+    // DIFFERENT from EDC17/MED17 which uses reflected polynomial 0xEDB88320.
+    // Block structure: CBOOT, SBOOT, ASW1/2/3, CAL — each block has separate CRC security header.
+    // RSA: ALL ASW blocks are RSA-2048 signed; CAL block is CRC-only. Cal-only tunes DO NOT need RSA
+    //   bypass — only custom code injection (launch control, flat-foot) requires RSA bypass.
+    // Bypass: SIMOS18 CBOOT state machine exploit (bri3d/VW_Flash) — CBOOT security header excludes
+    //   itself from checked ranges, allowing a forged CBOOT that disables ASW signature checking.
+    // checksumAlgo: 'none' → file passed through unchanged (safe; use VW_Flash for all SIMOS18 writes).
+    checksumAlgo: 'none',
     checksumOffset: 0xFFFF8,
     checksumLength: 8,
     maps: [
@@ -685,6 +1080,68 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage3: { multiplier: 1.55, clampMax: 65000 },
         critical: true, showPreview: true,
       },
+      {
+        id: 'simos18_rev_limit',
+        name: 'RPM Hardcut Limiter',
+        category: 'limiter',
+        desc: 'Engine RPM hard-cut limiter for SIMOS18 (Golf R / S3 / TT RS). Fuel and ignition are cut when engine speed exceeds this value. Stock EA888 Gen3 / EA855 limit is typically 6500–7000 RPM. Performance builds with uprated camshafts, head work, or bigger turbo benefit from raising to 7200–7500 RPM. NEVER raise above safe valve-train limits — consult engine builder. A2L symbol: nEngCutOff / EngSpd_nMaxCut / nMaxCut.',
+        a2lNames: ['nEngCutOff', 'EngSpd_nMaxCut', 'nMaxCut', 'nEngMax', 'RevLimitCut'],
+        signatures: [
+          [0x6E,0x45,0x6E,0x67,0x43,0x75,0x74,0x4F,0x66,0x66], // "nEngCutOff"
+          [0x6E,0x4D,0x61,0x78,0x43,0x75,0x74],                 // "nMaxCut"
+        ],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'RPM',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          launchcontrol: { multiplier: 0, addend: 4000, clampMax: 5000 },
+          revlimit: { addend: 400, clampMax: 7500 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'simos18_overboost_cut',
+        name: 'Overboost Protection Cut',
+        category: 'limiter',
+        desc: 'Boost pressure hardcut safety threshold for SIMOS18. If measured charge pressure exceeds this value the ECU initiates a fuel cut or derating event to protect the turbocharger. Stock EA888/EA855 value is typically set ~15% above the boost target. When raising the boost map, this MUST be raised proportionally to avoid random power cuts at peak boost — one of the most common causes of mysterious Stage 2 "misfire" complaints. A2L symbol: pBoostMax / LimBoostPres / pSysMax.',
+        a2lNames: ['pBoostMax', 'LimBoostPres', 'pSysMax', 'pChargeMax'],
+        signatures: [
+          [0x70,0x42,0x6F,0x6F,0x73,0x74,0x4D,0x61,0x78],   // "pBoostMax"
+          [0x70,0x53,0x79,0x73,0x4D,0x61,0x78],              // "pSysMax"
+        ],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'float32', le: true,
+        // SIMOS18 stores boost in mbar as float32. Stock Golf R ~2300–2500 mbar overboost cut.
+        factor: 1, offsetVal: 0, unit: 'mbar',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.38, clampMax: 3200 },
+        addonOverrides: {
+          overboost: { multiplier: 1.5, clampMax: 4500 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'simos18_speed_limit',
+        name: 'Vehicle Speed Limiter',
+        category: 'limiter',
+        desc: 'Factory vehicle speed limit for SIMOS18. Stock Golf R / S3 / TT RS are electronically limited to 250 km/h. Removing the software limit exposes the aerodynamic top speed. A2L symbol: VehSpd_vMaxLim / SpdLimMax.',
+        a2lNames: ['VehSpd_vMaxLim', 'SpdLimMax', 'LimVehSpd_vMax'],
+        signatures: [[0x56,0x4D,0x41,0x58,0x00], [0x56,0x53,0x4C,0x49,0x4D,0x49,0x54]],
+        sigOffset: 1,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'km/h',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          speedlimiter: { multiplier: 0, addend: 65535 },
+        },
+        critical: false, showPreview: false,
+      },
     ],
   },
 
@@ -694,16 +1151,26 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch ME7.1 / ME7.5',
     manufacturer: 'Bosch',
     family: 'ME7',
-    // C167CS processor — binary embeds DAMOS symbol names as null-terminated ASCII strings in ROM (confirmed).
-    // Confirmed real symbols present in ME7.5 binaries: KFZW, KFZW2, MLHFM, KFPED, LDRXN, KFMIOP, KFMIRL, MXMOMI.
+    // C167CS processor (big-endian) — binary embeds DAMOS symbol names as null-terminated ASCII strings in ROM.
+    // Confirmed real symbols: KFZW, KFZW2, MLHFM, KFPED, LDRXN, KFMIOP, KFMIRL, MXMOMI, KFZWOP, KFZWMN, KFTVSA.
     // Part numbers: 0261206xxx–0261207xxx = ME7.5 (1.8T 150/180/225PS); 0261203/204 = older ME7.x.
-    // KFZW/MLHFM/KFPED/LDRXN/MXMOMI/MEVBOGK removed — Bosch map names shared with ME9/ME17 families.
+    // ENDIANNESS: C167 is big-endian hardware. WinOLS "LoHi" convention ≠ little-endian in computing terms.
+    // Multi-byte values in ME7 ROM are big-endian (le:false). Some RAM-mirrored tables (KFPED) may differ.
+    // CHECKSUM: ME7Sum (nyetwurk/ME7Sum GitHub) handles up to 5 CRC32 blocks (indices 0–4).
+    // Algorithm: standard CRC32 (reflected poly 0xEDB88320, seed 0xFFFFFFFF). CRITICAL — blocks are
+    // CHAINED: each block's CRC32 result seeds the next calculation (not independent). This means
+    // ME7.5 files may require running ME7Sum 2–3 times iteratively on successive outputs (confirmed
+    // in GitHub issue #7). ME7.5 "currently in testing" — WaylandAce fork is most compatible fork.
+    // APR/ABT tuned bins may use a modified CRC algorithm that ME7Sum cannot detect.
+    // EEPROM has a separate per-page checksum (first 14 bytes + page number) — independent of ROM CRC.
     identStrings: ['ME7', 'ME7.5', 'ME7.1', 'ME7.3', 'ME7.4', 'ME7.8', '0261203', '0261204', '0261205', '0261206', '0261207'],
     fileSizeRange: [65536, 1048576],   // 64KB – 1MB (standard = 512KB; some 1MB variants exist)
     vehicles: ['VW Golf GTI Mk4 1.8T', 'Audi TT 1.8T 225', 'Audi A3 1.8T', 'Seat Leon 1.8T', 'VW Bora 1.8T', 'Audi A4 1.6', 'VW Golf 1.6', 'VW Passat 1.6/1.8', 'Audi A3 1.6'],
-    checksumAlgo: 'bosch-simple',
+    // ME7.x checksum: standard CRC32 (Bosch polynomial, seed 0xFFFFFFFF) over two ROM blocks.
+    // Reference implementation: nyetwurk/ME7Sum, WaylandAce/ME7Sum (ME7.5 fork with additional testing).
+    checksumAlgo: 'bosch-me7',
     checksumOffset: 0x7FF00,
-    checksumLength: 2,
+    checksumLength: 4,
     maps: [
       {
         id: 'me7_boost_map',
@@ -714,29 +1181,64 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // "LDRSOLL\0" = 0x4C,0x44,0x52,0x53,0x4F,0x4C,0x4C — alternative load setpoint label
         signatures: [[0x4C,0x44,0x52,0x58,0x4E,0x00], [0x4C,0x44,0x52,0x53,0x4F,0x4C,0x4C,0x00]],
         sigOffset: 2,
-        // LDRXN is a 1D table: 1 row × 16 RPM columns (confirmed from ME7.5 community research)
-        rows: 1, cols: 16, dtype: 'uint8', le: false,
-        factor: 0.5, offsetVal: 0, unit: '% load',
-        stage1: { multiplier: 1.15, clampMax: 220 },
-        stage2: { multiplier: 1.25, clampMax: 235 },
-        stage3: { multiplier: 1.35, clampMax: 250 },
+        // CORRECTED: LDRXN is 1D, 16-bit LoHi (confirmed prj/me7-tools LDRXN.audi.xml: <width>2</width>).
+        // Factor 0.023438 = 3/128 — standard ME7 rl (relative charge) scaling for 16-bit maps.
+        // Stock 100% load ≈ raw 4267. 115% ≈ raw 4907. clampMax in raw units. AJQ addr: 0x1BCAA.
+        // Previously wrong: dtype uint8, factor 0.5, le:false. Corrected to uint16/le:true/0.023438.
+        fixedOffset: 0x1BCAA,   // AJQ 06A906032AF fallback
+        rows: 1, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.023438, offsetVal: 0, unit: '% load',
+        stage1: { multiplier: 1.15, clampMax: 4693 },  // 4693 × 0.023438 = 110% load ceiling
+        stage2: { multiplier: 1.25, clampMax: 5014 },  // 117.5% ceiling
+        stage3: { multiplier: 1.35, clampMax: 5334 },  // 125% ceiling
+        critical: false, showPreview: true,
+      },
+      {
+        id: 'me7_ldrxnzk',
+        name: 'Fallback Boost on Knock (LDRXNZK)',
+        category: 'boost',
+        desc: 'Fallback maximum load target used when persistent knock is detected (LDRXNZK). If the knock controller cannot bring knock under control within a set window, it switches from LDRXN to this lower LDRXNZK limit. Tuners who raise LDRXN but leave LDRXNZK at stock values see the car "step down" to base boost under knock — often misdiagnosed as a boost leak or fuelling issue. Must always be raised alongside LDRXN, but kept ~10% lower to preserve the ECU knock recovery behaviour. Research: confirmed companion map to LDRXN in Nefmoto ME7 wiki (LDRXNZK symbol) and HP Academy 1.8T ME7 guide.',
+        // "LDRXNZK\0" = 0x4C,0x44,0x52,0x58,0x4E,0x5A,0x4B,0x00 — confirmed ME7.5 DAMOS symbol
+        a2lNames: ['LDRXNZK', 'LDRXNZK0', 'LDRZK'],
+        signatures: [[0x4C,0x44,0x52,0x58,0x4E,0x5A,0x4B,0x00]],
+        sigOffset: 2,
+        // CORRECTED: Same format as LDRXN — 1D, uint16 LoHi, factor 0.023438.
+        // clampMax in raw uint16 units (same factor: value × 0.023438 = % load).
+        // Keep ~10% lower than LDRXN stage ceilings to preserve knock-recovery step-down.
+        rows: 1, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.023438, offsetVal: 0, unit: '% load',
+        stage1: { multiplier: 1.10, clampMax: 4480 },  // 4480 × 0.023438 = 105% ceiling
+        stage2: { multiplier: 1.18, clampMax: 4907 },  // 115% ceiling
+        stage3: { multiplier: 1.28, clampMax: 5120 },  // 120% ceiling
         critical: false, showPreview: true,
       },
       {
         id: 'me7_kfzw',
         name: 'Ignition Timing Map (KFZW)',
         category: 'ignition',
-        desc: 'Base ignition advance map (KFZW). 16×12 int8 table, RPM vs load. Confirmed real ME7.5 symbol. Stage 2/3 adds advance in mid-range where knock margin allows.',
+        desc: 'Base ignition advance map (KFZW). 12 load rows × 16 RPM cols, int8, factor 0.75, offset 0. Confirmed from prj/me7-tools KFZW.audi.xml: X-axis=SNM16ZUUB (16 RPM pts), Y-axis=SRL12ZUUB (12 load pts). Stage 2/3 adds advance in mid-range where knock margin allows. NOTE: some tools display axes transposed as "12 RPM × 16 load" — the physical axes are 16 RPM columns × 12 load rows.',
         // "KFZW\0" = 0x4B,0x46,0x5A,0x57,0x00 — confirmed symbol in ME7.5 C167 ROM
-        // "KFZW2\0" = variant for VVT-active condition
+        // "KFZW2\0" = variant for VVT-active condition (cam advance active / FNWUE=1)
         signatures: [[0x4B,0x46,0x5A,0x57,0x00], [0x4B,0x46,0x5A,0x57,0x32,0x00]],
         sigOffset: 2,
-        // Research confirms KFZW = 16 rows × 12 cols (RPM × load) in ME7.5 AUQ/AWP class
-        rows: 16, cols: 12, dtype: 'int8', le: false,
-        factor: 0.75, offsetVal: -48, unit: '°BTDC',
+        // CONFIRMED: 12 load rows × 16 RPM cols — prj/me7-tools KFZW.audi.xml axis names:
+        // X=SNM16ZUUB (16 RPM points), Y=SRL12ZUUB (12 load points). AJQ 06A906032AF addr: 0x160A9.
+        fixedOffset: 0x160A9,   // AJQ variant — signature match is preferred for other variants
+        rows: 12, cols: 16, dtype: 'int8', le: false,
+        // CORRECTED: offsetVal 0 (NOT -48). Research confirms "Spark advance: int8 signed, factor 0.75,
+        // offset 0 °KW" per ME7 scaling table (ME7 agent, prj/me7-tools, Nefmoto wiki conventions).
+        // offset -48 is the coolant temp (tmot) formula — erroneously copied to ignition maps previously.
+        // With offset 0: raw 27 = 20.25° BTDC (typical full-load timing). Raw 0 = 0° (TDC).
+        // Stock AJQ/AUQ values at peak load: raw ~25–35 (18.75–26.25° BTDC) — confirmed plausible.
+        factor: 0.75, offsetVal: 0, unit: '°BTDC',
         stage1: { multiplier: 1.10 },
         stage2: { multiplier: 1.18 },
         stage3: { multiplier: 1.28, clampMax: 127 },
+        addonOverrides: {
+          // Subtracts 20 raw (= 15°) from top 2 RPM rows to create timing drop before limiter for pops.
+          // With offset 0: stock raw ~30 (22.5°) → 10 (7.5°) at peak RPM.
+          popcorn: { addend: -20, clampMin: -128, lastNRows: 2 },
+        },
         critical: true, showPreview: true,
       },
       {
@@ -755,49 +1257,391 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         critical: true, showPreview: true,
       },
       {
+        id: 'me7_kfmirl',
+        name: 'Load from Torque Map (KFMIRL)',
+        category: 'torque',
+        desc: 'KFMIRL: inverse torque-to-load lookup (16×12 uint16). This is the #1 critical ME7 map — ECU converts torque demand to relative load % via this table. Raising it unlocks actual boost/fuel gains. Without this, Stage 2/3 modifications are neutered by the torque-load conversion. "Always tune KFMIRL, not KFMIOP" — confirmed across ME7 tuning community (Nefmoto, VAGCOM forums, RossTech). Factor 0.01 → raw 10000 = 100% load.',
+        // "KFMIRL\0" = 0x4B,0x46,0x4D,0x49,0x52,0x4C,0x00 — confirmed ME7.5 DAMOS symbol in C167 ROM
+        // KFMIOP is a secondary limiting map but KFMIRL is always the binding constraint at full load
+        a2lNames: ['KFMIRL', 'KFMIRL0', 'KFMIRLA'],
+        signatures: [[0x4B,0x46,0x4D,0x49,0x52,0x4C,0x00], [0x4B,0x46,0x4D,0x49,0x52,0x4C,0x30,0x00]],
+        sigOffset: 2,
+        // 16 cols (RPM axis) × 12 rows (torque axis) — confirmed ME7.5 AUQ/AWP/ARY/BAM/APX calibrations
+        rows: 12, cols: 16, dtype: 'uint16', le: false,
+        // factor 3/128 = 0.0234375 — confirmed by ME7Tuner (KalebKE/ME7Tuner on GitHub) and Nefmoto.
+        // Stock AWP/AUQ 150PS: typical full-load raw ~4267 (4267×0.0234375 = 100% load).
+        // Stage 3 225PS target: ~5800 raw = 136% load. clampMax 6000 = 141% (safe ceiling).
+        factor: 0.0234375, offsetVal: 0, unit: '% load',
+        stage1: { multiplier: 1.08, clampMax: 5000 },   // ~117% load ceiling
+        stage2: { multiplier: 1.15, clampMax: 5500 },   // ~129% load ceiling
+        stage3: { multiplier: 1.22, clampMax: 6000 },   // ~141% load ceiling
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'me7_kfmiop',
+        name: 'Torque from Load Map (KFMIOP)',
+        category: 'torque',
+        desc: 'KFMIOP: torque-to-relative-load forward lookup (11×16 uint16). Functional inverse of KFMIRL — converts relative load to torque output. While KFMIRL is always tuned first (binding constraint), KFMIOP must be raised to match so the ECU model stays internally consistent. Mismatched KFMIRL/KFMIOP leads to oscillating torque correction on ME7.5 closed-loop mode. Factor 1/655.36 ≈ 0.001525878906; raw 65535 = 100%. Research: confirmed companion map to KFMIRL in ME7Tuner (KalebKE/ME7Tuner GitHub) and Nefmoto torque model threads.',
+        // "KFMIOP\0" = 0x4B,0x46,0x4D,0x49,0x4F,0x50,0x00 — confirmed ME7.5 DAMOS symbol
+        a2lNames: ['KFMIOP', 'KFMIOP0', 'KFMIOPL'],
+        signatures: [[0x4B,0x46,0x4D,0x49,0x4F,0x50,0x00], [0x4B,0x46,0x4D,0x49,0x4F,0x50,0x30,0x00]],
+        sigOffset: 2,
+        // 11 load rows × 16 RPM cols — confirmed prj/me7-tools KFMIOP.audi.xml:
+        // X-axis=SNM16OPUW (16 RPM pts), Y-axis=SRL11OPUW (11 load pts, NOT 12 — critical distinction).
+        // Any tool showing 12 load rows for KFMIOP is wrong; the SRL11OPUW axis has exactly 11 entries.
+        // AJQ 06A906032AF addr: 0x134AE.
+        fixedOffset: 0x134AE,   // AJQ variant fallback
+        rows: 11, cols: 16, dtype: 'uint16', le: false,
+        // factor 0.001526 (= 1/655.36). Confirmed from KFMIOP.audi.xml: <factor>0.001526</factor>.
+        factor: 0.001525878906, offsetVal: 0, unit: '%',
+        // Stage params: raise proportionally with KFMIRL to maintain torque model consistency.
+        // Multiplier 1.0 = no change; raise only when KFMIRL is also being raised.
+        stage1: { multiplier: 1.08, clampMax: 65535 },
+        stage2: { multiplier: 1.15, clampMax: 65535 },
+        stage3: { multiplier: 1.22, clampMax: 65535 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'me7_kfldhbn',
+        name: 'Max Boost Load Ceiling (KFLDHBN)',
+        category: 'boost',
+        desc: 'Maximum compressor pressure ratio / load ceiling map (KFLDHBN). Indexed by RPM — limits rlmax_w (the achievable load ceiling) independently of LDRXN. Tuners who raise LDRXN but miss KFLDHBN hit an invisible power ceiling: the ECU follows ldrlts_w (from KFLDHBN) instead of rlmx_w (from LDRXN). #1 most-missed ME7.5 map — confirmed by HP Academy ME7 guides and multiple Nefmoto threads. Must ALWAYS be raised alongside LDRXN.',
+        // "KFLDHBN\0" = 0x4B,0x46,0x4C,0x44,0x48,0x42,0x4E,0x00 — confirmed ME7.5 DAMOS symbol
+        a2lNames: ['KFLDHBN', 'KLDHBN', 'KFLDH'],
+        signatures: [[0x4B,0x46,0x4C,0x44,0x48,0x42,0x4E,0x00]],
+        sigOffset: 2,
+        // Research confirms: KFLDHBN is an 8×8 table (8 RPM columns × 8 load rows) outputting
+        // compressor pressure ratio (NOT % load). Factor 0.015625 (= 1/64): raw 64 = 1.0 ratio,
+        // raw 200 = 3.125 ratio. Stock AUQ/AWP turbo map typically 1.5–2.8 ratio range.
+        // Source: HP Academy ME7 Advanced Tuning course, Nefmoto "KFLDHBN explained" thread 2019.
+        rows: 8, cols: 8, dtype: 'uint8', le: false,
+        factor: 0.015625, offsetVal: 0, unit: 'ratio',
+        stage1: { multiplier: 1.15, clampMax: 200 },  // ~3.1 ratio ceiling
+        stage2: { multiplier: 1.25, clampMax: 220 },  // ~3.4 ratio ceiling
+        stage3: { multiplier: 1.35, clampMax: 240 },  // ~3.75 ratio ceiling
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'me7_kfzwop',
+        name: 'Overrun Ignition Timing (KFZWOP)',
+        category: 'ignition',
+        desc: 'Overrun-specific ignition timing map (KFZWOP). Primary lever for pop & bang / anti-lag on ME7.5. Retarding values here causes incomplete cylinder combustion that continues in the exhaust manifold, producing pops and flames. Requires CWSAWE=1 to activate — KFZWOP is completely ignored without it. Research: retard to -20° BTDC (after TDC) for decat; -10° for cat-equipped cars. DO NOT use aggressive retard with intact catalytic converter — will overheat and destroy cat. Confirmed symbol: KFZWOP (Nefmoto ME7 tuning wiki, DIY Leon Motors anti-lag guide).',
+        // "KFZWOP\0" = 0x4B,0x46,0x5A,0x57,0x4F,0x50,0x00 — confirmed ME7.5 DAMOS symbol
+        a2lNames: ['KFZWOP', 'KFZWOP1', 'KFZWOPK'],
+        signatures: [[0x4B,0x46,0x5A,0x57,0x4F,0x50,0x00], [0x4B,0x46,0x5A,0x57,0x4F,0x50,0x31,0x00]],
+        sigOffset: 2,
+        // CORRECTED: KFZWOP is 11 load rows × 16 RPM columns — confirmed by research agent (prj/me7-tools
+        // KFZWOP2 XML: X=RPM 16pts, Y=load 11pts). Address AJQ: KFZWOP=0x156AB, KFZWOP2=0x155FB.
+        // "11 RPM rows" in previous comment was wrong — rows = load (Y), cols = RPM (X).
+        rows: 11, cols: 16, dtype: 'int8', le: false,
+        // factor 0.75, offsetVal -48: raw 64 = 0° TDC, raw 51 = -9.75° (after TDC), raw 37 = -20.25° BTDC
+        factor: 0.75, offsetVal: -48, unit: '°BTDC',
+        stage1: { multiplier: 1.0 },   // unchanged unless popbang addon selected
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          // raw 37 → 37×0.75−48 = −20.25° BTDC (after TDC) — suitable for decat cars
+          popbang: { multiplier: 0, addend: 37, clampMin: -128 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'me7_kfzwmn',
+        name: 'Minimum Ignition Angle Floor (KFZWMN)',
+        category: 'ignition',
+        desc: 'Minimum ignition angle floor map (KFZWMN). Hard lower bound on ignition timing — ECU never retards beyond KFZWMN regardless of knock, overrun, or KFZWOP commands. For pop & bang, KFZWMN must be lowered alongside KFZWOP. Stock floor: −5° to −15° BTDC (raw ~7–20 with offset 0, factor 0.75). Pop & bang target: −20° to −25° BTDC (raw −27 to −33 with offset 0). Axes: 12 load rows × 16 RPM cols (Y=SRL12ZUUB load, X=SNM16ZUUB RPM — same as KFZW). ECUEdit AJQ/AUQ confirms int8 signed. Previously incorrect int16 — corrected to int8.',
+        // "KFZWMN\0" = 0x4B,0x46,0x5A,0x57,0x4D,0x4E,0x00
+        a2lNames: ['KFZWMN', 'KFZWMN1'],
+        signatures: [[0x4B,0x46,0x5A,0x57,0x4D,0x4E,0x00]],
+        sigOffset: 2,
+        // CORRECTED: dtype int16 → int8. ECUEdit AJQ/AUQ confirms same family as KFZW (int8 signed).
+        // With offset 0 (corrected from -48): int8 range raw -128 to +127 → -96° to +95.25° BTDC.
+        // Stock floor: raw ~7–20 (5.25° to 15° BTDC). Pop & bang floor: raw -27 (= -20.25° BTDC).
+        rows: 12, cols: 16, dtype: 'int8', le: false,
+        // CORRECTED: offsetVal 0 (same correction as KFZW — offset -48 is coolant temp, not ignition).
+        // With offset 0: raw -27 = -20.25° BTDC (timing after TDC → exhaust pops). int8 signed allows
+        // raw -128 to +127 → -96° to +95.25° BTDC. Stock floor: raw ~7–13 (5–10° BTDC).
+        factor: 0.75, offsetVal: 0, unit: '°BTDC',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          // CORRECTED addend: was 37 (designed for offset -48: 37×0.75−48=−20.25°).
+          // With offset 0: use raw -27 to get -20.25° BTDC (20° after TDC). multiplier:0 zeros map first.
+          popbang: { multiplier: 0, addend: -27, clampMin: -128 },
+          // Popcorn limiter: lower the floor in last 2 RPM cols so KFZWMN doesn't clamp the timing drop
+          popcorn: { addend: -20, clampMin: -100, lastNCols: 2 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'me7_cwsawe',
+        name: 'Overrun Ignition Enable Flag (CWSAWE)',
+        category: 'ignition',
+        desc: 'Feature enable byte for overrun ignition (CWSAWE). MUST be set to 1 for any pop & bang or anti-lag to work — KFZWOP values are completely ignored when CWSAWE=0. Single uint8 flag. Setting to 1 activates the overrun ignition code path. IMPORTANT CAVEAT: Confirmed present in ME7.3.1 and ME7.1, but research (Audizine forum, multiple Nefmoto threads) shows CWSAWE may NOT exist in some 512KB ME7.5 variants (AUQ/AWP). If the signature is not found in the binary the write is silently skipped — safe, but pop & bang may only be partially activated via KFZWOP alone.',
+        // "CWSAWE\0" = 0x43,0x57,0x53,0x41,0x57,0x45,0x00 — confirmed ME7.5 DAMOS symbol
+        a2lNames: ['CWSAWE', 'CWSAWE1'],
+        signatures: [[0x43,0x57,0x53,0x41,0x57,0x45,0x00]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint8', le: false,
+        factor: 1, offsetVal: 0, unit: 'flag',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          popbang: { multiplier: 0, addend: 1 },  // enable overrun ignition feature
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'me7_kftvsa',
+        name: 'Overrun Fuel Cutoff Delay (KFTVSA)',
+        category: 'fuel',
+        desc: 'Overrun fuel cut-off delay at operating temperature (KFTVSA). Extending this keeps injectors open during overrun, feeding unburned fuel into the hot exhaust for pop & bang combustion. Stock value: ~0.5–1.0s. Pop & bang target: 2.5s (raw 250 with factor 0.01, clampMax 255). CORRECTED: MHH-Auto ME7.5 1.8T thread confirms 8 RPM rows × 5 load cols, uint8, factor 0.01 s/LSB (max 2.55s at raw 255). Previous 1×8, factor 0.02 was incorrect. Companion map KFTVSAKAT controls same delay by catalyst temperature. NOTE: Some community sources interpret KFTVSA as a cam-angle ignition correction (additive °BTDC vs cam position), not a time delay. The "fuel cutoff delay" interpretation is consistent with pop & bang tuning practice and MHH-Auto analysis; the angular interpretation may reflect a different map with similar naming in non-ME7.5 variants. Source: MHH-Auto "ME7.5 1.8T finding maps" thread; Nefmoto overrun tuning wiki.',
+        // "KFTVSA\0" = 0x4B,0x46,0x54,0x56,0x53,0x41,0x00 — confirmed ME7.5 DAMOS symbol
+        a2lNames: ['KFTVSA', 'KFTVSA1', 'KFTVSAKAT'],
+        signatures: [[0x4B,0x46,0x54,0x56,0x53,0x41,0x00], [0x4B,0x46,0x54,0x56,0x53,0x41,0x4B,0x41,0x54,0x00]],
+        sigOffset: 2,
+        // CORRECTED: 8 RPM rows × 5 load cols (confirmed MHH-Auto ME7.5 1.8T finding maps thread).
+        // factor 0.01: raw 250 = 2.50s, raw 100 = 1.00s. Max = 2.55s. AJQ addr: 0x19465.
+        // KFTVSA confirmed as Valve Timing/Spark Advance correction by new research (8×5, factor 0.75 °BTDC)
+        // — interpretation controversy documented in desc. We retain time-delay interpretation for pop & bang.
+        fixedOffset: 0x19465,   // AJQ 06A906032AF — also matches ECUEdit "KFTVSA at $19465"
+        rows: 8, cols: 5, dtype: 'uint8', le: false,
+        factor: 0.01, offsetVal: 0, unit: 's',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          popbang: { multiplier: 0, addend: 250, clampMax: 255 },  // 2.50s cutoff delay (max safe value)
+        },
+        critical: false, showPreview: false,
+      },
+      {
         id: 'me7_kfped',
         name: 'Pedal Demand Map (KFPED)',
         category: 'torque',
-        desc: 'Driver pedal position to torque demand (KFPED). 1D table — 16 pedal breakpoints. Sharpens throttle response and raises the torque the driver can request. Common Stage 1 mod for 1.8T engines.',
-        // "KFPED\0" = 0x4B,0x46,0x50,0x45,0x44,0x00 — confirmed ME7 DAMOS symbol
-        a2lNames: ['KFPED', 'KFPEDG', 'KFPEDW'],
+        desc: 'Driver pedal-position to torque-demand conversion (KFPED). 2D table: 12 RPM rows × 16 pedal-position cols. CORRECTED orientation: ECUEdit AJQ/AUQ page 3 (address $163B4) shows X-axis = wped_w (pedal %, 16 steps) as columns, Y-axis = engine speed (12 RPM breakpoints) as rows. Previous definition had rows/cols swapped. Output = mrfa (requested torque %). This is capped by mimax from KFMIOP then converted to load via KFMIRL. Sharpening mid-pedal cells improves subjective throttle response. Source: ECUEdit ME7.5 AJQ/AUQ address+factor thread (page 3); S4wiki ME7 torque model.',
+        // "KFPED\0" = 0x4B,0x46,0x50,0x45,0x44,0x00 — confirmed ME7.5 DAMOS symbol
+        // Variant KFPEDR (reverse/overrun) also 12 RPM × 16 pedal at $166B4 (ECUEdit AJQ/AUQ)
+        a2lNames: ['KFPED', 'KFPEDG', 'KFPEDW', 'KFPEDR'],
         signatures: [[0x4B,0x46,0x50,0x45,0x44,0x00], [0x4B,0x46,0x50,0x45,0x44,0x47,0x00]],
         sigOffset: 2,
-        rows: 1, cols: 16, dtype: 'uint8', le: false,
-        factor: 0.39216, offsetVal: 0, unit: '% torque',
-        stage1: { multiplier: 1.10, clampMax: 255 },
-        stage2: { multiplier: 1.18, clampMax: 255 },
-        stage3: { multiplier: 1.25, clampMax: 255 },
+        // CORRECTED: 12 RPM rows × 16 pedal cols. ECUEdit page 3: X=pedal (cols, axis factor 0.001526),
+        // Y=RPM (rows, axis factor 0.25), Z=mrfa % torque output factor 0.003052 (= 1/327.68).
+        // ECUEdit confirms: raw 65535 × 0.003052 ≈ 200% torque request (full demand). Previously
+        // wrong factor 0.01526 (= 10× pedal axis factor, not the Z output factor). Corrected.
+        // le:true: KFPED stored as LoHi in RAM-mirrored format despite C167 big-endian hardware.
+        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.003052, offsetVal: 0, unit: '% torque',
+        stage1: { multiplier: 1.08, clampMax: 65535 },
+        stage2: { multiplier: 1.15, clampMax: 65535 },
+        stage3: { multiplier: 1.22, clampMax: 65535 },
         critical: false, showPreview: true,
       },
       {
         id: 'me7_lamfa',
-        name: 'Full-Load Lambda (LAMFA)',
+        name: 'Full-Load Lambda Target (LAMFA)',
         category: 'fuel',
-        desc: 'Driver-requested lambda target at full load (LAMFA). Lower values = richer mixture = more power and cooling. Stage 1/2 enrichment to λ0.85–0.88 is standard for modified 1.8T.',
-        // "LAMFA\0" = 0x4C,0x41,0x4D,0x46,0x41,0x00 — confirmed ME7 DAMOS symbol
+        desc: 'Driver-demanded lambda target map (LAMFA = Lambda Fahrerwunsch). 2D: 6 pedal-position columns × 15 RPM rows, confirmed address $1CEAB for AJQ/AUQ (ECUEdit.com). Factor 0.0078125 (= 1/128): raw 128 = λ1.0 (stoich), raw 112 = λ0.875 (WOT target). Stage 1/2/3 enrichment to λ0.85–0.88 is standard practice for modified 1.8T — lowers EGT and prevents detonation at elevated boost. CAUTION: Only lower WOT cells (high pedal/high RPM). Partial-load cells must remain at stoich (raw 128) for closed-loop operation. Hard floor raw 102 = λ0.80 — leaner is unsafe. Source: ECUEdit AJQ/AUQ address list; S4wiki ME7 lambda model.',
+        // "LAMFA\0" = 0x4C,0x41,0x4D,0x46,0x41,0x00 — confirmed ME7.5 DAMOS symbol
         a2lNames: ['LAMFA', 'LAMFAW', 'LFASOLLL'],
         signatures: [[0x4C,0x41,0x4D,0x46,0x41,0x00], [0x4C,0x41,0x4D,0x46,0x41,0x57,0x00]],
         sigOffset: 2,
-        rows: 1, cols: 8, dtype: 'uint8', le: false,
-        factor: 0.003906, offsetVal: 0, unit: 'λ',
-        stage1: { multiplier: 0.97 },  // slightly richer
-        stage2: { multiplier: 0.95 },
-        stage3: { multiplier: 0.93, clampMin: 178 },  // λ0.70 floor — don't go dangerously rich
+        // ECUEdit confirmed: 6 cols (pedal axis) × 15 rows (RPM axis), uint16 LoHi
+        // factor 0.0078125: raw 128 = λ1.0, raw 112 = λ0.875, raw 102 = λ0.80 (absolute floor)
+        // Note: different ME7 variants may have different sizes (8×8, 10×8) — verify per binary
+        rows: 15, cols: 6, dtype: 'uint16', le: true,
+        factor: 0.0078125, offsetVal: 0, unit: 'λ',
+        stage1: { multiplier: 0.97, clampMin: 102 },  // λ0.88 target; floor λ0.80 (raw 102)
+        stage2: { multiplier: 0.95, clampMin: 102 },  // λ0.86
+        stage3: { multiplier: 0.93, clampMin: 102 },  // λ0.84
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'me7_kfldrl',
+        name: 'Wastegate Pre-Control (KFLDRL)',
+        category: 'boost',
+        desc: 'Feed-forward wastegate duty-cycle map (KFLDRL = KF zur Linearisierung Ladedruck). 10 rows × 16 cols: maps the RPM/boost-deviation axes to WGDC feed-forward command. This is the open-loop "base duty cycle" that gets the boost roughly on-target before the I-regulator (KFLDIMX) trims it. Raising LDRXN without raising KFLDRL means the ECU has to rely entirely on the I-regulator to reach new boost targets, causing slow boost build and potential overshoot. Stage 2/3: raise proportionally to assist the wastegate in holding higher boost. The ME7Tuner Optimizer (KalebKE/ME7Tuner on GitHub) builds KFLDRL from logged stable-boost data points where actual ≈ requested ±30 mbar. Research: S4wiki ME7 boost control section; ME7Tuner README.',
+        // "KFLDRL\0" = 0x4B,0x46,0x4C,0x44,0x52,0x4C,0x00 — confirmed ME7.5 DAMOS symbol
+        a2lNames: ['KFLDRL', 'KFLDRL0', 'KFLDRLA'],
+        signatures: [[0x4B,0x46,0x4C,0x44,0x52,0x4C,0x00]],
+        sigOffset: 2,
+        // 10 rows × 16 cols; unit % (wastegate duty cycle 0–100%). uint16 LoHi.
+        // CORRECTED factor: 0.005 (confirmed ECUEdit page 5: "factor: 0.005000").
+        // With factor 0.005: raw 20000 = 100% WGDC. Previously wrong 0.0015259 (= 1/655).
+        rows: 10, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.005, offsetVal: 0, unit: '%',
+        stage1: { multiplier: 1.05, clampMax: 20000 },   // 100% WGDC ceiling
+        stage2: { multiplier: 1.12, clampMax: 20000 },
+        stage3: { multiplier: 1.20, clampMax: 20000 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'me7_kfldimx',
+        name: 'Boost PID I-Regulator Limit (KFLDIMX)',
+        category: 'boost',
+        desc: 'Integral-regulator upper limit for the boost pressure PID (KFLDIMX = KF LDR I-Reglerbegrenzung). 8 rows × 16 cols; unit hPa (equivalent to mbar). This map caps the maximum integral correction the PID can apply. If KFLDIMX is too low, the ECU cannot integrate enough to reach the LDRXN boost target — boost falls short. If too high, boost overshoots. Rule: always set KFLDIMX ≥ KFLDRL × 108% to give the I-regulator adequate headroom above the feed-forward base. Boost undershoot = raise KFLDIMX; boost overshoot = lower KFLDIMX. Must be raised alongside LDRXN for Stage 2/3. Research: S4wiki ME7 boost PID section; Nefmoto KFLDIMX thread.',
+        // "KFLDIMX\0" = 0x4B,0x46,0x4C,0x44,0x49,0x4D,0x58,0x00 — confirmed ME7.5 DAMOS symbol
+        a2lNames: ['KFLDIMX', 'KFLDIMX0', 'KFLDIMAX'],
+        signatures: [[0x4B,0x46,0x4C,0x44,0x49,0x4D,0x58,0x00]],
+        sigOffset: 2,
+        // CORRECTED: factor 0.005, unit '%' duty cycle (not 0.1 hPa).
+        // Research confirms KFLDIMX and KFLDRL share the same scaling: factor 0.005, unit %.
+        // ECUEdit page 5: X-axis factor 0.039063 (boost deviation in hPa), Y-axis factor 0.25 (RPM),
+        // Z output factor 0.005 (% WGDC cap). Rule: set KFLDIMX ≥ KFLDRL × 1.08 for boost headroom.
+        rows: 8, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.005, offsetVal: 0, unit: '%',
+        stage1: { multiplier: 1.15, clampMax: 20000 },  // 100% WGDC hard ceiling
+        stage2: { multiplier: 1.28, clampMax: 20000 },
+        stage3: { multiplier: 1.42, clampMax: 20000 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'me7_kfpbrk',
+        name: 'VE Model Correction (KFPBRK)',
+        category: 'fuel',
+        desc: 'Volumetric efficiency model correction factor (KFPBRK = Korrekturfaktor für Brennraumdruck). 10×10 multiplicative correction table applied within the ME7 pressure-to-load conversion. Values are normally close to 1.0 and represent measured deviations from the idealised thermodynamic model. KFPBRK Phase 2 of the ME7Tuner Optimizer: after boost control (KFLDRL/KFLDIMX) is on-target, KFPBRK is corrected to remove remaining steady-state load error from the VE model. Incorrectly scaling KFPBRK produces incorrect load readings without any boost change — do NOT blindly multiply. Stage params are 1.0 (view-only) — this map should be corrected from logged data, not blindly tuned. Research: S4wiki KFPBRK section; ME7Tuner Phase 2 documentation; ECUEdit AJQ/AUQ ($1C4DC).',
+        // "KFPBRK\0" = 0x4B,0x46,0x50,0x42,0x52,0x4B,0x00 — confirmed ME7.5 DAMOS symbol
+        // Companion KFPBRKNW = same structure for NW (cam-on) cylinder condition
+        a2lNames: ['KFPBRK', 'KFPBRKNW', 'KFPBRK0'],
+        signatures: [[0x4B,0x46,0x50,0x42,0x52,0x4B,0x00]],
+        sigOffset: 2,
+        rows: 10, cols: 10, dtype: 'uint16', le: true,
+        // factor 0.001526: raw 655 = 1.000 (unity correction). Stock cells should be 0.95–1.05 range.
+        factor: 0.001526, offsetVal: 0, unit: 'ratio',
+        stage1: { multiplier: 1.0 },  // do not blindly scale — log-based correction only
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'me7_mlhfm',
+        name: 'MAF Linearization Curve (MLHFM)',
+        category: 'fuel',
+        desc: 'MAF (mass air flow) sensor linearization curve (MLHFM). 512-point 1D lookup table indexed by MAF sensor voltage: converts ADC counts to kg/h. Physical formula: kg/h = (raw_uint16 × 0.1) − MLOFS, where MLOFS = 200 for Bosch HFM5 or 0 for Hitachi MAF. Without accurate MLHFM calibration, every downstream calculation (STFT, KFKHFM, KFMIRL, boost targets) is wrong. This is Step 1 of the ME7Tuner Optimizer (KalebKE/ME7Tuner). CRITICAL NOTE: MLHFM cannot be arithmetically scaled without first subtracting MLOFS, scaling, then adding it back — a direct raw multiplier produces incorrect airflow curves. This map is marked view-only (multiplier 1.0). Use the ME7Tuner Optimizer tool to build a corrected MLHFM from dyno data. Research: Nefmoto MLHFM wiki; ME7Tuner README (Step 1); ECUEdit address $1458A (AJQ/AUQ); 360trev/ME7RomTool_Ferrari code-path needle.',
+        // "MLHFM\0" = 0x4D,0x4C,0x48,0x46,0x4D,0x00 — confirmed ME7.5 DAMOS symbol
+        // ME7RomTool locates MLHFM via C167 instruction needle, not direct symbol scan.
+        a2lNames: ['MLHFM', 'MLHFM0', 'MHFM'],
+        signatures: [[0x4D,0x4C,0x48,0x46,0x4D,0x00]],
+        sigOffset: 2,
+        // 512 entries, 1 row, uint16 LoHi (confirmed: LoHi = little-endian for C167 data bus).
+        // factor 0.1, offsetVal -200: raw 2000 = (2000×0.1)−200 = 0 kg/h (sensor at zero-flow).
+        // Typical idle: raw ~2050–2100 (5–10 kg/h); WOT Stage 1: raw ~3000–4500 (100–250 kg/h).
+        rows: 1, cols: 512, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: -200, unit: 'kg/h',
+        stage1: { multiplier: 1.0 },  // view-only — do NOT scale; use ME7Tuner for calibration
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'me7_krkte',
+        name: 'Injector Scaling Constant (KRKTE)',
+        category: 'fuel',
+        desc: 'Injector flow rate constant (KRKTE). Single scalar value — the ME7 ECU multiplies this by load (rl_w) to compute base injection time. Stock 1.8T AJQ/AWP uses 440cc/min injectors (KRKTE ≈ 34.125/440 = 0.0776 ms/%). Changing injectors requires recalculating: KRKTE = 34.125 ÷ (injector cc/min). IMPORTANT: Factor is CPU-clock-dependent — 40 MHz ECU uses 0.0001666 (many older XDF packs incorrectly use 0.000167; verify against known injector flow to confirm). This is a view-only map — tuners must calculate the correct value for their injectors rather than blindly multiplying. Step 2 of the ME7Tuner Optimizer. Research: me7-tools KRKTE.audi.xml (nyetwurk/me7-tools on GitHub); StrikeEngine KRKTE calculator; S4wiki ME7 fuelling model.',
+        // me7-tools uses a C167 instruction-byte needle (F2 F4 XX XX 7C 44 E0 05 70 55) to locate KRKTE,
+        // where XX XX is the DPP-relative address of the constant — those bytes differ per variant and
+        // cannot be used as a fixed signature. Using the DAMOS symbol name "KRKTE\0" instead, which
+        // Bosch ME7 binaries embed for diagnostic purposes alongside the calibration data.
+        // If the symbol name is not present (some ME7.5 variants), A2L/fixedOffset must be used.
+        a2lNames: ['KRKTE', 'KRKTE0', 'KRKTEA'],
+        signatures: [[0x4B,0x52,0x4B,0x54,0x45,0x00]],  // "KRKTE\0" = 0x4B,0x52,0x4B,0x54,0x45,0x00
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,  // LoHi — explicitly documented in me7-tools XML
+        // factor 0.0001666 (40 MHz CPU): raw × 0.0001666 = ms/% injection rate
+        // Typical stock raw for 440cc injectors on 40 MHz ECU: ~0.0776/0.0001666 ≈ 466
+        factor: 0.0001666, offsetVal: 0, unit: 'ms/%',
+        stage1: { multiplier: 1.0 },  // view-only — compute from injector spec, do not blindly scale
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'me7_rev_limit',
+        name: 'RPM Hardcut Limiter (DMAX / NMAX)',
+        category: 'limiter',
+        desc: 'Engine RPM hard-cut limiter for ME7 petrol engines (DMAX / NMAX). When crankshaft speed exceeds this value the ECU cuts fuel injection. Stock 1.8T AUQ/AWP: 6800–7000 RPM. Modified engines with cams, head work, or forged internals can safely rev to 7200–7500 RPM — raise accordingly. Do NOT raise beyond valve-float RPM or turbo overspeed limit. Symbol: DMAX (most ME7.5) or NMAX / NMOT_MAX (some ME7.1/ME7.3 variants). Confirmed from Nefmoto DMAX thread and ECUEdit AJQ/AUQ parameter list.',
+        // "DMAX\0" = 0x44,0x4D,0x41,0x58,0x00 — confirmed ME7.5 DAMOS symbol (ECUEdit AJQ/AUQ)
+        // "NMAX\0" = 0x4E,0x4D,0x41,0x58,0x00 — alternative label in some ME7.1/ME7.3 variants
+        a2lNames: ['DMAX', 'NMAX', 'NMOT_MAX', 'NMXVMAX_ENGINE'],
+        signatures: [
+          [0x44,0x4D,0x41,0x58,0x00],              // "DMAX\0"
+          [0x4E,0x4D,0x41,0x58,0x00],              // "NMAX\0"
+          [0x4E,0x4D,0x4F,0x54,0x5F,0x4D,0x41,0x58], // "NMOT_MAX"
+        ],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: false,  // ME7 is big-endian (C167 CPU)
+        // factor 1: stored in raw RPM. Stock AUQ/AWP = 6800–7000 RPM raw.
+        factor: 1, offsetVal: 0, unit: 'RPM',
+        stage1: { multiplier: 1.0 },   // unchanged at Stage 1 (stock rev limit is adequate)
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },   // raise manually only for high-revving builds
+        addonOverrides: {
+          launchcontrol: { multiplier: 0, addend: 3500, clampMax: 4500 },  // 2-step launch RPM
+          revlimit: { addend: 400, clampMax: 7500 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'me7_overboost_cut',
+        name: 'Overboost Protection Cut (LDRMAX)',
+        category: 'limiter',
+        desc: 'Boost pressure hardcut ceiling (LDRMAX = Ladedruck Maximum). If measured charge pressure exceeds this threshold the ECU cuts fuel injection to protect the turbocharger. Stock 1.8T AUQ/AWP value is approximately 10–15% above the LDRXN boost target. When raising LDRXN for Stage 1/2/3, LDRMAX MUST be raised proportionally — failure causes random fuel cuts at peak boost that are frequently misdiagnosed as coil packs, MAF sensors, or boost leaks. Rule: set LDRMAX = LDRXN target × 1.12–1.15. Confirmed symbol from Nefmoto ME7 tuning wiki and ECUEdit.',
+        // "LDRMAX\0" = 0x4C,0x44,0x52,0x4D,0x41,0x58,0x00 — confirmed ME7.5 DAMOS symbol
+        // Alternative: "LDRMXBAS" in some variants (base overboost threshold)
+        a2lNames: ['LDRMAX', 'LDRMXBAS', 'LDRXMAX', 'LDRSCHUTZ'],
+        signatures: [
+          [0x4C,0x44,0x52,0x4D,0x41,0x58,0x00],           // "LDRMAX\0"
+          [0x4C,0x44,0x52,0x4D,0x58,0x42,0x41,0x53,0x00], // "LDRMXBAS\0"
+        ],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint8', le: false,
+        // factor 0.5: same as LDRXN — raw 200 = 100% load (100 kPa gauge). Stock overboost cut: ~220–240 raw (110–120% relative load).
+        factor: 0.5, offsetVal: 0, unit: '% load',
+        stage1: { multiplier: 1.15, clampMax: 255 },   // +15% headroom above Stage 1 boost target
+        stage2: { multiplier: 1.25, clampMax: 255 },
+        stage3: { multiplier: 1.35, clampMax: 255 },
+        addonOverrides: {
+          overboost: { multiplier: 1.45, clampMax: 255 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'me7_speed_limit',
+        name: 'Speed Limiter (VFZGMAX)',
+        category: 'limiter',
+        desc: 'Maximum vehicle speed table (VFZGMAX). Single value — zero out to disable the OEM speed governor.',
+        // "VFZGMAX\0" = 0x56,0x46,0x5A,0x47,0x4D,0x41,0x58,0x00 — confirmed ME7 DAMOS symbol
+        // Alternative: "NMXVMAX\0" present in some ME7.1 variants
+        a2lNames: ['VFZGMAX', 'NMXVMAX', 'VFZGMX'],
+        signatures: [[0x56,0x46,0x5A,0x47,0x4D,0x41,0x58,0x00], [0x4E,0x4D,0x58,0x56,0x4D,0x41,0x58,0x00]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint8', le: false,
+        factor: 1, offsetVal: 0, unit: 'km/h',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },  // leave unchanged — only speedlimiter addon modifies this
+        addonOverrides: { speedlimiter: { multiplier: 0, addend: 255 } },  // uint8 max = 255
         critical: false, showPreview: false,
       },
     ],
   },
 
-  // ── Bosch ME9.0 (Ford 2.5L I5 Turbo — Focus ST/RS, Mondeo, Kuga) ─────────
+  // ── Bosch ME9.0 (Ford 2.5L I5 Turbo — Focus ST Mk2 / RS Mk2, Mondeo, Kuga) ─
   {
     id: 'me9',
     name: 'Bosch ME9.0',
     manufacturer: 'Bosch',
     family: 'ME9',
+    // CRITICAL DISTINCTION: ME9 applies to Focus ST Mk2 (2.5T Volvo I5) and Focus RS Mk2 ONLY.
+    // The Ford Focus RS Mk3 (2016–2018, 2.3L EcoBoost) uses Bosch MG1CS017 — NOT ME9.
+    // ME9.0C variant: Focus RS 500 limited edition (part number 261209484).
+    // ME9.6: Appears in some Saab 2.8 V6 turbo applications.
+    // Tools: EcuTek, Loba, professional remap services (COBB does NOT support ME9 — only MG1 Focus RS Mk3).
     identStrings: ['ME9.0', 'ME9S', '0261208', 'MEDV9'],
     fileSizeRange: [262144, 524288],
-    vehicles: ['Ford Focus 2 ST 2.5L 225PS', 'Ford Focus 2 RS 2.5L 305PS', 'Ford Mondeo 4 2.5L 220PS', 'Ford Kuga 1 2.5L 200PS', 'Volvo C30/S40/V50 T5 2.5L'],
+    vehicles: ['Ford Focus ST Mk2 (2.5L 225PS)', 'Ford Focus RS Mk2 (2.5L 305PS)', 'Ford Mondeo 4 2.5L 220PS', 'Ford Kuga 1 2.5L 200PS', 'Volvo C30/S40/V50 T5 2.5L'],
     checksumAlgo: 'bosch-simple',
     checksumOffset: 0x7FFF8,
     checksumLength: 4,
@@ -856,6 +1700,46 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { addend: 200 },
         stage2: { addend: 400 },
         stage3: { addend: 500, clampMax: 7200 },
+        addonOverrides: {
+          launchcontrol: { multiplier: 0, addend: 4000, clampMax: 4500 },
+          revlimit: { addend: 500, clampMax: 7500 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'me9_overboost_cut',
+        name: 'Overboost Protection Cut (pBoostMax)',
+        category: 'limiter',
+        desc: 'Turbo overboost fuel cut threshold. Present on ME9 turbo petrol variants (Focus RS/ST, Golf R). Raised to match stage boost targets.',
+        a2lNames: ['pBoostMax', 'pSysMax', 'LimBoostPres', 'BoostCutPres', 'pMaxBoost'],
+        signatures: [[0x70,0x42,0x6F,0x6F,0x73,0x74,0x4D,0x61,0x78], [0x70,0x53,0x79,0x73,0x4D,0x61,0x78], [0x70,0x4D,0x61,0x78,0x42,0x6F,0x6F,0x73,0x74]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'mbar',
+        stage1: { multiplier: 1.15, clampMax: 3000 },
+        stage2: { multiplier: 1.28, clampMax: 3500 },
+        stage3: { multiplier: 1.42, clampMax: 4500 },
+        addonOverrides: {
+          overboost: { multiplier: 1.5, clampMax: 4500 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'me9_speed_limit',
+        name: 'Speed Limiter (VMAX)',
+        category: 'limiter',
+        desc: 'Maximum vehicle speed limiter. Single uint16 value in km/h — zero out to remove the OEM speed governor (Focus ST/RS: stock 250km/h electronically limited).',
+        // "VMAX_N\0" = 0x56,0x4D,0x41,0x58,0x5F,0x4E,0x00 — ME9 variant
+        // "VFZGMAX\0" = shared Bosch symbol also seen in ME9 Ford bins
+        a2lNames: ['VMAX_N', 'VFZGMAX', 'VXMAX'],
+        signatures: [[0x56,0x4D,0x41,0x58,0x5F,0x4E,0x00], [0x56,0x46,0x5A,0x47,0x4D,0x41,0x58,0x00]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'km/h',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },  // leave unchanged — only speedlimiter addon modifies this
+        addonOverrides: { speedlimiter: { multiplier: 0, addend: 65535 } },
         critical: false, showPreview: false,
       },
     ],
@@ -926,9 +1810,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 4,
         rows: 8, cols: 8, dtype: 'uint8', le: true,
         factor: 0.4, offsetVal: 0, unit: '%',
-        stage1: { multiplier: 0 },
-        stage2: { multiplier: 0 },
-        stage3: { multiplier: 0 },
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: { egr: { multiplier: 0, clampMax: 0 } },
         critical: false, showPreview: false,
       },
     ],
@@ -1057,9 +1942,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 4,
         rows: 8, cols: 8, dtype: 'uint8', le: true,
         factor: 0.4, offsetVal: 0, unit: '%',
-        stage1: { multiplier: 0 },
-        stage2: { multiplier: 0 },
-        stage3: { multiplier: 0 },
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: { egr: { multiplier: 0, clampMax: 0 } },
         critical: false, showPreview: false,
       },
     ],
@@ -1130,9 +2016,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 2,
         rows: 8, cols: 8, dtype: 'uint8', le: true,
         factor: 0.4, offsetVal: 0, unit: '%',
-        stage1: { multiplier: 0 },
-        stage2: { multiplier: 0 },
-        stage3: { multiplier: 0 },
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: { egr: { multiplier: 0, clampMax: 0 } },
         critical: false, showPreview: false,
       },
     ],
@@ -1192,6 +2079,61 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage2: { multiplier: 1.28 },
         stage3: { multiplier: 1.40, clampMax: 65000 },
         critical: true, showPreview: true,
+      },
+      {
+        id: 'simos10_rev_limit',
+        name: 'RPM Hardcut Limiter',
+        category: 'limiter',
+        desc: 'Engine RPM hard-cut limiter for SIMOS10 (1.2 TSI CBZA/CBZB). Stock 1.2 TSI limit is 6000–6200 RPM. Modified engines with supporting hardware can safely rev to 6500 RPM. A2L symbol: nEngCutOff / nMaxCut / EngSpd_nMaxCut.',
+        a2lNames: ['nEngCutOff', 'nMaxCut', 'EngSpd_nMaxCut', 'nEngMax'],
+        signatures: [[0x6E,0x45,0x6E,0x67,0x43,0x75,0x74,0x4F,0x66,0x66], [0x6E,0x4D,0x61,0x78,0x43,0x75,0x74]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'RPM',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          launchcontrol: { multiplier: 0, addend: 3500, clampMax: 4000 },
+          revlimit: { addend: 400, clampMax: 7500 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'simos10_speed_limit',
+        name: 'Vehicle Speed Limiter',
+        category: 'limiter',
+        desc: 'Factory vehicle speed limit for SIMOS10. Stock VAG small car limit is typically 185–210 km/h. A2L symbol: VehSpd_vMaxLim / SpdLimMax.',
+        a2lNames: ['VehSpd_vMaxLim', 'SpdLimMax', 'VMAX'],
+        signatures: [[0x56,0x4D,0x41,0x58,0x00], [0x56,0x53,0x4C,0x49,0x4D,0x49,0x54]],
+        sigOffset: 1,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'km/h',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          speedlimiter: { multiplier: 0, addend: 65535 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'simos10_overboost_cut',
+        name: 'Overboost Protection Cut',
+        category: 'limiter',
+        desc: 'Boost pressure hardcut for SIMOS10 TSI. If charge pressure exceeds this threshold fuel is cut. Must be raised proportionally when the boost target is raised — failure causes random fuel cuts at peak boost that are commonly misdiagnosed. A2L symbol: pBoostMax / LimBoostPres / pSysMax.',
+        a2lNames: ['pBoostMax', 'LimBoostPres', 'pSysMax', 'pChargeMax'],
+        signatures: [[0x70,0x42,0x6F,0x6F,0x73,0x74,0x4D,0x61,0x78], [0x70,0x53,0x79,0x73,0x4D,0x61,0x78]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'mbar',
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.35, clampMax: 3000 },
+        addonOverrides: {
+          overboost: { multiplier: 1.5, clampMax: 4500 },
+        },
+        critical: false, showPreview: false,
       },
     ],
   },
@@ -1281,6 +2223,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // Tricore TC275/TC277/TC298 depending on sub-variant. MG1CS015/016/017 for Ford.
     // 0261S14xxx confirmed on Ford Focus 1.0 EcoBoost (e.g. 0261S14568).
     // MG1CS/MG1C3 may appear in calibration ID strings within the binary.
+    // ARCHITECTURE NOTE: MG1 (Ford) uses torque-first demand model — ECU targets TORQUE, not boost
+    // directly. Boost is a result of torque + airflow targets. COBB Focus RS guide confirms this.
+    // Ford MG1 has lower encryption than VAG MG1 (Revo confirmed) — accessible via bench protocol 1423.
+    // Focus RS Mk3 (2016-18) uses MG1CS017, NOT ME9 — this is commonly confused.
+    // Stock Focus RS: ~25.5 psi peak, tapering to ~21 psi at redline (COBB OTS map documentation).
+    // Overboost is TIMED: stock allows ~21 psi boost for 20 seconds at WOT, then reduces WG duty.
     identStrings: ['MG1CS', 'MG1C3', 'MG1CS015', 'MG1CS016', 'MG1CS017', '0261S14', '0261S15', '0261S12'],
     fileSizeRange: [1048576, 4194304],   // 1MB – 4MB (TC275/TC277 = 2–4MB)
     vehicles: ['Ford Focus RS Mk3 (2.3 EcoBoost)', 'Ford Fiesta ST200 (1.6 EcoBoost)', 'Ford Focus ST Mk3 (2.0 EcoBoost)', 'Ford Mustang 2.3 EcoBoost', 'Ford Focus 1.0 EcoBoost 125/140ps'],
@@ -1342,6 +2290,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { addend: 0 },
         stage2: { addend: 2 },
         stage3: { addend: 3, clampMax: 60 },
+        addonOverrides: {
+          popcorn: { addend: -20, clampMin: 0, lastNCols: 2 },
+        },
         critical: false, showPreview: true,
       },
       {
@@ -1356,6 +2307,46 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { addend: 300 },
         stage2: { addend: 500 },
         stage3: { addend: 600, clampMax: 7200 },
+        addonOverrides: {
+          launchcontrol: { multiplier: 0, addend: 3500, clampMax: 4500 },
+          revlimit: { addend: 400, clampMax: 7500 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'mg1_overboost_cut',
+        name: 'Overboost Protection Cut (pBoostMax)',
+        category: 'limiter',
+        desc: 'Maximum boost pressure before ECU fuel cut fires. MG1 EcoBoost units have a very conservative stock overboost limit — raised to match stage targets.',
+        a2lNames: ['pBoostMax', 'pSysMax', 'LimBoostPres', 'BoostCutPres', 'REVLIMBOOST'],
+        signatures: [[0x70,0x42,0x6F,0x6F,0x73,0x74,0x4D,0x61,0x78], [0x70,0x53,0x79,0x73,0x4D,0x61,0x78], [0x52,0x45,0x56,0x4C,0x49,0x4D,0x42,0x4F,0x4F,0x53,0x54]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'mbar',
+        stage1: { multiplier: 1.15, clampMax: 3000 },
+        stage2: { multiplier: 1.28, clampMax: 3500 },
+        stage3: { multiplier: 1.42, clampMax: 4500 },
+        addonOverrides: {
+          overboost: { multiplier: 1.5, clampMax: 4500 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'mg1_speed_limit',
+        name: 'Vehicle Speed Limiter (VMAX)',
+        category: 'limiter',
+        desc: 'Factory vehicle speed limiter. Set to maximum to remove the software speed cap.',
+        a2lNames: ['VMAX', 'VehicleSpeedMax', 'VFZGMAX', 'SpeedLimMax'],
+        signatures: [[0x56,0x4D,0x41,0x58,0x00], [0x56,0x46,0x5A,0x47,0x4D,0x41,0x58], [0x53,0x50,0x44,0x4C,0x49,0x4D,0x4D,0x41,0x58]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'km/h',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          speedlimiter: { multiplier: 0, addend: 65535 },
+        },
         critical: false, showPreview: false,
       },
     ],
@@ -1383,14 +2374,16 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'sim2k_boost_target',
         name: 'Boost Pressure Target',
         category: 'boost',
-        desc: 'Charge air pressure setpoint map. Primary Stage 1/2 mod on i30N / Stinger — significant headroom over stock boost targets.',
+        desc: 'Charge air pressure setpoint map (absolute manifold pressure). SIM2K-250/260 uses kPa absolute internally — typical stock i30N 2.0T peak ~220–240 kPa absolute (~18 psi boost gauge). Research: N75 MotorSports SIM2K-250 calibration confirms boost pressure raised significantly in Stage 1. Factor 0.1 kPa/raw → raw 2000 = 200 kPa = ~14.5 psi gauge at sea level. Primary Stage 1/2 modification. Must be adjusted alongside torque ceiling and injection maps.',
         signatures: [[0x42,0x4F,0x4F,0x53,0x54,0x53,0x4F,0x4C], [0x4C,0x44,0x53,0x50,0x53,0x4F,0x4C,0x4C]],
         sigOffset: 4,
         rows: 10, cols: 14, dtype: 'uint16', le: true,
-        factor: 0.001, offsetVal: 0, unit: 'bar',
+        // factor 0.1 kPa/raw: raw 1013 = 101.3 kPa (atmospheric), raw 2500 = 250 kPa = ~21.7 psi boost.
+        // clampMax 3500 = 350 kPa absolute = ~36 psi gauge (safe hardware ceiling for SIM2K turbo).
+        factor: 0.1, offsetVal: 0, unit: 'kPa',
         stage1: { multiplier: 1.18 },
         stage2: { multiplier: 1.32 },
-        stage3: { multiplier: 1.48, clampMax: 60000 },
+        stage3: { multiplier: 1.48, clampMax: 3500 },
         critical: true, showPreview: true,
       },
       {
@@ -1433,7 +2426,67 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { addend: 0 },
         stage2: { addend: 2 },
         stage3: { addend: 3, clampMax: 60 },
+        addonOverrides: {
+          popcorn: { addend: -20, clampMin: 0, lastNCols: 2 },
+        },
         critical: false, showPreview: true,
+      },
+      {
+        id: 'sim2k_rev_limit',
+        name: 'Rev Limiter (nEngMax)',
+        category: 'limiter',
+        desc: 'Engine RPM hard cut. i30N/Stinger stock limiter is conservatively set — small raise on Stage 2+ improves top-end delivery.',
+        // SIM2K uses Tricore TC17xx — symbol names in calibration region
+        // "nEngMax\0" confirmed in SIM2K-250 binary dumps via Tricore disassembly
+        a2lNames: ['nEngMax', 'nEngCutOff', 'nMaxCut', 'REVLIMIT', 'nAbschalten'],
+        signatures: [[0x6E,0x45,0x6E,0x67,0x4D,0x61,0x78,0x00], [0x6E,0x45,0x6E,0x67,0x43,0x75,0x74,0x4F,0x66,0x66], [0x52,0x45,0x56,0x4C,0x49,0x4D,0x49,0x54]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'RPM',
+        stage1: { multiplier: 1.0 },
+        stage2: { addend: 300 },
+        stage3: { addend: 500, clampMax: 7800 },
+        addonOverrides: {
+          launchcontrol: { multiplier: 0, addend: 4000, clampMax: 4500 },
+          revlimit: { addend: 400, clampMax: 7800 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'sim2k_overboost_cut',
+        name: 'Overboost Protection Cut (pBoostMax)',
+        category: 'limiter',
+        desc: 'Maximum charge air pressure before ECU triggers fuel cut. Raised to prevent false overboost cut when running stage boost targets on i30N / Stinger.',
+        a2lNames: ['pBoostMax', 'pSysMax', 'LimBoostPres', 'BoostCutPres', 'pMaxBoost'],
+        signatures: [[0x70,0x42,0x6F,0x6F,0x73,0x74,0x4D,0x61,0x78], [0x70,0x53,0x79,0x73,0x4D,0x61,0x78], [0x70,0x4D,0x61,0x78,0x42,0x6F,0x6F,0x73,0x74]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'mbar',
+        stage1: { multiplier: 1.15, clampMax: 3200 },
+        stage2: { multiplier: 1.28, clampMax: 3800 },
+        stage3: { multiplier: 1.42, clampMax: 4500 },
+        addonOverrides: {
+          overboost: { multiplier: 1.5, clampMax: 4500 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'sim2k_speed_limit',
+        name: 'Vehicle Speed Limiter (VMAX)',
+        category: 'limiter',
+        desc: 'Factory speed limiter. Kia/Hyundai stock limit is 250km/h electronically — set to maximum to remove the speed governor.',
+        a2lNames: ['VMAX', 'VehicleSpeedMax', 'VFZGMAX', 'vMaxSpdLim'],
+        signatures: [[0x56,0x4D,0x41,0x58,0x00], [0x56,0x46,0x5A,0x47,0x4D,0x41,0x58], [0x76,0x4D,0x61,0x78,0x53,0x70,0x64,0x4C,0x69,0x6D]],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'km/h',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          speedlimiter: { multiplier: 0, addend: 65535 },
+        },
+        critical: false, showPreview: false,
       },
     ],
   },
@@ -2664,7 +3717,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     checksumLength: 4,
     maps: [
       {
-        id: 'crd3_boost_target',
+        id: 'merc_crd3_boost_target',
         name: 'Boost Pressure Target',
         category: 'boost',
         desc: 'Charge air pressure setpoint for Mercedes CDI/CRD3. OM651 and OM654 both have significant headroom over stock boost calibrations.',
@@ -2678,7 +3731,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         critical: true, showPreview: true,
       },
       {
-        id: 'crd3_fuel_quantity',
+        id: 'merc_crd3_fuel_quantity',
         name: 'Injection Quantity Map',
         category: 'fuel',
         desc: 'Fuel injection quantity for Mercedes CDI. Increasing this raises torque — OM651 responds particularly well to fuelling increases.',
@@ -2692,7 +3745,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         critical: true, showPreview: true,
       },
       {
-        id: 'crd3_torque_limit',
+        id: 'merc_crd3_torque_limit',
         name: 'Torque Demand Limit',
         category: 'torque',
         desc: 'Software torque ceiling. Mercedes deliberately limits torque output via software — raising this unlocks significant hidden performance.',
@@ -3036,28 +4089,44 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Siemens MS43/MS45 (BMW M54)',
     manufacturer: 'Siemens/Continental',
     family: 'MS43',
-    // MS43/MS45 = BMW E46 (318i/320i/325i/330i) and E39 520i/525i/530i.
-    // MC9S12 / ST10F-series MCU. MS43 embeds calibration variant code ('MS43') and
-    // DAMOS-style symbol names — map locations findable via embedded ASCII strings.
+    // MS43/MS45 = BMW E46 (318i/320i/325i/330i) and E39 520i/525i/530i — M52TU/M54 engines.
+    // CPU: Infineon C167CR_SR at 24 MHz. 512KB flash. Software version MS430069 (latest).
+    // MS43 embeds calibration variant code ('MS43') and DAMOS-style symbol names.
+    // IMPORTANT DISTINCTION: BMW M3 E46 (S54 engine) uses Siemens MSS54 — completely different ECU.
+    // MS45 is the late M54 variant (2003+ E46 330i), NOT the M3. Do not confuse MS45 with MSS54/MSS54HP.
+    // CHECKSUM: CORRECTED — MS43 has 5 checksums total (NOT 13):
+    //   2× 32-bit addition checksums (verify _mon system monitoring parameter area)
+    //   3× CRC16 checksums (verify boot section, program section, and calibration section)
+    //   Correction order: addition checksums FIRST, then CRC16 (addition data lies inside CRC16 region).
+    //   Tools: MS4X Flasher (open-source, github.com/ms4x-net/ms4x_flasher), WinOLS+Ultimo,
+    //   BimmerEditor (bmweditor.com), RomRaider + ba114 XML (github.com/ba114/Siemens-MS43).
+    // Source: ms4x.net wiki; ba114/Siemens-MS43 GitHub; ms4x-net/ms4x_flasher.
     identStrings: ['MS43', 'MS45', 'MS41', 'MS42', 'MS43.1', 'MS45.1', 'SIEMENS'],
     fileSizeRange: [131072, 524288],   // 128KB–512KB flash
-    vehicles: ['BMW 318i/320i (E46 M52TU/N42)', 'BMW 325i/330i (E46 M54)', 'BMW 318i/320i/325i (E36 M52)', 'BMW 520i/525i/530i (E39 M54)', 'BMW Z3/Z4 2.5i/3.0i (M54)', 'BMW X5 3.0i (E53 M54)', 'BMW M3 (E46 S54 — MS45)'],
-    checksumAlgo: 'bosch-simple',
+    vehicles: ['BMW 318i/320i (E46 M52TU/N42)', 'BMW 325i/330i (E46 M54)', 'BMW 318i/320i/325i (E36 M52)', 'BMW 520i/525i/530i (E39 M54)', 'BMW Z3/Z4 2.5i/3.0i (M54)', 'BMW X5 3.0i (E53 M54)'],
+    checksumAlgo: 'unknown',   // 5 checksums (2× addition + 3× CRC16) — use MS4X Flasher (open-source) or WinOLS+Ultimo
     checksumOffset: 0x7FFF8,
     checksumLength: 4,
     maps: [
       {
         id: 'ms43_ignition',
-        name: 'Ignition Timing Map (KFZW)',
+        name: 'Ignition Timing Map (ip_igab__n__maf)',
         category: 'ignition',
-        desc: 'Primary ignition advance map (KFZW). BMW M52TU/M54 naturally-aspirated inline-6 responds well to timing advance on 98 RON — main Stage 1 NA modification.',
+        desc: 'Primary part/full-load ignition advance map (ip_igab__n__maf). BMW M52TU/M54 inline-6 responds well to timing advance on 98 RON — main Stage 1 NA modification. MS43 uses multiple ignition tables (part-load/WOT × VANOS active/inactive). CRITICAL: Load axis = mg/stroke (x×0.04239 expression) — NOT MAP or TPS. Stock load range: 0–1389 mg/stroke. Factor 0.75°/LSB, offset -48° (raw 0 = -48° BTDC). CORRECTED DIMENSIONS: 16 load cols × 20 RPM rows (was 16×16). Confirmed by ba114/Siemens-MS43 RomRaider XML (ip_igab__n__maf entry) and ms4x.net wiki community definitions. Stage 1 gains: advance 2–3° at mid-load on 98 RON.',
         signatures: [[0x4B,0x46,0x5A,0x57,0x00], [0x4B,0x46,0x5A,0x57,0x32,0x00]],
         sigOffset: 0,
-        rows: 16, cols: 12, dtype: 'int8', le: false,
+        // CORRECTED: rows:20, cols:16 — main map is 16 load columns × 20 RPM rows.
+        // Source: ba114/Siemens-MS43 ECU Definitions XML, ms4x.net ip_igab__n__maf entry.
+        // Idle ignition map (ip_igab_is__n__maf) is a separate smaller table: 12 cols × 16 rows.
+        // Our single map definition targets the main part/full-load table only.
+        rows: 20, cols: 16, dtype: 'int8', le: false,
         factor: 0.75, offsetVal: -48, unit: '°BTDC',
         stage1: { addend: 2 },
         stage2: { addend: 3 },
         stage3: { addend: 4, clampMax: 70 },
+        addonOverrides: {
+          popcorn: { addend: -20, clampMin: 0, lastNCols: 2 },
+        },
         critical: true, showPreview: true,
       },
       {
@@ -3086,13 +4155,37 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { addend: 300 },
         stage2: { addend: 500 },
         stage3: { addend: 700, clampMax: 8500 },
+        addonOverrides: {
+          launchcontrol: { multiplier: 0, addend: 3500, clampMax: 4000 },
+          revlimit: { addend: 400, clampMax: 7800 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'ms43_speed_limit',
+        name: 'Vehicle Speed Limiter',
+        category: 'limiter',
+        desc: 'Factory vehicle speed limit for BMW MS43 (M54 engine). Stock E46/E39/Z3/Z4 with M54 is limited to 250 km/h electronically. Symbol: VMAX / NMAXVMAX / VehSpd_vMaxLim. Removing allows access to the true aerodynamic top speed.',
+        signatures: [
+          [0x56,0x4D,0x41,0x58,0x00],                    // "VMAX\0"
+          [0x4E,0x4D,0x41,0x58,0x56,0x4D,0x41,0x58],    // "NMAXVMAX"
+        ],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'km/h',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          speedlimiter: { multiplier: 0, addend: 65535 },
+        },
         critical: false, showPreview: false,
       },
       {
         id: 'ms43_vanos',
-        name: 'VANOS Cam Timing Map',
+        name: 'VANOS Cam Timing Map (IP_CAM_SP)',
         category: 'misc',
-        desc: 'Variable camshaft timing advance map (KFVANOS). Optimising VANOS advance on M54 improves mid-range torque and top-end power.',
+        desc: 'VANOS camshaft timing setpoint maps (IP_CAM_SP_tco_1_IN/EX_IS/PL/FL). MS43 controls BOTH intake and exhaust VANOS with 6 condition-specific tables: idle speed (IS), part-load (PL) and full-load (FL) × intake (IN) and exhaust (EX). Full-load VANOS switches via MAF threshold (id_maf_fl_ivvt__n scalar) — NOT pedal position. Widening this threshold expands full-load VANOS authority for modified engines. Load axis: mg/stroke (same as ignition). CORRECTED: 6 maps total (not 8) — confirmed ms4x.net IP_CAM_SP symbol structure and ba114/Siemens-MS43 XML. Advancing VANOS on M54 improves mid-range torque and top-end power on 98 RON.',
         signatures: [[0x4B,0x46,0x56,0x41,0x4E,0x4F,0x53], [0x56,0x41,0x4E,0x4F,0x53,0x41,0x44,0x56]],
         sigOffset: 2,
         rows: 8, cols: 12, dtype: 'uint8', le: false,
@@ -3273,7 +4366,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     checksumLength: 0,
     maps: [
       {
-        id: 'crd3_boost_target',
+        id: 'delphi_crd3_boost_target',
         name: 'Boost Pressure Target',
         category: 'boost',
         desc: 'Desired boost pressure map. Opel 2.0 CDTi A20DTH responds well to boost — primary Stage 1/2 map on Insignia/Astra.',
@@ -3287,7 +4380,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         critical: true, showPreview: true,
       },
       {
-        id: 'crd3_fuel_quantity',
+        id: 'delphi_crd3_fuel_quantity',
         name: 'Injection Quantity Map',
         category: 'fuel',
         desc: 'Base fuel injection quantity. Raising this on the 2.0 CDTi significantly improves mid-range torque — key Stage 1/2 change.',
@@ -3301,7 +4394,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         critical: true, showPreview: true,
       },
       {
-        id: 'crd3_torque_limit',
+        id: 'delphi_crd3_torque_limit',
         name: 'Max Torque Limit',
         category: 'torque',
         desc: 'Software torque ceiling. Opel CDTi ECU limits torque aggressively from factory — raising this is essential for any meaningful Stage 1 result.',
@@ -3315,7 +4408,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         critical: true, showPreview: true,
       },
       {
-        id: 'crd3_egr',
+        id: 'delphi_crd3_egr',
         name: 'EGR Duty Cycle Map',
         category: 'emission',
         desc: 'EGR valve duty cycle. Reducing this on the 2.0 CDTi lowers intake temps and reduces carbon buildup in the intake manifold.',
@@ -3326,6 +4419,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { multiplier: 0.8 },
         stage2: { multiplier: 0.5 },
         stage3: { multiplier: 0, clampMax: 100 },
+        addonOverrides: { egr: { multiplier: 0, clampMax: 0 } },
         critical: false, showPreview: false,
       },
     ],
@@ -3706,6 +4800,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { addend: 20 },
         stage2: { addend: 40 },
         stage3: { addend: 60, clampMax: 280 },
+        addonOverrides: { speedlimiter: { multiplier: 0, addend: 65535 } },
         critical: false, showPreview: false,
       },
     ],
@@ -3783,6 +4878,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { multiplier: 0.8 },
         stage2: { multiplier: 0.5 },
         stage3: { multiplier: 0, clampMax: 100 },
+        addonOverrides: { egr: { multiplier: 0, clampMax: 0 } },
         critical: false, showPreview: false,
       },
     ],
@@ -3920,7 +5016,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         factor: 0.1, offsetVal: 0, unit: 'Nm',
         stage1: { multiplier: 1.18 },
         stage2: { multiplier: 1.28 },
-        stage3: { multiplier: 1.40, clampMax: 70000 },
+        stage3: { multiplier: 1.40, clampMax: 65000 },
         critical: true, showPreview: true,
       },
       {
@@ -3935,6 +5031,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { multiplier: 0.75 },
         stage2: { multiplier: 0.4 },
         stage3: { multiplier: 0, clampMax: 100 },
+        addonOverrides: { egr: { multiplier: 0, clampMax: 0 } },
         critical: false, showPreview: false,
       },
     ],
@@ -4142,7 +5239,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         factor: 0.1, offsetVal: 0, unit: 'Nm',
         stage1: { multiplier: 1.12 },
         stage2: { multiplier: 1.20 },
-        stage3: { multiplier: 1.30, clampMax: 80000 },
+        stage3: { multiplier: 1.30, clampMax: 65000 },
         critical: true, showPreview: true,
       },
     ],
@@ -4213,7 +5310,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         factor: 0.1, offsetVal: 0, unit: 'Nm',
         stage1: { multiplier: 1.18 },
         stage2: { multiplier: 1.28 },
-        stage3: { multiplier: 1.38, clampMax: 68000 },
+        stage3: { multiplier: 1.38, clampMax: 65000 },
         critical: true, showPreview: true,
       },
       {
@@ -4228,6 +5325,34 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { addend: 2 },
         stage2: { addend: 3 },
         stage3: { addend: 4, clampMax: 400 },
+        addonOverrides: {
+          popcorn: { addend: -150, clampMin: -400, lastNCols: 2 },
+        },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'simos11_rev_limit',
+        name: 'RPM Hardcut Limiter',
+        category: 'limiter',
+        // Stock Golf GTI 2.0 TSI CCZA/CCZB: ~7000 RPM; 1.4 TSI CAVD/CAXA: ~6800 RPM.
+        // A2L symbol consistent with SIMOS10/SIMOS18 family: nEngCutOff / nMaxCut.
+        // 1-cell uint16 LE, factor 1 (raw = RPM). Launch control 2-step at 4000 RPM.
+        desc: 'Engine RPM hard-cut limiter for SIMOS11.x (Golf GTI / Jetta / Passat TSI). Stock 2.0 TSI CCZA limit is ~7000 RPM; 1.4 TSI variants typically 6800 RPM. Raise in +200–400 RPM increments only — valve-float and rod-bearing limits apply. A2L symbol: nEngCutOff / nMaxCut / EngSpd_nMaxCut.',
+        a2lNames: ['nEngCutOff', 'nMaxCut', 'EngSpd_nMaxCut', 'nEngMax'],
+        signatures: [
+          [0x6E,0x45,0x6E,0x67,0x43,0x75,0x74,0x4F,0x66,0x66], // "nEngCutOff"
+          [0x6E,0x4D,0x61,0x78,0x43,0x75,0x74],                 // "nMaxCut"
+        ],
+        sigOffset: 2,
+        rows: 1, cols: 1, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'RPM',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        addonOverrides: {
+          launchcontrol: { multiplier: 0, addend: 4000, clampMax: 4500 },  // 2-step at 4000 RPM
+          revlimit: { addend: 400, clampMax: 8000 },                        // +400 RPM, 8000 hard ceiling
+        },
         critical: false, showPreview: false,
       },
     ],
@@ -4249,37 +5374,95 @@ export const ADDONS: AddonDef[] = [
   {
     id: 'popbang',
     name: 'Pop & Bang',
-    desc: 'Crackle and pops on overrun / lift-off. Delays ignition cut on deceleration to push unburnt fuel into hot exhaust.',
-    mapTargets: [],
-    warning: 'Not recommended for catalytic converter longevity.',
+    desc: 'Petrol only. Crackle and pops on overrun / lift-off (throttle closed, decelerating). Works by retarding ignition timing during overrun so unburnt fuel ignites in the exhaust. Sets CWSAWE=1, retards KFZWOP to −20° after TDC, and extends KFTVSA fuel cutoff delay. Cannot be combined with Popcorn Limiter (which fires at the rev limit on full throttle) — select one or the other.',
+    mapTargets: ['me7_kfzwop', 'me7_kfzwmn', 'me7_cwsawe', 'me7_kftvsa'],
+    compatEcus: ['me7'],  // confirmed ME7.5 symbols; MED17 requires code-level intervention (not map-only)
+    warning: 'Not compatible with intact catalytic converters — will overheat and destroy cat. Decat required for aggressive settings.',
   },
   {
     id: 'dpf',
     name: 'DPF Off',
     desc: 'Software DPF removal. Zeroes regeneration thresholds and disables forced regen cycles. Requires physical DPF removal.',
-    mapTargets: ['edc17_dpf_regen'],
-    compatEcus: ['edc16', 'edc17', 'dcm35', 'dcm61', 'ems3120', 'pcr21'],
+    // compatEcus limited to ECUs with actual DPF regen map signatures.
+    // DCM35/DCM61/EMS3120/PCR21 have DPF hardware but signatures are not yet mapped.
+    mapTargets: ['edc16_dpf_regen', 'edc17_dpf_regen'],
+    compatEcus: ['edc16', 'edc17'],
     warning: 'Illegal on public roads in most jurisdictions. Off-road / track use only.',
   },
   {
     id: 'egr',
     name: 'EGR Delete',
     desc: 'EGR flow zeroed in software. Reduces intake carbon buildup, lowers intake temps, improves throttle response.',
-    mapTargets: ['med17_egr_duty', 'edc17_egr_map'],
+    mapTargets: [
+      'edc15_egr_map', 'edc16_egr_map', 'edc17_egr_map', 'med17_egr_duty',
+      'dcm35_egr', 'ems3120_egr', 'pcr21_egr',
+      'delphi_crd3_egr', 'sid803_egr', 'ppd1_egr',
+    ],
     warning: 'May trigger emissions fault codes without a physical EGR blank.',
   },
   {
     id: 'launchcontrol',
     name: 'Launch Control',
-    desc: 'Set-RPM flat-foot launches. Holds RPM at target launch RPM while building boost before release.',
-    mapTargets: [],
-    warning: 'Increases drivetrain stress. Not recommended for stock clutch on Stage 2+.',
+    desc: 'Set-RPM flat-foot launches. Holds RPM at 2-step target while building boost before release. Sets the rev limiter to a fixed 2-step RPM (diesel: 3500 RPM, turbo petrol: 3500–4000 RPM) via fuel cut while throttle is floored.',
+    mapTargets: [
+      'edc15_rev_limit', 'edc16_rev_limit', 'edc17_rev_limit',
+      'simos18_rev_limit', 'simos10_rev_limit', 'simos11_rev_limit', 'sim2k_rev_limit',
+      'me7_rev_limit', 'ms43_rev_limit', 'me9_rev_limiter',
+      'mg1_rev_limit', 'med17_rev_limit',
+    ],
+    warning: 'Increases drivetrain stress significantly. Not recommended for stock clutch on Stage 2+. Full launch control requires additional clutch switch or brake input wiring.',
+  },
+  {
+    id: 'revlimit',
+    name: 'Rev Limiter Raise',
+    desc: 'Raises the engine RPM hard-cut limiter. Diesel engines: +300 RPM to allow full use of the power band post-tune. Petrol/turbo petrol: +400–500 RPM for improved top-end delivery. Launch control and track use. Does not affect 2-step launch control RPM (set separately).',
+    mapTargets: [
+      'edc15_rev_limit', 'edc16_rev_limit', 'edc17_rev_limit',
+      'simos18_rev_limit', 'simos10_rev_limit', 'simos11_rev_limit', 'sim2k_rev_limit',
+      'me7_rev_limit', 'ms43_rev_limit', 'me9_rev_limiter',
+      'med17_rev_limit', 'mg1_rev_limit',
+    ],
+    warning: 'Do not exceed engine mechanical limits or valve-float RPM. Consult your engine builder on modified builds.',
+  },
+  {
+    id: 'overboost',
+    name: 'Overboost Protection Raise',
+    desc: 'Raises the boost pressure fuel-cut threshold (pBoostMax / LDRMAX). The standard tune already raises this proportionally with stage — this option adds extra headroom for aggressive setups, high-altitude driving, or when running elevated boost beyond the standard stage map.',
+    mapTargets: [
+      'edc15_overboost_cut', 'edc16_overboost_cut', 'edc17_overboost_cut',
+      'simos18_overboost_cut', 'simos10_overboost_cut', 'sim2k_overboost_cut',
+      'me7_overboost_cut', 'med17_overboost_cut', 'me9_overboost_cut', 'mg1_overboost_cut',
+    ],
+    warning: 'Do not raise beyond safe turbocharger and intercooler limits. Monitor boost pressure on a data logger before increasing further.',
+  },
+  {
+    id: 'popcorn',
+    name: 'Popcorn Limiter',
+    desc: 'Petrol and diesel. Aggressive hardcut fuel cut at the rev limit — RPM bounces rapidly off the limiter creating a sharp, rhythmic machine-gun popping sound at the top of the rev range. '
+      + 'Diesel: the effect comes from the ECU\'s hardcut fuel cut at NMAX. No additional map changes are made — the hardcut is already the mechanism. '
+      + 'Petrol: hardcut at the rev limit is combined with ignition retard in the 2 highest RPM cells, creating more aggressive and frequent pops. '
+      + 'Cannot be combined with Pop & Bang (select one or the other).',
+    mapTargets: [
+      // Petrol — ignition retard at top RPM cells amplifies the hardcut pops
+      'me7_kfzw', 'me7_kfzwmn',
+      'med17_ign_timing', 'mg1_ignition', 'sim2k_ignition',
+      'ms43_ignition', 'simos11_ignition',
+      // Diesel — hardcut at NMAX is the sole mechanism (no ignition maps); listed for tuner visibility
+      'edc15_rev_limit', 'edc16_rev_limit', 'edc17_rev_limit',
+    ],
+    warning: 'Petrol: retards ignition ~15° in high-RPM cells — do not use with stock catalytic converters (risk of overheating). Decat or sports cat required. Diesel: effect is natural to the hardcut rev limiter — no additional risk beyond standard rev limit raise.',
   },
   {
     id: 'speedlimiter',
     name: 'Speed Limiter Off',
     desc: 'Factory speed limiter removed. Maximum speed cap set to maximum allowable value.',
-    mapTargets: ['med17_speed_limit'],
+    mapTargets: [
+      'edc15_speed_limit', 'edc16_speed_limit', 'edc17_speed_limit', 'med17_speed_limit',
+      'me7_speed_limit', 'me9_speed_limit', 'ms43_speed_limit',
+      'simos18_speed_limit', 'simos10_speed_limit',
+      'mg1_speed_limit', 'sim2k_speed_limit',
+      'scania_speed_limit', 'dcm34_speed_limit',
+    ],
     warning: 'For track days and private roads only.',
   },
   {
