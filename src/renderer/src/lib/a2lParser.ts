@@ -239,9 +239,17 @@ export function parseA2L(content: string): A2LParseResult {
     warnings.push(`File truncated to 40MB for performance (${(content.length / 1_000_000).toFixed(1)}MB total)`)
   }
 
-  // Extract ECU name from PROJECT
-  const projMatch = parseContent.match(/\/begin PROJECT\s+(\S+)/)
-  const ecuName = projMatch ? projMatch[1] : 'Unknown'
+  // Extract ECU name from PROJECT — prefer the quoted description over the bare identifier
+  // because many Bosch A2Ls use a short code as the identifier (e.g. "X447") while
+  // the description holds the useful family string (e.g. "EDC16U34").
+  // Also check the MODULE name as a third fallback.
+  const projMatch = parseContent.match(/\/begin PROJECT\s+(\S+)\s+"([^"]*)"/)
+  const projId    = projMatch ? projMatch[1] : ''
+  const projDesc  = projMatch ? projMatch[2] : ''
+  const modMatch  = parseContent.match(/\/begin MODULE\s+(\S+)/)
+  const modName   = modMatch ? modMatch[1] : ''
+  // Build a combined name string so guessEcuFamily can search it
+  const ecuName = [projDesc, projId, modName].filter(Boolean).join(' ') || 'Unknown'
 
   // Parse COMPU_METHODs
   const compuMethods = new Map<string, A2LCompuMethod>()
