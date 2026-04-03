@@ -45,7 +45,7 @@ function pickBestBaseAddress(buffer: ArrayBuffer, result: A2LParseResult): numbe
   const minAddr = addrs.length > 0 ? Math.min(...addrs) : preferred
   const derivedBase = minAddr & 0xFFFF0000
 
-  const candidates = [...new Set([preferred, 0x80000000, 0x00000000, 0x80800000, derivedBase])]
+  const candidates = [...new Set([preferred, 0x80000000, 0x00000000, 0x80800000, 0xC0000000, 0xFFE00000, 0x00200000, derivedBase])]
 
   let bestBase = preferred
   let bestScore = -1

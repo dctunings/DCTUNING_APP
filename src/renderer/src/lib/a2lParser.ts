@@ -64,7 +64,7 @@ export const ECU_BASE_ADDRESSES: Record<string, number> = {
   'ME7': 0x00000000,
   'ME9': 0x80000000,
   'MED9': 0x80000000,
-  'EDC16': 0x80000000,
+  'EDC16': 0x00000000,  // MPC5565 PowerPC — flash is 0-based (0x00000000–0x001FFFFF)
   'EDC15': 0x00000000,
   'MEVD17': 0x80000000,
 }
@@ -269,9 +269,11 @@ export function parseA2L(content: string): A2LParseResult {
 }
 
 // BUG FIX D1 (part 1): derive endianness from ECU family so validateA2LMapsInBinary
-// reads bytes in the correct order. Big-endian ECUs (Motorola 68K / SH-series):
-// ME7, EDC15, SID*, some Marelli. All TriCore-based ECUs (EDC16/17, MED17, SIMOS, ME9…) are LE.
-const BIG_ENDIAN_FAMILIES = new Set(['ME7', 'EDC15', 'SID208', 'SID807', 'SID310'])
+// reads bytes in the correct order.
+// Big-endian ECUs: Motorola 68K (ME7), SH-series (EDC15), NEC (SID*), PowerPC (EDC16 MPC5565).
+// Little-endian ECUs: TriCore (EDC17, MED17, SIMOS, ME9, MEVD17) and x86.
+// NOTE: EDC16 uses MPC5565 (PowerPC) which is big-endian — NOT TriCore.
+const BIG_ENDIAN_FAMILIES = new Set(['ME7', 'EDC15', 'EDC16', 'SID208', 'SID807', 'SID310'])
 
 export function extractMapsFromA2L(result: A2LParseResult, baseAddress: number): A2LMapDef[] {
   const maps: A2LMapDef[] = []
@@ -404,9 +406,9 @@ export function detectBaseAddress(result: A2LParseResult): number {
   const minAddr = Math.min(...addrs)
   const maxAddr = Math.max(...addrs)
 
-  // Old-architecture ECUs (Motorola 68K / SH-series: ME7, EDC15, MS4x, older Marelli)
-  // have flash mapped at 0x00000000. Their addresses are all below 16 MB.
-  // TriCore ECUs (EDC16/17, MED17, SIMOS, ME9) use 0x80000000+ address space.
+  // Old-architecture ECUs (Motorola 68K / SH-series / PowerPC: ME7, EDC15, EDC16, MS4x, older Marelli)
+  // have flash mapped at 0x00000000. Their A2L addresses are all below 16 MB.
+  // TriCore ECUs (EDC17, MED17, SIMOS, ME9) use 0x80000000+ address space.
   // Rounding minAddr to a 64KB boundary gives the wrong result for old-arch ECUs
   // whose lowest map address may be e.g. 0x00018000 → rounds to 0x00010000 ≠ 0.
   if (maxAddr < 0x01000000) return 0x00000000  // old arch: base address is always 0
