@@ -60,7 +60,7 @@ function createWindow(): void {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
     },
-    title: 'DCTuning Desktop v1.0'
+    title: 'DCTuning'
   })
 
   mainWindow.on('ready-to-show', () => {

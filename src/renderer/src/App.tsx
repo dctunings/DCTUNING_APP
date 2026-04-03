@@ -98,7 +98,7 @@ export default function App() {
   const [activeVehicle, setActiveVehicle] = useState<ActiveVehicle | null>(null)
   const [ecuFile, setEcuFile] = useState<EcuFileState | null>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
-  const { user, loading: authLoading, signIn, signUp, signOut } = useAuth()
+  const { user, loading: authLoading, signIn, signUp, signOut, resetPassword } = useAuth()
 
   const {
     subscription,
@@ -187,6 +187,7 @@ export default function App() {
             return err
           }}
           signUp={signUp}
+          resetPassword={resetPassword}
         />
       )
     }
@@ -207,6 +208,7 @@ export default function App() {
       <LoginScreen
         signIn={signIn}
         signUp={signUp}
+        resetPassword={resetPassword}
       />
     )
   }

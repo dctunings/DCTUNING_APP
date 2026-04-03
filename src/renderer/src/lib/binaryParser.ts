@@ -254,11 +254,15 @@ export function validateA2LMapsInBinary(
     }
 
     // Sample up to 16 values spread across the map
+    // BUG FIX D1: use map.le (set by extractMapsFromA2L from the ECU family) instead of
+    // hardcoded true. ME7/EDC15/SID are big-endian — reading them as LE produces garbage
+    // values that fail range checks, causing correct addresses to be marked 'invalid'.
+    const mapLE = map.le ?? true  // default LE for unknown/TriCore families
     const total = map.rows * map.cols
     const stride = Math.max(1, Math.floor(total / 16))
     const sampleValues: number[] = []
     for (let i = 0; i < total; i += stride) {
-      const raw = readVal(view, map.fileOffset + i * elSize, dtype, true) // default LE
+      const raw = readVal(view, map.fileOffset + i * elSize, dtype, mapLE)
       sampleValues.push(raw * map.factor + map.physicalOffset)
     }
 
@@ -270,12 +274,20 @@ export function validateA2LMapsInBinary(
     const allZero = sampleValues.every(v => Math.abs(v) < 0.0001)
 
     // Fraction of samples within the declared physical range (±15% tolerance)
+    // BUG FIX D3: when min=0 and max=0 (undeclared range in A2L), skip range check entirely
+    // rather than letting everything within ±1 of zero score as valid.
     const rangeSpan = map.max - map.min
-    const tol = rangeSpan > 0 ? rangeSpan * 0.15 : Math.abs(map.max) * 0.15 + 1
-    const inRangeCount = sampleValues.filter(
-      v => v >= map.min - tol && v <= map.max + tol
-    ).length
-    const confidence = sampleValues.length > 0 ? inRangeCount / sampleValues.length : 0
+    let confidence = 0
+    if (rangeSpan === 0 && map.min === 0 && map.max === 0) {
+      // No range declared — mark uncertain, don't try to validate
+      confidence = 0.5
+    } else {
+      const tol = rangeSpan > 0 ? rangeSpan * 0.15 : Math.abs(map.max) * 0.15 + Math.abs(map.min) * 0.15 + 1
+      const inRangeCount = sampleValues.filter(
+        v => v >= map.min - tol && v <= map.max + tol
+      ).length
+      confidence = sampleValues.length > 0 ? inRangeCount / sampleValues.length : 0
+    }
 
     // Extract 12-byte signature immediately before the map
     const sigStart = Math.max(0, map.fileOffset - 12)

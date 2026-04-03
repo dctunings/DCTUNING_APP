@@ -27,21 +27,28 @@
     "@electron-toolkit/tsconfig": "^2.0.0",
     "@electron-toolkit/utils": "^4.0.0",
     "@supabase/supabase-js": "^2.0.0",
+    "fflate": "^0.8.2",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "serialport": "^12.0.0"
   },
   "build": {
     "appId": "ie.dctuning.desktop",
-    "productName": "DCTuning Desktop",
+    "productName": "DCTuning",
     "win": {
       "target": "nsis",
       "icon": "resources/icon.ico",
       "requestedExecutionLevel": "requireAdministrator"
     },
     "extraResources": [
-      { "from": "resources/j2534helper.exe", "to": "j2534helper.exe" },
-      { "from": "resources/drivers", "to": "drivers" }
+      {
+        "from": "resources/j2534helper.exe",
+        "to": "j2534helper.exe"
+      },
+      {
+        "from": "resources/drivers",
+        "to": "drivers"
+      }
     ],
     "directories": {
       "output": "release"

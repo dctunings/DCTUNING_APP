@@ -15,6 +15,7 @@ export interface MapChange {
   avgChangePct: number
   maxChangePct: number
   found: boolean
+  skippedUniform: boolean  // true = map read all-same values → wrong address or erased flash → write blocked
 }
 
 export interface RemapResult {
@@ -30,6 +31,7 @@ export interface RemapResult {
     torqueChangePct: number
     mapsModified: number
     mapsNotFound: number
+    mapsBlockedUniform: number  // maps with uniform reads that were NOT written (safety gate)
   }
 }
 
@@ -99,6 +101,22 @@ function calcChangePct(before: number[][], after: number[][]): { avg: number; ma
   return { avg: count > 0 ? totalPct / count : 0, max: maxPct }
 }
 
+// ─── Uniform-map detector ─────────────────────────────────────────────────────
+// A map whose raw values are all identical is almost certainly a wrong-address
+// read (erased 0xFF flash, zeroed region, or signature false-positive).
+// Real boost/torque/fuel maps always vary across the RPM×load grid.
+// The check matches the UI heatmap warning in RemapBuilder.tsx: mapRange < 0.5.
+const POSITIVE_CATEGORIES = new Set(['boost', 'fuel', 'torque', 'limiter', 'emission', 'smoke'])
+
+function isUniformMap(rawData: number[][], category: string): boolean {
+  if (!POSITIVE_CATEGORIES.has(category)) return false  // ignition/misc: don't block
+  const allVals = rawData.flatMap(r => r)
+  if (allVals.length <= 4) return false                 // too small to judge
+  const mn = Math.min(...allVals)
+  const mx = Math.max(...allVals)
+  return (mx - mn) < 0.5                               // flat to within half a raw unit
+}
+
 // ─── Main remap function ──────────────────────────────────────────────────────
 export function buildRemap(
   buffer: ArrayBuffer,
@@ -129,7 +147,12 @@ export function buildRemap(
       })
     )
 
-    if (!isIdentity && found) {
+    // Safety gate: never write a map whose raw data is uniform (all identical values).
+    // Uniform reads mean the address is wrong — erased flash (0xFF), zeroed region, or
+    // a signature collision. Writing staged values into these bytes would corrupt the ECU file.
+    const uniform = found && isUniformMap(rawData, mapDef.category)
+
+    if (!isIdentity && found && !uniform) {
       workingBuffer = writeMap(workingBuffer, extracted, newRaw)
     }
 
@@ -138,6 +161,7 @@ export function buildRemap(
       mapDef, before: physBefore, after: physAfter,
       beforeRaw: rawData, afterRaw: newRaw,
       avgChangePct: avg, maxChangePct: max, found,
+      skippedUniform: uniform,
     })
   }
 
@@ -150,8 +174,9 @@ export function buildRemap(
   const boostChange = avgCat('boost')
   const fuelChange = avgCat('fuel')
   const torqueChange = avgCat('torque')
-  const mapsModified = changes.filter(c => c.avgChangePct > 0 && c.found).length
+  const mapsModified = changes.filter(c => c.avgChangePct > 0 && c.found && !c.skippedUniform).length
   const mapsNotFound = changes.filter(c => !c.found && c.mapDef.critical).length
+  const mapsBlockedUniform = changes.filter(c => c.skippedUniform).length
 
   return {
     ecuDef, stage, addons, changes,
@@ -163,6 +188,7 @@ export function buildRemap(
       torqueChangePct: torqueChange,
       mapsModified,
       mapsNotFound,
+      mapsBlockedUniform,
     },
   }
 }

@@ -5,6 +5,7 @@ import heroBg from '../../public/hero-big.jpg'
 interface Props {
   signIn: (email: string, password: string) => Promise<string | null>
   signUp: (email: string, password: string, name: string) => Promise<string | null>
+  resetPassword: (email: string) => Promise<string | null>
 }
 
 const features = [
@@ -14,8 +15,8 @@ const features = [
   { icon: '🔍', label: 'VIN Decoder & ECU Scanner' },
 ]
 
-export default function LoginScreen({ signIn, signUp }: Props) {
-  const [mode, setMode] = useState<'login' | 'signup'>('login')
+export default function LoginScreen({ signIn, signUp, resetPassword }: Props) {
+  const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
@@ -24,6 +25,15 @@ export default function LoginScreen({ signIn, signUp }: Props) {
   const [success, setSuccess] = useState('')
 
   const handleSubmit = async () => {
+    if (mode === 'forgot') {
+      if (!email) { setError('Please enter your email address'); return }
+      setError(''); setSuccess(''); setLoading(true)
+      const err = await resetPassword(email)
+      if (err) { setError(err) }
+      else { setSuccess('Reset link sent — check your email inbox.') }
+      setLoading(false)
+      return
+    }
     if (!email || !password) { setError('Email and password required'); return }
     if (mode === 'signup' && !name) { setError('Name required'); return }
     setError(''); setSuccess(''); setLoading(true)
@@ -119,7 +129,7 @@ export default function LoginScreen({ signIn, signUp }: Props) {
 
           {/* Version badge */}
           <div style={{ marginTop: 36, fontSize: 11, color: 'rgba(255,255,255,.25)', fontWeight: 600, letterSpacing: '0.5px' }}>
-            DCTuning Desktop · v{__APP_VERSION__} · Ireland
+            DCTuning · v{__APP_VERSION__} · Ireland
           </div>
         </div>
       </div>
@@ -158,10 +168,10 @@ export default function LoginScreen({ signIn, signUp }: Props) {
               <img src={logoUrl} alt="DCTuning" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             </div>
             <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-0.4px', marginBottom: 3 }}>
-              {mode === 'login' ? 'Welcome back' : 'Create account'}
+              {mode === 'login' ? 'Welcome back' : mode === 'signup' ? 'Create account' : 'Reset password'}
             </div>
             <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,.38)', fontWeight: 500 }}>
-              {mode === 'login' ? 'Sign in to your DCTuning account' : 'Get started with DCTuning Ireland'}
+              {mode === 'login' ? 'Sign in to your DCTuning account' : mode === 'signup' ? 'Get started with DCTuning Ireland' : 'We\'ll email you a reset link'}
             </div>
           </div>
 
@@ -178,10 +188,25 @@ export default function LoginScreen({ signIn, signUp }: Props) {
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" onKeyDown={e => e.key === 'Enter' && handleSubmit()} style={inputStyle} onFocus={focusIn} onBlur={focusOut} />
           </div>
 
-          <div style={{ marginBottom: 22 }}>
-            <label style={labelStyle}>Password</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} onKeyDown={e => e.key === 'Enter' && handleSubmit()} style={inputStyle} onFocus={focusIn} onBlur={focusOut} />
-          </div>
+          {mode !== 'forgot' && (
+            <div style={{ marginBottom: 8 }}>
+              <label style={labelStyle}>Password</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} onKeyDown={e => e.key === 'Enter' && handleSubmit()} style={inputStyle} onFocus={focusIn} onBlur={focusOut} />
+            </div>
+          )}
+
+          {mode === 'login' && (
+            <div style={{ marginBottom: 18, textAlign: 'right' }}>
+              <span
+                onClick={() => { setMode('forgot'); setError(''); setSuccess('') }}
+                style={{ fontSize: 12, color: 'rgba(0,174,200,.7)', cursor: 'pointer', fontWeight: 600 }}
+              >
+                Forgot password?
+              </span>
+            </div>
+          )}
+
+          {mode !== 'login' && mode !== 'forgot' && <div style={{ marginBottom: 14 }} />}
 
           {error && (
             <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.3)', borderRadius: 8, fontSize: 13, color: '#fca5a5' }}>⚠ {error}</div>
@@ -202,14 +227,16 @@ export default function LoginScreen({ signIn, signUp }: Props) {
               transition: 'all .2s',
             }}
           >
-            {loading ? '⏳ Please wait...' : mode === 'login' ? '→  Sign In' : '→  Create Account'}
+            {loading ? '⏳ Please wait...' : mode === 'login' ? '→  Sign In' : mode === 'signup' ? '→  Create Account' : '→  Send Reset Link'}
           </button>
 
           <div style={{ marginTop: 20, textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,.35)' }}>
             {mode === 'login' ? (
-              <>No account?{' '}<span onClick={() => { setMode('signup'); setError('') }} style={{ color: '#00aec8', cursor: 'pointer', fontWeight: 700 }}>Create one free</span></>
+              <>No account?{' '}<span onClick={() => { setMode('signup'); setError(''); setSuccess('') }} style={{ color: '#00aec8', cursor: 'pointer', fontWeight: 700 }}>Create one free</span></>
+            ) : mode === 'signup' ? (
+              <>Already have an account?{' '}<span onClick={() => { setMode('login'); setError(''); setSuccess('') }} style={{ color: '#00aec8', cursor: 'pointer', fontWeight: 700 }}>Sign in</span></>
             ) : (
-              <>Already have an account?{' '}<span onClick={() => { setMode('login'); setError('') }} style={{ color: '#00aec8', cursor: 'pointer', fontWeight: 700 }}>Sign in</span></>
+              <><span onClick={() => { setMode('login'); setError(''); setSuccess('') }} style={{ color: '#00aec8', cursor: 'pointer', fontWeight: 700 }}>← Back to Sign In</span></>
             )}
           </div>
 

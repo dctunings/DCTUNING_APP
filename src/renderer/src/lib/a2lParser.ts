@@ -47,6 +47,7 @@ export interface A2LMapDef {
   rows: number
   cols: number
   dataType: 'uint8' | 'int8' | 'uint16' | 'int16' | 'float32'
+  le: boolean            // endianness — false = big-endian (ME7/EDC15/SID), true = little-endian (TriCore)
   factor: number
   physicalOffset: number
   min: number
@@ -86,13 +87,15 @@ function extractBlocks(content: string, tag: string): string[] {
 }
 
 // Tokenise a block (handles quoted strings as single tokens)
+// BUG FIX E2: regex now matches // line comments so they are consumed and skipped,
+// preventing the comment text from being parsed as data tokens (address shift bug).
 function tokenise(block: string): string[] {
   const tokens: string[] = []
-  const re = /"[^"]*"|\/\*[\s\S]*?\*\/|[^\s]+/g
+  const re = /"[^"]*"|\/\*[\s\S]*?\*\/|\/\/[^\n]*|[^\s]+/g
   let m: RegExpExecArray | null
   while ((m = re.exec(block)) !== null) {
     const t = m[0]
-    if (t.startsWith('/*')) continue // skip comments
+    if (t.startsWith('/*') || t.startsWith('//')) continue // skip block and line comments
     tokens.push(t)
   }
   return tokens
@@ -127,8 +130,14 @@ function parseCharacteristic(block: string): A2LCharacteristic | null {
     if (typeStr !== 'VALUE' && typeStr !== 'CURVE' && typeStr !== 'MAP') return null
     const type = typeStr as 'VALUE' | 'CURVE' | 'MAP'
     const addrStr = tokens[i++] ?? '0'
-    const address = parseInt(addrStr, 16)
-    if (isNaN(address)) return null
+    // BUG FIX B3: A2L addresses may be decimal (older Delphi/Marelli/non-Bosch tools)
+    // or hex with 0x prefix (Bosch, Continental, standard ASAP2).
+    // Always parsing as base-16 silently mangles decimal addresses (e.g. 134217728 → 0x8000000 is
+    // coincidentally correct, but 135790616 → wrong). Check for the 0x prefix first.
+    const address = /^0x/i.test(addrStr)
+      ? parseInt(addrStr, 16)
+      : parseInt(addrStr, 10)
+    if (isNaN(address) || address === 0) return null
     const recordLayout = tokens[i++] ?? ''
     i++ // skip maxDiff
     const conversionMethod = tokens[i++] ?? ''
@@ -259,8 +268,17 @@ export function parseA2L(content: string): A2LParseResult {
   return { ecuName, characteristics, compuMethods, totalMaps, totalCurves, totalValues, warnings }
 }
 
+// BUG FIX D1 (part 1): derive endianness from ECU family so validateA2LMapsInBinary
+// reads bytes in the correct order. Big-endian ECUs (Motorola 68K / SH-series):
+// ME7, EDC15, SID*, some Marelli. All TriCore-based ECUs (EDC16/17, MED17, SIMOS, ME9…) are LE.
+const BIG_ENDIAN_FAMILIES = new Set(['ME7', 'EDC15', 'SID208', 'SID807', 'SID310'])
+
 export function extractMapsFromA2L(result: A2LParseResult, baseAddress: number): A2LMapDef[] {
   const maps: A2LMapDef[] = []
+
+  // Determine endianness for this A2L file
+  const family = guessEcuFamily(result)
+  const isLE = !BIG_ENDIAN_FAMILIES.has(family)  // default LE for unknown / TriCore families
 
   for (const ch of result.characteristics) {
     if (ch.type === 'VALUE') continue
@@ -311,6 +329,7 @@ export function extractMapsFromA2L(result: A2LParseResult, baseAddress: number):
       rows,
       cols,
       dataType,
+      le: isLE,
       factor,
       physicalOffset,
       min: ch.lowerLimit,
@@ -343,10 +362,19 @@ export function guessEcuFamily(result: A2LParseResult): string {
   const names = new Set(result.characteristics.map(c => c.name))
   let med17Score = 0, edc17Score = 0, me7Score = 0
   if (names.has('KFMIRL')) med17Score += 3
-  if (names.has('KFZW')) { med17Score += 2; me7Score += 2 }
+  if (names.has('KFZW'))  { med17Score += 1; me7Score += 2 }  // shared, weighted toward ME7
   if (names.has('KFPED')) med17Score += 2
   if (names.has('KFLDRL')) edc17Score += 3
-  if (names.has('LDRXN')) me7Score += 3
+  // ME7-specific map names (Bosch Motronic ME7.x)
+  if (names.has('LDRXN'))  me7Score += 3  // boost pressure setpoint — ME7 only
+  if (names.has('KFTWUP')) me7Score += 2  // warm-up enrichment — ME7/ME9 only
+  if (names.has('KFURL'))  me7Score += 2  // lambda control — ME7 specific name
+  if (names.has('MLHFM'))  me7Score += 2  // HFM air mass characteristic — ME7
+  if (names.has('CWKOS'))  me7Score += 2  // knock sensor config word — ME7
+  if (names.has('KFNWN'))  me7Score += 2  // injector correction — ME7
+  if (names.has('LDRPR'))  me7Score += 2  // boost pressure ref map — ME7
+  if (names.has('KFZW2'))  me7Score += 2  // secondary ignition map — ME7.5
+  if (names.has('KFMIOP')) me7Score += 2  // injection map — ME7
 
   if (me7Score > med17Score && me7Score > edc17Score) return 'ME7'
   if (edc17Score > med17Score) return 'EDC17'
@@ -374,6 +402,14 @@ export function detectBaseAddress(result: A2LParseResult): number {
   if (addrs.length === 0) return 0x80000000  // safe fallback for Bosch TriCore
 
   const minAddr = Math.min(...addrs)
-  return minAddr & 0xFFFF0000  // round down to 64KB boundary
+  const maxAddr = Math.max(...addrs)
+
+  // Old-architecture ECUs (Motorola 68K / SH-series: ME7, EDC15, MS4x, older Marelli)
+  // have flash mapped at 0x00000000. Their addresses are all below 16 MB.
+  // TriCore ECUs (EDC16/17, MED17, SIMOS, ME9) use 0x80000000+ address space.
+  // Rounding minAddr to a 64KB boundary gives the wrong result for old-arch ECUs
+  // whose lowest map address may be e.g. 0x00018000 → rounds to 0x00010000 ≠ 0.
+  if (maxAddr < 0x01000000) return 0x00000000  // old arch: base address is always 0
+  return minAddr & 0xFFFF0000  // TriCore/new arch: round down to 64KB boundary
 }
 

@@ -15,6 +15,7 @@ export function useAuth(): AuthState & {
   signIn: (email: string, password: string) => Promise<string | null>
   signUp: (email: string, password: string, name: string) => Promise<string | null>
   signOut: () => Promise<void>
+  resetPassword: (email: string) => Promise<string | null>
 } {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
@@ -57,5 +58,12 @@ export function useAuth(): AuthState & {
     await supabase.auth.signOut()
   }
 
-  return { user, session, loading, isAdmin, signIn, signUp, signOut }
+  const resetPassword = async (email: string): Promise<string | null> => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://app.dctuning.ie',
+    })
+    return error?.message ?? null
+  }
+
+  return { user, session, loading, isAdmin, signIn, signUp, signOut, resetPassword }
 }

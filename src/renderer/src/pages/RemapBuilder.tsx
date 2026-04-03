@@ -11,13 +11,17 @@ import { parseA2L, extractMapsFromA2L, detectBaseAddress } from '../lib/a2lParse
 import type { A2LParseResult, A2LMapDef } from '../lib/a2lParser'
 import { parseDRT, convertDRTMaps, guessEcuFamilyFromDRT } from '../lib/drtParser'
 import type { DRTParseResult, DRTConvertedMap } from '../lib/drtParser'
+import { parseKP, convertKPMaps } from '../lib/kpParser'
+import type { KPParseResult, KPConvertedMap } from '../lib/kpParser'
+import { suppressDTCs, getActiveDTCGroups } from '../lib/dtcRemoval'
+import type { DTCPatternResult } from '../lib/dtcRemoval'
 import { supabase } from '../lib/supabase'
 import type { EcuFileState } from '../App'
 
 interface DefinitionEntry {
   id: string
   filename: string
-  file_type: 'a2l' | 'drt'
+  file_type: 'a2l' | 'drt' | 'kp'
   driver_name: string | null
   ecu_family: string | null
   make: string | null
@@ -279,6 +283,15 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [drtMaps, setDrtMaps] = useState<DRTConvertedMap[]>([])
   const [drtFileName, setDrtFileName] = useState<string>('')
 
+  // KP state
+  const [kpResult, setKpResult] = useState<KPParseResult | null>(null)
+  const [kpMaps, setKpMaps] = useState<KPConvertedMap[]>([])
+  const [kpFileName, setKpFileName] = useState<string>('')
+
+  // DTC removal state
+  const [dtcResults, setDtcResults] = useState<DTCPatternResult[]>([])
+  const [dtcSuppressedCount, setDtcSuppressedCount] = useState(0)
+
   // Library search state
   const [libSearch, setLibSearch] = useState('')
   const [libResults, setLibResults] = useState<DefinitionEntry[]>([])
@@ -467,6 +480,34 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       setA2lFallbackCount(c => c + drtCount)
     }
 
+    // KP fallback: same approach as DRT — direct file offsets, match by category + dimensions.
+    if (kpMaps.length > 0) {
+      const normCat = (c: string) => (c === 'egr' || c === 'dpf') ? 'emission' : c
+      const kpUsedOffsets = new Set<number>()
+      for (const em of maps) { if (em.found && em.offset >= 0) kpUsedOffsets.add(em.offset) }
+      let kpCount = 0
+      maps = maps.map(em => {
+        if (em.found) return em
+        const candidates = kpMaps.filter(km => normCat(km.category) === em.mapDef.category)
+        if (candidates.length === 0) return em
+        const sorted = [...candidates].sort((a, b) =>
+          (Math.abs(a.rows - em.mapDef.rows) + Math.abs(a.cols - em.mapDef.cols)) -
+          (Math.abs(b.rows - em.mapDef.rows) + Math.abs(b.cols - em.mapDef.cols))
+        )
+        for (const km of sorted) {
+          const synthDef = syntheticMapDefFromDRT(km, em.mapDef)
+          const result = extractMap(fileBuffer, synthDef)
+          if (result.found && !kpUsedOffsets.has(result.offset)) {
+            kpUsedOffsets.add(result.offset)
+            kpCount++
+            return { ...result, source: 'kp' as const }
+          }
+        }
+        return em
+      })
+      setA2lFallbackCount(c => c + kpCount)
+    }
+
     setExtractedMaps(maps)
     setStep(3)
   }
@@ -505,10 +546,23 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     // Step 1: correct header checksum (works for all ECU families)
     const corrected = correctChecksum(result.modifiedBuffer, selectedEcu)
     // Step 2: attempt block-level checksum correction (EDC17/EDC16/MED17/SIMOS)
-    // correctBlockChecksums modifies the buffer in-place and returns a result report.
     const blockRes = correctBlockChecksums(corrected)
     setBlockResult(blockRes)
-    setRemapResult({ ...result, modifiedBuffer: corrected })
+    // Step 3: DTC suppression — applied after checksum so DTC byte writes don't
+    // invalidate the corrected checksum (DTC bytes are in calibration, not checksum regions).
+    const emissionAddons = ['egr_dtcs', 'dpf_sensors', 'cat', 'sai', 'evap', 'adblue']
+    const activeDtcAddons = addons.filter(a => emissionAddons.includes(a))
+    let finalBuffer = corrected
+    if (activeDtcAddons.length > 0) {
+      const { modifiedBuffer, results, suppressedCount } = suppressDTCs(corrected, activeDtcAddons, selectedEcuId)
+      finalBuffer = modifiedBuffer
+      setDtcResults(results)
+      setDtcSuppressedCount(suppressedCount)
+    } else {
+      setDtcResults([])
+      setDtcSuppressedCount(0)
+    }
+    setRemapResult({ ...result, modifiedBuffer: finalBuffer })
     setStep(4)
   }
 
@@ -606,6 +660,24 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     }
   }
 
+  // ─── KP load ──────────────────────────────────────────────────────────────
+  const handleKPLoad = async (file: File) => {
+    try {
+      const buf = await file.arrayBuffer()
+      const result = parseKP(buf)
+      const converted = convertKPMaps(result)
+      setKpResult(result)
+      setKpMaps(converted)
+      setKpFileName(file.name)
+      // Clear A2L and DRT — KP is the active definition source
+      setA2lResult(null); setA2lMaps([]); setA2lFileName('')
+      setDrtResult(null); setDrtMaps([]); setDrtFileName('')
+      if (fileBuffer) onEcuLoaded?.({ fileName, fileBuffer, detected, a2lMaps: [], drtMaps: [] })
+    } catch (e) {
+      setLoadError(`KP parse failed: ${String(e)}`)
+    }
+  }
+
   // ─── Library search ───────────────────────────────────────────────────────
   const searchLibrary = useCallback(async (query: string, page = 0): Promise<number> => {
     if (!query.trim()) { setLibResults([]); setLibTotal(0); setLibOriginalNum(''); return 0 }
@@ -669,6 +741,33 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       // No part number in filename — pre-fill with ECU family, user searches manually
       setLibSearch(family)
     }
+
+    // Auto-suggest DRT files for the detected ECU family.
+    // DRT files use ECM Titanium internal IDs (e.g. C20_1F23.drt) — part-number searches
+    // will NEVER match them. Show family-matched DRTs automatically so the user can click to load.
+    // Filter out "- Copia" duplicate files from the Italian ECM Titanium library dumps.
+    const drtFamily = (detected.def.family || detected.def.id.toUpperCase()).split('.')[0]
+    if (drtFamily) {
+      supabase
+        .from('definitions_index')
+        .select('*', { count: 'exact' })
+        .eq('file_type', 'drt')
+        .ilike('ecu_family', `%${drtFamily}%`)
+        .not('filename', 'ilike', '._%')
+        .not('filename', 'ilike', '% - Copia%')
+        .order('filename')
+        .range(0, LIB_PAGE_SIZE - 1)
+        .then(({ data, count }) => {
+          if (data && data.length > 0) {
+            setLibResults(data as DefinitionEntry[])
+            setLibTotal(count ?? data.length)
+            setLibFallbackNote(
+              `Auto-loaded ${count ?? data.length} DRT files for ${drtFamily} — click any to load map addresses. ` +
+              `Search above by part number to find an exact A2L match.`
+            )
+          }
+        })
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detected, fileName])
 
@@ -696,7 +795,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           setA2lValidation(validation)
           setShowSigExport(false)
         }
-      } else {
+      } else if (entry.file_type === 'drt') {
         const buf = await data.arrayBuffer()
         const result = parseDRT(buf, entry.driver_name ?? entry.filename)
         const converted = convertDRTMaps(result)
@@ -705,6 +804,17 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         setDrtFileName(entry.filename)
         // Keep a2lValidation so A2L-validated addresses remain as primary fallback
         setA2lResult(null); setA2lMaps([]); setA2lFileName('')
+        setKpResult(null); setKpMaps([]); setKpFileName('')
+      } else {
+        // KP file
+        const buf = await data.arrayBuffer()
+        const result = parseKP(buf)
+        const converted = convertKPMaps(result)
+        setKpResult(result)
+        setKpMaps(converted)
+        setKpFileName(entry.filename)
+        setA2lResult(null); setA2lMaps([]); setA2lFileName('')
+        setDrtResult(null); setDrtMaps([]); setDrtFileName('')
       }
       // If binary is already loaded, advance to step 1 automatically
       if (fileBuffer) setStep(1)
@@ -777,10 +887,10 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         style={{
           marginTop: 16, border: '1px dashed var(--border)', borderRadius: 12,
           padding: '20px', textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s ease',
-          background: (a2lFileName || drtFileName) ? 'rgba(34,197,94,0.04)' : 'transparent',
+          background: (a2lFileName || drtFileName || kpFileName) ? 'rgba(34,197,94,0.04)' : 'transparent',
         }}
         onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
-        onMouseLeave={e => (e.currentTarget.style.borderColor = (a2lFileName || drtFileName) ? 'rgba(34,197,94,0.4)' : 'var(--border)')}
+        onMouseLeave={e => (e.currentTarget.style.borderColor = (a2lFileName || drtFileName || kpFileName) ? 'rgba(34,197,94,0.4)' : 'var(--border)')}
         onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--accent)' }}
         onDragLeave={e => { e.currentTarget.style.borderColor = 'var(--border)' }}
         onDrop={e => {
@@ -791,17 +901,19 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           const lower = f.name.toLowerCase()
           if (lower.endsWith('.a2l')) handleA2LLoad(f)
           else if (lower.endsWith('.drt')) handleDRTLoad(f)
+          else if (lower.endsWith('.kp')) handleKPLoad(f)
         }}
         onClick={() => {
           const input = document.createElement('input')
           input.type = 'file'
-          input.accept = '.a2l,.A2L,.drt,.DRT'
+          input.accept = '.a2l,.A2L,.drt,.DRT,.kp,.KP'
           input.onchange = (ev) => {
             const f = (ev.target as HTMLInputElement).files?.[0]
             if (!f) return
             const lower = f.name.toLowerCase()
             if (lower.endsWith('.a2l')) handleA2LLoad(f)
             else if (lower.endsWith('.drt')) handleDRTLoad(f)
+            else if (lower.endsWith('.kp')) handleKPLoad(f)
           }
           input.click()
         }}
@@ -849,12 +961,27 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
               <div style={{ fontSize: 10, color: '#f59e0b', marginTop: 4 }}>{drtResult.warnings[0]}</div>
             )}
           </div>
+        ) : kpFileName ? (
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#22c55e', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              ✓ KP Loaded
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
+              {kpFileName}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+              {kpResult?.maps.length ?? 0} maps · WinOLS MapPack
+            </div>
+            {kpResult?.warnings[0] && (
+              <div style={{ fontSize: 10, color: '#f59e0b', marginTop: 4 }}>{kpResult.warnings[0]}</div>
+            )}
+          </div>
         ) : (
           <>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
               {SIG_SUPPORTED.includes(selectedEcuId || detected?.def.id || '')
                 ? 'Optional: Drop definition file or search library'
-                : '⚠ Required: Drop an A2L or DRT file, or load one from the library above'}
+                : '⚠ Required: Drop an A2L, DRT, or KP file, or load one from the library above'}
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', fontWeight: 700 }}>
@@ -862,6 +989,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
               </span>
               <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.3)', fontWeight: 700 }}>
                 .drt — ECM Titanium
+              </span>
+              <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(184,240,42,0.1)', color: 'var(--lime)', border: '1px solid rgba(184,240,42,0.3)', fontWeight: 700 }}>
+                .kp — WinOLS MapPack
               </span>
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, opacity: 0.7 }}>
@@ -933,7 +1063,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       {(() => {
         const ecuId = selectedEcuId || detected?.def.id || ''
         const sigSupported = ['edc15', 'me7', 'me9', 'me9_merc', 'bmw_ms43'].includes(ecuId)
-        const needsBanner  = ecuId && !sigSupported && !a2lResult && !drtResult
+        const needsBanner  = ecuId && !sigSupported && !a2lResult && !drtResult && !kpResult
         if (!needsBanner) return null
         return (
           <div style={{ marginBottom: 20, padding: '14px 18px', borderRadius: 10, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.35)', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
@@ -957,27 +1087,31 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         )
       })()}
 
-      {(a2lResult || drtResult) && (
+      {(a2lResult || drtResult || kpResult) && (
         <div style={{ marginBottom: 20, padding: '16px 18px', borderRadius: 10, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: '#22c55e' }}>
-              ✓ {a2lResult ? 'A2L' : 'DRT'} Definition Loaded
+              ✓ {a2lResult ? 'A2L' : drtResult ? 'DRT' : 'KP'} Definition Loaded
             </span>
             <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 4, background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)' }}>
-              {a2lResult ? 'ASAP2 / Bosch' : 'ECM Titanium'}
+              {a2lResult ? 'ASAP2 / Bosch' : drtResult ? 'ECM Titanium' : 'WinOLS MapPack'}
             </span>
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 12 }}>
             {a2lResult
               ? `${a2lResult.totalMaps} MAPs · ${a2lResult.totalCurves} CURVEs · ${a2lResult.totalValues} scalar values`
-              : `${drtResult!.totalMaps} MAPs · ${drtResult!.totalCurves} CURVEs · ${drtResult!.maps.length} total entries`
+              : drtResult
+              ? `${drtResult.totalMaps} MAPs · ${drtResult.totalCurves} CURVEs · ${drtResult.maps.length} total entries`
+              : `${kpResult!.maps.length} maps extracted · WinOLS MapPack`
             }
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
             {(['boost', 'torque', 'fuel', 'ignition'] as const).map(cat => {
               const count = a2lResult
                 ? a2lMaps.filter(m => m.category === cat).length
-                : drtMaps.filter(m => m.category === cat).length
+                : drtResult
+                ? drtMaps.filter(m => m.category === cat).length
+                : kpMaps.filter(m => m.category === cat).length
               return count > 0 ? (
                 <div key={cat} style={{ background: 'var(--bg-card)', borderRadius: 8, padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 11, color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{cat}</span>
@@ -991,6 +1125,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           )}
           {a2lResult?.warnings[0] && (
             <div style={{ marginTop: 8, fontSize: 11, color: '#f59e0b' }}>{a2lResult.warnings[0]}</div>
+          )}
+          {kpResult?.warnings[0] && (
+            <div style={{ marginTop: 8, fontSize: 11, color: '#f59e0b' }}>{kpResult.warnings[0]}</div>
           )}
 
           {/* A2L address validation panel — only shown when A2L is the active definition */}
@@ -1141,7 +1278,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                           </span>
                         </span>
                       )}
-                      <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, background: entry.file_type === 'a2l' ? 'rgba(34,197,94,0.1)' : 'rgba(59,130,246,0.1)', color: entry.file_type === 'a2l' ? '#22c55e' : '#3b82f6', fontWeight: 700, flexShrink: 0 }}>
+                      <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, background: entry.file_type === 'a2l' ? 'rgba(34,197,94,0.1)' : entry.file_type === 'kp' ? 'rgba(184,240,42,0.1)' : 'rgba(59,130,246,0.1)', color: entry.file_type === 'a2l' ? '#22c55e' : entry.file_type === 'kp' ? 'var(--lime)' : '#3b82f6', fontWeight: 700, flexShrink: 0 }}>
                         .{entry.file_type}
                       </span>
                     </div>
@@ -1286,6 +1423,48 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           })}
         </div>
       </div>
+
+      {/* ── DTC Removal panel — shown when any emission addon is active ────────── */}
+      {(() => {
+        const activeDtcGroups = getActiveDTCGroups(addons)
+        if (activeDtcGroups.length === 0) return null
+        return (
+          <div style={{ marginBottom: 24, padding: '14px 16px', borderRadius: 10, background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: '#f59e0b' }}>🔇 DTC Suppression</span>
+              <span style={{ fontSize: 10, padding: '1px 7px', borderRadius: 4, background: 'rgba(245,158,11,0.12)', color: '#f59e0b', fontWeight: 700, border: '1px solid rgba(245,158,11,0.3)' }}>
+                {activeDtcGroups.reduce((acc, g) => acc + g.codes.length, 0)} codes
+              </span>
+            </div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginBottom: 12, lineHeight: 1.5 }}>
+              The following OBD-II fault codes will be suppressed automatically during export by zeroing their monitoring enable flags in the ECU binary. Patterns are searched per ECU family — only confirmed pattern matches are written.
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {activeDtcGroups.map(g => (
+                <div key={g.id} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: 8, padding: '10px 12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>{g.label}</span>
+                    <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      via {g.addonId}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
+                    {g.codes.map(c => (
+                      <span key={c} style={{ fontFamily: 'monospace', fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'rgba(245,158,11,0.1)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)' }}>
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                  <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{g.note}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 10, fontSize: 10.5, color: 'rgba(255,255,255,0.25)', lineHeight: 1.5 }}>
+              ℹ Pattern-based suppression. Some ECU variants may not have matching byte signatures — in that case no bytes are changed and the DTC may remain active. A2L-based suppression is more reliable and will be applied if an A2L file is loaded.
+            </div>
+          </div>
+        )
+      })()}
 
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <button className="btn-secondary" onClick={() => setStep(1)}>Back</button>
@@ -1653,6 +1832,46 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             <span style={{ fontSize: 11.5, color: '#ef4444' }}>
               {summary.mapsNotFound} critical map(s) not found in binary. The file may still have been modified for located maps. Verify carefully before flashing.
             </span>
+          </div>
+        )}
+        {summary.mapsBlockedUniform > 0 && (
+          <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 8, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span style={{ fontSize: 11.5, color: '#f59e0b' }}>
+              {summary.mapsBlockedUniform} map(s) had uniform (blank) reads and were <strong>not written</strong> — load an A2L or DRT to resolve correct addresses.
+            </span>
+          </div>
+        )}
+
+        {/* DTC suppression results */}
+        {dtcResults.length > 0 && (
+          <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 8, background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.2)' }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: '#f59e0b', marginBottom: 6 }}>
+              🔇 DTC Suppression — {dtcSuppressedCount} pattern{dtcSuppressedCount !== 1 ? 's' : ''} zeroed
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {dtcResults.map((r, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10.5 }}>
+                  <span style={{ color: '#22c55e', fontWeight: 700, minWidth: 14 }}>✓</span>
+                  <span style={{ fontFamily: 'monospace', color: 'rgba(255,255,255,0.35)', minWidth: 80 }}>
+                    0x{r.offset.toString(16).toUpperCase().padStart(6, '0')}
+                  </span>
+                  <span style={{ fontFamily: 'monospace', color: 'rgba(255,255,255,0.3)', minWidth: 48 }}>
+                    {r.originalByte.toString(16).padStart(2,'0').toUpperCase()} → {r.newByte.toString(16).padStart(2,'0').toUpperCase()}
+                  </span>
+                  <span style={{ color: 'rgba(255,255,255,0.45)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {r.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {dtcSuppressedCount === 0 && (
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>
+                No matching DTC patterns found in this binary — patterns may differ for this ECU software version.
+              </div>
+            )}
           </div>
         )}
 

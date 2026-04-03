@@ -85,7 +85,7 @@ export default function Dashboard({ setPage, connected, activeVehicle }: Props) 
             background: 'var(--accent)',
             boxShadow: '0 0 8px var(--accent)',
           }} />
-          <h1 style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.4px' }}>DCTuning Desktop</h1>
+          <h1 style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.4px' }}>DCTuning</h1>
         </div>
         <p style={{ fontSize: 12, color: 'var(--text-muted)', paddingLeft: 18 }}>
           Professional ECU Remapping Suite · Ireland
@@ -116,7 +116,7 @@ export default function Dashboard({ setPage, connected, activeVehicle }: Props) 
         <div className="stat-box">
           <div className="stat-label">Software</div>
           <div className="stat-value" style={{ fontSize: 22 }}>v{__APP_VERSION__}</div>
-          <div className="stat-sub">DCTuning Desktop</div>
+          <div className="stat-sub">DCTuning</div>
         </div>
       </div>
 
