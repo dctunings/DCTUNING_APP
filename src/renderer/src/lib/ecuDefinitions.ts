@@ -142,8 +142,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         desc: 'Base ignition advance map. Optimised for better combustion efficiency. Stage 2/3 adds advance where knock margin allows.',
         signatures: [[0x49,0x47,0x4E,0x42,0x41,0x53,0x45], [0x5A,0x57,0x42,0x41,0x53,0x45,0x01]],
         sigOffset: 4,
-        rows: 16, cols: 16, dtype: 'int8', le: true,
-        factor: 0.75, offsetVal: -48, unit: '°BTDC',
+        // A2L ground truth: KFZW factor 0.75 GradKW, offset 0, 12×16 confirmed across ME7/MED17/ME9.
+        // offsetVal -48 was wrong (uint8 coolant-temp offset convention, not applicable to int8 KFZW).
+        rows: 12, cols: 16, dtype: 'int8', le: true,
+        factor: 0.75, offsetVal: 0, unit: '°BTDC',
         stage1: { addend: 0 },
         stage2: { addend: 1 },
         stage3: { addend: 2, clampMax: 60 },
@@ -499,10 +501,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'torque',
         desc: "Converts pedal position to torque request (Nm). First map in the EDC16 torque chain — raising this sharpens throttle response and increases peak torque demand.",
         // TrqEngDriveAway = 70% occurrence. AccPed_trqENU = 53%. TrqStrtBas = 78%.
-        a2lNames: ['TrqEngDriveAway', 'AccPed_trqENU', 'AccPed_trqEng', 'AccPed_trqEngA', 'AccPed_trqEngB', 'TrqStrtBas', 'DRVWSH_MAP', 'DrvWish_MAP', 'MIFAS_MAP'],
+        // A2L ground truth: AccPed_trqEng0_MAP (factor 0.1 Nm, 8×16) confirmed EDC16U.
+        a2lNames: ['AccPed_trqEng0_MAP', 'AccPed_trqEng1_MAP', 'TrqEngDriveAway', 'AccPed_trqENU', 'AccPed_trqEng', 'AccPed_trqEngA', 'AccPed_trqEngB', 'TrqStrtBas', 'DRVWSH_MAP', 'DrvWish_MAP', 'MIFAS_MAP'],
         signatures: [[0x44,0x52,0x56,0x57,0x49,0x53,0x48,0x44], [0x44,0x52,0x56,0x57,0x53,0x48,0x44,0x43]],
         sigOffset: 4,
-        rows: 8, cols: 12, dtype: 'uint16', le: true,
+        rows: 8, cols: 16, dtype: 'uint16', le: true,
         factor: 0.1, offsetVal: 0, unit: 'Nm',
         stage1: { multiplier: 1.12 },
         stage2: { multiplier: 1.18 },
@@ -556,7 +559,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // factor 0.01: raw 4500 = 45.0 mg/st, raw 6500 = 65.0 mg/st (typical tuned ceiling) — consistent
         // with Inj_qMaxSmkLim_MAP in MHH-Auto DRT/A2L analysis of 2.0 TDI 140PS EDC16C34 files.
         // LmbdSmkLow = 59%, LmbdSmkHigh = 36% of real EDC16 files.
-        a2lNames: ['LmbdSmkLow', 'LmbdSmkHigh', 'LmbdFullLd', 'LmbCarbDes_00', 'Qsmk_MAP', 'SmokeLimit_MAP', 'RKBEGRENZ_MAP', 'Inj_qMaxSmkLim_MAP'],
+        // A2L ground truth: FlMng_rLmbdSmkLim0_MAP (factor 0.001, dimensionless λ) confirmed EDC16U.
+        // SmkLim_qLimPres_MAP = quantity-based smoke limit (factor 0.01 mg/hub) confirmed EDC17.
+        a2lNames: ['FlMng_rLmbdSmkLim0_MAP', 'FlMng_rLmbdSmkHigh_MAP', 'SmkLim_qLimPres_MAP', 'LmbdSmkLow', 'LmbdSmkHigh', 'LmbdFullLd', 'LmbCarbDes_00', 'Qsmk_MAP', 'SmokeLimit_MAP', 'RKBEGRENZ_MAP', 'Inj_qMaxSmkLim_MAP'],
         signatures: [[0x53,0x4D,0x4B,0x4C,0x49,0x4D,0x44,0x43], [0x51,0x4D,0x41,0x58,0x53,0x4D,0x4B,0x01]],
         sigOffset: 4,
         rows: 12, cols: 16, dtype: 'uint16', le: true,
@@ -572,11 +577,13 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Rail Pressure Setpoint',
         category: 'fuel',
         desc: 'Common rail fuel pressure target vs RPM and IQ. Higher pressure enables finer atomisation and supports increased injection quantity — essential alongside fuel delivery increases.',
-        // PCR_DesBas/DesMaxAP/DesMax = 80–90% of real EDC16 files. PCR_CtlBas = 75%.
-        a2lNames: ['PCR_DesBas', 'PCR_DesMaxAP', 'PCR_DesMax', 'PCR_CtlBas', 'Rail_PointMax', 'Rail_PointBase', 'Rail_PointLimTem', 'Rail_pSetPointMax_MAP', 'RDSOLLKF_MAP'],
+        // PCR_* names are CHARGE (boost) pressure maps, NOT rail pressure — moved to boost map.
+        // Rail pressure names confirmed: RDSOLLKF_MAP stores directly in bar (raw 300-1600 = 300-1600 bar).
+        a2lNames: ['Rail_pSetPointMax_MAP', 'RDSOLLKF_MAP', 'Rail_PointMax', 'Rail_PointBase', 'Rail_PointLimTem', 'CRpres_MAP', 'rdsoll_MAP', 'Rail_MAP', 'pRailSetMax_MAP', 'RailPres_MAP'],
         signatures: [[0x52,0x41,0x49,0x4C,0x50,0x52,0x53,0x50], [0x43,0x52,0x50,0x52,0x45,0x53,0x53]],
         sigOffset: 4,
-        rows: 8, cols: 12, dtype: 'uint16', le: true,
+        rows: 10, cols: 16, dtype: 'uint16', le: true,
+        // EDC16 rail pressure stored in bar directly. raw 1600 = 1600 bar. Ceiling 1900 bar.
         factor: 1, offsetVal: 0, unit: 'bar',
         stage1: { multiplier: 1.06 },
         stage2: { multiplier: 1.10 },
@@ -589,8 +596,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Boost Pressure Target',
         category: 'boost',
         desc: 'Desired charge air pressure vs RPM and load. Raising this tells the ECU how much boost to build — must be paired with smoke limiter raise to allow extra airflow to carry more fuel.',
-        // AirCtl_mDesBas = 74.9% of real EDC16 files (air mass desired base = boost target proxy).
-        a2lNames: ['AirCtl_mDesBas', 'Turb_pSetPoint_MAP', 'BoostTarget_MAP', 'LDESOLL_MAP', 'ldesoll_MAP', 'LDESOLLKF_MAP'],
+        // PCR_DesBas/DesMaxAP/DesMax = charge pressure regulator setpoints in hPa (factor 0.001 → bar).
+        // A2L confirmed: PCR_pBDesBas_MAP factor 1.0 hPa in EDC16U. AirCtl_mDesBas = air MASS (mg/hub), not pressure — excluded.
+        a2lNames: ['PCR_DesBas', 'PCR_DesMaxAP', 'PCR_DesMax', 'PCR_CtlBas', 'PCR_pBDesBas_MAP', 'AirCtl_pBstPresRef_MAP', 'Turb_pSetPoint_MAP', 'BoostTarget_MAP', 'LDESOLL_MAP', 'ldesoll_MAP', 'LDESOLLKF_MAP'],
         signatures: [
           [0x4C,0x4C,0x53,0x4F,0x4C,0x4C],                // "LLSOLL"
           [0x4C,0x41,0x44,0x53,0x4F,0x4C,0x4C],           // "LADSOLL"
@@ -797,7 +805,8 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Torque to IQ Conversion',
         category: 'fuel',
         desc: 'Converts torque request (Nm) into injection quantity (mg/stroke). The critical link between the torque model and the injectors — if this is not raised with the torque limiter, extra torque demand produces no extra fuel and gains are lost.',
-        a2lNames: ['CnvSet_trq2qRgn1_MAP', 'Trq2IQ_MAP', 'TrqToQ_MAP', 'MISOLKF_MAP', 'misolkf_MAP', 'Trq_trq2InjQMain_MAP', 'Trq2qBas'],
+        // A2L ground truth: PhyMod_trq2qBas_MAP and CnvSet_trq2qRgn1_MAP (factor 0.01 mg/hub) confirmed.
+        a2lNames: ['PhyMod_trq2qBas_MAP', 'CnvSet_trq2qRgn1_MAP', 'FMTC_trq2qBas_MAP', 'Trq2IQ_MAP', 'TrqToQ_MAP', 'MISOLKF_MAP', 'misolkf_MAP', 'Trq_trq2InjQMain_MAP', 'Trq2qBas'],
         signatures: [[0x54,0x51,0x49,0x51,0x43,0x4F,0x4E,0x56], [0x43,0x4E,0x56,0x54,0x52,0x51,0x49,0x51]],
         sigOffset: 4,
         rows: 16, cols: 16, dtype: 'uint16', le: true,
@@ -827,14 +836,17 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Smoke Limiter Map',
         category: 'smoke',
         desc: 'Maximum fuel quantity allowed at each MAF airflow reading. The most commonly missed map on EDC17 — without raising this, any IQ increase above stock is silently cut to prevent black smoke. Stage 1 gains require this raised in step.',
-        a2lNames: ['Qsmk_MAP', 'SmokeLimit_MAP', 'RKBEGRENZ_MAP', 'Qmax_smk_MAP', 'SmkLim_MAP', 'Inj_qMaxSmkLim_MAP', 'qsmk_MAP', 'LmbdSmkLow', 'LmbdSmkHigh', 'LmbdFullLd', 'Inj_qSmkLim_MAP', 'QSmkLim_MAP', 'QSMKLIM_MAP', 'Smk_qLim_MAP', 'qSmkMax_MAP', 'Inj_rSmkLim_MAP', 'SmkCtl_qLim_MAP'],
+        // A2L ground truth: SmkLim_qLimPres_MAP factor 0.01 mg/hub (EDC17L01 confirmed).
+        // EDC16/17 also uses lambda-based smoke limiters (FlMng_rLmbdSmkLim0_MAP, factor 0.001 λ).
+        a2lNames: ['SmkLim_qLimPres_MAP', 'SmkLim_rLamSmkNrmMode_MAP', 'Qsmk_MAP', 'SmokeLimit_MAP', 'RKBEGRENZ_MAP', 'Qmax_smk_MAP', 'SmkLim_MAP', 'Inj_qMaxSmkLim_MAP', 'qsmk_MAP', 'FlMng_rLmbdSmkLim0_MAP', 'FlMng_rLmbdSmkHigh_MAP', 'LmbdSmkLow', 'LmbdSmkHigh', 'LmbdFullLd', 'Inj_qSmkLim_MAP', 'QSmkLim_MAP', 'QSMKLIM_MAP', 'Smk_qLim_MAP', 'qSmkMax_MAP', 'Inj_rSmkLim_MAP', 'SmkCtl_qLim_MAP'],
         signatures: [[0x53,0x4D,0x4B,0x4C,0x49,0x4D,0x44,0x43], [0x51,0x4D,0x41,0x58,0x53,0x4D,0x4B,0x01]],
         sigOffset: 4,
-        rows: 16, cols: 11, dtype: 'uint16', le: true,
-        factor: 0.001, offsetVal: 0, unit: 'mg/st',
+        rows: 14, cols: 16, dtype: 'uint16', le: true,
+        // A2L confirmed factor 0.01 mg/hub for EDC17. clampMax 6200 raw = 62 mg/st ceiling.
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
         stage1: { multiplier: 1.12 },
         stage2: { multiplier: 1.20 },
-        stage3: { multiplier: 1.30, clampMax: 62000 },
+        stage3: { multiplier: 1.30, clampMax: 6200 },
         critical: true, showPreview: true,
       },
       {
@@ -875,7 +887,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Boost Pressure Target',
         category: 'boost',
         desc: 'Desired boost pressure vs RPM and IQ. Raising this tells the ECU how much boost to build — must be paired with N75 adjustment to prevent spikes and smoke limiter raise to allow the extra airflow to carry more fuel.',
-        a2lNames: ['Turb_pSetPoint_MAP', 'BoostTarget_MAP', 'LDESOLL_MAP', 'Boost_MAP', 'pBoostSet_MAP', 'ldesoll_MAP', 'LDESOLLKF_MAP'],
+        // A2L ground truth: AirCtl_pBstPresRef_MAP (factor 1.0 hPa = 0.001 bar) confirmed in EDC17L01.
+        // PCR_pLadeMax_MAP / PCR_pDesBas_MAP = charge pressure setpoints (hPa → bar via factor 0.001).
+        a2lNames: ['AirCtl_pBstPresRef_MAP', 'Turb_pSetPoint_MAP', 'PCR_pLadeMax_MAP', 'PCR_pDesBas_MAP', 'BoostTarget_MAP', 'LDESOLL_MAP', 'Boost_MAP', 'pBoostSet_MAP', 'ldesoll_MAP', 'LDESOLLKF_MAP'],
         signatures: [[0x4C,0x4C,0x53,0x4F,0x4C,0x4C,0x44,0x52], [0x42,0x53,0x54,0x47,0x54,0x44,0x43]],
         sigOffset: 4,
         rows: 12, cols: 16, dtype: 'uint16', le: true,
