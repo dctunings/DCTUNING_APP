@@ -827,7 +827,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Smoke Limiter Map',
         category: 'smoke',
         desc: 'Maximum fuel quantity allowed at each MAF airflow reading. The most commonly missed map on EDC17 — without raising this, any IQ increase above stock is silently cut to prevent black smoke. Stage 1 gains require this raised in step.',
-        a2lNames: ['Qsmk_MAP', 'SmokeLimit_MAP', 'RKBEGRENZ_MAP', 'Qmax_smk_MAP', 'SmkLim_MAP', 'Inj_qMaxSmkLim_MAP', 'qsmk_MAP', 'LmbdSmkLow', 'LmbdSmkHigh', 'LmbdFullLd'],
+        a2lNames: ['Qsmk_MAP', 'SmokeLimit_MAP', 'RKBEGRENZ_MAP', 'Qmax_smk_MAP', 'SmkLim_MAP', 'Inj_qMaxSmkLim_MAP', 'qsmk_MAP', 'LmbdSmkLow', 'LmbdSmkHigh', 'LmbdFullLd', 'Inj_qSmkLim_MAP', 'QSmkLim_MAP', 'QSMKLIM_MAP', 'Smk_qLim_MAP', 'qSmkMax_MAP', 'Inj_rSmkLim_MAP', 'SmkCtl_qLim_MAP'],
         signatures: [[0x53,0x4D,0x4B,0x4C,0x49,0x4D,0x44,0x43], [0x51,0x4D,0x41,0x58,0x53,0x4D,0x4B,0x01]],
         sigOffset: 4,
         rows: 16, cols: 11, dtype: 'uint16', le: true,
@@ -846,10 +846,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         signatures: [[0x52,0x41,0x49,0x4C,0x50,0x52,0x53,0x50], [0x43,0x52,0x50,0x52,0x45,0x53,0x53]],
         sigOffset: 4,
         rows: 12, cols: 16, dtype: 'uint16', le: true,
-        factor: 1, offsetVal: 0, unit: 'bar',
+        // Raw uint16 values in units of 0.1 bar (e.g. 14000 raw = 1400 bar).
+        // 2.0 TDI CR runs 700–1600 bar at full load; ceiling 2200 bar = 22000 raw.
+        factor: 0.1, offsetVal: 0, unit: 'bar',
         stage1: { multiplier: 1.08 },
         stage2: { multiplier: 1.14 },
-        stage3: { multiplier: 1.20, clampMax: 2200 },
+        stage3: { multiplier: 1.20, clampMax: 22000 },
         critical: true, showPreview: true,
       },
       // ── BOOST CHAIN — N75 controls build rate, boost target sets the setpoint ──
