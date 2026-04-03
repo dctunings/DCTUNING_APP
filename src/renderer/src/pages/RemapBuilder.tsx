@@ -803,6 +803,22 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
               {a2lResult?.totalMaps} MAPs · {a2lResult?.totalCurves} CURVEs · Manufacturer-accurate definitions
             </div>
+            {a2lValidation.length > 0 && (() => {
+              const vCount = a2lValidation.filter(v => v.status === 'valid').length
+              const total = a2lValidation.length
+              const pct = Math.round(vCount / total * 100)
+              const color = pct >= 70 ? '#22c55e' : pct >= 40 ? '#f59e0b' : '#ef4444'
+              const icon = pct >= 70 ? '✓' : pct >= 40 ? '⚠' : '✗'
+              const label = pct >= 70 ? 'Good match' : pct >= 40 ? 'Partial match' : 'Poor match — wrong ECU variant?'
+              return (
+                <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 4, background: `${color}15`, color, border: `1px solid ${color}40` }}>
+                    {icon} {pct}% binary match
+                  </span>
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{vCount}/{total} maps confirmed · {label}</span>
+                </div>
+              )
+            })()}
           </div>
         ) : drtFileName ? (
           <div>
