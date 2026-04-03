@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { ECU_DEFINITIONS, ADDONS } from '../lib/ecuDefinitions'
 import type { EcuDef } from '../lib/ecuDefinitions'
-import { detectEcu, detectEcuFromFilename, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, syntheticMapDefFromDRT } from '../lib/binaryParser'
+import { detectEcu, detectEcuFromFilename, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, syntheticMapDefFromDRT, extractPartNumberFromBinary } from '../lib/binaryParser'
 import type { DetectedEcu, ExtractedMap, A2LValidationResult } from '../lib/binaryParser'
 import { buildRemap, buildFilename } from '../lib/remapEngine'
 import type { Stage, AddonId, RemapResult } from '../lib/remapEngine'
@@ -709,14 +709,17 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   useEffect(() => {
     if (!detected) return
     const family = detected.def.family || detected.def.name
-    // Match alphanumeric ECU part numbers first (e.g. 03L906018AG, 06A906032TE, 03L906018BB)
-    // Use lookahead/lookbehind instead of \b — underscores are word chars so \b fails on __03L...
-    // then fall back to pure numeric sequences (e.g. 0261207446)
+
+    // Priority 1: scan the actual binary for embedded ASCII part numbers
+    // Priority 2: fall back to filename pattern matching
+    const binaryPart = fileBuffer ? extractPartNumberFromBinary(fileBuffer) : null
     const alphaNumMatch = fileName.match(/(?<![A-Za-z0-9])(\d{2,3}[A-Za-z]\d{5,9}[A-Za-z]{1,3})(?![A-Za-z0-9])/i)
     const pureNumMatch  = fileName.match(/(?<!\d)(\d{7,10})(?!\d)/)
-    const partMatch = alphaNumMatch ?? pureNumMatch
-    if (partMatch) {
-      const part = partMatch[1].toUpperCase()
+    const fileNamePart  = (alphaNumMatch ?? pureNumMatch)?.[1] ?? null
+    const resolvedPart  = binaryPart ?? fileNamePart
+
+    if (resolvedPart) {
+      const part = resolvedPart.toUpperCase()
       setLibSearch(part)
       // Try to auto-load if there is exactly one A2L whose filename contains this part number.
       // We do NOT call searchLibrary() here — the list stays empty until the user clicks Search.
@@ -738,7 +741,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           // Multiple hits or no hits: leave list empty, search box is pre-filled — user clicks Search
         })
     } else {
-      // No part number in filename — pre-fill with ECU family, user searches manually
+      // No part number found in binary or filename — pre-fill with ECU family
       setLibSearch(family)
     }
 
@@ -790,7 +793,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [detected, fileName])
+  }, [detected, fileName, fileBuffer])
 
   const loadDefinitionFromLibrary = async (entry: DefinitionEntry) => {
     setLibLoadingId(entry.id)

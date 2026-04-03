@@ -61,6 +61,43 @@ export function detectEcu(buffer: ArrayBuffer): DetectedEcu | null {
   return bestScore > 0.15 ? best : null
 }
 
+// ─── Part number extraction from binary content ───────────────────────────────
+// Scans the binary for embedded ASCII part numbers.
+// Priority order:
+//   1. VW/Audi/BMW/Ford alphanumeric  (e.g. 03L906018AG, 06A906032TE, 8V21-12A650-AB)
+//   2. Bosch 10-digit numeric         (e.g. 0261207446, 0281014069)
+//   3. Generic 7-10 digit numeric     (e.g. 1037394205)
+// Only scans the first 512 KB — part numbers are always in the calibration header.
+export function extractPartNumberFromBinary(buffer: ArrayBuffer): string | null {
+  const bytes  = new Uint8Array(buffer)
+  const scanLen = Math.min(bytes.length, 512 * 1024)
+  const ascii  = Array.from(bytes.subarray(0, scanLen))
+    .map(b => (b >= 32 && b < 127) ? String.fromCharCode(b) : ' ')
+    .join('')
+
+  // 1. VW/Audi/Skoda/Seat alphanumeric: 3 digits + letter + 5-6 digits + 0-3 letters
+  //    e.g. 03L906018AG  06A906032TE  03C906025AA  8K0907115J
+  const vwMatches = [...ascii.matchAll(/(?<![A-Z0-9])(\d{2,3}[A-Z]\d{5,7}[A-Z]{0,3})(?![A-Z0-9])/g)]
+    .map(m => m[1])
+    .filter(m => m.length >= 8 && m.length <= 14)
+  if (vwMatches.length > 0) return vwMatches[0]
+
+  // 2. Bosch numeric 10-digit starting with 026x or 028x (ME7, EDC15, EDC16, EDC17)
+  //    e.g. 0261207446  0281014069  0281018057
+  const boschMatches = [...ascii.matchAll(/(?<!\d)(02[0-9]{8})(?!\d)/g)]
+    .map(m => m[1])
+    .filter(m => /^0(26|28|12|20|21|22|23|24|25|27|29|30|31)\d/.test(m))
+  if (boschMatches.length > 0) return boschMatches[0]
+
+  // 3. Generic long numeric (7-10 digits) as last resort
+  const genericMatches = [...ascii.matchAll(/(?<!\d)(\d{8,10})(?!\d)/g)]
+    .map(m => m[1])
+    .filter(m => !/^0+$/.test(m) && !/^(1234|9999|0000)/.test(m))
+  if (genericMatches.length > 0) return genericMatches[0]
+
+  return null
+}
+
 // ─── Filename-based ECU detection fallback ────────────────────────────────────
 // Used when binary content detection fails (encrypted/proprietary/tool-format files).
 // Parses the filename for ECU family keywords and returns a low-confidence match.
