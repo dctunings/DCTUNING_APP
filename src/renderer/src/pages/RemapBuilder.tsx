@@ -637,9 +637,13 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   useEffect(() => {
     if (!detected) return
     const family = detected.def.family || detected.def.name
-    const partMatch = fileName.match(/(?<!\d)(\d{5,9})(?!\d)/)
+    // Match alphanumeric ECU part numbers first (e.g. 03L906018AG, 06A906032TE)
+    // then fall back to pure numeric sequences (e.g. 0261207446)
+    const alphaNumMatch = fileName.match(/\b(\d{2,3}[A-Z]\d{5,9}[A-Z]{1,3})\b/i)
+    const pureNumMatch  = fileName.match(/(?<!\d)(\d{7,10})(?!\d)/)
+    const partMatch = alphaNumMatch ?? pureNumMatch
     if (partMatch) {
-      const part = partMatch[1]
+      const part = partMatch[1].toUpperCase()
       setLibSearch(part)
       // Try to auto-load if there is exactly one A2L whose filename contains this part number.
       // We do NOT call searchLibrary() here — the list stays empty until the user clicks Search.
@@ -653,15 +657,12 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         .then(({ data }) => {
           if (!data) return
           const exactHits = data.filter(e =>
-            e.filename.toLowerCase().replace(/[^a-z0-9]/g, '').includes(part.toLowerCase())
+            e.filename.toUpperCase().replace(/[^A-Z0-9]/g, '').includes(part.replace(/[^A-Z0-9]/g, ''))
           )
           if (exactHits.length === 1) {
             loadDefinitionFromLibrary(exactHits[0] as DefinitionEntry)
           }
-          // If 0 or multiple hits: pre-fill search box with family so user can click Search
-          if (exactHits.length !== 1 && family) {
-            setLibSearch(prev => prev === part ? family : prev)
-          }
+          // Multiple hits or no hits: leave list empty, search box is pre-filled — user clicks Search
         })
     } else {
       // No part number in filename — pre-fill with ECU family, user searches manually
