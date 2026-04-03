@@ -637,9 +637,10 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   useEffect(() => {
     if (!detected) return
     const family = detected.def.family || detected.def.name
-    // Match alphanumeric ECU part numbers first (e.g. 03L906018AG, 06A906032TE)
+    // Match alphanumeric ECU part numbers first (e.g. 03L906018AG, 06A906032TE, 03L906018BB)
+    // Use lookahead/lookbehind instead of \b — underscores are word chars so \b fails on __03L...
     // then fall back to pure numeric sequences (e.g. 0261207446)
-    const alphaNumMatch = fileName.match(/\b(\d{2,3}[A-Z]\d{5,9}[A-Z]{1,3})\b/i)
+    const alphaNumMatch = fileName.match(/(?<![A-Za-z0-9])(\d{2,3}[A-Za-z]\d{5,9}[A-Za-z]{1,3})(?![A-Za-z0-9])/i)
     const pureNumMatch  = fileName.match(/(?<!\d)(\d{7,10})(?!\d)/)
     const partMatch = alphaNumMatch ?? pureNumMatch
     if (partMatch) {
