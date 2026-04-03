@@ -53,6 +53,33 @@ function fmtVehicle(make: string, model: string): string {
   return [make, model].filter(Boolean).map(fmt).join(' ')
 }
 
+// Extract a meaningful sub-line for a library entry card:
+// priority: ecu_type → parent folder from path (part number / variant) → filename without extension
+function extractEntrySubInfo(entry: any): string {
+  if (entry.ecu_type) return entry.ecu_type
+
+  // Parent folder often has "Model-ECU-PartNumber" e.g. "E.270cdi-edc16-0281010835"
+  const rawPath: string = entry.original_file_path || ''
+  if (rawPath) {
+    const parts = rawPath.replace(/\\/g, '/').split('/')
+    // second-to-last segment is the variant/part folder (last is filename)
+    const folder = parts.length >= 2 ? parts[parts.length - 2] : ''
+    // Only use if it looks like a variant/part reference (not same as model, not generic)
+    const modelNorm = (entry.vehicle_model || '').toLowerCase().replace(/[\s_\-]/g, '')
+    const folderNorm = folder.toLowerCase().replace(/[\s_\-]/g, '')
+    if (folder && folderNorm !== modelNorm && folder.length > 3 && !folder.toLowerCase().includes('ecu map')) {
+      // Truncate very long folder names
+      return folder.length > 50 ? folder.slice(0, 50) + '…' : folder
+    }
+  }
+
+  // Fall back: filename without extension (part number is often embedded)
+  const fname: string = entry.original_file_name || ''
+  if (fname) return fname.replace(/\.[^.]+$/, '')
+
+  return '—'
+}
+
 export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVehicle | null }) {
   const { user, isAdmin, loading: authLoading, signIn, signUp, signOut } = useAuth()
   const [tunes, setTunes] = useState<TuneRecord[]>([])
@@ -556,8 +583,8 @@ CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id
                         {fmtVehicle(entry.vehicle_make, entry.vehicle_model)}
                         {entry.vehicle_fuel && <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: 12 }}> · {entry.vehicle_fuel}</span>}
                       </div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>
-                        {entry.ecu_type || '—'}
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3, fontFamily: 'monospace' }}>
+                        {extractEntrySubInfo(entry)}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
