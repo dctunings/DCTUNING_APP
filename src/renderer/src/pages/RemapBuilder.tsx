@@ -649,6 +649,24 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           setLibOriginalNum(part)
           setLibFallbackNote(`No exact match for "${part}" — showing ${family} definitions sorted by closest calibration number`)
           searchLibrary(family)
+        } else if (cnt > 0) {
+          // Auto-load if exactly one result contains the part number in its filename
+          supabase
+            .from('definitions_index')
+            .select('*')
+            .or(`filename.ilike.%${part}%,ecu_family.ilike.%${part}%,make.ilike.%${part}%,model.ilike.%${part}%,driver_name.ilike.%${part}%`)
+            .not('filename', 'ilike', '._%')
+            .order('filename')
+            .limit(20)
+            .then(({ data }) => {
+              if (!data) return
+              const exactHits = data.filter(e =>
+                e.filename.toLowerCase().replace(/[^a-z0-9]/g, '').includes(part.toLowerCase())
+              )
+              if (exactHits.length === 1) {
+                loadDefinitionFromLibrary(exactHits[0] as DefinitionEntry)
+              }
+            })
         }
       })
     } else {
