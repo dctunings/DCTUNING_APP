@@ -363,7 +363,13 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       const api = (window as any).api
       if (api?.openEcuFile) {
         const result = await api.openEcuFile()
-        if (result) processFile(result.buffer, result.name)
+        if (result) {
+          // Convert number[] back to ArrayBuffer
+          const ab = new Uint8Array(result.buffer).buffer
+          // Use full path as name so folder-based part number extraction works
+          const nameWithPath = result.path || result.name
+          processFile(ab, nameWithPath)
+        }
       } else {
         // Fallback: file input
         const input = document.createElement('input')
@@ -711,12 +717,27 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     const family = detected.def.family || detected.def.name
 
     // Priority 1: scan the actual binary for embedded ASCII part numbers
-    // Priority 2: fall back to filename pattern matching
+    // Priority 2: scan ALL path segments (folder names often contain part numbers)
+    //             e.g. "C:\ECU maps\A4 1.6 0261203941 1037358701 CS 3BE3\file.bin"
+    // Priority 3: filename only
     const binaryPart = fileBuffer ? extractPartNumberFromBinary(fileBuffer) : null
-    const alphaNumMatch = fileName.match(/(?<![A-Za-z0-9])(\d{2,3}[A-Za-z]\d{5,9}[A-Za-z]{1,3})(?![A-Za-z0-9])/i)
-    const pureNumMatch  = fileName.match(/(?<!\d)(\d{7,10})(?!\d)/)
-    const fileNamePart  = (alphaNumMatch ?? pureNumMatch)?.[1] ?? null
-    const resolvedPart  = binaryPart ?? fileNamePart
+
+    // Split full path into segments and search each one for a part number
+    const pathSegments = fileName.replace(/\\/g, '/').split('/').filter(Boolean)
+    let pathPart: string | null = null
+    for (const seg of pathSegments.reverse()) { // search from deepest folder first
+      // VW/Bosch alphanumeric: e.g. 03L906018AG
+      const am = seg.match(/(?<![A-Za-z0-9])(\d{2,3}[A-Za-z]\d{5,9}[A-Za-z]{0,3})(?![A-Za-z0-9])/i)
+      if (am && am[1].length >= 8) { pathPart = am[1]; break }
+      // Bosch 10-digit: e.g. 0261203941, 0281014069 — any 10-digit starting with 02
+      const bm = seg.match(/(?<!\d)(02\d{8})(?!\d)/)
+      if (bm) { pathPart = bm[1]; break }
+      // Generic long number: 7-10 digits not all zeros
+      const gm = seg.match(/(?<!\d)(\d{8,10})(?!\d)/)
+      if (gm && !/^0+$/.test(gm[1])) { pathPart = gm[1]; break }
+    }
+
+    const resolvedPart = binaryPart ?? pathPart
 
     if (resolvedPart) {
       const part = resolvedPart.toUpperCase()

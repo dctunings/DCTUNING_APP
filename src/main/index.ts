@@ -96,7 +96,14 @@ app.whenReady().then(() => {
     if (result.canceled) return null
     const filePath = result.filePaths[0]
     const data = fs.readFileSync(filePath)
-    return { path: filePath, name: filePath.split(/[\\/]/).pop(), size: data.length }
+    // Return buffer as plain number array (safe across Electron IPC boundary)
+    // Also return full path so renderer can extract part numbers from parent folder name
+    return {
+      path: filePath,
+      name: filePath.split(/[\\/]/).pop(),
+      size: data.length,
+      buffer: Array.from(data as unknown as Uint8Array),
+    }
   })
 
   // IPC: Pick a watch folder
