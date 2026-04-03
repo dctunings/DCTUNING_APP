@@ -1231,9 +1231,17 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // With offset 0: raw 27 = 20.25° BTDC (typical full-load timing). Raw 0 = 0° (TDC).
         // Stock AJQ/AUQ values at peak load: raw ~25–35 (18.75–26.25° BTDC) — confirmed plausible.
         factor: 0.75, offsetVal: 0, unit: '°BTDC',
-        stage1: { multiplier: 1.10 },
-        stage2: { multiplier: 1.18 },
-        stage3: { multiplier: 1.28, clampMax: 127 },
+        // Stage 1: NO ignition change — boost/fuel calibration provides Stage 1 gains.
+        // Advancing ignition without verifying AFR and knock margin on pump fuel is unsafe.
+        // Stage 2/3: conservative raw addend only (NOT multiplier). Using multiplier amplifies
+        // retard zones as well as advance zones (e.g. -10° × 1.10 = -11° — more retard at
+        // idle/overrun is harmless but misleading; critical issue is multiplier hitting
+        // already-retarded cells in knock regions). Addend avoids this.
+        // addend 2 raw = +1.5° BTDC (2 × 0.75°). addend 3 raw = +2.25° BTDC.
+        // These are conservative — professional dyno tune should optimise further.
+        stage1: { multiplier: 1.0 },
+        stage2: { addend: 2, clampMax: 127 },   // +1.5° BTDC max
+        stage3: { addend: 3, clampMax: 127 },   // +2.25° BTDC max
         addonOverrides: {
           // Subtracts 20 raw (= 15°) from top 2 RPM rows to create timing drop before limiter for pops.
           // With offset 0: stock raw ~30 (22.5°) → 10 (7.5°) at peak RPM.

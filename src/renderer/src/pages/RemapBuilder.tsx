@@ -120,20 +120,23 @@ function MiniHeatmap({ data, label, mapCategory }: { data: number[][], label: st
   const mapMax = Math.max(...allMapVals)
   const mapRange = mapMax - mapMin
   // Positive-expected categories: boost, fuel, torque, limiter, emission values should be > 0.
-  // When DRT addresses point to wrong/zeroed binary regions, all raw bytes = 0 so physical
-  // values equal physicalOffset (e.g. -1.0 for boost, -10.0 for fuel). Range is tiny AND max < 0.
-  // Strict every() alone breaks when factor=0.001 and one byte = 1 → diff = exactly 0.001, fails < check.
   const positiveExpected = ['boost', 'fuel', 'torque', 'limiter', 'emission', 'smoke'].includes(mapCategory ?? '')
-  // sampleAllNegative: sample cells all negative AND tightly clustered (range < 0.5).
-  // Catches A2L wrong-address case where full-map has a few edge bytes > 0 (breaking mapMax < 0)
-  // but the operating region is uniform-negative (all cells = physicalOffset, raw = 0).
-  // Real calibration data has variation even when negative, so sampleRange will be > 0.5.
+  // sampleAllNegative: sample cells all negative AND tightly clustered.
+  // Catches wrong-address maps where a few edge bytes > 0 break the mapMax < 0 test
+  // but the operating region is uniformly-negative (raw = 0, physicalOffset < 0).
   const sampleRange = allVals.length > 0 ? Math.max(...allVals) - Math.min(...allVals) : 0
   const sampleAllNegative = positiveExpected && allVals.length > 0 && allVals.every(v => v < 0) && sampleRange < 0.5
+  // isUniform: flags wrong-address reads. For positive-expected maps, ANY flat signal is
+  // suspicious — real boost/torque/fuel maps always vary across RPM×load axes. The old
+  // condition (mapRange < 0.5 && mapMax < 0) missed two common failure modes:
+  //   • All-zero bytes  → mapMax = 0 (not < 0): LDRXNZK pointing at zeroed region
+  //   • All-0xFF bytes  → mapMax = 1536 (= 65535 × 0.023438): KFMIRL at erased flash
+  // Dropping the mapMax < 0 guard catches both — if mapRange < 0.5 on a boost/torque map,
+  // it's wrong regardless of whether the flat value is negative, zero, or some large constant.
   const isUniform = allMapVals.length > 4 && (
     positiveExpected
-      ? (mapRange < 0.5 && mapMax < 0) || sampleAllNegative
-      : mapRange < 0.001               // strict check for ignition/misc/other
+      ? mapRange < 0.5 || sampleAllNegative  // any flat read (zero, max, or negative) = wrong address
+      : mapRange < 0.001                      // ignition/misc: strict check only
   )
   const mn = Math.min(...allVals)
   const mx = Math.max(...allVals)
