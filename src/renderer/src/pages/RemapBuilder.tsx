@@ -691,11 +691,22 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     setLibFallbackNote('')
     setLibOriginalNum('')
     try {
+      // Bosch SW numbers: "389289" ↔ "1037389289" — search both forms so KP files are found
+      // whether the user types the short WinOLS suffix or the full embedded SW number.
+      const boschFull   = /^(\d{6})$/.exec(query.trim())   // 6-digit → also try 1037XXXXXX
+      const boschShort  = /^1037(\d{6})$/.exec(query.trim()) // 10-digit → also try 6-digit suffix
+      const altQuery    = boschFull   ? `1037${boschFull[1]}`  :
+                          boschShort  ? boschShort[1]           : null
+
+      const orFilter = altQuery
+        ? `filename.ilike.%${query}%,filename.ilike.%${altQuery}%,ecu_family.ilike.%${query}%,make.ilike.%${query}%,model.ilike.%${query}%,driver_name.ilike.%${query}%`
+        : `filename.ilike.%${query}%,ecu_family.ilike.%${query}%,make.ilike.%${query}%,model.ilike.%${query}%,driver_name.ilike.%${query}%`
+
       const { data, count } = await supabase
         .from('definitions_index')
         .select('*', { count: 'exact' })
-        .or(`filename.ilike.%${query}%,ecu_family.ilike.%${query}%,make.ilike.%${query}%,model.ilike.%${query}%,driver_name.ilike.%${query}%`)
-        .not('filename', 'ilike', '._%')   // filter macOS resource fork artifacts
+        .or(orFilter)
+        .not('filename', 'ilike', '._%')
         .order('filename')
         .range(page * LIB_PAGE_SIZE, (page + 1) * LIB_PAGE_SIZE - 1)
       setLibResults((data ?? []) as DefinitionEntry[])
@@ -741,25 +752,40 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
 
     if (resolvedPart) {
       const part = resolvedPart.toUpperCase()
-      setLibSearch(part)
+
+      // Bosch SW numbers are 10-digit 1037XXXXXX — WinOLS KP/DRT files only store
+      // the last 6-digit suffix (e.g. "389289" not "1037389289"). When we have a
+      // full Bosch SW number, use the short suffix for the search box and auto-load
+      // so KP files are found. Keep the full number as a secondary search.
+      const boschSuffix = /^1037(\d{6})$/.exec(part)
+      const searchTerm  = boschSuffix ? boschSuffix[1] : part   // "389289" or full part
+      const altTerm     = boschSuffix ? part : null              // "1037389289" as fallback
+
+      setLibSearch(searchTerm)
+
+      // Build ilike filter: match searchTerm OR altTerm in filename
+      const ilikeFilter = altTerm
+        ? `filename.ilike.%${searchTerm}%,filename.ilike.%${altTerm}%`
+        : `filename.ilike.%${searchTerm}%`
+
       // Try to auto-load if there is exactly one A2L whose filename contains this part number.
-      // We do NOT call searchLibrary() here — the list stays empty until the user clicks Search.
       supabase
         .from('definitions_index')
         .select('*')
-        .ilike('filename', `%${part}%`)
+        .or(ilikeFilter)
         .not('filename', 'ilike', '._%')
         .order('filename')
         .limit(20)
         .then(({ data }) => {
           if (!data) return
           const exactHits = data.filter(e =>
-            e.filename.toUpperCase().replace(/[^A-Z0-9]/g, '').includes(part.replace(/[^A-Z0-9]/g, ''))
+            e.filename.toUpperCase().replace(/[^A-Z0-9]/g, '').includes(searchTerm.replace(/[^A-Z0-9]/g, ''))
+            || (altTerm && e.filename.toUpperCase().replace(/[^A-Z0-9]/g, '').includes(altTerm.replace(/[^A-Z0-9]/g, '')))
           )
           if (exactHits.length === 1) {
             loadDefinitionFromLibrary(exactHits[0] as DefinitionEntry)
           }
-          // Multiple hits or no hits: leave list empty, search box is pre-filled — user clicks Search
+          // Multiple hits or no hits: leave list empty, search box pre-filled — user clicks Search
         })
     } else {
       // No part number found in binary or filename — pre-fill with ECU family
