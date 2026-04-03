@@ -103,7 +103,13 @@ export function extractPartNumberFromBinary(buffer: ArrayBuffer): string | null 
 // Parses the filename for ECU family keywords and returns a low-confidence match.
 // Keyword list covers common naming conventions from WinOLS, ECM Titanium, KESS, CMD etc.
 export function detectEcuFromFilename(filename: string): DetectedEcu | null {
+  // Normalise: lowercase, then collapse all spaces/underscores/hyphens/dots so
+  // "EDC 16", "EDC_16", "EDC-16", "edc16" all become "edc16" for matching.
   const lower = filename.toLowerCase()
+  const norm  = lower.replace(/[\s_\-\.]+/g, '')   // spaces/underscores/hyphens/dots removed
+
+  // Match helper — checks both raw lowercase and normalised form
+  const has = (kw: string) => lower.includes(kw) || norm.includes(kw.replace(/[\s_\-\.]+/g, ''))
 
   // Map of filename keywords → ECU definition id (ordered most-specific first)
   const filenameRules: Array<[string[], string]> = [
@@ -112,12 +118,12 @@ export function detectEcuFromFilename(filename: string): DetectedEcu | null {
     [['edc17c46','c46'],              'edc17'],
     [['edc17c41','c41'],              'edc17'],
     [['edc17cp','edc17c','edc17u'],   'edc17'],
-    [['edc17'],                       'edc17'],
+    [['edc17','edc 17'],              'edc17'],
     [['edc16c34','c34'],              'edc16'],
     [['edc16c8','c8'],                'edc16'],
     [['edc16cp','edc16c','edc16u'],   'edc16'],
-    [['edc16'],                       'edc16'],
-    [['edc15c','edc15p','edc15'],     'edc15'],
+    [['edc16','edc 16'],              'edc16'],
+    [['edc15c','edc15p','edc15','edc 15'], 'edc15'],
     [['med17.5','med175'],            'med17'],
     [['med17.9','med179'],            'med17'],
     [['med17'],                       'med17'],
@@ -149,7 +155,7 @@ export function detectEcuFromFilename(filename: string): DetectedEcu | null {
 
   for (const [keywords, defId] of filenameRules) {
     for (const kw of keywords) {
-      if (lower.includes(kw)) {
+      if (has(kw)) {
         const def = ECU_DEFINITIONS.find(d => d.id === defId)
         if (def) {
           return {
