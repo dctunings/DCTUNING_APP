@@ -746,27 +746,48 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     // DRT files use ECM Titanium internal IDs (e.g. C20_1F23.drt) — part-number searches
     // will NEVER match them. Show family-matched DRTs automatically so the user can click to load.
     // Filter out "- Copia" duplicate files from the Italian ECM Titanium library dumps.
+    // Also include KP (WinOLS MapPack) files that match the same ECU family.
     const drtFamily = (detected.def.family || detected.def.id.toUpperCase()).split('.')[0]
     if (drtFamily) {
-      supabase
-        .from('definitions_index')
-        .select('*', { count: 'exact' })
-        .eq('file_type', 'drt')
-        .ilike('ecu_family', `%${drtFamily}%`)
-        .not('filename', 'ilike', '._%')
-        .not('filename', 'ilike', '% - Copia%')
-        .order('filename')
-        .range(0, LIB_PAGE_SIZE - 1)
-        .then(({ data, count }) => {
-          if (data && data.length > 0) {
-            setLibResults(data as DefinitionEntry[])
-            setLibTotal(count ?? data.length)
-            setLibFallbackNote(
-              `Auto-loaded ${count ?? data.length} DRT files for ${drtFamily} — click any to load map addresses. ` +
-              `Search above by part number to find an exact A2L match.`
-            )
-          }
-        })
+      // Run both queries in parallel — DRT and KP — then merge results
+      Promise.all([
+        supabase
+          .from('definitions_index')
+          .select('*', { count: 'exact' })
+          .eq('file_type', 'drt')
+          .ilike('ecu_family', `%${drtFamily}%`)
+          .not('filename', 'ilike', '._%')
+          .not('filename', 'ilike', '% - Copia%')
+          .order('filename')
+          .range(0, LIB_PAGE_SIZE - 1),
+        supabase
+          .from('definitions_index')
+          .select('*', { count: 'exact' })
+          .eq('file_type', 'kp')
+          .ilike('ecu_family', `%${drtFamily}%`)
+          .not('filename', 'ilike', '._%')
+          .order('filename')
+          .limit(50),
+      ]).then(([drtRes, kpRes]) => {
+        const drtData  = (drtRes.data  ?? []) as DefinitionEntry[]
+        const kpData   = (kpRes.data   ?? []) as DefinitionEntry[]
+        const drtCount = drtRes.count  ?? drtData.length
+        const kpCount  = kpRes.count   ?? kpData.length
+
+        // KP files first (higher priority — exact map addresses), then DRTs
+        const merged = [...kpData, ...drtData]
+        if (merged.length > 0) {
+          setLibResults(merged)
+          setLibTotal(drtCount + kpCount)
+          const parts: string[] = []
+          if (kpCount > 0) parts.push(`${kpCount} KP MapPack${kpCount > 1 ? 's' : ''}`)
+          if (drtCount > 0) parts.push(`${drtCount} DRT files`)
+          setLibFallbackNote(
+            `Auto-loaded ${parts.join(' + ')} for ${drtFamily} — click any to load map addresses. ` +
+            `Search above by part number to find an exact A2L match.`
+          )
+        }
+      })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detected, fileName])
