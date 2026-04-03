@@ -583,7 +583,7 @@ CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id
                         {fmtVehicle(entry.vehicle_make, entry.vehicle_model)}
                         {entry.vehicle_fuel && <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: 12 }}> · {entry.vehicle_fuel}</span>}
                       </div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3, fontFamily: 'monospace' }}>
+                      <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 3, fontFamily: 'monospace', opacity: 0.85 }}>
                         {extractEntrySubInfo(entry)}
                       </div>
                     </div>
