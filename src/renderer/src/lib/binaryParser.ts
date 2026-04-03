@@ -302,8 +302,14 @@ export function syntheticMapDefFromA2L(a2lMap: A2LMapDef, baseDef: MapDef): MapD
     cols:       a2lMap.cols,
     dtype:      a2lMap.dataType as DataType,
     le:         baseDef.le,  // inherit endianness from ecuDefinitions — ME7/SID/MS43 etc. are big-endian (le:false)
-    factor:     a2lMap.factor,
-    offsetVal:  a2lMap.physicalOffset,
+    // Use ecuDef factor/offsetVal, NOT the A2L file's values.
+    // A2L factor conventions vary wildly between vendors (e.g. KFMIRL A2L factor ≈ 655 vs
+    // ecuDef 0.023438 — a 28,000× difference). The remap params (multiplier, clampMax, addend)
+    // are all calibrated against ecuDef factor. Using A2L factor breaks the display (shows
+    // 2,796,160 % instead of 100 %) and corrupts clampMax enforcement in the preview.
+    // The A2L contribution here is the file address only — let ecuDef handle the scaling.
+    factor:     baseDef.factor,
+    offsetVal:  baseDef.offsetVal,
     signatures: [],    // skip signature search
     sigOffset:  0,
     fixedOffset: a2lMap.fileOffset,  // go directly to validated address
@@ -322,8 +328,13 @@ export function syntheticMapDefFromDRT(
     rows:        drtMap.rows,
     cols:        drtMap.cols,
     dtype:       drtMap.dataType as DataType,
-    factor:      drtMap.factor,          // use DRT-supplied scaling
-    offsetVal:   drtMap.physicalOffset,  // use DRT-supplied offset
+    // Use ecuDef factor/offsetVal, NOT DRT-supplied scaling.
+    // DRT factor conventions differ from ecuDef: using DRT values causes the same display
+    // corruption as A2L factor mismatch (e.g. MXMOMI showing 0.4 Nm instead of ~300 Nm).
+    // Remap params (multiplier, clampMax, addend) are calibrated against ecuDef factor.
+    // DRT contribution here is file address + dimensions only.
+    factor:      baseDef.factor,
+    offsetVal:   baseDef.offsetVal,
     le:          baseDef.le,  // inherit endianness from ecuDefinitions — big-endian ECUs (ME7, SID, MS43) use le:false
     signatures:  [],
     sigOffset:   0,
