@@ -233,13 +233,21 @@ function categoriseMap(name: string, desc: string): A2LMapDef['category'] {
   // not primary driver-wish or torque-limit tuning maps.
   if (/^asdrf_/.test(n)) return 'other'
 
-  // AccPed_trqEng[1-9]_MAP = gear-specific driver's wish variants (1st gear, 2nd gear…).
-  // AccPed_trqEng0_MAP is the PRIMARY map and is name-matched directly.
-  // The numbered variants must NOT become fallback for the torque_limit slot —
-  // they have the same format/factor as AccPed_trqEng0_MAP and will be chosen first
-  // alphabetically by the confidence sort, displacing the real limit map.
-  // AccPed_trq*Cold* = cold-start variants.  Same reason.
-  if (/^accped_trqeng[1-9]|^accped_trq.*cold|^accped_trqlow|^accped_trqprp/.test(n)) return 'other'
+  // AccPed_trqEng[1-9] = gear-mode driver's wish variants. AccPed_trqEng0 is primary (name-matched).
+  // AccPed_trqEngLim = clutch-protection torque limit (Kupplungsschutz) — NOT the master ceiling.
+  // AccPed_trq*Cold/Low/Prp = cold-start, low-load and proportional variants.
+  // None of these must be selected as a Phase B fallback for the torque_limit slot.
+  if (/^accped_trqeng[1-9]|^accped_trqenglim|^accped_trq.*cold|^accped_trqlow|^accped_trqprp/.test(n)) return 'other'
+
+  // CtTCtl_* = Cooling Temperature Control maps (coolant target temps vs RPM and load/IQ).
+  // Despite having "Einspritz" (injection) as an AXIS label in their descriptions,
+  // these are temperature setpoint maps, NOT injection quantity targets.
+  if (/^ctctl_/.test(n)) return 'other'
+
+  // EngPrt_fac* = Engine Protection factor/correction maps (over-temp protection etc.).
+  // 'EngPrt_facFlTempLim' has "Kraftstoff" (fuel) in its description but is a
+  // fuel-temperature protection correction — not a rail pressure or quantity target.
+  if (/^engprt_fac/.test(n)) return 'other'
 
   // AFSCD_* = Air Flow Sensor Correction Detection maps (e.g. facCorrVal, facAirPerCylCor).
   // These are internal correction factors, not primary fuel delivery calibration targets.
@@ -293,12 +301,15 @@ function categoriseMap(name: string, desc: string): A2LMapDef['category'] {
   if (/^accped_trq|^trqlim_|^trqcrv_|^trq_trq/.test(n)) return 'torque'
 
   // ── Fuel / injection quantity ────────────────────────────────────────────────
-  // NOTE: 'menge' (German: quantity/amount) intentionally removed — it is too generic
-  // and matches correction factor maps (AFSCD_facCorrVal_MAP desc "Drehzahl und der Menge",
-  // AirCtl_facNQAPCor_MAP desc "Korrekturkennfeld über Drehzahl und Menge") causing those
-  // to be wrongly categorised as injection fuel maps.  'einspritz' covers German injection
-  // quantity maps sufficiently; prefix checks below handle EDC16/17 Bosch names.
-  if (/kfmirl|kfped|einspritz|fuel|kraftstoff|dmll|fuell/.test(s)) return 'fuel'
+  // NOTE: 'einspritz' and 'kraftstoff' intentionally removed from this check.
+  // 'einspritz' is too broad — it appears in descriptions of coolant maps where
+  // injection quantity is merely an INPUT AXIS (e.g. CtTCtl_tBase_MAP: "Drehzahl- und
+  // Einspritzmengenabhängiger Kühlmitteltempsoillwert").  'kraftstoff' similarly appears
+  // in fuel-temperature PROTECTION maps (EngPrt_facFlTempLim: "Überhitzungsschutz
+  // Kraftstoff") that are not injection quantity targets.
+  // Genuine injection quantity maps are reliably caught by the prefix checks below
+  // (^inj_q, ^injq_, ^injcor_q) and the smoke-limiter keyword group.
+  if (/kfmirl|kfped|fuel|dmll|fuell/.test(s)) return 'fuel'
   // The generic "injection" keyword is intentionally removed from the combined string
   // check above — it matches both injection QUANTITY maps (correct) and injection
   // TIMING / PAUSE maps (wrong, e.g. InjVlv_tiMI1BreMin).  Instead, rely on the
