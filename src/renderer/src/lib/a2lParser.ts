@@ -233,25 +233,31 @@ function categoriseMap(name: string, desc: string): A2LMapDef['category'] {
   // not primary driver-wish or torque-limit tuning maps.
   if (/^asdrf_/.test(n)) return 'other'
 
-  // AccPed_trq*Cold* = cold-start driver's wish calibration variants. Same format as
-  // AccPed_trqEng0_MAP but apply only during cold start.  Must NOT be selected as a
-  // substitute for the master torque limit (EngPrt_trqLim) in Phase B fallback.
-  if (/^accped_trq.*cold/.test(n)) return 'other'
+  // AccPed_trqEng[1-9]_MAP = gear-specific driver's wish variants (1st gear, 2nd gear…).
+  // AccPed_trqEng0_MAP is the PRIMARY map and is name-matched directly.
+  // The numbered variants must NOT become fallback for the torque_limit slot —
+  // they have the same format/factor as AccPed_trqEng0_MAP and will be chosen first
+  // alphabetically by the confidence sort, displacing the real limit map.
+  // AccPed_trq*Cold* = cold-start variants.  Same reason.
+  if (/^accped_trqeng[1-9]|^accped_trq.*cold|^accped_trqlow|^accped_trqprp/.test(n)) return 'other'
 
   // AFSCD_* = Air Flow Sensor Correction Detection maps (e.g. facCorrVal, facAirPerCylCor).
   // These are internal correction factors, not primary fuel delivery calibration targets.
   // Descriptions often contain German "Menge" (quantity) but they are not injection maps.
   if (/^afscd_/.test(n)) return 'other'
 
-  // AirCtl_fac* = Air Control correction/factor maps (normalisation coefficients).
-  // Not direct calibration targets for power tuning.
-  if (/^airctl_fac/.test(n)) return 'other'
+  // AirCtl_* = ALL Air Control maps (EGR, charge-air, correction curves, quantity corrections).
+  // 'AirCtl_qRpOilCorr_CUR' desc contains 'einspritz' → triggers fuel; must be excluded.
+  // None of these are direct injection quantity / rail pressure tuning targets.
+  if (/^airctl_/.test(n)) return 'other'
+
+  // BIP_* = Begin-of-Injection-Period maps (timing, fuel temp correction, etc.).
+  // BIP_ti* = timing, BIP_fac* = correction factors — none are injection quantity targets.
+  // 'BIP_facFTCor_CUR' desc has 'kraftstoff' → triggers fuel without this exclusion.
+  if (/^bip_/.test(n)) return 'other'
 
   // OvRMon_* = Override Monitor maps (safety/monitoring, not tuning targets).
   if (/^ovrmon_/.test(n)) return 'other'
-
-  // BIP_ti* = Begin-of-Injection-Period timing maps (µs/°CA). Not injection quantity.
-  if (/^bip_ti/.test(n)) return 'other'
 
   // InjCrv_num* = injection curve COUNT maps (number of injections per cycle).
   // InjCrv_pos* = injection crank-position maps. Neither is fuel quantity.
