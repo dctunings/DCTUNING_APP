@@ -277,6 +277,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
 
   // Step 3 state
   const [extractedMaps, setExtractedMaps] = useState<ExtractedMap[]>([])
+  // Per-map custom multiplier overrides (keyed by mapDef.id, value = multiplier e.g. 1.15 for +15%)
+  // When set, overrides the stage default in both the preview heatmap and the final build.
+  const [customMultipliers, setCustomMultipliers] = useState<Record<string, number>>({})
 
   // Step 4 state
   const [remapResult, setRemapResult] = useState<RemapResult | null>(null)
@@ -568,7 +571,24 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   // ─── Step 3→4: build remap ────────────────────────────────────────────────
   const handleBuildRemap = () => {
     if (!fileBuffer || !selectedEcu || extractedMaps.length === 0) return
-    const result = buildRemap(fileBuffer, selectedEcu, stage, addons, extractedMaps)
+    // Inject custom per-map multipliers: clone the extractedMaps and override stage params
+    // for any map where the tuner has set a custom percentage in the Preview screen.
+    const mapsWithOverrides = extractedMaps.map(em => {
+      const custom = customMultipliers[em.mapDef.id]
+      if (custom === undefined) return em
+      // Build a synthetic mapDef with all 3 stages pointing at the custom multiplier,
+      // preserving clampMax/clampMin/addend from the original stage param.
+      const baseStageKey = `stage${stage}` as 'stage1' | 'stage2' | 'stage3'
+      const baseParams = em.mapDef[baseStageKey]
+      const overrideDef = {
+        ...em.mapDef,
+        stage1: { ...baseParams, multiplier: custom },
+        stage2: { ...baseParams, multiplier: custom },
+        stage3: { ...baseParams, multiplier: custom },
+      }
+      return { ...em, mapDef: overrideDef }
+    })
+    const result = buildRemap(fileBuffer, selectedEcu, stage, addons, mapsWithOverrides)
     // Step 1: correct header checksum (works for all ECU families)
     const corrected = correctChecksum(result.modifiedBuffer, selectedEcu)
     // Step 2: attempt block-level checksum correction (EDC17/EDC16/MED17/SIMOS)
@@ -1689,7 +1709,11 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
               break
             }
           }
-          const params = effectiveParams
+          // Apply custom multiplier override if tuner has set one
+          const customMul = customMultipliers[m.mapDef.id]
+          const params = customMul !== undefined
+            ? { ...effectiveParams, multiplier: customMul }
+            : effectiveParams
           // Badge: multiplier != 1 → show %; multiplier 0 with addend → show "SET"; addend-only → show physical delta
           const isSet = params.multiplier === 0 && params.addend !== undefined  // full replacement (e.g. popbang)
           const expectedPct = !isSet && params.multiplier !== undefined && params.multiplier !== 1
@@ -1698,6 +1722,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           const expectedAddend = !isSet && params.multiplier === undefined && params.addend
             ? params.addend * m.mapDef.factor
             : 0
+          // Stage default % for the reset button tooltip
+          const stageDefaultMul = effectiveParams.multiplier ?? 1
+          const stageDefaultPct = Math.round((stageDefaultMul - 1) * 100)
 
           return (
             <div
@@ -1775,6 +1802,55 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                 return (
                   <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.28)', fontFamily: 'monospace', marginBottom: 4, letterSpacing: '0.2px' }}>
                     {mn.toFixed(1)} – {mx.toFixed(1)}{unit ? ` ${unit}` : ''}
+                  </div>
+                )
+              })()}
+              {/* ── Per-map percentage editor — only for multiplier-based maps ─────── */}
+              {m.found && !isSet && effectiveParams.multiplier !== undefined && effectiveParams.multiplier !== 1 && (() => {
+                const currentPct = Math.round((params.multiplier ?? stageDefaultMul) * 100) - 100
+                const isCustom = customMul !== undefined
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, marginBottom: 4, padding: '8px 10px', borderRadius: 7, background: isCustom ? 'rgba(184,240,42,0.04)' : 'rgba(255,255,255,0.02)', border: `1px solid ${isCustom ? 'rgba(184,240,42,0.2)' : 'rgba(255,255,255,0.07)'}` }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                      Adjustment
+                    </span>
+                    <input
+                      type="range"
+                      min={1}
+                      max={50}
+                      step={1}
+                      value={currentPct}
+                      onChange={e => {
+                        const pct = parseInt(e.target.value)
+                        setCustomMultipliers(prev => ({ ...prev, [m.mapDef.id]: 1 + pct / 100 }))
+                      }}
+                      style={{ flex: 1, accentColor: 'var(--accent)', cursor: 'pointer', minWidth: 80 }}
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: isCustom ? '#b8f02a' : 'var(--accent)', minWidth: 34, textAlign: 'right' }}>
+                        +{currentPct}%
+                      </span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={50}
+                        value={currentPct}
+                        onChange={e => {
+                          const pct = Math.max(1, Math.min(50, parseInt(e.target.value) || 0))
+                          setCustomMultipliers(prev => ({ ...prev, [m.mapDef.id]: 1 + pct / 100 }))
+                        }}
+                        style={{ width: 44, padding: '3px 5px', borderRadius: 5, border: `1px solid ${isCustom ? 'rgba(184,240,42,0.35)' : 'rgba(255,255,255,0.12)'}`, background: 'rgba(0,0,0,0.3)', color: '#fff', fontSize: 12, fontWeight: 700, textAlign: 'center', outline: 'none' }}
+                      />
+                    </div>
+                    {isCustom && (
+                      <button
+                        onClick={() => setCustomMultipliers(prev => { const n = { ...prev }; delete n[m.mapDef.id]; return n })}
+                        title={`Reset to Stage ${stage} default (+${stageDefaultPct}%)`}
+                        style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                      >
+                        ↺ S{stage} default
+                      </button>
+                    )}
                   </div>
                 )
               })()}
