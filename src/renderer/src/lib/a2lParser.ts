@@ -161,13 +161,19 @@ function parseCompuMethod(block: string): A2LCompuMethod | null {
     let factor = 1
     let physicalOffset = 0
     if (coeffIdx !== -1 && tokens[coeffIdx + 6] !== undefined) {
-      // COEFFS a b c d e f  -> physical = (b*raw + c) / f
+      // COEFFS a b c d e f
+      // Bosch/DAMOS A2Ls (EDC16, EDC17, ME7 etc.) use the INVERSE convention:
+      // COEFFS encodes the phys→raw function:  raw = (b*phys + c) / f
+      // Solving for phys:  phys = (f/b)*raw - c/b
+      // → factor = f / b,  physicalOffset = -c / b
+      // (For ASAP2-standard raw→physical A2Ls the terms cancel for factor=1, so
+      //  maps with COEFFS 0 1 0 0 0 1 are unaffected by this direction choice.)
       const b = parseFloat(tokens[coeffIdx + 2])
       const c = parseFloat(tokens[coeffIdx + 3])
       const f = parseFloat(tokens[coeffIdx + 6])
-      if (!isNaN(b) && !isNaN(f) && f !== 0) {
-        factor = b / f
-        physicalOffset = c / f
+      if (!isNaN(b) && !isNaN(f) && b !== 0) {
+        factor = f / b
+        physicalOffset = -c / b
       }
     }
     // Fallback: try LINEAR coeffs: COEFFS_LINEAR a b -> physical = a*raw + b
@@ -219,6 +225,20 @@ function categoriseMap(name: string, desc: string): A2LMapDef['category'] {
   // driver-wish/torque-limit tuning maps.  Move to 'other' so they don't pollute
   // the 'torque' category and cause the wrong A2L map to be selected as a fallback.
   if (/^acc_d|^acccd_|^acc_trqbrk|^acc_trqdec/.test(n)) return 'other'
+
+  // ACC_ti* = ACC timing/duration maps (soft-brake, ramp timing). Not torque control.
+  if (/^acc_ti/.test(n)) return 'other'
+
+  // ASDrf_* = Anti-Stall / Drive-away resistance torque — clutch-protection models,
+  // not primary driver-wish or torque-limit tuning maps.
+  if (/^asdrf_/.test(n)) return 'other'
+
+  // BIP_ti* = Begin-of-Injection-Period timing maps (µs/°CA). Not injection quantity.
+  if (/^bip_ti/.test(n)) return 'other'
+
+  // InjCrv_num* = injection curve COUNT maps (number of injections per cycle).
+  // InjCrv_pos* = injection crank-position maps. Neither is fuel quantity.
+  if (/^injcrv_num|^injcrv_pos/.test(n)) return 'other'
 
   // InjVlv_ti* = injection valve TIMING (pause/break duration in µs), NOT quantity.
   // InjCrv_ct* = injection correction by revolution count or temperature.

@@ -519,7 +519,8 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'fuel',
         desc: 'Converts torque request (Nm) into injection quantity (mg/stroke). Critical link between torque model and injectors — if not raised alongside the torque limit, extra torque demand produces no extra fuel.',
         // Trq2qBas = 74.6% of real EDC16 files.
-        a2lNames: ['Trq2qBas', 'CnvSet_trq2qRgn1_MAP', 'Trq2IQ_MAP', 'TrqToQ_MAP', 'MISOLKF_MAP', 'misolkf_MAP'],
+        // FMTC_trq2qBas_MAP = Bosch EDC16U name (confirmed in test_edc16.a2l)
+        a2lNames: ['FMTC_trq2qBas_MAP', 'Trq2qBas', 'CnvSet_trq2qRgn1_MAP', 'FMTC_trq2qRgn1_MAP', 'Trq2IQ_MAP', 'TrqToQ_MAP', 'MISOLKF_MAP', 'misolkf_MAP'],
         signatures: [[0x54,0x51,0x49,0x51,0x43,0x4F,0x4E,0x56], [0x43,0x4E,0x56,0x54,0x52,0x51,0x49,0x51]],
         sigOffset: 4,
         rows: 12, cols: 16, dtype: 'uint16', le: true,
