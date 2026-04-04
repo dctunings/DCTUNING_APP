@@ -233,6 +233,23 @@ function categoriseMap(name: string, desc: string): A2LMapDef['category'] {
   // not primary driver-wish or torque-limit tuning maps.
   if (/^asdrf_/.test(n)) return 'other'
 
+  // AccPed_trq*Cold* = cold-start driver's wish calibration variants. Same format as
+  // AccPed_trqEng0_MAP but apply only during cold start.  Must NOT be selected as a
+  // substitute for the master torque limit (EngPrt_trqLim) in Phase B fallback.
+  if (/^accped_trq.*cold/.test(n)) return 'other'
+
+  // AFSCD_* = Air Flow Sensor Correction Detection maps (e.g. facCorrVal, facAirPerCylCor).
+  // These are internal correction factors, not primary fuel delivery calibration targets.
+  // Descriptions often contain German "Menge" (quantity) but they are not injection maps.
+  if (/^afscd_/.test(n)) return 'other'
+
+  // AirCtl_fac* = Air Control correction/factor maps (normalisation coefficients).
+  // Not direct calibration targets for power tuning.
+  if (/^airctl_fac/.test(n)) return 'other'
+
+  // OvRMon_* = Override Monitor maps (safety/monitoring, not tuning targets).
+  if (/^ovrmon_/.test(n)) return 'other'
+
   // BIP_ti* = Begin-of-Injection-Period timing maps (µs/°CA). Not injection quantity.
   if (/^bip_ti/.test(n)) return 'other'
 
@@ -270,7 +287,12 @@ function categoriseMap(name: string, desc: string): A2LMapDef['category'] {
   if (/^accped_trq|^trqlim_|^trqcrv_|^trq_trq/.test(n)) return 'torque'
 
   // ── Fuel / injection quantity ────────────────────────────────────────────────
-  if (/kfmirl|kfped|einspritz|menge|fuel|kraftstoff|dmll|fuell/.test(s)) return 'fuel'
+  // NOTE: 'menge' (German: quantity/amount) intentionally removed — it is too generic
+  // and matches correction factor maps (AFSCD_facCorrVal_MAP desc "Drehzahl und der Menge",
+  // AirCtl_facNQAPCor_MAP desc "Korrekturkennfeld über Drehzahl und Menge") causing those
+  // to be wrongly categorised as injection fuel maps.  'einspritz' covers German injection
+  // quantity maps sufficiently; prefix checks below handle EDC16/17 Bosch names.
+  if (/kfmirl|kfped|einspritz|fuel|kraftstoff|dmll|fuell/.test(s)) return 'fuel'
   // The generic "injection" keyword is intentionally removed from the combined string
   // check above — it matches both injection QUANTITY maps (correct) and injection
   // TIMING / PAUSE maps (wrong, e.g. InjVlv_tiMI1BreMin).  Instead, rely on the

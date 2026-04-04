@@ -481,7 +481,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'torque',
         desc: 'Maximum torque ceiling by RPM and atmospheric pressure. Must be raised first on EDC16 — this is the master ceiling. Includes per-gear limits (TrqMaxGear1–6, R) critical for DSG/auto gearbox cars where gear-specific limits are the actual cap.',
         // EngPrt_trqLim = 91.4% of 1,037 real EDC16 files. TrqMaxGear1–6/R = 70%+ each.
-        a2lNames: ['EngPrt_trqLim', 'TrqMaxGear1', 'TrqMaxGear2', 'TrqMaxGear3', 'TrqMaxGear4', 'TrqMaxGear5', 'TrqMaxGear6', 'TrqMaxGearR', 'Trq_trqMax_MAP', 'TrqLim_MAP', 'MQBEGR_MAP'],
+        // Gearbx_trqMaxGear*_CUR = per-gear torque ceiling curves (Bosch EDC16U34 name).
+        // These are 1D RPM-vs-Nm curves (15 cols, factor 0.1) — the actual calibration target
+        // for DSG/auto gearbox cars where per-gear limits are the effective torque cap.
+        a2lNames: ['EngPrt_trqLim', 'Gearbx_trqMaxGear1_CUR', 'Gearbx_trqMaxGear2_CUR', 'Gearbx_trqMaxGear3_CUR', 'Gearbx_trqMaxGear4_CUR', 'Gearbx_trqMaxGear5_CUR', 'TrqMaxGear1', 'TrqMaxGear2', 'TrqMaxGear3', 'TrqMaxGear4', 'TrqMaxGear5', 'TrqMaxGear6', 'TrqMaxGearR', 'Trq_trqMax_MAP', 'TrqLim_MAP', 'MQBEGR_MAP'],
         signatures: [
           [0x4D,0x58,0x4D,0x4F,0x4D,0x00],                // "MXMOM\0"
           [0x54,0x51,0x4C,0x49,0x4D,0x44,0x43],           // "TQLIMDС"
