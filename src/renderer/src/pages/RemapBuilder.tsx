@@ -427,25 +427,33 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       const usedOffsets = new Set<number>()
       for (const em of maps) { if (em.found && em.offset >= 0) usedOffsets.add(em.offset) }
       let fallbackCount = 0
+
+      // ── Phase A: name-first matching (Pass 1) for ALL maps before any category fallback ──
+      // CRITICAL ORDER FIX: previously each map ran Pass1 then Pass2 sequentially, so
+      // edc16_torque_limit's Pass2 category-fallback could consume AccPed_trqEng0_MAP before
+      // edc16_drivers_wish got a chance to name-match it.  Run ALL name matches first, then
+      // ALL category fallbacks, so precise matches are never stolen by earlier fallbacks.
       maps = maps.map(em => {
         if (em.found) return em
-        // Pass 1 — name-first: match by known DAMOS/A2L characteristic names (a2lNames field).
-        // This is the most precise match: 'Qmain_MAP' → edc17_fuel_quantity, not just any fuel map.
-        if (em.mapDef.a2lNames?.length) {
-          for (const v of allPool) {
-            if (usedOffsets.has(v.map.fileOffset)) continue
-            if (em.mapDef.a2lNames.some(n => n.toLowerCase() === v.map.name.toLowerCase())) {
-              const synthDef = syntheticMapDefFromA2L(v.map, em.mapDef)
-              const result = extractMap(fileBuffer, synthDef)
-              if (result.found) {
-                usedOffsets.add(v.map.fileOffset)
-                fallbackCount++
-                return { ...result, source: 'a2l' as const }
-              }
+        if (!em.mapDef.a2lNames?.length) return em
+        for (const v of allPool) {
+          if (usedOffsets.has(v.map.fileOffset)) continue
+          if (em.mapDef.a2lNames.some(n => n.toLowerCase() === v.map.name.toLowerCase())) {
+            const synthDef = syntheticMapDefFromA2L(v.map, em.mapDef)
+            const result = extractMap(fileBuffer, synthDef)
+            if (result.found) {
+              usedOffsets.add(v.map.fileOffset)
+              fallbackCount++
+              return { ...result, source: 'a2l' as const }
             }
           }
         }
-        // Pass 2 — category fallback: any unused address in the same category.
+        return em
+      })
+
+      // ── Phase B: category fallback (Pass 2) for maps still not found after Phase A ──
+      maps = maps.map(em => {
+        if (em.found) return em
         for (const v of allPool) {
           if (usedOffsets.has(v.map.fileOffset)) continue
           if (normCat(v.map.category) === em.mapDef.category) {

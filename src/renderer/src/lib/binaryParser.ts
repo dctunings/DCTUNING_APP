@@ -356,7 +356,11 @@ export function syntheticMapDefFromA2L(a2lMap: A2LMapDef, baseDef: MapDef): MapD
     rows:       a2lMap.rows,
     cols:       a2lMap.cols,
     dtype:      a2lMap.dataType as DataType,
-    le:         baseDef.le,  // inherit endianness from ecuDefinitions — ME7/SID/MS43 etc. are big-endian (le:false)
+    // BUG FIX E1: use the A2L-derived endianness (set by extractMapsFromA2L from BIG_ENDIAN_FAMILIES).
+    // EDC16 (PowerPC MPC5565) is big-endian — a2lMap.le = false.  Using baseDef.le (= true in ecuDef)
+    // caused display to read LE while validation read BE, producing wildly wrong physical values
+    // (e.g. 1800 hPa boost → −6141 instead of 1.8 bar).  Both paths must use the same byte order.
+    le:         a2lMap.le,
     // Use ecuDef factor/offsetVal, NOT the A2L file's values.
     // A2L factor conventions vary wildly between vendors (e.g. KFMIRL A2L factor ≈ 655 vs
     // ecuDef 0.023438 — a 28,000× difference). The remap params (multiplier, clampMax, addend)
