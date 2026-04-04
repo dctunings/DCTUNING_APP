@@ -2,6 +2,7 @@
 // A2L (ASAP2) file parser for ECU calibration definitions
 
 export interface A2LAxis {
+  axisType: string       // 'STD_AXIS' | 'COM_AXIS' | 'FIX_AXIS' — determines inline storage
   inputVariable: string
   conversionMethod: string
   size: number
@@ -104,12 +105,13 @@ function tokenise(block: string): string[] {
 function parseAxisDescr(block: string): A2LAxis {
   const tokens = tokenise(block)
   // tokens[0] = axis type (STD_AXIS / COM_AXIS / FIX_AXIS)
+  const axisType = (tokens[0] ?? 'STD_AXIS').toUpperCase()
   const inputVariable = tokens[1] ?? ''
   const conversionMethod = tokens[2] ?? ''
   const size = parseInt(tokens[3] ?? '0', 10)
   const lowerLimit = parseFloat(tokens[4] ?? '0')
   const upperLimit = parseFloat(tokens[5] ?? '0')
-  return { inputVariable, conversionMethod, size, lowerLimit, upperLimit }
+  return { axisType, inputVariable, conversionMethod, size, lowerLimit, upperLimit }
 }
 
 function parseCharacteristic(block: string): A2LCharacteristic | null {
@@ -411,11 +413,32 @@ export function extractMapsFromA2L(result: A2LParseResult, baseAddress: number):
 
     if (cols === 0 || rows === 0) continue
 
-    // Compute final file offset.  For Bosch Kf_/Kl_ inline-axis layouts the
-    // CHARACTERISTIC address is the START of the calibration block which begins
-    // with axis count headers and axis arrays.  Skip past them so fileOffset
-    // points at the actual calibration values, not the axis metadata.
-    const axisSkip = getInlineAxisSkip(ch.recordLayout, cols, rows)
+    // Compute final file offset.
+    // Primary: layout-name skip (handles Bosch Kf_/Kl_ record layouts).
+    // Fallback: STD_AXIS skip — in ASAP2, STD_AXIS means axis data is stored INLINE in the
+    // binary at the CHARACTERISTIC address.  The binary block layout is:
+    //   MAP:   [X_count: 2B][Y_count: 2B][X_axis: cols×elSize][Y_axis: rows×elSize][values]
+    //   CURVE: [X_count: 2B][X_axis: cols×elSize][values]
+    // This is true regardless of the RECORD_LAYOUT name — the layout name is just a tag.
+    // Only Kf_/Kl_ names are caught by getInlineAxisSkip().  Any other layout name with
+    // STD_AXIS axes also has inline storage and needs the same skip.  Without this fallback
+    // fileOffset lands at the count headers instead of the values, causing validation to read
+    // axis/header data as if it were map cells → garbage confidence → status='invalid' →
+    // map never enters allPool → name-first selection falls through to wrong category fallback.
+    let axisSkip = getInlineAxisSkip(ch.recordLayout, cols, rows)
+    if (axisSkip === 0) {
+      const elSize = dataType === 'float32' ? 4 : dataType === 'uint8' || dataType === 'int8' ? 1 : 2
+      if (ch.type === 'MAP' && ch.axes.length >= 2) {
+        const ax0 = ch.axes[0], ax1 = ch.axes[1]
+        if (ax0.axisType === 'STD_AXIS' && ax1.axisType === 'STD_AXIS') {
+          axisSkip = 4 + cols * elSize + rows * elSize  // [X_count][Y_count][X_axis][Y_axis]
+        }
+      } else if (ch.type === 'CURVE' && ch.axes.length >= 1) {
+        if (ch.axes[0].axisType === 'STD_AXIS') {
+          axisSkip = 2 + cols * elSize  // [X_count][X_axis]
+        }
+      }
+    }
     const fileOffset = rawOffset + axisSkip
 
     maps.push({
