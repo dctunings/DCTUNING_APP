@@ -25,6 +25,10 @@ export interface MapDef {
   // Known DAMOS / A2L characteristic names for this map — used for name-first A2L matching.
   // Multiple names listed in priority order (most common first).
   a2lNames?: string[]
+  // When true: ONLY use Phase A name-match for A2L selection. Phase B category fallback is
+  // disabled for this map. Use on maps where category fallback always picks wrong results
+  // because the correct map simply is not present in every A2L by its expected name.
+  a2lNameOnly?: boolean
   // Binary location - array of candidate signatures (bytes), map starts sigOffset bytes after match end
   signatures: number[][]
   sigOffset: number
@@ -485,6 +489,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // These are 1D RPM-vs-Nm curves (15 cols, factor 0.1) — the actual calibration target
         // for DSG/auto gearbox cars where per-gear limits are the effective torque cap.
         a2lNames: ['EngPrt_trqLim', 'Gearbx_trqMaxGear1_CUR', 'Gearbx_trqMaxGear2_CUR', 'Gearbx_trqMaxGear3_CUR', 'Gearbx_trqMaxGear4_CUR', 'Gearbx_trqMaxGear5_CUR', 'TrqMaxGear1', 'TrqMaxGear2', 'TrqMaxGear3', 'TrqMaxGear4', 'TrqMaxGear5', 'TrqMaxGear6', 'TrqMaxGearR', 'Trq_trqMax_MAP', 'TrqLim_MAP', 'MQBEGR_MAP'],
+        // a2lNameOnly: Phase B category fallback disabled — the torque category contains dozens
+        // of AccPed_trqEng* driver's wish variants that look identical to the limit map and will
+        // always be picked incorrectly. Only a precise name match is trustworthy here.
+        a2lNameOnly: true,
         signatures: [
           [0x4D,0x58,0x4D,0x4F,0x4D,0x00],                // "MXMOM\0"
           [0x54,0x51,0x4C,0x49,0x4D,0x44,0x43],           // "TQLIMDС"
@@ -539,6 +547,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'fuel',
         desc: 'Fuel injection quantity in mg/stroke vs RPM and load. Primary diesel power map — raising this increases torque across all RPM.',
         // InjVCD_tiET = 75.1% occurrence (injector energising time = base pulse width).
+        // a2lNameOnly: the 'fuel' category in EDC16 A2Ls is flooded with temperature, correction
+        // and management maps whose names or descriptions contain 'fuel'/'Kraftstoff'/'Einspritz'.
+        // Category fallback always picks the wrong one. Only name-match is trustworthy.
+        a2lNameOnly: true,
         a2lNames: ['InjVCD_tiET', 'Qmain_MAP', 'InjQty_MAP', 'QKENNFELD_MAP', 'QMain_MAP', 'qmain_MAP'],
         signatures: [
           [0x4D,0x45,0x4E,0x5A,0x4B,0x00],                // "MENZK\0"
@@ -583,6 +595,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         desc: 'Common rail fuel pressure target vs RPM and IQ. Higher pressure enables finer atomisation and supports increased injection quantity — essential alongside fuel delivery increases.',
         // PCR_* names are CHARGE (boost) pressure maps, NOT rail pressure — moved to boost map.
         // Rail pressure names confirmed: RDSOLLKF_MAP stores directly in bar (raw 300-1600 = 300-1600 bar).
+        // a2lNameOnly: same reason as fuel_quantity — 'fuel' category fallback in EDC16 A2Ls hits
+        // FlMng_*, EngPrt_* and correction maps before ever reaching a real rail pressure map.
+        a2lNameOnly: true,
         a2lNames: ['Rail_pSetPointMax_MAP', 'RDSOLLKF_MAP', 'Rail_PointMax', 'Rail_PointBase', 'Rail_PointLimTem', 'CRpres_MAP', 'rdsoll_MAP', 'Rail_MAP', 'pRailSetMax_MAP', 'RailPres_MAP'],
         signatures: [[0x52,0x41,0x49,0x4C,0x50,0x52,0x53,0x50], [0x43,0x52,0x50,0x52,0x45,0x53,0x53]],
         sigOffset: 4,

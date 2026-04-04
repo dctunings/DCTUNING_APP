@@ -452,8 +452,11 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       })
 
       // ── Phase B: category fallback (Pass 2) for maps still not found after Phase A ──
+      // Maps with a2lNameOnly:true are skipped — their category contains too many false
+      // positives and only a precise name-match (Phase A) is trustworthy for them.
       maps = maps.map(em => {
         if (em.found) return em
+        if (em.mapDef.a2lNameOnly) return em   // name-match only, no category fallback
         for (const v of allPool) {
           if (usedOffsets.has(v.map.fileOffset)) continue
           if (normCat(v.map.category) === em.mapDef.category) {
