@@ -209,14 +209,95 @@ function inferDataType(recordLayout: string, conversionMethod: string): 'uint8' 
 
 function categoriseMap(name: string, desc: string): A2LMapDef['category'] {
   const s = (name + ' ' + desc).toLowerCase()
+  const n = name.toLowerCase()
+
+  // ── Bosch EDC16/EDC17 explicit exclusions (must come first) ────────────────
+  // ACC_d* / ACCCD_* = Active Cruise Control brake/deceleration torque control maps.
+  // Despite containing "trq" in the name, these are chassis-control maps, not
+  // driver-wish/torque-limit tuning maps.  Move to 'other' so they don't pollute
+  // the 'torque' category and cause the wrong A2L map to be selected as a fallback.
+  if (/^acc_d|^acccd_|^acc_trqbrk|^acc_trqdec/.test(n)) return 'other'
+
+  // InjVlv_ti* = injection valve TIMING (pause/break duration in µs), NOT quantity.
+  // InjCrv_ct* = injection correction by revolution count or temperature.
+  // Both are operational control maps, not calibration targets for power/fuel quantity.
+  if (/^injvlv_ti|^injcrv_ct|^injvlv_ct/.test(n)) return 'other'
+
+  // ── Boost / turbocharger ────────────────────────────────────────────────────
   if (/lade|boost|ldr|ldsol|ladedruck|aufladedruck|pressol|turb/.test(s)) return 'boost'
+  // EDC16 Bosch: PCR_ = Pressure Control Regulator (manifold boost pressure targets)
+  // e.g. PCR_pBDesBas_MAP, PCR_pBDesNorm_MAP, PCR_pBDesHigh_MAP
+  if (/^pcr_p/.test(n)) return 'boost'
+
+  // ── Ignition ────────────────────────────────────────────────────────────────
   if (/kfzw|zundwink|z.ndwink|ignit|zuend/.test(s)) return 'ignition'
+
+  // ── EGR ─────────────────────────────────────────────────────────────────────
   if (/agr|egr/.test(s)) return 'egr'
+
+  // ── DPF ─────────────────────────────────────────────────────────────────────
   if (/dpf|russ|partikel|regen/.test(s)) return 'dpf'
+
+  // ── Limiters ────────────────────────────────────────────────────────────────
   if (/nmax|vmax|begr|limit|sperrung|abschalt|abregel/.test(s)) return 'limiter'
+
+  // ── Torque ──────────────────────────────────────────────────────────────────
   if (/mom|drehmom|torq|mxmomi|mxmotor|drehm/.test(s)) return 'torque'
-  if (/kfmirl|kfped|einspritz|menge|fuel|kraftstoff|dmll|injection|fuell/.test(s)) return 'fuel'
+  // EDC16/EDC17 Bosch: AccPed_trq* = accelerator pedal → torque request (driver's wish).
+  // TrqLim_* / TrqCrv_* = torque limit / torque curve tables.
+  if (/^accped_trq|^trqlim_|^trqcrv_|^trq_trq/.test(n)) return 'torque'
+
+  // ── Fuel / injection quantity ────────────────────────────────────────────────
+  if (/kfmirl|kfped|einspritz|menge|fuel|kraftstoff|dmll|fuell/.test(s)) return 'fuel'
+  // The generic "injection" keyword is intentionally removed from the combined string
+  // check above — it matches both injection QUANTITY maps (correct) and injection
+  // TIMING / PAUSE maps (wrong, e.g. InjVlv_tiMI1BreMin).  Instead, rely on the
+  // name-prefix checks below for EDC16/EDC17 quantity maps:
+  if (/^inj_q|^injq_|^injcor_q/.test(n)) return 'fuel'                // Bosch quantity names
+  if (/smklim|smokl|smkl|smoke.*limit|rauchl/.test(s)) return 'fuel'  // smoke/quantity limiters
+  // Also re-admit injection in description when it's clearly a fuel map context
+  // (not filtered by the ti* exclusion above)
+  if (/injection/.test(s)) return 'fuel'
+
   return 'other'
+}
+
+// ─── Bosch inline-axis layout skip ───────────────────────────────────────────
+// Bosch DAMOS++ A2Ls use 'Kf_' (Kennfeld = 2D map) and 'Kl_' (Kennlinie = curve)
+// record layout names.  These layouts store the axis data INLINE before the map
+// values, starting at the CHARACTERISTIC address:
+//
+//   Kf_ (MAP):   [X_count: int16] [Y_count: int16]
+//                [X_axis:  cols × elSize bytes]
+//                [Y_axis:  rows × elSize bytes]
+//                [values:  rows × cols × elSize bytes]   ← actual calibration data
+//
+//   Kl_ (CURVE): [X_count: int16]
+//                [X_axis:  cols × elSize bytes]
+//                [values:  cols × elSize bytes]           ← actual calibration data
+//
+// Without this skip the parser reads axis count headers and axis values as if they
+// were map cells, producing wildly wrong physical values (e.g. 0x0010 = 16 raw
+// read as 1.6 bar or –6141 Nm depending on factor/offset).
+//
+// The element size is derived from the type token in the layout name:
+//   s16 / u16 → 2 bytes   s8 / u8 → 1 byte   s32 / u32 / float32 → 4 bytes
+function getInlineAxisSkip(recordLayout: string, cols: number, rows: number): number {
+  const rl = recordLayout.toLowerCase()
+  if (!rl.startsWith('kf_') && !rl.startsWith('kl_')) return 0
+
+  // Extract element size from the X-axis type token (e.g. 'xs16' → 's16' → 2)
+  const typeMatch = rl.match(/^k[fl]_x([su](?:8|16|32)|float32)/)
+  const typeStr = typeMatch ? typeMatch[1] : 's16'
+  const elSize = typeStr.includes('32') ? 4 : typeStr.includes('8') ? 1 : 2
+
+  if (rl.startsWith('kf_')) {
+    // 2D map: two 2-byte count headers + X-axis array + Y-axis array
+    return 2 + 2 + cols * elSize + rows * elSize
+  } else {
+    // 1D curve: one 2-byte count header + X-axis array
+    return 2 + cols * elSize
+  }
 }
 
 function axisLabel(variable: string, min: number, max: number): string {
@@ -293,8 +374,8 @@ export function extractMapsFromA2L(result: A2LParseResult, baseAddress: number):
   for (const ch of result.characteristics) {
     if (ch.type === 'VALUE') continue
 
-    const fileOffset = ch.address - baseAddress
-    if (fileOffset < 0) continue // address below base -- likely not a file offset
+    const rawOffset = ch.address - baseAddress
+    if (rawOffset < 0) continue // address below base -- likely not a file offset
 
     // Get scaling from COMPU_METHOD
     let factor = 1
@@ -329,6 +410,13 @@ export function extractMapsFromA2L(result: A2LParseResult, baseAddress: number):
     }
 
     if (cols === 0 || rows === 0) continue
+
+    // Compute final file offset.  For Bosch Kf_/Kl_ inline-axis layouts the
+    // CHARACTERISTIC address is the START of the calibration block which begins
+    // with axis count headers and axis arrays.  Skip past them so fileOffset
+    // points at the actual calibration values, not the axis metadata.
+    const axisSkip = getInlineAxisSkip(ch.recordLayout, cols, rows)
+    const fileOffset = rawOffset + axisSkip
 
     maps.push({
       name: ch.name,
