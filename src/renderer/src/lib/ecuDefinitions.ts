@@ -488,7 +488,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // Gearbx_trqMaxGear*_CUR = per-gear torque ceiling curves (Bosch EDC16U34 name).
         // These are 1D RPM-vs-Nm curves (15 cols, factor 0.1) — the actual calibration target
         // for DSG/auto gearbox cars where per-gear limits are the effective torque cap.
-        a2lNames: ['EngPrt_trqLim', 'Gearbx_trqMaxGear1_CUR', 'Gearbx_trqMaxGear2_CUR', 'Gearbx_trqMaxGear3_CUR', 'Gearbx_trqMaxGear4_CUR', 'Gearbx_trqMaxGear5_CUR', 'TrqMaxGear1', 'TrqMaxGear2', 'TrqMaxGear3', 'TrqMaxGear4', 'TrqMaxGear5', 'TrqMaxGear6', 'TrqMaxGearR', 'Trq_trqMax_MAP', 'TrqLim_MAP', 'MQBEGR_MAP'],
+        // EngPrt_trqLimP_MAP = "Kennfeld zur Begrenzung aufgrund des Atmosphärendrucks und der Drehzahl"
+        // = Torque limit map by atmospheric pressure and RPM. Confirmed in EDC16U34 (389289 SW):
+        // 25×4 MAP, factor 0.1 Nm, values 240-262 Nm at sea level, drops at altitude. This is
+        // the actual master torque ceiling in this A2L variant (EngPrt_trqLim is a VALUE scalar here).
+        // Gearbx_trqMaxGear1-5_CUR = per-gear limits, but set to 30000 (disabled) in this calibration.
+        a2lNames: ['EngPrt_trqLimP_MAP', 'EngPrt_trqLim', 'Gearbx_trqMaxGear1_CUR', 'Gearbx_trqMaxGear2_CUR', 'Gearbx_trqMaxGear3_CUR', 'Gearbx_trqMaxGear4_CUR', 'Gearbx_trqMaxGear5_CUR', 'TrqMaxGear1', 'TrqMaxGear2', 'TrqMaxGear3', 'TrqMaxGear4', 'TrqMaxGear5', 'TrqMaxGear6', 'TrqMaxGearR', 'Trq_trqMax_MAP', 'TrqLim_MAP', 'MQBEGR_MAP'],
         // a2lNameOnly: Phase B category fallback disabled — the torque category contains dozens
         // of AccPed_trqEng* driver's wish variants that look identical to the limit map and will
         // always be picked incorrectly. Only a precise name match is trustworthy here.
