@@ -548,26 +548,34 @@ export const ECU_DEFINITIONS: EcuDef[] = [
       },
       {
         id: 'edc16_fuel_quantity',
-        name: 'Injection Quantity Map',
+        name: 'Injection Duration Map',
         category: 'fuel',
-        desc: 'Fuel injection quantity in mg/stroke vs RPM and load. Primary diesel power map — raising this increases torque across all RPM.',
-        // InjVCD_tiET = 75.1% occurrence (injector energising time = base pulse width).
-        // a2lNameOnly: the 'fuel' category in EDC16 A2Ls is flooded with temperature, correction
-        // and management maps whose names or descriptions contain 'fuel'/'Kraftstoff'/'Einspritz'.
-        // Category fallback always picks the wrong one. Only name-match is trustworthy.
+        desc: 'Main injection duration in crank degrees vs RPM and injection quantity. One of 7 selectable maps (MAP0–6) — the ECU picks based on operating mode. Raising these values directly increases fuel delivery per cycle. Factor 0.023437 °/LSB (AngleCrS COMPU_METHOD, Bosch EDC16U34). In EDC16U34 (torque-demand architecture), IQ mg/st is handled upstream via Torque→IQ conversion; these maps control the actual injector open time.',
+        // EDC16U34 SW389289 (test_edc16.a2l): traditional RDSOLLKF/InjVCD_tiET are NOT present.
+        // This calibration uses the torque-demand chain: AccPed→Torque→FMTC_trq2qBas→IQ→InjVlv_phiInjMI1.
+        // InjVlv_phiInjMI1_MAP0-6 = "Förderdauer" (delivery duration) for main injection (MI1).
+        // These ARE the classic "duration maps" that tuners scale to add fuel in WinOLS.
+        // InjVCD_tiET / Qmain_MAP = names used by other EDC16 calibrations (older DAMOS naming).
         a2lNameOnly: true,
-        a2lNames: ['InjVCD_tiET', 'Qmain_MAP', 'InjQty_MAP', 'QKENNFELD_MAP', 'QMain_MAP', 'qmain_MAP'],
+        a2lNames: [
+          'InjVlv_phiInjMI1_MAP0', 'InjVlv_phiInjMI1_MAP1', 'InjVlv_phiInjMI1_MAP2',
+          'InjVlv_phiInjMI1_MAP3', 'InjVlv_phiInjMI1_MAP4', 'InjVlv_phiInjMI1_MAP5',
+          'InjVlv_phiInjMI1_MAP6',
+          'InjVCD_tiET', 'Qmain_MAP', 'InjQty_MAP', 'QKENNFELD_MAP', 'QMain_MAP', 'qmain_MAP',
+        ],
         signatures: [
           [0x4D,0x45,0x4E,0x5A,0x4B,0x00],                // "MENZK\0"
           [0x49,0x4E,0x4A,0x51,0x54,0x59,0x44,0x43],      // "INJQTYDC"
           [0x46,0x55,0x45,0x4C,0x51,0x54,0x59,0x01],      // "FUELQTY\1"
         ],
         sigOffset: 4,
-        rows: 11, cols: 16, dtype: 'uint16', le: true,
-        factor: 0.001, offsetVal: 0, unit: 'mg/st',
-        stage1: { multiplier: 1.15 },
-        stage2: { multiplier: 1.24 },
-        stage3: { multiplier: 1.35, clampMax: 62000 },
+        rows: 10, cols: 10, dtype: 'int16', le: true,
+        // AngleCrS: COEFFS 0 42.6666... 0 0 0 1 → factor = f/b = 1/42.667 ≈ 0.023437 °/LSB
+        // Matches the classic WinOLS "duration map factor" of 0.023437 for Bosch EDC16.
+        factor: 0.023437, offsetVal: 0, unit: 'deg',
+        stage1: { multiplier: 1.12 },
+        stage2: { multiplier: 1.20 },
+        stage3: { multiplier: 1.30 },
         critical: true, showPreview: true,
       },
       {
@@ -608,11 +616,15 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 4,
         rows: 10, cols: 16, dtype: 'uint16', le: true,
         // EDC16 rail pressure stored in bar directly. raw 1600 = 1600 bar. Ceiling 1900 bar.
+        // NOTE: EDC16U34 (VAA1 A2L) does NOT expose a standalone rail pressure map under any of
+        // the above names. CrCtl_ = Cruise Control, PCR_ = boost pressure regulator — neither is rail.
+        // Rail pressure is managed internally by the ECU in this calibration variant.
+        // critical:false — Not Found is expected and correct for EDC16U34 SW389289.
         factor: 1, offsetVal: 0, unit: 'bar',
         stage1: { multiplier: 1.06 },
         stage2: { multiplier: 1.10 },
         stage3: { multiplier: 1.15, clampMax: 1900 },
-        critical: true, showPreview: true,
+        critical: false, showPreview: true,
       },
       // ── BOOST ────────────────────────────────────────────────────────────────
       {
@@ -643,7 +655,16 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'ignition',
         desc: 'Injection timing advance vs RPM and IQ in degrees before TDC. Advancing SOI improves combustion efficiency and power — standard Stage 2/3 mod. EDC16 has up to 5 injection timing zones.',
         // InjCrv_Bas1–5 = 73%+ each across 1,037 real EDC16 files. AntBasDeg_ga_0 = SOI correction.
-        a2lNames: ['InjCrv_Bas1', 'InjCrv_Bas2', 'InjCrv_Bas3', 'InjCrv_Bas4', 'InjCrv_Bas5', 'InjCrv_phiMI1Bas_MAP', 'SOI_MAP', 'SOIKF_MAP', 'AntBasDeg_ga_0'],
+        // EDC16U34 SW389289 (test_edc16.a2l): InjCrv_phiBas0_GMAP–phiBas9_GMAP = 10 SOI map groups
+        // (Förderbeginn Grundkorrektur). Selected by InjCrv_phiBas_CUR based on operating mode.
+        // phiBas0_GMAP is the primary group (cold start / standard). Factor = AngleCrS = 0.023437 °/LSB.
+        // phiBasGear12/34/56_MAP = gear-specific SOI maps, simpler STD_AXIS format.
+        a2lNames: [
+          'InjCrv_phiBas0_GMAP', 'InjCrv_phiBas1_GMAP', 'InjCrv_phiBas2_GMAP',
+          'InjCrv_phiBasGear12_MAP', 'InjCrv_phiBasGear34_MAP', 'InjCrv_phiBasGear56_MAP',
+          'InjCrv_Bas1', 'InjCrv_Bas2', 'InjCrv_Bas3', 'InjCrv_Bas4', 'InjCrv_Bas5',
+          'InjCrv_phiMI1Bas_MAP', 'SOI_MAP', 'SOIKF_MAP', 'AntBasDeg_ga_0',
+        ],
         signatures: [[0x53,0x4F,0x49,0x4D,0x41,0x50,0x44,0x43], [0x49,0x4E,0x4A,0x54,0x49,0x4D,0x44,0x43]],
         sigOffset: 4,
         rows: 8, cols: 10, dtype: 'int16', le: true,
