@@ -7,7 +7,7 @@ import { buildRemap, buildFilename } from '../lib/remapEngine'
 import type { Stage, AddonId, RemapResult } from '../lib/remapEngine'
 import { verifyChecksum, correctChecksum, correctBlockChecksums } from '../lib/checksumEngine'
 import type { BlockCorrectionResult } from '../lib/checksumEngine'
-import { parseA2L, extractMapsFromA2L, detectBaseAddress } from '../lib/a2lParser'
+import { parseA2L, extractMapsFromA2L, detectBaseAddress, guessEcuFamily, ECU_BASE_ADDRESSES } from '../lib/a2lParser'
 import type { A2LParseResult, A2LMapDef } from '../lib/a2lParser'
 import { parseDRT, convertDRTMaps, guessEcuFamilyFromDRT } from '../lib/drtParser'
 import type { DRTParseResult, DRTConvertedMap } from '../lib/drtParser'
@@ -38,6 +38,15 @@ interface DefinitionEntry {
 // non-standard ECU variants, and any A2L whose family isn't in the lookup table.
 function pickBestBaseAddress(buffer: ArrayBuffer, result: A2LParseResult): number {
   const preferred = detectBaseAddress(result)
+
+  // If the ECU family is definitively identified, trust the lookup table and skip
+  // the scoring search entirely.  The multi-candidate search is only a fallback for
+  // A2Ls whose family cannot be recognised (unknown tool, unusual naming, etc.).
+  // Without this short-circuit, the scoring can accidentally prefer derivedBase
+  // (minAddr & 0xFFFF0000, e.g. 0x1C0000 for EDC16) over the correct 0x000000.
+  const family = guessEcuFamily(result)
+  if (family && ECU_BASE_ADDRESSES[family] !== undefined) return preferred
+
   const addrs = result.characteristics
     .filter(c => c.type !== 'VALUE')
     .map(c => c.address)
