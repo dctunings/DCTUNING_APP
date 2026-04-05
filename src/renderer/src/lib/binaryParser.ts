@@ -536,8 +536,8 @@ export function scanBinaryForMaps(buffer: ArrayBuffer): ScannedMap[] {
   const looksLikeRpm = (vals: number[]) => {
     if (vals.length < 6 || vals.length > 22) return false
     if (vals[0] < 200 || vals[0] > 2000) return false
-    // Max RPM must reach at least 3500 — filters out spurious 2231–2831 sequences
-    if (vals[vals.length - 1] < 3500 || vals[vals.length - 1] > 10000) return false
+    // Max RPM must reach at least 3000 — diesel maps often cap at 3500–4500 RPM
+    if (vals[vals.length - 1] < 3000 || vals[vals.length - 1] > 10000) return false
     if (!isMonoInc(vals, 50)) return false
     for (let i = 1; i < vals.length; i++) if (vals[i] - vals[i - 1] > 2500) return false
     // Perfectly uniform + small max RPM — very suspicious (not a real RPM axis)
@@ -581,49 +581,35 @@ export function scanBinaryForMaps(buffer: ArrayBuffer): ScannedMap[] {
   const hasDimHdr = (axisStart: number, rows: number, cols: number) =>
     axisStart >= 2 && u8(axisStart - 2) === rows && u8(axisStart - 1) === cols
 
-  // ── 6. Category guesser (string-first, then value range) ──────────────────
-  // Value ranges here are in RAW ECU units (no scaling factor applied).
-  //
-  // Bosch diesel fuel quantity maps (KFLOAD, QSOL, MXSOL etc.):
-  //   stored as mg/stroke × 256 → raw values 0–65535 are normal (e.g. 65483/256 = 255 mg/str)
-  //   These are always LARGE maps (rows*cols >= 24) covering full RPM × Load range.
-  //
-  // Boost / rail pressure maps:
-  //   mbar or kPa with ×10 scaling → typically 5000–35000 raw
-  //
-  // Ignition / injection timing:
-  //   degrees × 10 → 0–600 raw (petrol) or 0–200 raw (diesel SOI)
-  //
-  // Torque maps:
-  //   Nm × 10 or × 4 → 1000–60000 raw typical
-  const guessCategory = (mn: number, mx: number, rows: number, cols: number, name?: string) => {
+  // ── 6. Category guesser ───────────────────────────────────────────────────
+  // IMPORTANT: ECU raw values have unknown COMPU_METHOD scaling factors.
+  // Without knowing the factor (e.g. 0.023437 °/LSB or 0.001 Nm/LSB), we
+  // CANNOT reliably determine category from raw values alone.
+  // Rule: only classify when the evidence is overwhelming; else UNKNOWN.
+  // A wrong label is much worse than an UNKNOWN label for the end user.
+  const guessCategory = (mn: number, mx: number, rows: number, cols: number, name?: string): string => {
     const n = (name ?? '').toUpperCase()
-    const cells = rows * cols
 
-    // ── Name-based (highest priority — trust embedded strings) ─────────────
-    if (/FUEL|INJ|KFLOAD|MLXSOL|KFMIRL|KFKHFM|QSOL|MXSOL|QDVQFMAX|DTMX/.test(n)) return 'fuel'
+    // ── Embedded-name classification (highest confidence) ──────────────────
+    if (/FUEL|INJ|KFLOAD|MLXSOL|KFMIRL|KFKHFM|QSOL|MXSOL|QDVQFMAX/.test(n)) return 'fuel'
     if (/BOOST|TURB|LADP|KFLAM|DSMXPH|PRESSURE|LDRXN|PBARO|KFPW|RAIL/.test(n)) return 'boost'
     if (/IGN|TIMING|KFZW|KFZWOP|SPARK|ADVANCE|ZWTK|ZWIST|SOI|ZWSOL/.test(n)) return 'ignition'
     if (/TORQ|MOMENT|LIMIT|MXMOMI|MXKFMOM|TRQFIL|MNTQMAX/.test(n)) return 'torque'
-    if (/EGR|AGR|SMOKE|LAMBDA|LAMSOLL/.test(n)) return 'boost'
+    if (/SMOKE|EGR|AGR|LAMBDA|LAMSOLL/.test(n)) return 'smoke'
 
-    // ── Value-range heuristics ─────────────────────────────────────────────
-    // Ignition / SOI timing: very small range (degrees × 10)
-    if (mx <= 600 && mx > 10 && mn >= 0) return 'ignition'
+    // ── Value-range heuristics — VERY conservative ─────────────────────────
+    // Only classify if the value pattern is essentially unmistakable.
+    // For everything else show UNKNOWN — the user knows the ECU better than we do.
 
-    // Large main map with wide range → almost certainly the main FUEL quantity map
-    // (Bosch diesel stores raw mg/stroke × 256, so max can reach 60000–65535)
-    if (cells >= 24 && mx > 30000) return 'fuel'
+    // Injection timing / SOI: raw timing values are always small
+    // (degrees × small factor → max raw rarely exceeds 3000, min near 0)
+    if (mn >= 0 && mx >= 50 && mx <= 3000 && (mx - mn) >= 30) return 'ignition'
 
-    // Medium map with moderate range → fuel quantity or injection duration
-    if (cells >= 12 && mn >= 0 && mx >= 200 && mx <= 20000) return 'fuel'
+    // Boost / pressure target: medium positive values in narrow window
+    // (mbar raw or bar×1000, never tiny like timing, never huge like torque)
+    if (mn >= 800 && mx >= 1200 && mx <= 5000 && (mx - mn) >= 400) return 'boost'
 
-    // Boost / pressure: mid-range values, typically mbar × scaling
-    if (mn >= 500 && mx >= 1000 && mx <= 35000) return 'boost'
-
-    // Torque tables: higher values, medium-large maps
-    if (cells >= 12 && mn >= 0 && mx >= 5000 && mx <= 65000) return 'torque'
-
+    // Everything else: insufficient evidence — show UNKNOWN
     return 'unknown'
   }
 
@@ -753,7 +739,68 @@ export function scanBinaryForMaps(buffer: ArrayBuffer): ScannedMap[] {
     }
   }
 
-  // ── 11. Sort, deduplicate by overlap AND axis signature, return top 40 ──────
+  // ── 11. EDC16-style dimension-header scan ─────────────────────────────────
+  // Bosch EDC16/EDC17/MED17 stores many maps as: [rows:u8][cols:u8][Y:rows×u16][X:cols×u16][data]
+  // The key difference from the adjacent-axis scan above:
+  //   • We REQUIRE the [rows][cols] byte header to be present
+  //   • We do NOT require the Y-axis to look like RPM values — the Y axis might be
+  //     IQ (mg/stroke), MAF (kg/h), torque (Nm), pressure (mbar), etc.
+  //   • We only require both axes to be monotonically increasing with meaningful spread
+  // This catches the main A2L calibration maps that use non-RPM primary axes.
+  for (let off = 0; off < scanLimit - 200; off++) {
+    const rows = u8(off)
+    const cols = u8(off + 1)
+    if (rows < 4 || rows > 22 || cols < 4 || cols > 22) continue
+    if (rows * cols < 16) continue
+    const yOff = off + 2
+    const xOff = yOff + rows * 2
+    const dOff = xOff + cols * 2
+    if (dOff + rows * cols * 2 > len) continue
+    if (overlaps(dOff, rows * cols * 2)) continue
+    const yVals2 = readSeq16(yOff, rows, false)
+    if (yVals2.length !== rows) continue
+    if (!isMonoInc(yVals2, 1)) continue
+    const ySpread = yVals2[rows - 1] - yVals2[0]
+    if (ySpread < 100 || yVals2[0] < 0) continue
+    const xVals2 = readSeq16(xOff, cols, false)
+    if (xVals2.length !== cols) continue
+    if (!isMonoInc(xVals2, 1)) continue
+    const xSpread = xVals2[cols - 1] - xVals2[0]
+    if (xSpread < 30) continue
+    const flat2: number[] = []
+    let ok2 = true
+    for (let i = 0; i < rows * cols; i++) {
+      const v = u16b(dOff + i * 2)
+      if (v < 0) { ok2 = false; break }
+      flat2.push(v)
+    }
+    if (!ok2) continue
+    const q2 = scoreGrid(flat2, 'uint16')
+    if (q2 < 0.30) continue
+    const mn2 = Math.min(...flat2), mx2 = Math.max(...flat2)
+    const eName2 = nearestStr(yOff)
+    let conf2 = q2 * 0.50 + 0.25  // dim-header gives +0.25 base vs plain axis scan
+    if (eName2) conf2 += 0.06
+    // RPM-shaped Y axis is extra evidence
+    if (looksLikeRpm(yVals2)) conf2 += 0.08
+    conf2 = Math.min(1, conf2)
+    const grid2: number[][] = []
+    for (let r = 0; r < rows; r++) grid2.push(flat2.slice(r * cols, r * cols + cols))
+    const mapLabel = eName2
+      ? `${eName2} @ 0x${dOff.toString(16).toUpperCase()} (${rows}×${cols})`
+      : `Map 0x${dOff.toString(16).toUpperCase()} (${rows}×${cols})`
+    results.push({
+      id: `scan_${++id}`,
+      name: mapLabel,
+      offset: dOff, rows, cols, yVals: yVals2, xVals: xVals2,
+      yAxisOffset: yOff, xAxisOffset: xOff,
+      dtype: 'uint16', le: false, confidence: conf2,
+      dataPreview: grid2, dataMin: mn2, dataMax: mx2,
+      category: guessCategory(mn2, mx2, rows, cols, eName2), embeddedName: eName2,
+    })
+  }
+
+  // ── 12. Sort, deduplicate by overlap AND axis signature, return top 25 ──────
   // Two kinds of dedup:
   //   a) byte-range overlap  — same bytes claimed by two different detections
   //   b) axis signature      — same yVals+xVals repeated (e.g. 30 cylinder trim tables)
