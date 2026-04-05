@@ -564,12 +564,15 @@ export function scanBinaryForMaps(buffer: ArrayBuffer): ScannedMap[] {
     const maxV = dtype === 'uint8' ? 255 : 65535
     const mn = Math.min(...flat), mx = Math.max(...flat)
     if (mx === 0 || mn === mx) return 0.04
-    // Full-range maps (0–65535 for uint16, 0–255 for uint8) are almost always noise —
-    // real calibration data never spans the entire raw integer range.
-    if (mn === 0 && mx >= maxV - 2) return 0.04
+    // Near-full-range maps are almost always noise — real calibration data is
+    // scaled to engineering units and never spans the raw integer max.
+    // Threshold: min < 20 AND max > 97% of type max (catches 0–65519, 0–65480, etc.)
+    if (mn <= 20 && mx >= maxV * 0.97) return 0.04
+    // Maps where >30% of cells are at the type maximum are saturated / noise
+    const maxFrac = flat.filter(v => v >= maxV - 50).length / flat.length
+    if (maxFrac > 0.3) return 0.04
     const zeroFrac = flat.filter(v => v === 0).length / flat.length
-    const maxFrac  = flat.filter(v => v >= maxV - 2).length / flat.length
-    if (zeroFrac > 0.6 || maxFrac > 0.4) return 0.04
+    if (zeroFrac > 0.6) return 0.04
     return Math.min(1, 0.3 + ((mx - mn) / maxV) * 0.4 + (1 - zeroFrac) * 0.3)
   }
 
@@ -579,17 +582,31 @@ export function scanBinaryForMaps(buffer: ArrayBuffer): ScannedMap[] {
     axisStart >= 2 && u8(axisStart - 2) === rows && u8(axisStart - 1) === cols
 
   // ── 6. Category guesser (string-first, then value range) ──────────────────
-  const guessCategory = (mn: number, mx: number, name?: string) => {
+  // Value ranges here are in RAW ECU units (no factor applied).
+  // Diesel fuel maps: mg/stroke × 8 → typically 0–2000 raw
+  // Boost/pressure:  mbar or % × scaling → 800–3000 raw range typical
+  // Ignition timing: degrees × 10 → 0–500 raw, sometimes signed (180° offset)
+  // Torque:          Nm × 10 or × 4 → 500–60000 raw typical
+  const guessCategory = (mn: number, mx: number, rows: number, cols: number, name?: string) => {
     const n = (name ?? '').toUpperCase()
-    if (/FUEL|INJ|KFLOAD|MLXSOL|KFMIRL|KFKHFM/.test(n)) return 'fuel'
-    if (/BOOST|TURB|LADP|KFLAM|DSMXPH|PRESSURE/.test(n)) return 'boost'
-    if (/IGN|TIMING|KFZW|KFZWOP|SPARK|ADVANCE/.test(n)) return 'ignition'
-    if (/TORQ|MOMENT|LIMIT|MXMOMI|MXKFMOM/.test(n)) return 'torque'
-    if (/EGR|SMOKE|RAIL|LAMBDA/.test(n)) return 'other'
-    if (mn >= 600  && mx <= 4000)  return 'boost'
-    if (mn >= 0    && mx <= 255)   return 'ignition'
-    if (mn >= 0    && mx <= 8192)  return 'fuel'
-    if (mn >= 1000 && mx <= 60000) return 'torque'
+    // Name-based (highest priority — trust embedded strings)
+    if (/FUEL|INJ|KFLOAD|MLXSOL|KFMIRL|KFKHFM|QSOL|MXSOL|QDVQFMAX/.test(n)) return 'fuel'
+    if (/BOOST|TURB|LADP|KFLAM|DSMXPH|PRESSURE|LDRXN|PBARO|KFPW/.test(n)) return 'boost'
+    if (/IGN|TIMING|KFZW|KFZWOP|SPARK|ADVANCE|ZWTK|ZWIST/.test(n)) return 'ignition'
+    if (/TORQ|MOMENT|LIMIT|MXMOMI|MXKFMOM|KFMIRL|TRQFIL/.test(n)) return 'torque'
+    if (/EGR|SMOKE|RAIL|LAMBDA|LAMSOLL|AGR/.test(n)) return 'boost'
+
+    // Value-range heuristics (diesel-first, then petrol patterns)
+    // Ignition timing: small values 0–500 (degrees×10) or larger if in crank degrees
+    if (mn >= 0 && mx <= 500 && mx > 0) return 'ignition'
+    // Diesel fuel quantity: moderate range, typically 0–2000 or 0–5000
+    if (mn >= 0 && mx >= 100 && mx <= 8000 && rows * cols >= 12) return 'fuel'
+    // Boost / pressure: values in low thousands
+    if (mn >= 500 && mx >= 800 && mx <= 6000) return 'boost'
+    // Rail pressure: 500–3000 bar×10 typical
+    if (mn >= 200 && mx >= 3000 && mx <= 35000 && rows * cols >= 12) return 'boost'
+    // Torque: values in tens of thousands (Nm × factor)
+    if (mn >= 500 && mx >= 5000 && mx <= 65000) return 'torque'
     return 'unknown'
   }
 
@@ -638,7 +655,7 @@ export function scanBinaryForMaps(buffer: ArrayBuffer): ScannedMap[] {
           yAxisOffset: off, xAxisOffset: xOff,
           dtype: 'uint16', le: false, confidence: conf,
           dataPreview: grid, dataMin: mn, dataMax: mx,
-          category: guessCategory(mn, mx, eName), embeddedName: eName,
+          category: guessCategory(mn, mx, rows, cols, eName), embeddedName: eName,
         })
         break
       }
@@ -675,7 +692,7 @@ export function scanBinaryForMaps(buffer: ArrayBuffer): ScannedMap[] {
           yAxisOffset: off, xAxisOffset: xOff,
           dtype: 'uint16', le: true, confidence: conf,
           dataPreview: grid, dataMin: mn, dataMax: mx,
-          category: guessCategory(mn, mx, eName), embeddedName: eName,
+          category: guessCategory(mn, mx, rows, cols, eName), embeddedName: eName,
         })
         break
       }
@@ -712,7 +729,7 @@ export function scanBinaryForMaps(buffer: ArrayBuffer): ScannedMap[] {
           yAxisOffset: off, xAxisOffset: xOff,
           dtype: 'uint8', le: false, confidence: conf,
           dataPreview: grid, dataMin: mn, dataMax: mx,
-          category: guessCategory(mn, mx, eName), embeddedName: eName,
+          category: guessCategory(mn, mx, rows, cols, eName), embeddedName: eName,
         })
         break
       }
