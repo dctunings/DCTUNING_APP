@@ -523,19 +523,39 @@ export function scanBinaryForMaps(buffer: ArrayBuffer): ScannedMap[] {
     for (let i = 1; i < vals.length; i++) if (vals[i] - vals[i - 1] < minStep) return false
     return true
   }
+  // Returns true if ALL inter-value steps are exactly equal (perfectly uniform spacing).
+  // Real calibration axes are almost never perfectly uniform — they cluster near interesting
+  // operating points. Uniform = likely a non-axis data structure masquerading as an axis.
+  const isUniformSpacing = (vals: number[]) => {
+    if (vals.length < 3) return false
+    const step = vals[1] - vals[0]
+    if (step <= 0) return false
+    for (let i = 2; i < vals.length; i++) if (vals[i] - vals[i - 1] !== step) return false
+    return true
+  }
   const looksLikeRpm = (vals: number[]) => {
     if (vals.length < 6 || vals.length > 22) return false
-    if (vals[0] < 200 || vals[0] > 2500) return false
-    if (vals[vals.length - 1] < 2000 || vals[vals.length - 1] > 10000) return false
+    if (vals[0] < 200 || vals[0] > 2000) return false
+    // Max RPM must reach at least 3500 — filters out spurious 2231–2831 sequences
+    if (vals[vals.length - 1] < 3500 || vals[vals.length - 1] > 10000) return false
     if (!isMonoInc(vals, 50)) return false
     for (let i = 1; i < vals.length; i++) if (vals[i] - vals[i - 1] > 2500) return false
+    // Perfectly uniform + small max RPM — very suspicious (not a real RPM axis)
+    if (isUniformSpacing(vals) && vals[vals.length - 1] < 5000) return false
     return true
   }
   const looksLikeLoad = (vals: number[]) => {
     if (vals.length < 4 || vals.length > 22) return false
     if (!isMonoInc(vals, 1)) return false
-    const last = vals[vals.length - 1]
-    return last > 0 && last <= 65535
+    const first = vals[0], last = vals[vals.length - 1]
+    if (last <= 0 || last > 65535) return false
+    // Load axis must have meaningful spread — ratio of max/min or absolute range
+    const spread = last - first
+    if (spread < 50) return false
+    // Reject axes where values fall in pure RPM territory (200–6000) with uniform spacing
+    // These are almost certainly not load axes but misdetected secondary data
+    if (last <= 6500 && isUniformSpacing(vals)) return false
+    return true
   }
 
   // ── 4. Grid quality scorer ─────────────────────────────────────────────────
@@ -544,6 +564,9 @@ export function scanBinaryForMaps(buffer: ArrayBuffer): ScannedMap[] {
     const maxV = dtype === 'uint8' ? 255 : 65535
     const mn = Math.min(...flat), mx = Math.max(...flat)
     if (mx === 0 || mn === mx) return 0.04
+    // Full-range maps (0–65535 for uint16, 0–255 for uint8) are almost always noise —
+    // real calibration data never spans the entire raw integer range.
+    if (mn === 0 && mx >= maxV - 2) return 0.04
     const zeroFrac = flat.filter(v => v === 0).length / flat.length
     const maxFrac  = flat.filter(v => v >= maxV - 2).length / flat.length
     if (zeroFrac > 0.6 || maxFrac > 0.4) return 0.04
@@ -696,14 +719,29 @@ export function scanBinaryForMaps(buffer: ArrayBuffer): ScannedMap[] {
     }
   }
 
-  // ── 11. Sort, deduplicate, return top 60 ──────────────────────────────────
+  // ── 11. Sort, deduplicate by overlap AND axis signature, return top 40 ──────
+  // Two kinds of dedup:
+  //   a) byte-range overlap  — same bytes claimed by two different detections
+  //   b) axis signature      — same yVals+xVals repeated (e.g. 30 cylinder trim tables)
+  //      Keep at most 3 maps per unique axis signature (the 3 highest confidence ones).
   results.sort((a, b) => b.confidence - a.confidence)
+
+  const axisKey = (r: ScannedMap) => r.yVals.join(',') + '|' + r.xVals.join(',')
+  const axisCounts = new Map<string, number>()
+
   const out: ScannedMap[] = []
   for (const r of results) {
     const sz = r.rows * r.cols * (r.dtype === 'uint16' ? 2 : 1)
-    if (!out.some(e => { const es = e.rows * e.cols * (e.dtype === 'uint16' ? 2 : 1); return r.offset < e.offset + es && r.offset + sz > e.offset }))
-      out.push(r)
-    if (out.length >= 60) break
+    // Skip byte-overlap
+    if (out.some(e => { const es = e.rows * e.cols * (e.dtype === 'uint16' ? 2 : 1); return r.offset < e.offset + es && r.offset + sz > e.offset }))
+      continue
+    // Skip if this axis signature already has 3 representatives
+    const key = axisKey(r)
+    const count = axisCounts.get(key) ?? 0
+    if (count >= 3) continue
+    axisCounts.set(key, count + 1)
+    out.push(r)
+    if (out.length >= 40) break
   }
   return out
 }
