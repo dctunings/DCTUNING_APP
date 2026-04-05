@@ -582,31 +582,48 @@ export function scanBinaryForMaps(buffer: ArrayBuffer): ScannedMap[] {
     axisStart >= 2 && u8(axisStart - 2) === rows && u8(axisStart - 1) === cols
 
   // ── 6. Category guesser (string-first, then value range) ──────────────────
-  // Value ranges here are in RAW ECU units (no factor applied).
-  // Diesel fuel maps: mg/stroke × 8 → typically 0–2000 raw
-  // Boost/pressure:  mbar or % × scaling → 800–3000 raw range typical
-  // Ignition timing: degrees × 10 → 0–500 raw, sometimes signed (180° offset)
-  // Torque:          Nm × 10 or × 4 → 500–60000 raw typical
+  // Value ranges here are in RAW ECU units (no scaling factor applied).
+  //
+  // Bosch diesel fuel quantity maps (KFLOAD, QSOL, MXSOL etc.):
+  //   stored as mg/stroke × 256 → raw values 0–65535 are normal (e.g. 65483/256 = 255 mg/str)
+  //   These are always LARGE maps (rows*cols >= 24) covering full RPM × Load range.
+  //
+  // Boost / rail pressure maps:
+  //   mbar or kPa with ×10 scaling → typically 5000–35000 raw
+  //
+  // Ignition / injection timing:
+  //   degrees × 10 → 0–600 raw (petrol) or 0–200 raw (diesel SOI)
+  //
+  // Torque maps:
+  //   Nm × 10 or × 4 → 1000–60000 raw typical
   const guessCategory = (mn: number, mx: number, rows: number, cols: number, name?: string) => {
     const n = (name ?? '').toUpperCase()
-    // Name-based (highest priority — trust embedded strings)
-    if (/FUEL|INJ|KFLOAD|MLXSOL|KFMIRL|KFKHFM|QSOL|MXSOL|QDVQFMAX/.test(n)) return 'fuel'
-    if (/BOOST|TURB|LADP|KFLAM|DSMXPH|PRESSURE|LDRXN|PBARO|KFPW/.test(n)) return 'boost'
-    if (/IGN|TIMING|KFZW|KFZWOP|SPARK|ADVANCE|ZWTK|ZWIST/.test(n)) return 'ignition'
-    if (/TORQ|MOMENT|LIMIT|MXMOMI|MXKFMOM|KFMIRL|TRQFIL/.test(n)) return 'torque'
-    if (/EGR|SMOKE|RAIL|LAMBDA|LAMSOLL|AGR/.test(n)) return 'boost'
+    const cells = rows * cols
 
-    // Value-range heuristics (diesel-first, then petrol patterns)
-    // Ignition timing: small values 0–500 (degrees×10) or larger if in crank degrees
-    if (mn >= 0 && mx <= 500 && mx > 0) return 'ignition'
-    // Diesel fuel quantity: moderate range, typically 0–2000 or 0–5000
-    if (mn >= 0 && mx >= 100 && mx <= 8000 && rows * cols >= 12) return 'fuel'
-    // Boost / pressure: values in low thousands
-    if (mn >= 500 && mx >= 800 && mx <= 6000) return 'boost'
-    // Rail pressure: 500–3000 bar×10 typical
-    if (mn >= 200 && mx >= 3000 && mx <= 35000 && rows * cols >= 12) return 'boost'
-    // Torque: values in tens of thousands (Nm × factor)
-    if (mn >= 500 && mx >= 5000 && mx <= 65000) return 'torque'
+    // ── Name-based (highest priority — trust embedded strings) ─────────────
+    if (/FUEL|INJ|KFLOAD|MLXSOL|KFMIRL|KFKHFM|QSOL|MXSOL|QDVQFMAX|DTMX/.test(n)) return 'fuel'
+    if (/BOOST|TURB|LADP|KFLAM|DSMXPH|PRESSURE|LDRXN|PBARO|KFPW|RAIL/.test(n)) return 'boost'
+    if (/IGN|TIMING|KFZW|KFZWOP|SPARK|ADVANCE|ZWTK|ZWIST|SOI|ZWSOL/.test(n)) return 'ignition'
+    if (/TORQ|MOMENT|LIMIT|MXMOMI|MXKFMOM|TRQFIL|MNTQMAX/.test(n)) return 'torque'
+    if (/EGR|AGR|SMOKE|LAMBDA|LAMSOLL/.test(n)) return 'boost'
+
+    // ── Value-range heuristics ─────────────────────────────────────────────
+    // Ignition / SOI timing: very small range (degrees × 10)
+    if (mx <= 600 && mx > 10 && mn >= 0) return 'ignition'
+
+    // Large main map with wide range → almost certainly the main FUEL quantity map
+    // (Bosch diesel stores raw mg/stroke × 256, so max can reach 60000–65535)
+    if (cells >= 24 && mx > 30000) return 'fuel'
+
+    // Medium map with moderate range → fuel quantity or injection duration
+    if (cells >= 12 && mn >= 0 && mx >= 200 && mx <= 20000) return 'fuel'
+
+    // Boost / pressure: mid-range values, typically mbar × scaling
+    if (mn >= 500 && mx >= 1000 && mx <= 35000) return 'boost'
+
+    // Torque tables: higher values, medium-large maps
+    if (cells >= 12 && mn >= 0 && mx >= 5000 && mx <= 65000) return 'torque'
+
     return 'unknown'
   }
 
@@ -637,7 +654,7 @@ export function scanBinaryForMaps(buffer: ArrayBuffer): ScannedMap[] {
         for (let i = 0; i < rows * cols; i++) { const v = u16b(dataOff + i * 2); if (v < 0) { ok = false; break }; flat.push(v) }
         if (!ok) continue
         const q = scoreGrid(flat, 'uint16')
-        if (q < 0.2) continue
+        if (q < 0.28) continue
         const mn = Math.min(...flat), mx = Math.max(...flat)
         const eName = nearestStr(off)
         const dimHdr = hasDimHdr(off, rows, cols)
@@ -679,7 +696,7 @@ export function scanBinaryForMaps(buffer: ArrayBuffer): ScannedMap[] {
         for (let i = 0; i < rows * cols; i++) { const v = u16l(dataOff + i * 2); if (v < 0) { ok = false; break }; flat.push(v) }
         if (!ok) continue
         const q = scoreGrid(flat, 'uint16')
-        if (q < 0.2) continue
+        if (q < 0.28) continue
         const mn = Math.min(...flat), mx = Math.max(...flat)
         const eName = nearestStr(off)
         let conf = Math.min(1, q * 0.5 + 0.18 + (eName ? 0.05 : 0))
@@ -758,7 +775,7 @@ export function scanBinaryForMaps(buffer: ArrayBuffer): ScannedMap[] {
     if (count >= 3) continue
     axisCounts.set(key, count + 1)
     out.push(r)
-    if (out.length >= 40) break
+    if (out.length >= 25) break
   }
   return out
 }
