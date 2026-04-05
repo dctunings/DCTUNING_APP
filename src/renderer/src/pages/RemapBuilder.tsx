@@ -1,8 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { ECU_DEFINITIONS, ADDONS } from '../lib/ecuDefinitions'
 import type { EcuDef } from '../lib/ecuDefinitions'
-import { detectEcu, detectEcuFromFilename, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, syntheticMapDefFromDRT, extractPartNumberFromBinary } from '../lib/binaryParser'
-import type { DetectedEcu, ExtractedMap, A2LValidationResult } from '../lib/binaryParser'
+import { detectEcu, detectEcuFromFilename, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, syntheticMapDefFromDRT, extractPartNumberFromBinary, scanBinaryForMaps } from '../lib/binaryParser'
+import type { DetectedEcu, ExtractedMap, A2LValidationResult, ScannedMap } from '../lib/binaryParser'
 import { buildRemap, buildFilename } from '../lib/remapEngine'
 import type { Stage, AddonId, RemapResult } from '../lib/remapEngine'
 import { verifyChecksum, correctChecksum, correctBlockChecksums } from '../lib/checksumEngine'
@@ -212,6 +212,310 @@ function CatBadge({ cat }: { cat: string }) {
   )
 }
 
+// ─── Zone Editor: ECM Titanium-style drag-select + Pg+/Pg- staircase ─────────
+// Each cell stores an absolute multiplier override. Drag to select a rectangle,
+// then Pg+ / Pg- applies the step% to every selected cell cumulatively.
+// Cells without an override use the stage default. No interpolation — pure manual.
+export function computeCellGrid(
+  edits: Record<string, number>,  // "r,c" → absolute multiplier
+  rows: number,
+  cols: number,
+  defaultMul: number,
+): number[][] {
+  return Array.from({ length: rows }, (_, r) =>
+    Array.from({ length: cols }, (_, c) => edits[`${r},${c}`] ?? defaultMul)
+  )
+}
+
+interface ZoneEditorProps {
+  rows: number
+  cols: number
+  edits: Record<string, number>          // "r,c" → absolute multiplier
+  stageMul: number                        // uniform stage default (e.g. 1.12)
+  physData: number[][]                    // original physical values for display
+  factor: number
+  offsetVal: number
+  unit: string
+  axisXLabel?: string                     // e.g. "Load" or "TANS_W"
+  axisYLabel?: string                     // e.g. "RPM" or "NMOT_W"
+  axisXVals?: number[]                    // col header values (load breakpoints)
+  axisYVals?: number[]                    // row header values (RPM breakpoints)
+  onApply: (newEdits: Record<string, number>) => void
+  onClearAll: () => void
+}
+
+function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, unit, axisXLabel, axisYLabel, axisXVals, axisYVals, onApply, onClearAll }: ZoneEditorProps) {
+  const [selStart, setSelStart] = useState<{ r: number; c: number } | null>(null)
+  const [selEnd, setSelEnd]     = useState<{ r: number; c: number } | null>(null)
+  const [dragging, setDragging] = useState(false)
+  const [step, setStep] = useState(0.5)   // % per Pg+ press
+
+  const editCount = Object.keys(edits).length
+  const hasAxes = (axisXVals && axisXVals.length > 0) || (axisYVals && axisYVals.length > 0)
+
+  const sel = selStart && selEnd ? {
+    r1: Math.min(selStart.r, selEnd.r), r2: Math.max(selStart.r, selEnd.r),
+    c1: Math.min(selStart.c, selEnd.c), c2: Math.max(selStart.c, selEnd.c),
+  } : null
+
+  const isSelected = (r: number, c: number) =>
+    sel !== null && r >= sel.r1 && r <= sel.r2 && c >= sel.c1 && c <= sel.c2
+
+  const getMul = (r: number, c: number) => edits[`${r},${c}`] ?? stageMul
+  const isEdited = (r: number, c: number) => edits[`${r},${c}`] !== undefined
+
+  // Modified physical value for display
+  const getDisplayVal = (r: number, c: number) => {
+    const orig = physData[r]?.[c] ?? 0
+    const mul = getMul(r, c)
+    const raw = factor !== 0 ? (orig - offsetVal) / factor : 0
+    return raw * mul * factor + offsetVal
+  }
+
+  const applyStep = (sign: 1 | -1) => {
+    if (!sel) return
+    const next = { ...edits }
+    for (let r = sel.r1; r <= sel.r2; r++) {
+      for (let c = sel.c1; c <= sel.c2; c++) {
+        const key = `${r},${c}`
+        const cur = next[key] ?? stageMul
+        next[key] = Math.max(0.01, Math.min(5.0, cur + sign * step / 100))
+      }
+    }
+    onApply(next)
+  }
+
+  const selectAll = () => { setSelStart({ r: 0, c: 0 }); setSelEnd({ r: rows - 1, c: cols - 1 }) }
+
+  // Cell sizing — narrower when axes shown to keep total width reasonable
+  const cellW = cols > 14 ? 36 : cols > 10 ? 42 : cols > 7 ? 50 : 58
+  const cellH = 28
+  const rowHdrW = 44   // always show RPM header column
+  const colHdrH = 20   // always show Load header row
+
+  const selSizeLabel = sel
+    ? `${sel.r2 - sel.r1 + 1}×${sel.c2 - sel.c1 + 1} selected`
+    : 'Drag to select'
+
+  // Format axis value for header display
+  const fmtAxis = (v: number) => v >= 10000 ? `${Math.round(v / 100) / 10}k` : v >= 1000 ? `${Math.round(v / 10) / 100}k` : v.toFixed(v % 1 === 0 ? 0 : 1)
+
+  // Build evenly-spaced axis values if none provided
+  const xVals = axisXVals && axisXVals.length === cols ? axisXVals
+    : axisXVals && axisXVals.length > 0 ? axisXVals
+    : null
+  const yVals = axisYVals && axisYVals.length === rows ? axisYVals
+    : axisYVals && axisYVals.length > 0 ? axisYVals
+    : null
+
+  return (
+    <div
+      style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 14, marginTop: 10, overflowX: 'auto' }}
+      onMouseUp={() => setDragging(false)}
+      onMouseLeave={() => setDragging(false)}
+    >
+      {/* ── Toolbar ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 11, fontWeight: 800, color: '#b8f02a', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Zone Editor</span>
+        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.22)' }}>{rows}×{cols}</span>
+
+        {/* Step input */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '3px 8px' }}>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Step</span>
+          <input
+            type="number" min={0.1} max={50} step={0.5} value={step}
+            onChange={e => setStep(Math.max(0.1, Math.min(50, parseFloat(e.target.value) || 0.5)))}
+            style={{ width: 38, background: 'none', border: 'none', color: '#fff', fontSize: 11, fontWeight: 700, textAlign: 'center', outline: 'none' }}
+          />
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>%</span>
+        </div>
+
+        {/* Pg+ / Pg- buttons */}
+        <button
+          onClick={() => applyStep(1)}
+          disabled={!sel}
+          title="Apply +step% to selected cells (like Pg+ in ECM Titanium)"
+          style={{ fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 6, cursor: sel ? 'pointer' : 'not-allowed', border: '1px solid rgba(184,240,42,0.4)', background: sel ? 'rgba(184,240,42,0.12)' : 'rgba(255,255,255,0.03)', color: sel ? '#b8f02a' : 'rgba(255,255,255,0.2)', opacity: sel ? 1 : 0.5 }}
+        >
+          Pg+ +{step}%
+        </button>
+        <button
+          onClick={() => applyStep(-1)}
+          disabled={!sel}
+          title="Apply -step% to selected cells (like Pg- in ECM Titanium)"
+          style={{ fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 6, cursor: sel ? 'pointer' : 'not-allowed', border: '1px solid rgba(251,146,60,0.4)', background: sel ? 'rgba(251,146,60,0.1)' : 'rgba(255,255,255,0.03)', color: sel ? '#fb923c' : 'rgba(255,255,255,0.2)', opacity: sel ? 1 : 0.5 }}
+        >
+          Pg- -{step}%
+        </button>
+
+        <button onClick={selectAll} style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 5, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.55)' }}>
+          Select All
+        </button>
+
+        {/* Selection info */}
+        <span style={{ fontSize: 10, color: sel ? '#22d3ee' : 'rgba(255,255,255,0.25)', fontWeight: sel ? 700 : 400 }}>
+          {selSizeLabel}
+        </span>
+
+        {editCount > 0 && (
+          <>
+            <span style={{ fontSize: 10, color: 'rgba(184,240,42,0.7)', fontWeight: 700 }}>
+              {editCount} cells modified
+            </span>
+            <button
+              onClick={onClearAll}
+              style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 4, border: '1px solid rgba(251,146,60,0.4)', background: 'rgba(251,146,60,0.08)', color: '#fb923c', cursor: 'pointer' }}
+            >
+              ✕ Reset All
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* ── Grid with axis headers — ECM Titanium style ── */}
+      <div style={{ display: 'inline-block' }}>
+
+        {/* ── Top: corner + column header row ── */}
+        <div style={{ display: 'flex', gap: 1, marginBottom: 1 }}>
+          {/* Corner cell — "RPM | Load" */}
+          <div style={{
+            width: rowHdrW, height: colHdrH, flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 6, fontWeight: 800, color: 'rgba(255,255,255,0.7)',
+            background: 'linear-gradient(135deg,#3d0d0d,#5a1515)',
+            border: '1px solid rgba(180,40,40,0.5)',
+            borderRadius: 2, lineHeight: 1.1, textAlign: 'center',
+          }}>
+            RPM<br/>Load
+          </div>
+          {/* Column headers — Load axis */}
+          {Array.from({ length: cols }, (_, c) => (
+            <div key={c} style={{
+              width: cellW, height: colHdrH,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 7, fontWeight: 700, color: '#fff',
+              background: 'linear-gradient(180deg,#4a1010,#3a0c0c)',
+              border: '1px solid rgba(180,40,40,0.45)',
+              borderRadius: 2, overflow: 'hidden', flexShrink: 0,
+            }}>
+              {xVals ? fmtAxis(xVals[c]) : c + 1}
+            </div>
+          ))}
+        </div>
+
+        {/* ── Data rows with RPM row headers on left ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          {Array.from({ length: rows }, (_, r) => (
+            <div key={r} style={{ display: 'flex', gap: 1 }}>
+              {/* Row header — RPM axis */}
+              <div style={{
+                width: rowHdrW, height: cellH, flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 7, fontWeight: 700, color: '#fff',
+                background: 'linear-gradient(90deg,#3a0c0c,#4a1010)',
+                border: '1px solid rgba(180,40,40,0.45)',
+                borderRadius: 2, overflow: 'hidden',
+              }}>
+                {yVals ? fmtAxis(yVals[r]) : r + 1}
+              </div>
+
+              {/* Data cells */}
+              {Array.from({ length: cols }, (_, c) => {
+                const key = `${r},${c}`
+                const edited = isEdited(r, c)
+                const selected = isSelected(r, c)
+                const mul = getMul(r, c)
+                const pct = ((mul - 1) * 100)
+                const dispVal = getDisplayVal(r, c)
+
+                const stagePct = (stageMul - 1) * 100
+                const extraPct = pct - stagePct  // how much beyond stage default
+                // Scale: 6% above/below stage = full intensity. Minimum 0.15 when any edit present
+                // so the FIRST Pg+ press is already clearly visible as dark green.
+                const rawIntensity = edited ? Math.max(0, Math.min(1, Math.abs(extraPct) / 6)) : 0
+                const intensity = edited ? Math.max(0.15, rawIntensity) : 0
+                const isAbove = extraPct >= 0
+
+                // ── Colours ──────────────────────────────────────────────────
+                // SELECTED  → bright cyan (clear drag highlight)
+                // INCREASED → dark forest green → vivid lime (ECM Titanium style)
+                //   intensity 0.15 (first press):  rgba(20,  65, 20, 0.90)  — dark green
+                //   intensity 1.00 (many presses): rgba(80, 210, 40, 0.97)  — bright lime
+                // REDUCED   → dark amber → bright orange
+                // DEFAULT   → near-black cell
+                let bg: string
+                let borderCol: string
+                let textCol: string
+
+                if (selected) {
+                  bg = 'rgba(6,182,212,0.55)'
+                  borderCol = 'rgba(6,182,212,0.9)'
+                  textCol = '#fff'
+                } else if (edited && isAbove) {
+                  const r0 = Math.round(20 + intensity * 60)   // 20 → 80
+                  const g0 = Math.round(65 + intensity * 145)  // 65 → 210
+                  const b0 = Math.round(20 + intensity * 20)   // 20 → 40
+                  const a0 = 0.80 + intensity * 0.17           // 0.80 → 0.97
+                  bg = `rgba(${r0},${g0},${b0},${a0})`
+                  borderCol = `rgba(${r0 + 20},${g0 + 20},${b0},0.7)`
+                  // Text: dark on bright green, white on dark green
+                  textCol = intensity > 0.6 ? '#0a1a00' : '#c8ffb0'
+                } else if (edited && !isAbove) {
+                  const r0 = Math.round(100 + intensity * 140)  // 100 → 240
+                  const g0 = Math.round(45 + intensity * 60)    // 45 → 105
+                  const b0 = 8
+                  const a0 = 0.80 + intensity * 0.17
+                  bg = `rgba(${r0},${g0},${b0},${a0})`
+                  borderCol = `rgba(${r0},${g0 + 10},${b0},0.7)`
+                  textCol = intensity > 0.6 ? '#1a0800' : '#ffd5a0'
+                } else {
+                  bg = 'rgba(255,255,255,0.04)'
+                  borderCol = 'rgba(255,255,255,0.07)'
+                  textCol = 'rgba(255,255,255,0.38)'
+                }
+
+                return (
+                  <div
+                    key={key}
+                    title={`[${r},${c}]${yVals ? ` RPM:${fmtAxis(yVals[r])}` : ''}${xVals ? ` Load:${fmtAxis(xVals[c])}` : ''} — ${pct >= 0 ? '+' : ''}${pct.toFixed(1)}% → ${dispVal.toFixed(dispVal > 10 ? 1 : 2)}${unit ? ' ' + unit : ''}`}
+                    style={{
+                      width: cellW, height: cellH,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 8, fontWeight: edited ? 700 : 400,
+                      userSelect: 'none', cursor: 'crosshair',
+                      border: `1px solid ${borderCol}`,
+                      background: bg,
+                      color: textCol,
+                      borderRadius: 2,
+                      transition: 'background 0.06s',
+                    }}
+                    onMouseDown={e => { e.preventDefault(); setSelStart({ r, c }); setSelEnd({ r, c }); setDragging(true) }}
+                    onMouseEnter={() => { if (dragging) setSelEnd({ r, c }) }}
+                    onMouseUp={() => { setDragging(false) }}
+                  >
+                    {pct >= 0 ? '+' : ''}{pct.toFixed(pct % 1 === 0 ? 0 : 1)}%
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Legend ── */}
+      <div style={{ marginTop: 8, display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>
+        <span><span style={{ color: 'rgba(6,182,212,0.9)' }}>■</span> Selected</span>
+        <span><span style={{ color: 'rgba(30,90,30,0.9)' }}>■</span>→<span style={{ color: 'rgba(80,210,40,0.9)' }}>■</span> Increased (dark→bright)</span>
+        <span><span style={{ color: 'rgba(120,60,8,0.9)' }}>■</span>→<span style={{ color: 'rgba(240,110,8,0.9)' }}>■</span> Reduced</span>
+        <span><span style={{ color: 'rgba(255,255,255,0.2)' }}>■</span> Stage default</span>
+        <span style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.12)' }}>
+          Drag → Pg+ increase · Pg- reduce · Shrink for staircase
+        </span>
+      </div>
+    </div>
+  )
+}
+
 // ─── Step indicator ───────────────────────────────────────────────────────────
 const STEPS = ['Load File', 'ECU Detected', 'Configure', 'Preview', 'Export']
 
@@ -280,6 +584,18 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   // Per-map custom multiplier overrides (keyed by mapDef.id, value = multiplier e.g. 1.15 for +15%)
   // When set, overrides the stage default in both the preview heatmap and the final build.
   const [customMultipliers, setCustomMultipliers] = useState<Record<string, number>>({})
+  // Per-map zone anchors for ECM Titanium-style region editing.
+  // cellAnchors[mapId]["r,c"] = multiplier — sparse anchor points; non-anchor cells are IDW-interpolated.
+  // When a map has anchors, cellAnchors takes precedence over customMultipliers.
+  const [cellAnchors, setCellAnchors] = useState<Record<string, Record<string, number>>>({})
+  // Which map's Zone Editor panel is currently open (null = all closed)
+  const [zoneEditorMapId, setZoneEditorMapId] = useState<string | null>(null)
+
+  // Binary scanner state
+  const [scannedMaps, setScannedMaps]       = useState<ScannedMap[]>([])
+  const [scanStatus, setScanStatus]         = useState<'idle' | 'scanning' | 'done'>('idle')
+  const [scanPanelOpen, setScanPanelOpen]   = useState(false)
+  const [addedScanIds, setAddedScanIds]     = useState<Set<string>>(new Set())
 
   // Step 4 state
   const [remapResult, setRemapResult] = useState<RemapResult | null>(null)
@@ -571,13 +887,36 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   // ─── Step 3→4: build remap ────────────────────────────────────────────────
   const handleBuildRemap = () => {
     if (!fileBuffer || !selectedEcu || extractedMaps.length === 0) return
-    // Inject custom per-map multipliers: clone the extractedMaps and override stage params
-    // for any map where the tuner has set a custom percentage in the Preview screen.
+    // Inject custom per-map multipliers / zone grids: clone the extractedMaps and override
+    // stage params for any map where the tuner has set a custom % or zone anchors.
     const mapsWithOverrides = extractedMaps.map(em => {
+      const anchors = cellAnchors[em.mapDef.id] ?? {}
+      const hasZoneAnchors = Object.keys(anchors).length > 0
       const custom = customMultipliers[em.mapDef.id]
+
+      // Zone editor (per-cell anchors) takes precedence over uniform slider
+      if (hasZoneAnchors) {
+        const baseStageKey = `stage${stage}` as 'stage1' | 'stage2' | 'stage3'
+        const baseParams = em.mapDef[baseStageKey]
+        const defaultMul = baseParams?.multiplier ?? 1
+        const { rows, cols } = em.mapDef
+        // Build the full per-cell multiplier grid from sparse anchors
+        const grid = computeCellGrid(anchors, rows, cols, defaultMul)
+        // Attach cell grid; set stage multiplier to 1 so applyParams defers to per-cell values
+        return {
+          ...em,
+          cellMultiplierGrid: grid,
+          mapDef: {
+            ...em.mapDef,
+            stage1: { ...baseParams, multiplier: 1 },
+            stage2: { ...baseParams, multiplier: 1 },
+            stage3: { ...baseParams, multiplier: 1 },
+          },
+        }
+      }
+
       if (custom === undefined) return em
-      // Build a synthetic mapDef with all 3 stages pointing at the custom multiplier,
-      // preserving clampMax/clampMin/addend from the original stage param.
+      // Uniform custom multiplier (existing slider logic)
       const baseStageKey = `stage${stage}` as 'stage1' | 'stage2' | 'stage3'
       const baseParams = em.mapDef[baseStageKey]
       const overrideDef = {
@@ -882,6 +1221,21 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detected, fileName, fileBuffer])
 
+  // ── Auto-scan binary when step 3 is reached ─────────────────────────────────
+  // Fires automatically so the user never needs to find or click the scan button.
+  useEffect(() => {
+    if (step === 3 && fileBuffer && scanStatus === 'idle') {
+      setScanStatus('scanning')
+      setScanPanelOpen(true)
+      setTimeout(() => {
+        const found = scanBinaryForMaps(fileBuffer)
+        setScannedMaps(found)
+        setScanStatus('done')
+      }, 80)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, fileBuffer])
+
   const loadDefinitionFromLibrary = async (entry: DefinitionEntry) => {
     setLibLoadingId(entry.id)
     setLibLoadError('')
@@ -1111,6 +1465,108 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           </>
         )}
       </div>
+
+      {/* ── Binary Map Scanner — always visible regardless of A2L/DRT/KP ── */}
+      {fileBuffer && (
+        <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 10, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(184,240,42,0.15)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <button
+              onClick={() => {
+                if (scanStatus === 'scanning') return
+                setScanStatus('scanning')
+                setScanPanelOpen(true)
+                setTimeout(() => {
+                  const found = scanBinaryForMaps(fileBuffer)
+                  setScannedMaps(found)
+                  setScanStatus('done')
+                }, 50)
+              }}
+              style={{
+                fontSize: 12, fontWeight: 800, padding: '7px 18px', borderRadius: 7,
+                cursor: scanStatus === 'scanning' ? 'wait' : 'pointer',
+                border: '1px solid rgba(184,240,42,0.5)',
+                background: 'rgba(184,240,42,0.1)',
+                color: '#b8f02a', letterSpacing: '0.04em',
+              }}
+            >
+              {scanStatus === 'scanning' ? '⏳ Scanning...' : scanStatus === 'done' ? `🔍 Rescan .bin (${scannedMaps.length} found)` : '🔍 Scan .bin for Maps'}
+            </button>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>
+              Finds maps directly from raw binary — no A2L/DRT/KP needed
+            </span>
+          </div>
+
+          {/* Results */}
+          {scanStatus === 'done' && scannedMaps.length > 0 && (
+            <div style={{ marginTop: 12, maxHeight: 320, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 5 }}>
+              {scannedMaps.map(sm => {
+                const isAdded = addedScanIds.has(sm.id)
+                const confColor = sm.confidence > 0.7 ? '#b8f02a' : sm.confidence > 0.45 ? '#fb923c' : '#f87171'
+                const flat = sm.dataPreview.flat()
+                const cellSize = Math.max(3, Math.min(7, Math.floor(100 / Math.max(sm.cols, 1))))
+                return (
+                  <div key={sm.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px',
+                    background: isAdded ? 'rgba(184,240,42,0.07)' : 'rgba(255,255,255,0.02)',
+                    border: `1px solid ${isAdded ? 'rgba(184,240,42,0.3)' : 'rgba(255,255,255,0.07)'}`,
+                    borderRadius: 6,
+                  }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${sm.cols}, ${cellSize}px)`, gap: 0, flexShrink: 0 }}>
+                      {flat.map((v, i) => {
+                        const t = sm.dataMax > sm.dataMin ? (v - sm.dataMin) / (sm.dataMax - sm.dataMin) : 0
+                        return <div key={i} style={{ width: cellSize, height: cellSize, background: `rgb(${Math.round(20+t*60)},${Math.round(60+t*160)},20)` }} />
+                      })}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: sm.embeddedName ? '#b8f02a' : 'rgba(255,255,255,0.75)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {sm.embeddedName ? `📛 ${sm.embeddedName}` : sm.name}
+                      </div>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', display: 'flex', gap: 6, marginTop: 2 }}>
+                        <span>0x{sm.offset.toString(16).toUpperCase()}</span>
+                        <span>{sm.rows}×{sm.cols}</span>
+                        <span>{sm.dtype}{sm.le ? ' LE' : ' BE'}</span>
+                        <span style={{ color: confColor }}>{Math.round(sm.confidence * 100)}%</span>
+                        <span style={{ color: '#6ee7b7', textTransform: 'uppercase', fontSize: 8 }}>{sm.category}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (isAdded) return
+                        const mapDef = {
+                          id: sm.id, name: sm.embeddedName ?? sm.name,
+                          rows: sm.rows, cols: sm.cols,
+                          dtype: (sm.dtype === 'uint16' ? 'uint16' : 'uint8') as 'uint8' | 'uint16',
+                          factor: 1, offsetVal: 0, le: sm.le,
+                          category: sm.category as 'fuel' | 'ignition' | 'boost' | 'torque' | 'unknown',
+                          fixedOffset: sm.offset, signatures: [], sigOffset: 0, showPreview: true,
+                          stage1: { multiplier: 1 }, stage2: { multiplier: 1 }, stage3: { multiplier: 1 },
+                        }
+                        const newMap: ExtractedMap = {
+                          mapDef, data: sm.dataPreview, rawData: sm.dataPreview,
+                          offset: sm.offset, found: true, source: 'fixedOffset',
+                        }
+                        setExtractedMaps(prev => [...prev, newMap])
+                        setAddedScanIds(prev => new Set([...prev, sm.id]))
+                      }}
+                      style={{
+                        fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 4, cursor: isAdded ? 'default' : 'pointer', flexShrink: 0,
+                        border: `1px solid ${isAdded ? 'rgba(184,240,42,0.2)' : 'rgba(184,240,42,0.5)'}`,
+                        background: isAdded ? 'rgba(184,240,42,0.05)' : 'rgba(184,240,42,0.12)',
+                        color: isAdded ? 'rgba(184,240,42,0.4)' : '#b8f02a',
+                      }}
+                    >
+                      {isAdded ? '✓' : '+ Add'}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          {scanStatus === 'done' && scannedMaps.length === 0 && (
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 8 }}>No maps detected in this binary.</div>
+          )}
+        </div>
+      )}
     </div>
   )
 
@@ -1607,6 +2063,142 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         </span>
       </div>
 
+      {/* ── Binary Map Scanner ─────────────────────────────────────────────── */}
+      {fileBuffer && (
+        <div style={{ marginBottom: 16, padding: '12px 16px', borderRadius: 10, background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(184,240,42,0.2)' }}>
+          {/* Header row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: scanStatus === 'done' && scannedMaps.length > 0 ? 12 : 0, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#b8f02a', letterSpacing: '0.05em' }}>
+              🔍 BINARY MAP SCANNER
+            </span>
+            {scanStatus === 'scanning' && (
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>⏳ Scanning binary...</span>
+            )}
+            {scanStatus === 'done' && (
+              <span style={{ fontSize: 11, color: scannedMaps.length > 0 ? '#b8f02a' : 'rgba(255,255,255,0.35)', fontWeight: 700 }}>
+                {scannedMaps.length > 0 ? `${scannedMaps.length} candidate maps found` : 'No maps detected'}
+              </span>
+            )}
+            <button
+              onClick={() => {
+                if (scanStatus === 'scanning') return
+                setScanStatus('idle')
+                setTimeout(() => {
+                  setScanStatus('scanning')
+                  setTimeout(() => {
+                    const found = scanBinaryForMaps(fileBuffer)
+                    setScannedMaps(found)
+                    setScanStatus('done')
+                  }, 80)
+                }, 10)
+              }}
+              style={{
+                fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 5,
+                cursor: scanStatus === 'scanning' ? 'wait' : 'pointer',
+                border: '1px solid rgba(184,240,42,0.3)', background: 'rgba(184,240,42,0.06)',
+                color: '#b8f02a', marginLeft: 'auto',
+              }}
+            >
+              {scanStatus === 'scanning' ? '⏳' : '↺ Rescan'}
+            </button>
+          </div>
+
+          {/* Results panel — always open, no toggle */}
+          {scanStatus === 'done' && (
+            <div style={{ marginTop: 10, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(184,240,42,0.15)', borderRadius: 10, padding: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: '#b8f02a', marginBottom: 10 }}>
+                SCAN RESULTS — {scannedMaps.length} candidate maps found in binary
+              </div>
+              {scannedMaps.length === 0 && (
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>No maps detected. The binary may use an unusual axis format or be encrypted.</div>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 420, overflowY: 'auto' }}>
+                {scannedMaps.map(sm => {
+                  const isAdded = addedScanIds.has(sm.id)
+                  const confColor = sm.confidence > 0.7 ? '#b8f02a' : sm.confidence > 0.45 ? '#fb923c' : '#f87171'
+                  // Mini heatmap: flatten grid, compute colours
+                  const flat = sm.dataPreview.flat()
+                  const mn = sm.dataMin, mx = sm.dataMax
+                  const cellSize = Math.max(3, Math.min(8, Math.floor(120 / Math.max(sm.cols, 1))))
+                  return (
+                    <div key={sm.id} style={{
+                      display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px',
+                      background: isAdded ? 'rgba(184,240,42,0.07)' : 'rgba(255,255,255,0.02)',
+                      border: `1px solid ${isAdded ? 'rgba(184,240,42,0.3)' : 'rgba(255,255,255,0.07)'}`,
+                      borderRadius: 7,
+                    }}>
+                      {/* Mini heatmap */}
+                      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${sm.cols}, ${cellSize}px)`, gap: 0, flexShrink: 0 }}>
+                        {flat.map((v, i) => {
+                          const t = mx > mn ? (v - mn) / (mx - mn) : 0
+                          const r = Math.round(20 + t * 60), g = Math.round(60 + t * 160), b = Math.round(20)
+                          return <div key={i} style={{ width: cellSize, height: cellSize, background: `rgb(${r},${g},${b})` }} />
+                        })}
+                      </div>
+                      {/* Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: sm.embeddedName ? '#b8f02a' : 'rgba(255,255,255,0.8)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {sm.embeddedName ? `📛 ${sm.embeddedName}` : sm.name}
+                        </div>
+                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <span>Offset: <b style={{ color: 'rgba(255,255,255,0.55)' }}>0x{sm.offset.toString(16).toUpperCase()}</b></span>
+                          <span>Size: <b style={{ color: 'rgba(255,255,255,0.55)' }}>{sm.rows}×{sm.cols}</b></span>
+                          <span>Type: <b style={{ color: 'rgba(255,255,255,0.55)' }}>{sm.dtype}{sm.le ? ' LE' : ' BE'}</b></span>
+                          <span>Range: <b style={{ color: 'rgba(255,255,255,0.55)' }}>{sm.dataMin}–{sm.dataMax}</b></span>
+                          <span style={{ color: confColor }}>Confidence: {Math.round(sm.confidence * 100)}%</span>
+                          <span style={{ color: '#6ee7b7', textTransform: 'uppercase', fontSize: 8 }}>{sm.category}</span>
+                        </div>
+                        <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>
+                          RPM: {sm.yVals[0]}–{sm.yVals[sm.yVals.length-1]} · Load: {sm.xVals[0]}–{sm.xVals[sm.xVals.length-1]}
+                        </div>
+                      </div>
+                      {/* Add button */}
+                      <button
+                        onClick={() => {
+                          if (isAdded) return
+                          // Create a synthetic ExtractedMap from the scan result
+                          const mapDef = {
+                            id: sm.id,
+                            name: sm.name,
+                            rows: sm.rows, cols: sm.cols,
+                            dtype: (sm.dtype === 'uint16' ? 'uint16' : 'uint8') as 'uint8' | 'uint16',
+                            factor: 1, offsetVal: 0,
+                            le: sm.le,
+                            category: sm.category as 'fuel' | 'ignition' | 'boost' | 'torque' | 'unknown',
+                            fixedOffset: sm.offset,
+                            signatures: [], sigOffset: 0,
+                            showPreview: true,
+                            stage1: { multiplier: 1 }, stage2: { multiplier: 1 }, stage3: { multiplier: 1 },
+                          }
+                          const newMap: ExtractedMap = {
+                            mapDef,
+                            data: sm.dataPreview,
+                            rawData: sm.dataPreview,
+                            offset: sm.offset,
+                            found: true,
+                            source: 'fixedOffset',
+                          }
+                          setExtractedMaps(prev => [...prev, newMap])
+                          setAddedScanIds(prev => new Set([...prev, sm.id]))
+                        }}
+                        style={{
+                          fontSize: 10, fontWeight: 800, padding: '4px 12px', borderRadius: 5, cursor: isAdded ? 'default' : 'pointer', flexShrink: 0,
+                          border: `1px solid ${isAdded ? 'rgba(184,240,42,0.3)' : 'rgba(184,240,42,0.5)'}`,
+                          background: isAdded ? 'rgba(184,240,42,0.08)' : 'rgba(184,240,42,0.14)',
+                          color: isAdded ? 'rgba(184,240,42,0.5)' : '#b8f02a',
+                        }}
+                      >
+                        {isAdded ? '✓ Added' : '+ Add'}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* A2L fallback diagnostic — shown when all maps fail */}
       {extractedMaps.length > 0 && extractedMaps.filter(m => m.found).length === 0 && a2lValidation.length > 0 && (() => {
         const vCount = a2lValidation.filter(v => v.status === 'valid').length
@@ -1805,52 +2397,110 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                   </div>
                 )
               })()}
-              {/* ── Per-map percentage editor — only for multiplier-based maps ─────── */}
+              {/* ── Per-map adjustment controls — only for multiplier-based found maps ── */}
               {m.found && !isSet && effectiveParams.multiplier !== undefined && effectiveParams.multiplier !== 1 && (() => {
-                const currentPct = Math.round((params.multiplier ?? stageDefaultMul) * 100) - 100
-                const isCustom = customMul !== undefined
+                const mapAnchors = cellAnchors[m.mapDef.id] ?? {}
+                const hasZone = Object.keys(mapAnchors).length > 0
+                const isZoneOpen = zoneEditorMapId === m.mapDef.id
+                // When zone editor is active, the "current %" badge reflects the default anchor value
+                const currentPct = hasZone
+                  ? Math.round((stageDefaultMul - 1) * 100)   // show stage default (zone controls per-cell)
+                  : Math.round((params.multiplier ?? stageDefaultMul) * 100) - 100
+                const isCustom = customMul !== undefined && !hasZone
+
                 return (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, marginBottom: 4, padding: '8px 10px', borderRadius: 7, background: isCustom ? 'rgba(184,240,42,0.04)' : 'rgba(255,255,255,0.02)', border: `1px solid ${isCustom ? 'rgba(184,240,42,0.2)' : 'rgba(255,255,255,0.07)'}` }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                      Adjustment
-                    </span>
-                    <input
-                      type="range"
-                      min={1}
-                      max={50}
-                      step={1}
-                      value={currentPct}
-                      onChange={e => {
-                        const pct = parseInt(e.target.value)
-                        setCustomMultipliers(prev => ({ ...prev, [m.mapDef.id]: 1 + pct / 100 }))
-                      }}
-                      style={{ flex: 1, accentColor: 'var(--accent)', cursor: 'pointer', minWidth: 80 }}
-                    />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: isCustom ? '#b8f02a' : 'var(--accent)', minWidth: 34, textAlign: 'right' }}>
-                        +{currentPct}%
+                  <div style={{ marginTop: 6, marginBottom: 4 }}>
+                    {/* ── Slider row ── */}
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '8px 10px', borderRadius: 7,
+                      background: hasZone ? 'rgba(184,240,42,0.06)' : isCustom ? 'rgba(184,240,42,0.04)' : 'rgba(255,255,255,0.02)',
+                      border: `1px solid ${hasZone ? 'rgba(184,240,42,0.35)' : isCustom ? 'rgba(184,240,42,0.2)' : 'rgba(255,255,255,0.07)'}`,
+                    }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                        {hasZone ? 'Base %' : 'Adjustment'}
                       </span>
                       <input
-                        type="number"
-                        min={1}
-                        max={50}
+                        type="range"
+                        min={1} max={50} step={1}
                         value={currentPct}
+                        disabled={hasZone}
                         onChange={e => {
-                          const pct = Math.max(1, Math.min(50, parseInt(e.target.value) || 0))
+                          const pct = parseInt(e.target.value)
                           setCustomMultipliers(prev => ({ ...prev, [m.mapDef.id]: 1 + pct / 100 }))
                         }}
-                        style={{ width: 44, padding: '3px 5px', borderRadius: 5, border: `1px solid ${isCustom ? 'rgba(184,240,42,0.35)' : 'rgba(255,255,255,0.12)'}`, background: 'rgba(0,0,0,0.3)', color: '#fff', fontSize: 12, fontWeight: 700, textAlign: 'center', outline: 'none' }}
+                        style={{ flex: 1, accentColor: 'var(--accent)', cursor: hasZone ? 'not-allowed' : 'pointer', minWidth: 80, opacity: hasZone ? 0.4 : 1 }}
                       />
-                    </div>
-                    {isCustom && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: hasZone ? 'rgba(184,240,42,0.5)' : isCustom ? '#b8f02a' : 'var(--accent)', minWidth: 34, textAlign: 'right' }}>
+                          +{currentPct}%
+                        </span>
+                        <input
+                          type="number" min={1} max={50}
+                          value={currentPct}
+                          disabled={hasZone}
+                          onChange={e => {
+                            const pct = Math.max(1, Math.min(50, parseInt(e.target.value) || 0))
+                            setCustomMultipliers(prev => ({ ...prev, [m.mapDef.id]: 1 + pct / 100 }))
+                          }}
+                          style={{ width: 44, padding: '3px 5px', borderRadius: 5, border: `1px solid ${isCustom ? 'rgba(184,240,42,0.35)' : 'rgba(255,255,255,0.12)'}`, background: 'rgba(0,0,0,0.3)', color: hasZone ? 'rgba(255,255,255,0.3)' : '#fff', fontSize: 12, fontWeight: 700, textAlign: 'center', outline: 'none' }}
+                        />
+                      </div>
+                      {isCustom && !hasZone && (
+                        <button
+                          onClick={() => setCustomMultipliers(prev => { const n = { ...prev }; delete n[m.mapDef.id]; return n })}
+                          title={`Reset to Stage ${stage} default (+${stageDefaultPct}%)`}
+                          style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        >
+                          ↺ S{stage} default
+                        </button>
+                      )}
+                      {/* Zone Editor toggle button */}
                       <button
-                        onClick={() => setCustomMultipliers(prev => { const n = { ...prev }; delete n[m.mapDef.id]; return n })}
-                        title={`Reset to Stage ${stage} default (+${stageDefaultPct}%)`}
-                        style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        onClick={() => setZoneEditorMapId(isZoneOpen ? null : m.mapDef.id)}
+                        title={isZoneOpen ? 'Close Zone Editor' : 'Open Zone Editor — set different % per RPM/load cell (ECM Titanium style)'}
+                        style={{
+                          fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 5, cursor: 'pointer', whiteSpace: 'nowrap',
+                          border: `1px solid ${isZoneOpen || hasZone ? 'rgba(184,240,42,0.5)' : 'rgba(255,255,255,0.15)'}`,
+                          background: isZoneOpen || hasZone ? 'rgba(184,240,42,0.12)' : 'rgba(255,255,255,0.04)',
+                          color: isZoneOpen || hasZone ? '#b8f02a' : 'rgba(255,255,255,0.5)',
+                        }}
                       >
-                        ↺ S{stage} default
+                        {hasZone ? `📐 Zones (${Object.keys(mapAnchors).length} cells)` : '📐 Zone Editor'}
                       </button>
-                    )}
+                    </div>
+
+                    {/* ── Zone Editor panel (shown when open) ── */}
+                    {isZoneOpen && (() => {
+                      const a2lMapForZone = a2lMaps.find(am => am.name === m.mapDef.name)
+                      // Build evenly-spaced axis values from A2L min/max when no explicit breakpoints
+                      const buildAxisVals = (size: number, min: number, max: number) =>
+                        Array.from({ length: size }, (_, i) => min + (max - min) * i / Math.max(size - 1, 1))
+                      const xVals = a2lMapForZone?.axisX
+                        ? buildAxisVals(a2lMapForZone.axisX.size, a2lMapForZone.axisX.min, a2lMapForZone.axisX.max)
+                        : undefined
+                      const yVals = a2lMapForZone?.axisY
+                        ? buildAxisVals(a2lMapForZone.axisY.size, a2lMapForZone.axisY.min, a2lMapForZone.axisY.max)
+                        : undefined
+                      return (
+                        <ZoneEditor
+                          rows={m.mapDef.rows}
+                          cols={m.mapDef.cols}
+                          edits={mapAnchors}
+                          stageMul={params.multiplier ?? stageDefaultMul}
+                          physData={m.data}
+                          factor={m.mapDef.factor}
+                          offsetVal={m.mapDef.offsetVal ?? 0}
+                          unit={m.mapDef.unit ?? ''}
+                          axisXLabel={a2lMapForZone?.axisX?.label}
+                          axisYLabel={a2lMapForZone?.axisY?.label}
+                          axisXVals={xVals}
+                          axisYVals={yVals}
+                          onApply={newEdits => setCellAnchors(prev => ({ ...prev, [m.mapDef.id]: newEdits }))}
+                          onClearAll={() => setCellAnchors(prev => { const n = { ...prev }; delete n[m.mapDef.id]; return n })}
+                        />
+                      )
+                    })()}
                   </div>
                 )
               })()}
@@ -1862,35 +2512,48 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                   </div>
                 ) : null
               })()}
-              {m.found && m.mapDef.showPreview && (
-                <div style={{ display: 'flex', gap: 20, marginTop: 8 }}>
-                  <MiniHeatmap data={m.data} label="Before (stock)" mapCategory={m.mapDef.category} />
-                  <div style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)', fontSize: 14 }}>→</div>
-                  <MiniHeatmap
-                    data={m.data.map((row, r) => row.map((v, c) => {
-                      // Mirror remapEngine.ts applyParams exactly: operate in RAW space,
-                      // then convert back to physical. This is critical for maps with non-zero
-                      // offsetVal (KFZW, KFZWOP, KFZWMN, KFMIRL) where multiplying physical
-                      // values directly gives wrong results (e.g. 15°×1.1 = 16.5° instead of 21.3°).
-                      // Also handles multiplier=0 correctly (falsy check was broken before).
-                      // lastNRows/lastNCols masking: cells outside the target zone keep physical value as-is.
-                      const rowStart = params.lastNRows !== undefined ? Math.max(0, m.data.length - params.lastNRows) : 0
-                      const colStart = params.lastNCols !== undefined ? Math.max(0, row.length - params.lastNCols) : 0
-                      if (r < rowStart || c < colStart) return v
-                      const f   = m.mapDef.factor   || 1
-                      const off = m.mapDef.offsetVal ?? 0
-                      const oldRaw = f !== 0 ? (v - off) / f : 0
-                      let newRaw = params.multiplier !== undefined ? oldRaw * params.multiplier : oldRaw
-                      if (params.addend   !== undefined) newRaw += params.addend
-                      if (params.clampMax !== undefined) newRaw  = Math.min(newRaw, params.clampMax)
-                      if (params.clampMin !== undefined) newRaw  = Math.max(newRaw, params.clampMin)
-                      return newRaw * f + off
-                    }))}
-                    label={`After (Stage ${stage}${addons.length > 0 ? ' + addons' : ''})`}
-                    mapCategory={m.mapDef.category}
-                  />
-                </div>
-              )}
+              {m.found && m.mapDef.showPreview && (() => {
+                // Build per-cell grid for the After preview if zone anchors are set
+                const mapAnchors = cellAnchors[m.mapDef.id] ?? {}
+                const hasZone = Object.keys(mapAnchors).length > 0
+                const defaultMulForGrid = params.multiplier ?? stageDefaultMul
+                const cellGrid = hasZone
+                  ? computeCellGrid(mapAnchors, m.mapDef.rows, m.mapDef.cols, defaultMulForGrid)
+                  : null
+                return (
+                  <div style={{ display: 'flex', gap: 20, marginTop: 8 }}>
+                    <MiniHeatmap data={m.data} label="Before (stock)" mapCategory={m.mapDef.category} />
+                    <div style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)', fontSize: 14 }}>→</div>
+                    <MiniHeatmap
+                      data={m.data.map((row, r) => row.map((v, c) => {
+                        // Mirror remapEngine.ts applyParams exactly: operate in RAW space,
+                        // then convert back to physical. This is critical for maps with non-zero
+                        // offsetVal (KFZW, KFZWOP, KFZWMN, KFMIRL) where multiplying physical
+                        // values directly gives wrong results (e.g. 15°×1.1 = 16.5° instead of 21.3°).
+                        // Also handles multiplier=0 correctly (falsy check was broken before).
+                        // lastNRows/lastNCols masking: cells outside the target zone keep physical value as-is.
+                        const rowStart = params.lastNRows !== undefined ? Math.max(0, m.data.length - params.lastNRows) : 0
+                        const colStart = params.lastNCols !== undefined ? Math.max(0, row.length - params.lastNCols) : 0
+                        if (r < rowStart || c < colStart) return v
+                        const f   = m.mapDef.factor   || 1
+                        const off = m.mapDef.offsetVal ?? 0
+                        const oldRaw = f !== 0 ? (v - off) / f : 0
+                        // Use per-cell multiplier from zone grid if available, else uniform
+                        const cellMul = cellGrid?.[r]?.[c]
+                        let newRaw = cellMul !== undefined
+                          ? oldRaw * cellMul
+                          : params.multiplier !== undefined ? oldRaw * params.multiplier : oldRaw
+                        if (params.addend   !== undefined) newRaw += params.addend
+                        if (params.clampMax !== undefined) newRaw  = Math.min(newRaw, params.clampMax)
+                        if (params.clampMin !== undefined) newRaw  = Math.max(newRaw, params.clampMin)
+                        return newRaw * f + off
+                      }))}
+                      label={`After (Stage ${stage}${addons.length > 0 ? ' + addons' : ''}${hasZone ? ' + zones' : ''})`}
+                      mapCategory={m.mapDef.category}
+                    />
+                  </div>
+                )
+              })()}
             </div>
           )
         })}
