@@ -38,7 +38,9 @@ export interface RemapResult {
 // ─── Apply stage params to raw values ────────────────────────────────────────
 // Supports lastNRows / lastNCols masking: only the last N rows or cols are modified.
 // Used for popcorn limiter — retards timing only in the highest-RPM cells.
-function applyParams(raw: number[][], params: StageParams, mapDef: MapDef): number[][] {
+// cellGrid: optional per-cell multiplier grid (zone editor). When supplied, each cell
+// uses its own multiplier instead of the uniform params.multiplier.
+function applyParams(raw: number[][], params: StageParams, mapDef: MapDef, cellGrid?: number[][]): number[][] {
   const rowStart = params.lastNRows !== undefined ? Math.max(0, raw.length - params.lastNRows) : 0
   return raw.map((row, r) => {
     const colStart = params.lastNCols !== undefined ? Math.max(0, row.length - params.lastNCols) : 0
@@ -46,7 +48,13 @@ function applyParams(raw: number[][], params: StageParams, mapDef: MapDef): numb
       // Outside the target zone — leave raw value completely untouched
       if (r < rowStart || c < colStart) return v
       let result = v
-      if (params.multiplier !== undefined) result *= params.multiplier
+      // Per-cell multiplier (zone editor) takes precedence over stage-level uniform multiplier
+      const cellMul = cellGrid?.[r]?.[c]
+      if (cellMul !== undefined) {
+        result *= cellMul
+      } else if (params.multiplier !== undefined) {
+        result *= params.multiplier
+      }
       if (params.addend !== undefined) result += params.addend
       if (params.clampMax !== undefined) result = Math.min(result, params.clampMax)
       if (params.clampMin !== undefined) result = Math.max(result, params.clampMin)
@@ -134,12 +142,15 @@ export function buildRemap(
 
     // If no modification needed, record as unchanged.
     // A masked param (lastNRows/lastNCols) is never identity even with neutral multiplier/addend.
-    const isIdentity = (params.multiplier === undefined || params.multiplier === 1) &&
+    // A cell grid is also never identity — the tuner set it explicitly.
+    const hasCellGrid = extracted.cellMultiplierGrid !== undefined
+    const isIdentity = !hasCellGrid &&
+                       (params.multiplier === undefined || params.multiplier === 1) &&
                        (params.addend === undefined || params.addend === 0) &&
                        params.clampMax === undefined && params.clampMin === undefined &&
                        params.lastNRows === undefined && params.lastNCols === undefined
 
-    const newRaw = isIdentity ? rawData : applyParams(rawData, params, mapDef)
+    const newRaw = isIdentity ? rawData : applyParams(rawData, params, mapDef, extracted.cellMultiplierGrid)
     const physAfter = newRaw.map((row, r) =>
       row.map((v, c) => {
         if (!isIdentity) return v * mapDef.factor + mapDef.offsetVal

@@ -16,6 +16,9 @@ export interface ExtractedMap {
   offset: number        // byte offset where map was found (-1 = not found)
   found: boolean
   source: 'signature' | 'fixedOffset' | 'a2l' | 'drt' | 'none'  // how the map was located
+  // Optional per-cell multiplier grid for ECM Titanium-style zone editing.
+  // When present, each cell uses its own multiplier instead of the stage-level uniform multiplier.
+  cellMultiplierGrid?: number[][]
 }
 
 // ─── ECU Detection ────────────────────────────────────────────────────────────
@@ -420,4 +423,287 @@ export function writeMap(buffer: ArrayBuffer, extracted: ExtractedMap, newRaw: n
     }
   }
   return copy
+}
+
+// ─── Binary Map Scanner ────────────────────────────────────────────────────────
+// Scans a raw .bin for axis-shaped data and extracts candidate maps without
+// needing any A2L/DRT/KP definition file.
+// Strategy:
+//   1. String scraping — pull all ASCII identifiers from the binary and index
+//      them by offset so detected maps can be auto-named
+//   2. Dimension header detection — look for Bosch-style [rows][cols] byte pair
+//      immediately before axis data (e.g. 0x10 0x10 = 16×16)
+//   3. Axis pattern scanning — slide through the binary looking for
+//      monotonically-increasing sequences matching ECU RPM/load axes
+//   4. Data grid scoring — read the following grid and score for "map-likeness"
+//   5. Return top candidates sorted by confidence, named from nearest string
+
+export interface ScannedMap {
+  id: string
+  name: string
+  offset: number          // byte offset of data grid in binary
+  rows: number
+  cols: number
+  yVals: number[]         // RPM axis values (rows)
+  xVals: number[]         // Load axis values (cols)
+  yAxisOffset: number
+  xAxisOffset: number
+  dtype: 'uint8' | 'uint16'
+  le: boolean
+  confidence: number      // 0–1
+  dataPreview: number[][] // raw grid values
+  dataMin: number
+  dataMax: number
+  category: string        // guessed: 'fuel' | 'boost' | 'ignition' | 'torque' | 'unknown'
+  embeddedName?: string   // string scraped from near the map in the binary
+}
+
+export function scanBinaryForMaps(buffer: ArrayBuffer): ScannedMap[] {
+  const bytes = new Uint8Array(buffer)
+  const len   = bytes.length
+  const results: ScannedMap[] = []
+
+  // ── 1. String scraper — index all ECU-style ASCII identifiers ──────────────
+  // ECUs embed map names like "KFLOAD\0", "BOOST_MAX\0", "MLXSOL\0" near data.
+  // We pre-build a sorted list so each found map can be named from nearby text.
+  interface StrEntry { offset: number; text: string }
+  const strIndex: StrEntry[] = []
+  {
+    let i = 0
+    while (i < Math.min(len, 2 * 1024 * 1024)) {
+      const b = bytes[i]
+      // ECU identifiers start with uppercase letter or underscore
+      if ((b >= 65 && b <= 90) || b === 95) {
+        let j = i, text = ''
+        while (j < len) {
+          const c = bytes[j]
+          if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122) || (c >= 48 && c <= 57) || c === 95) {
+            text += String.fromCharCode(c); j++
+          } else break
+        }
+        // 4-24 chars, starts uppercase, looks like an identifier not random text
+        if (text.length >= 4 && text.length <= 24 && /^[A-Z]/.test(text) &&
+            (text.includes('_') || /^[A-Z]{3,}/.test(text))) {
+          strIndex.push({ offset: i, text })
+          i = j; continue
+        }
+      }
+      i++
+    }
+  }
+
+  // Find best string within maxDist bytes BEFORE a given offset (maps follow their names)
+  const nearestStr = (targetOff: number, maxDist = 384): string | undefined => {
+    let best: StrEntry | undefined, bestDist = maxDist + 1
+    for (const e of strIndex) {
+      const dist = targetOff - e.offset
+      if (dist > 0 && dist <= maxDist && dist < bestDist) { best = e; bestDist = dist }
+    }
+    return best?.text
+  }
+
+  // ── 2. Low-level readers ───────────────────────────────────────────────────
+  const u8   = (o: number) => (o >= 0 && o < len) ? bytes[o] : -1
+  const u16b = (o: number) => (o + 1 < len) ? (bytes[o] << 8 | bytes[o + 1]) : -1
+  const u16l = (o: number) => (o + 1 < len) ? (bytes[o + 1] << 8 | bytes[o]) : -1
+
+  const readSeq16 = (off: number, count: number, le: boolean): number[] => {
+    const rd = le ? u16l : u16b, out: number[] = []
+    for (let i = 0; i < count; i++) { const v = rd(off + i * 2); if (v < 0) return []; out.push(v) }
+    return out
+  }
+  const readSeq8 = (off: number, count: number): number[] => {
+    const out: number[] = []
+    for (let i = 0; i < count; i++) { const v = u8(off + i); if (v < 0) return []; out.push(v) }
+    return out
+  }
+
+  // ── 3. Axis validators ─────────────────────────────────────────────────────
+  const isMonoInc = (vals: number[], minStep: number) => {
+    for (let i = 1; i < vals.length; i++) if (vals[i] - vals[i - 1] < minStep) return false
+    return true
+  }
+  const looksLikeRpm = (vals: number[]) => {
+    if (vals.length < 6 || vals.length > 22) return false
+    if (vals[0] < 200 || vals[0] > 2500) return false
+    if (vals[vals.length - 1] < 2000 || vals[vals.length - 1] > 10000) return false
+    if (!isMonoInc(vals, 50)) return false
+    for (let i = 1; i < vals.length; i++) if (vals[i] - vals[i - 1] > 2500) return false
+    return true
+  }
+  const looksLikeLoad = (vals: number[]) => {
+    if (vals.length < 4 || vals.length > 22) return false
+    if (!isMonoInc(vals, 1)) return false
+    const last = vals[vals.length - 1]
+    return last > 0 && last <= 65535
+  }
+
+  // ── 4. Grid quality scorer ─────────────────────────────────────────────────
+  const scoreGrid = (flat: number[], dtype: 'uint8' | 'uint16') => {
+    if (!flat.length) return 0
+    const maxV = dtype === 'uint8' ? 255 : 65535
+    const mn = Math.min(...flat), mx = Math.max(...flat)
+    if (mx === 0 || mn === mx) return 0.04
+    const zeroFrac = flat.filter(v => v === 0).length / flat.length
+    const maxFrac  = flat.filter(v => v >= maxV - 2).length / flat.length
+    if (zeroFrac > 0.6 || maxFrac > 0.4) return 0.04
+    return Math.min(1, 0.3 + ((mx - mn) / maxV) * 0.4 + (1 - zeroFrac) * 0.3)
+  }
+
+  // ── 5. Dimension header check (Bosch: [rows][cols] byte pair before Y axis) ─
+  // e.g. bytes 0x10 0x10 = 16×16 map, 0x0E 0x10 = 14×16 map
+  const hasDimHdr = (axisStart: number, rows: number, cols: number) =>
+    axisStart >= 2 && u8(axisStart - 2) === rows && u8(axisStart - 1) === cols
+
+  // ── 6. Category guesser (string-first, then value range) ──────────────────
+  const guessCategory = (mn: number, mx: number, name?: string) => {
+    const n = (name ?? '').toUpperCase()
+    if (/FUEL|INJ|KFLOAD|MLXSOL|KFMIRL|KFKHFM/.test(n)) return 'fuel'
+    if (/BOOST|TURB|LADP|KFLAM|DSMXPH|PRESSURE/.test(n)) return 'boost'
+    if (/IGN|TIMING|KFZW|KFZWOP|SPARK|ADVANCE/.test(n)) return 'ignition'
+    if (/TORQ|MOMENT|LIMIT|MXMOMI|MXKFMOM/.test(n)) return 'torque'
+    if (/EGR|SMOKE|RAIL|LAMBDA/.test(n)) return 'other'
+    if (mn >= 600  && mx <= 4000)  return 'boost'
+    if (mn >= 0    && mx <= 255)   return 'ignition'
+    if (mn >= 0    && mx <= 8192)  return 'fuel'
+    if (mn >= 1000 && mx <= 60000) return 'torque'
+    return 'unknown'
+  }
+
+  // ── 7. Dedup ───────────────────────────────────────────────────────────────
+  const overlaps = (off: number, size: number) =>
+    results.some(r => {
+      const rs = r.rows * r.cols * (r.dtype === 'uint16' ? 2 : 1)
+      return off < r.offset + rs && off + size > r.offset
+    })
+
+  let id = 0
+  const scanLimit = Math.min(len, 2 * 1024 * 1024)
+
+  // ── 8. 16-bit Big-Endian scan (Bosch ME7/ME9/MED17/EDC16/EDC17) ───────────
+  for (let off = 0; off < scanLimit - 100; off += 2) {
+    for (let rows = 6; rows <= 22; rows++) {
+      const yVals = readSeq16(off, rows, false)
+      if (yVals.length !== rows || !looksLikeRpm(yVals)) continue
+      const xOff = off + rows * 2
+      for (let cols = 4; cols <= 22; cols++) {
+        const xVals = readSeq16(xOff, cols, false)
+        if (xVals.length !== cols || !looksLikeLoad(xVals)) continue
+        const dataOff = xOff + cols * 2
+        if (dataOff + rows * cols * 2 > len) continue
+        if (overlaps(dataOff, rows * cols * 2)) continue
+        const flat: number[] = []
+        let ok = true
+        for (let i = 0; i < rows * cols; i++) { const v = u16b(dataOff + i * 2); if (v < 0) { ok = false; break }; flat.push(v) }
+        if (!ok) continue
+        const q = scoreGrid(flat, 'uint16')
+        if (q < 0.2) continue
+        const mn = Math.min(...flat), mx = Math.max(...flat)
+        const eName = nearestStr(off)
+        const dimHdr = hasDimHdr(off, rows, cols)
+        let conf = q * 0.55 + 0.2
+        if (dimHdr) conf += 0.15
+        if (eName)  conf += 0.06
+        if ((rows === 16 && cols === 16) || (rows === 8 && cols === 12) || (rows === 12 && cols === 16)) conf += 0.08
+        conf = Math.min(1, conf)
+        const grid: number[][] = []
+        for (let r = 0; r < rows; r++) grid.push(flat.slice(r * cols, r * cols + cols))
+        results.push({
+          id: `scan_${++id}`,
+          name: eName ? `${eName} @ 0x${dataOff.toString(16).toUpperCase()} (${rows}×${cols})` : `Map 0x${dataOff.toString(16).toUpperCase()} (${rows}×${cols})`,
+          offset: dataOff, rows, cols, yVals, xVals,
+          yAxisOffset: off, xAxisOffset: xOff,
+          dtype: 'uint16', le: false, confidence: conf,
+          dataPreview: grid, dataMin: mn, dataMax: mx,
+          category: guessCategory(mn, mx, eName), embeddedName: eName,
+        })
+        break
+      }
+    }
+  }
+
+  // ── 9. 16-bit Little-Endian scan (Denso / some Continental) ──────────────
+  for (let off = 0; off < scanLimit - 100; off += 2) {
+    for (let rows = 6; rows <= 22; rows++) {
+      const yVals = readSeq16(off, rows, true)
+      if (yVals.length !== rows || !looksLikeRpm(yVals)) continue
+      const xOff = off + rows * 2
+      for (let cols = 4; cols <= 22; cols++) {
+        const xVals = readSeq16(xOff, cols, true)
+        if (xVals.length !== cols || !looksLikeLoad(xVals)) continue
+        const dataOff = xOff + cols * 2
+        if (dataOff + rows * cols * 2 > len) continue
+        if (overlaps(dataOff, rows * cols * 2)) continue
+        const flat: number[] = []
+        let ok = true
+        for (let i = 0; i < rows * cols; i++) { const v = u16l(dataOff + i * 2); if (v < 0) { ok = false; break }; flat.push(v) }
+        if (!ok) continue
+        const q = scoreGrid(flat, 'uint16')
+        if (q < 0.2) continue
+        const mn = Math.min(...flat), mx = Math.max(...flat)
+        const eName = nearestStr(off)
+        let conf = Math.min(1, q * 0.5 + 0.18 + (eName ? 0.05 : 0))
+        const grid: number[][] = []
+        for (let r = 0; r < rows; r++) grid.push(flat.slice(r * cols, r * cols + cols))
+        results.push({
+          id: `scan_${++id}`,
+          name: eName ? `${eName} @ 0x${dataOff.toString(16).toUpperCase()} (${rows}×${cols}) LE` : `Map 0x${dataOff.toString(16).toUpperCase()} (${rows}×${cols}) LE`,
+          offset: dataOff, rows, cols, yVals, xVals,
+          yAxisOffset: off, xAxisOffset: xOff,
+          dtype: 'uint16', le: true, confidence: conf,
+          dataPreview: grid, dataMin: mn, dataMax: mx,
+          category: guessCategory(mn, mx, eName), embeddedName: eName,
+        })
+        break
+      }
+    }
+  }
+
+  // ── 10. 8-bit scan (older ECUs: EDC15, Marelli, ME7 sub-maps) ─────────────
+  for (let off = 0; off < scanLimit - 60; off++) {
+    for (let rows = 6; rows <= 18; rows++) {
+      const rawY = readSeq8(off, rows)
+      if (rawY.length !== rows) continue
+      const scaled = rawY.map(v => v * 4)
+      if (!looksLikeRpm(scaled) && !looksLikeRpm(rawY)) continue
+      const xOff = off + rows
+      for (let cols = 4; cols <= 18; cols++) {
+        const rawX = readSeq8(xOff, cols)
+        if (rawX.length !== cols || !isMonoInc(rawX, 1)) continue
+        const dataOff = xOff + cols
+        if (dataOff + rows * cols > len) continue
+        if (overlaps(dataOff, rows * cols)) continue
+        const flat = readSeq8(dataOff, rows * cols)
+        if (flat.length !== rows * cols) continue
+        const q = scoreGrid(flat, 'uint8')
+        if (q < 0.25) continue
+        const mn = Math.min(...flat), mx = Math.max(...flat)
+        const eName = nearestStr(off)
+        let conf = Math.min(1, q * 0.45 + 0.12 + (eName ? 0.05 : 0))
+        const grid: number[][] = []
+        for (let r = 0; r < rows; r++) grid.push(flat.slice(r * cols, r * cols + cols))
+        results.push({
+          id: `scan_${++id}`,
+          name: eName ? `${eName} @ 0x${dataOff.toString(16).toUpperCase()} (${rows}×${cols}) 8bit` : `Map 0x${dataOff.toString(16).toUpperCase()} (${rows}×${cols}) 8bit`,
+          offset: dataOff, rows, cols, yVals: scaled, xVals: rawX,
+          yAxisOffset: off, xAxisOffset: xOff,
+          dtype: 'uint8', le: false, confidence: conf,
+          dataPreview: grid, dataMin: mn, dataMax: mx,
+          category: guessCategory(mn, mx, eName), embeddedName: eName,
+        })
+        break
+      }
+    }
+  }
+
+  // ── 11. Sort, deduplicate, return top 60 ──────────────────────────────────
+  results.sort((a, b) => b.confidence - a.confidence)
+  const out: ScannedMap[] = []
+  for (const r of results) {
+    const sz = r.rows * r.cols * (r.dtype === 'uint16' ? 2 : 1)
+    if (!out.some(e => { const es = e.rows * e.cols * (e.dtype === 'uint16' ? 2 : 1); return r.offset < e.offset + es && r.offset + sz > e.offset }))
+      out.push(r)
+    if (out.length >= 60) break
+  }
+  return out
 }
