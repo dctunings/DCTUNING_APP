@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { ECU_DEFINITIONS, ADDONS } from '../lib/ecuDefinitions'
 import type { EcuDef } from '../lib/ecuDefinitions'
-import { detectEcu, detectEcuFromFilename, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, syntheticMapDefFromDRT, extractPartNumberFromBinary, scanBinaryForMaps } from '../lib/binaryParser'
+import { detectEcu, detectEcuFromFilename, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, syntheticMapDefFromDRT, extractPartNumberFromBinary, scanBinaryForMaps as scanBinarySimple } from '../lib/binaryParser'
 import type { DetectedEcu, ExtractedMap, A2LValidationResult, ScannedMap } from '../lib/binaryParser'
 import { buildRemap, buildFilename } from '../lib/remapEngine'
 import type { Stage, AddonId, RemapResult } from '../lib/remapEngine'
@@ -627,11 +627,16 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [dtcResults, setDtcResults] = useState<DTCPatternResult[]>([])
   const [dtcSuppressedCount, setDtcSuppressedCount] = useState(0)
 
-  // Binary scanner state
+  // Binary scanner state (new classifier-based scanner)
   const [scanResult, setScanResult] = useState<ClassificationResult | null>(null)
   const [showScanner, setShowScanner] = useState(false)
   const [scannerBusy, setScannerBusy] = useState(false)
   const [scannerDebug, setScannerDebug] = useState('')
+  // Binary scanner state (simple Kf_ scan — used in step 2 panel & step 3 auto-scan)
+  const [scanStatus, setScanStatus] = useState<'idle' | 'scanning' | 'done'>('idle')
+  const [scannedMaps, setScannedMaps] = useState<ScannedMap[]>([])
+  const [addedScanIds, setAddedScanIds] = useState<Set<string>>(new Set())
+  const [scanPanelOpen, setScanPanelOpen] = useState(false)
 
   // Library search state
   const [libSearch, setLibSearch] = useState('')
@@ -1297,7 +1302,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       setScanStatus('scanning')
       setScanPanelOpen(true)
       setTimeout(() => {
-        const found = scanBinaryForMaps(fileBuffer)
+        const found = scanBinarySimple(fileBuffer)
         setScannedMaps(found)
         setScanStatus('done')
       }, 80)
@@ -1545,7 +1550,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                 setScanStatus('scanning')
                 setScanPanelOpen(true)
                 setTimeout(() => {
-                  const found = scanBinaryForMaps(fileBuffer)
+                  const found = scanBinarySimple(fileBuffer)
                   setScannedMaps(found)
                   setScanStatus('done')
                 }, 50)
@@ -2334,7 +2339,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                 setTimeout(() => {
                   setScanStatus('scanning')
                   setTimeout(() => {
-                    const found = scanBinaryForMaps(fileBuffer)
+                    const found = scanBinarySimple(fileBuffer)
                     setScannedMaps(found)
                     setScanStatus('done')
                   }, 80)
