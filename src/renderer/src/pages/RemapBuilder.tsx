@@ -390,7 +390,7 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
 
         {/* ── Top: corner + column header row ── */}
         <div style={{ display: 'flex', gap: 1, marginBottom: 1 }}>
-          {/* Corner cell — "RPM | Load" */}
+          {/* Corner cell — Y axis label (rows, left) / X axis label (cols, top) */}
           <div style={{
             width: rowHdrW, height: colHdrH, flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -399,9 +399,9 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
             border: '1px solid rgba(180,40,40,0.5)',
             borderRadius: 2, lineHeight: 1.1, textAlign: 'center',
           }}>
-            RPM<br/>Load
+            {axisYLabel || 'Load'}<br/>{axisXLabel || 'RPM'}
           </div>
-          {/* Column headers — Load axis */}
+          {/* Column headers — X axis (typically RPM) */}
           {Array.from({ length: cols }, (_, c) => (
             <div key={c} style={{
               width: cellW, height: colHdrH,
@@ -416,11 +416,11 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
           ))}
         </div>
 
-        {/* ── Data rows with RPM row headers on left ── */}
+        {/* ── Data rows with Y axis (Load/IQ) headers on left ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {Array.from({ length: rows }, (_, r) => (
             <div key={r} style={{ display: 'flex', gap: 1 }}>
-              {/* Row header — RPM axis */}
+              {/* Row header — Y axis (typically Load/IQ) */}
               <div style={{
                 width: rowHdrW, height: cellH, flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -490,7 +490,7 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
                 return (
                   <div
                     key={key}
-                    title={`[${r},${c}]${yVals ? ` RPM:${fmtAxis(yVals[r])}` : ''}${xVals ? ` Load:${fmtAxis(xVals[c])}` : ''} — ${pct >= 0 ? '+' : ''}${pct.toFixed(1)}% → ${dispVal.toFixed(dispVal > 10 ? 1 : 2)}${unit ? ' ' + unit : ''}`}
+                    title={`[${r},${c}]${yVals ? ` ${axisYLabel || 'Load'}:${fmtAxis(yVals[r])}` : ''}${xVals ? ` ${axisXLabel || 'RPM'}:${fmtAxis(xVals[c])}` : ''} — ${pct >= 0 ? '+' : ''}${pct.toFixed(1)}% → ${dispVal.toFixed(dispVal > 10 ? 1 : 2)}${unit ? ' ' + unit : ''}`}
                     style={{
                       width: cellW, height: cellH,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
