@@ -15,6 +15,19 @@ import { parseKP, convertKPMaps } from '../lib/kpParser'
 import type { KPParseResult, KPConvertedMap } from '../lib/kpParser'
 import { suppressDTCs, getActiveDTCGroups } from '../lib/dtcRemoval'
 import type { DTCPatternResult } from '../lib/dtcRemoval'
+import { scanBinaryForMaps, classifyCandidates, matchUnknownsByDNA } from '../lib/mapClassifier'
+import type { ClassificationResult } from '../lib/mapClassifier'
+
+// ─── Transpose helper (kept for any future use) ──────────────────────────────
+function transposeGrid(grid: number[][]): number[][] {
+  if (grid.length === 0 || grid[0].length === 0) return grid
+  const rows = grid.length, cols = grid[0].length
+  return Array.from({ length: cols }, (_, c) =>
+    Array.from({ length: rows }, (_, r) => grid[r][c])
+  )
+}
+
+const SCANNER_THRESHOLD = 35  // minimum score for a classified match
 import { supabase } from '../lib/supabase'
 import type { EcuFileState } from '../App'
 
@@ -493,7 +506,7 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
                     onMouseEnter={() => { if (dragging) setSelEnd({ r, c }) }}
                     onMouseUp={() => { setDragging(false) }}
                   >
-                    {pct >= 0 ? '+' : ''}{pct.toFixed(pct % 1 === 0 ? 0 : 1)}%
+                    {dispVal.toFixed(dispVal > 100 ? 0 : dispVal > 10 ? 1 : 2)}
                   </div>
                 )
               })}
@@ -591,12 +604,6 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   // Which map's Zone Editor panel is currently open (null = all closed)
   const [zoneEditorMapId, setZoneEditorMapId] = useState<string | null>(null)
 
-  // Binary scanner state
-  const [scannedMaps, setScannedMaps]       = useState<ScannedMap[]>([])
-  const [scanStatus, setScanStatus]         = useState<'idle' | 'scanning' | 'done'>('idle')
-  const [scanPanelOpen, setScanPanelOpen]   = useState(false)
-  const [addedScanIds, setAddedScanIds]     = useState<Set<string>>(new Set())
-
   // Step 4 state
   const [remapResult, setRemapResult] = useState<RemapResult | null>(null)
   const [blockResult, setBlockResult] = useState<BlockCorrectionResult | null>(null)
@@ -619,6 +626,12 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   // DTC removal state
   const [dtcResults, setDtcResults] = useState<DTCPatternResult[]>([])
   const [dtcSuppressedCount, setDtcSuppressedCount] = useState(0)
+
+  // Binary scanner state
+  const [scanResult, setScanResult] = useState<ClassificationResult | null>(null)
+  const [showScanner, setShowScanner] = useState(false)
+  const [scannerBusy, setScannerBusy] = useState(false)
+  const [scannerDebug, setScannerDebug] = useState('')
 
   // Library search state
   const [libSearch, setLibSearch] = useState('')
@@ -680,6 +693,46 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     setSigExportText('')
     setLibSearch(''); setLibResults([]); setLibTotal(0); setLibPage(0)
     setLibFallbackNote(''); setLibOriginalNum(''); setLibLoadError('')
+    setScanResult(null); setShowScanner(false)
+
+    // Run binary map scanner in background
+    const ecuForScan = det?.def ?? null
+    setScannerDebug('Scanner starting... buf=' + buf.byteLength + ' ecu=' + (ecuForScan?.id ?? 'null'))
+    setTimeout(() => {
+      setScannerBusy(true)
+      try {
+        const candidates = scanBinaryForMaps(buf, ecuForScan)
+        setScannerDebug('Found ' + candidates.length + ' candidates')
+        if (candidates.length > 0 && ecuForScan) {
+          const result = classifyCandidates(candidates, ecuForScan)
+          setScannerDebug('OK: ' + result.candidates.length + ' identified, ' + result.unmatched.length + ' unknown')
+          setScanResult(result)
+          // Share scanner results with Performance page
+          onEcuLoaded?.({ fileName: name, fileBuffer: buf, detected: det, a2lMaps: [], drtMaps: [], scanResult: result })
+          // AI match unmatched candidates in background (non-blocking)
+          if (result.unmatched.length > 0) {
+            matchUnknownsByDNA(buf, result.unmatched, ecuForScan.family).then(aiMatches => {
+              if (aiMatches.size > 0) {
+                setScannerDebug(prev => prev + ' | AI matched ' + aiMatches.size + ' unknowns')
+              }
+            }).catch(() => { /* AI matching failure shouldn't block scanning */ })
+          }
+        } else if (candidates.length > 0) {
+          setScannerDebug('No ECU def — showing ' + candidates.length + ' unclassified')
+          setScanResult({
+            candidates: [],
+            unmatched: candidates.map(c => ({
+              candidate: c, hypotheses: [], bestMatch: null, assigned: false,
+            })),
+            anchors: [],
+          })
+        } else {
+          setScannerDebug('ERROR: 0 candidates found — scanner returned empty')
+        }
+      } catch (e) { setScannerDebug('CRASH: ' + String(e)) }
+      setScannerBusy(false)
+    }, 50)
+
     setStep(1)
     // Share file state with Performance page (a2l/drt maps not loaded yet — updated later)
     onEcuLoaded?.({ fileName: name, fileBuffer: buf, detected: det, a2lMaps: [], drtMaps: [] })
@@ -854,6 +907,11 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     }
 
     setExtractedMaps(maps)
+    // Share extracted maps with Performance page via parent state
+    const foundMaps = maps.filter(m => m.found)
+    if (foundMaps.length > 0 && fileBuffer && detected) {
+      onEcuLoaded?.({ fileName, fileBuffer, detected, a2lMaps: [], drtMaps: [], extractedMaps: foundMaps })
+    }
     setStep(3)
   }
 
@@ -959,7 +1017,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const api = (window as any).api
       if (api?.saveEcuFile) {
-        await api.saveEcuFile(remapResult.modifiedBuffer, outName)
+        await api.saveEcuFile({ defaultName: outName, buffer: Array.from(new Uint8Array(remapResult.modifiedBuffer)) })
       } else {
         // Fallback: blob download
         const blob = new Blob([remapResult.modifiedBuffer], { type: 'application/octet-stream' })
@@ -1009,6 +1067,17 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         const validation = validateA2LMapsInBinary(fileBuffer, maps)
         setA2lValidation(validation)
         setShowSigExport(false)
+        // Re-classify binary scanner candidates with A2L anchors for improved accuracy
+        const ecuForScan = selectedEcu ?? detected?.def ?? null
+        if (ecuForScan) {
+          try {
+            const candidates = scanBinaryForMaps(fileBuffer, ecuForScan)
+            if (candidates.length > 0) {
+              const result = classifyCandidates(candidates, ecuForScan, { a2lMaps: maps })
+              setScanResult(result)
+            }
+          } catch (_) { /* scanner failure shouldn't block A2L load */ }
+        }
       }
       // Share with Performance page
       if (fileBuffer) onEcuLoaded?.({ fileName, fileBuffer, detected, a2lMaps: maps, drtMaps: [] })
@@ -1868,7 +1937,186 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         {libLoadError && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 6 }}>{libLoadError}</div>}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+      {/* ── Binary Map Scanner ─────────────────────────────────────────────── */}
+      {(scanResult || scannerBusy) && (
+        <div style={{ marginTop: 16, border: '1px solid rgba(184,240,42,0.2)', borderRadius: 10, overflow: 'hidden' }}>
+          <div
+            onClick={() => setShowScanner(!showScanner)}
+            style={{
+              padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
+              background: 'rgba(184,240,42,0.04)', borderBottom: showScanner ? '1px solid rgba(184,240,42,0.15)' : 'none',
+            }}
+          >
+            <span style={{ fontSize: 14 }}>🔍</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--lime)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              BINARY MAP SCANNER
+            </span>
+            {scannerBusy ? (
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>Scanning...</span>
+            ) : scanResult ? (
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                {scanResult.candidates.length + scanResult.unmatched.length} candidate maps found
+                {scanResult.candidates.length > 0 && (
+                  <span style={{ color: '#22c55e', fontWeight: 700, marginLeft: 6 }}>
+                    {scanResult.candidates.length} identified
+                  </span>
+                )}
+              </span>
+            ) : null}
+            <span style={{ fontSize: 10, color: 'var(--text-muted)', transform: showScanner ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
+          </div>
+
+          {showScanner && scanResult && (
+            <div style={{ padding: '12px 16px', maxHeight: 420, overflowY: 'auto' }}>
+              {/* Classified candidates — grouped by map type */}
+              {scanResult.candidates.length > 0 && (() => {
+                // Group candidates by their best match mapDefId
+                const groups = new Map<string, typeof scanResult.candidates>()
+                for (const cc of scanResult.candidates) {
+                  const key = cc.bestMatch?.mapDefId ?? 'unknown'
+                  const arr = groups.get(key) || []
+                  arr.push(cc)
+                  groups.set(key, arr)
+                }
+                const catColors: Record<string, string> = {
+                  boost: '#3b82f6', fuel: '#f59e0b', torque: '#ef4444', ignition: '#a855f7',
+                  limiter: '#6b7280', emission: '#10b981', smoke: '#f97316', misc: '#6b7280',
+                }
+                return (
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.5px' }}>
+                      Identified Maps ({groups.size} types, {scanResult.candidates.length} total)
+                    </div>
+                    <div style={{ display: 'grid', gap: 6 }}>
+                      {[...groups.entries()].map(([mapDefId, members]) => {
+                        const primary = members[0]
+                        const best = primary.bestMatch!
+                        const conf = best.score
+                        const confColor = conf >= 75 ? '#22c55e' : conf >= 55 ? '#f59e0b' : '#f97316'
+                        const catColor = catColors[best.category] ?? '#6b7280'
+                        const variantCount = members.length
+                        return (
+                          <div key={mapDefId} style={{
+                            padding: '8px 12px', borderRadius: 8,
+                            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                              <span style={{
+                                fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 4,
+                                background: `${catColor}15`, color: catColor, border: `1px solid ${catColor}40`,
+                                textTransform: 'uppercase',
+                              }}>
+                                {best.category}
+                              </span>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', flex: 1 }}>
+                                {best.mapDefName}
+                              </span>
+                              <span style={{
+                                fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 4,
+                                background: `${confColor}15`, color: confColor, border: `1px solid ${confColor}40`,
+                              }}>
+                                {conf}%
+                              </span>
+                              {variantCount > 1 && (
+                                <span style={{
+                                  fontSize: 9, padding: '1px 6px', borderRadius: 3,
+                                  background: 'rgba(168,85,247,0.1)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.3)',
+                                }}>
+                                  {variantCount} variants
+                                </span>
+                              )}
+                            </div>
+                            {/* Show addresses for all variants */}
+                            <div style={{ marginTop: 4, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                              {members.slice(0, 6).map((cc, i) => (
+                                <span key={i} style={{ fontFamily: 'monospace', fontSize: 9, color: 'var(--text-muted)', padding: '1px 4px', borderRadius: 3, background: 'rgba(255,255,255,0.03)' }}>
+                                  0x{cc.candidate.offset.toString(16).toUpperCase().padStart(6, '0')} ({cc.candidate.rows}×{cc.candidate.cols})
+                                </span>
+                              ))}
+                              {members.length > 6 && (
+                                <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>+{members.length - 6} more</span>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })()}
+
+              {/* Unmatched candidates */}
+              {scanResult.unmatched.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.5px' }}>
+                    Unknown Maps ({scanResult.unmatched.length})
+                  </div>
+                  <div style={{ display: 'grid', gap: 4 }}>
+                    {scanResult.unmatched.slice(0, 15).map((cc, idx) => (
+                      <div key={idx} style={{
+                        padding: '6px 12px', borderRadius: 6,
+                        background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.04)',
+                        display: 'flex', alignItems: 'center', gap: 10, fontSize: 10, color: 'var(--text-muted)',
+                      }}>
+                        <span style={{ fontFamily: 'monospace', fontWeight: 700, minWidth: 72, color: 'var(--text-secondary)' }}>
+                          0x{cc.candidate.offset.toString(16).toUpperCase().padStart(6, '0')}
+                        </span>
+                        <span style={{ minWidth: 40 }}>{cc.candidate.rows}×{cc.candidate.cols}</span>
+                        <span>Range: {cc.candidate.valueRange.min}–{cc.candidate.valueRange.max}</span>
+                        {cc.candidate.axisX && (
+                          <span style={{ marginLeft: 'auto' }}>
+                            RPM: {cc.candidate.axisX.min}–{cc.candidate.axisX.max}
+                          </span>
+                        )}
+                        <span style={{
+                          fontSize: 9, padding: '1px 5px', borderRadius: 3,
+                          background: 'rgba(107,114,128,0.1)', color: '#6b7280',
+                        }}>
+                          UNKNOWN
+                        </span>
+                      </div>
+                    ))}
+                    {scanResult.unmatched.length > 15 && (
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', textAlign: 'center', padding: 4 }}>
+                        +{scanResult.unmatched.length - 15} more
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Re-scan button */}
+              <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+                <button
+                  className="btn-secondary"
+                  style={{ fontSize: 10, padding: '4px 12px' }}
+                  onClick={() => {
+                    if (!fileBuffer) return
+                    setScannerBusy(true)
+                    setTimeout(() => {
+                      try {
+                        const ecuForScan = selectedEcu ?? detected?.def ?? null
+                        const candidates = scanBinaryForMaps(fileBuffer, ecuForScan)
+                        if (candidates.length > 0 && ecuForScan) {
+                          const result = classifyCandidates(candidates, ecuForScan, {
+                            a2lMaps: a2lMaps.length > 0 ? a2lMaps : undefined,
+                          })
+                          setScanResult(result)
+                        }
+                      } catch (e) { console.warn('Rescan failed:', e) }
+                      setScannerBusy(false)
+                    }, 50)
+                  }}
+                >
+                  ↺ Rescan{a2lMaps.length > 0 ? ' (with A2L anchors)' : ''}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16 }}>
         <button className="btn-secondary" onClick={() => setStep(0)}>Back</button>
         <button className="btn-primary" disabled={!selectedEcuId} onClick={() => setStep(2)}>
           Continue →
@@ -2527,18 +2775,13 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                     <MiniHeatmap
                       data={m.data.map((row, r) => row.map((v, c) => {
                         // Mirror remapEngine.ts applyParams exactly: operate in RAW space,
-                        // then convert back to physical. This is critical for maps with non-zero
-                        // offsetVal (KFZW, KFZWOP, KFZWMN, KFMIRL) where multiplying physical
-                        // values directly gives wrong results (e.g. 15°×1.1 = 16.5° instead of 21.3°).
-                        // Also handles multiplier=0 correctly (falsy check was broken before).
-                        // lastNRows/lastNCols masking: cells outside the target zone keep physical value as-is.
+                        // then convert back to physical.
                         const rowStart = params.lastNRows !== undefined ? Math.max(0, m.data.length - params.lastNRows) : 0
                         const colStart = params.lastNCols !== undefined ? Math.max(0, row.length - params.lastNCols) : 0
                         if (r < rowStart || c < colStart) return v
                         const f   = m.mapDef.factor   || 1
                         const off = m.mapDef.offsetVal ?? 0
                         const oldRaw = f !== 0 ? (v - off) / f : 0
-                        // Use per-cell multiplier from zone grid if available, else uniform
                         const cellMul = cellGrid?.[r]?.[c]
                         let newRaw = cellMul !== undefined
                           ? oldRaw * cellMul

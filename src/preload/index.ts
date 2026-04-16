@@ -1,9 +1,17 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import { readFileSync } from 'fs'
 
 const api = {
   // ─── File I/O ─────────────────────────────────────────────────────────────
   openEcuFile: () => ipcRenderer.invoke('open-ecu-file'),
+  // Read a file directly in the preload context — bypasses IPC serialization.
+  // Returns ArrayBuffer which transfers to renderer without copying.
+  // This handles 4MB+ files that would choke the IPC JSON serialization.
+  readFileDirect: (filePath: string): ArrayBuffer => {
+    const data = readFileSync(filePath)
+    return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength)
+  },
   saveEcuFile: (opts: { defaultName: string; buffer: number[] }) => ipcRenderer.invoke('save-ecu-file', opts),
   listSerialPorts: () => ipcRenderer.invoke('list-serial-ports'),
 

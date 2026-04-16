@@ -15,7 +15,8 @@ export interface ExtractedMap {
   rawData: number[][]   // raw integer values as stored in binary
   offset: number        // byte offset where map was found (-1 = not found)
   found: boolean
-  source: 'signature' | 'fixedOffset' | 'a2l' | 'drt' | 'none'  // how the map was located
+  source: 'signature' | 'fixedOffset' | 'calSearch' | 'a2l' | 'drt' | 'none'
+  quality?: number      // 0-1 data quality score (smoothness × range × non-trivial)
   // Optional per-cell multiplier grid for ECM Titanium-style zone editing.
   // When present, each cell uses its own multiplier instead of the stage-level uniform multiplier.
   cellMultiplierGrid?: number[][]
@@ -25,13 +26,30 @@ export interface ExtractedMap {
 export function detectEcu(buffer: ArrayBuffer): DetectedEcu | null {
   const bytes = new Uint8Array(buffer)
 
-  // Build three search strings from the full binary:
-  // 1. ascii_spaced    — non-printable → space  (standard string matching with separators)
-  // 2. ascii_compact   — non-printable → ''     (catches null-padded strings: "EDC17\x00C46")
-  // 3. ascii_nounderscore — underscores removed  (Bosch embeds "EDC17_CP20" but identStrings use "EDC17CP20")
-  const ascii_spaced       = Array.from(bytes).map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : ' ').join('')
-  const ascii_compact      = Array.from(bytes).map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : '' ).join('')
-  const ascii_nounderscore = Array.from(bytes).map(b => b === 95 ? '' : b >= 32 && b < 127 ? String.fromCharCode(b) : '').join('')
+  // Build search strings from the binary for ident matching.
+  // For large files (>1MB), only scan key regions to avoid creating massive strings:
+  //   - First 512KB (contains headers, part numbers, ident strings)
+  //   - Middle region around 75% (contains cal ident blocks in some ECUs)
+  //   - Last 256KB (contains trailing ident blocks)
+  // For small files (<1MB), scan the entire file.
+  let scanBytes: Uint8Array
+  if (bytes.length > 1048576) {
+    // Large file: combine first 512K + middle 256K + last 256K
+    const first = bytes.slice(0, 524288)
+    const midStart = Math.floor(bytes.length * 0.70)
+    const mid = bytes.slice(midStart, midStart + 262144)
+    const last = bytes.slice(bytes.length - 262144)
+    const combined = new Uint8Array(first.length + mid.length + last.length)
+    combined.set(first, 0)
+    combined.set(mid, first.length)
+    combined.set(last, first.length + mid.length)
+    scanBytes = combined
+  } else {
+    scanBytes = bytes
+  }
+  const ascii_spaced       = Array.from(scanBytes).map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : ' ').join('')
+  const ascii_compact      = Array.from(scanBytes).map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : '' ).join('')
+  const ascii_nounderscore = Array.from(scanBytes).map(b => b === 95 ? '' : b >= 32 && b < 127 ? String.fromCharCode(b) : '').join('')
 
   let best: DetectedEcu | null = null
   let bestScore = 0
@@ -39,7 +57,7 @@ export function detectEcu(buffer: ArrayBuffer): DetectedEcu | null {
   for (const def of ECU_DEFINITIONS) {
     const matched: string[] = []
     for (const s of def.identStrings) {
-      if (s.length < 4) continue  // ignore any string too short to be meaningful
+      if (s.length < 4) continue
       if (ascii_spaced.includes(s) || ascii_compact.includes(s) || ascii_nounderscore.includes(s)) matched.push(s)
     }
     // Also check file size range
@@ -154,6 +172,19 @@ export function detectEcuFromFilename(filename: string): DetectedEcu | null {
     [['mevd17'],                      'bmw_mevd17'],
     [['mg1cs','mg1c'],                'mg1'],
     [['sim2k'],                       'sim2k'],
+    // New ECU families
+    [['sid801','sid802','sid803','sid804','sid805','sid806','sid807'], 'siemens_sid'],
+    [['sid201','sid206','sid301'],     'siemens_sid'],
+    [['ems3110','ems3120','ems3125','ems3130','ems3132','ems3150'], 'siemens_ems3'],
+    [['pcr2','pcr21'],                'siemens_pcr'],
+    [['dcm3.5','dcm35','dcm3.7','dcm37'], 'delphi_dcm35'],
+    [['8gmf','mm8gmf','multiair'],    'marelli_8gmf'],
+    [['mjd6f3','mjd602','mjd8f2','mjd8df','mjd9df'], 'marelli_mjd'],
+    [['denso','279700'],              'denso_v8'],
+    [['visteon','6c1u','dcu10','dcu-10'], 'visteon_dcm'],
+    [['siemens'],                     'siemens_sid'],  // generic Siemens fallback
+    [['delphi'],                      'delphi_dcm35'], // generic Delphi fallback
+    [['marelli'],                     'marelli_8gmf'], // generic Marelli fallback
   ]
 
   for (const [keywords, defId] of filenameRules) {
@@ -175,8 +206,8 @@ export function detectEcuFromFilename(filename: string): DetectedEcu | null {
 }
 
 // ─── Signature search ─────────────────────────────────────────────────────────
-function findSignature(bytes: Uint8Array, sig: number[]): number {
-  outer: for (let i = 0; i <= bytes.length - sig.length; i++) {
+function findSignature(bytes: Uint8Array, sig: number[], startFrom = 0): number {
+  outer: for (let i = startFrom; i <= bytes.length - sig.length; i++) {
     for (let j = 0; j < sig.length; j++) {
       if (bytes[i + j] !== sig[j]) continue outer
     }
@@ -206,22 +237,690 @@ function dtypeSize(dtype: DataType): number {
   }
 }
 
+// ─── Physical range per category ──────────────────────────────────────────────
+const PHYS_RANGES: Record<string, { min: number; max: number }> = {
+  boost:    { min: -5,   max: 4000 },  // mbar (0-4000) or bar (0-4) depending on ECU
+  torque:   { min: -10,  max: 700 },   // Nm — widened for EDC15 variants with higher torque maps
+  fuel:     { min: -5,   max: 150 },   // mg/st — widened from 100 for EDC15 tuned maps
+  smoke:    { min: 0,    max: 150 },   // mg/st — widened from 50: real EDC15 smoke limiters go 55-100
+  ignition: { min: -50,  max: 70 },
+  limiter:  { min: 0,    max: 8000 },
+  emission: { min: -5,   max: 150 },
+  misc:     { min: -500, max: 500 },
+}
+
+// ─── Fast data quality scoring (inline min/max, no .flat()) ───────────────────
+// Scores how likely a data block is to be a REAL ECU map vs garbage/padding.
+//
+// Real ECU maps have these characteristics:
+//   1. Values within expected physical range for the category
+//   2. Smooth gradients — adjacent cells differ by small amounts
+//   3. Low zigzag — values trend consistently, don't reverse direction constantly
+//   4. Many distinct values spread across the grid (not flat fill)
+//   5. No large constant regions (>60% same value = fill/padding)
+//   6. Variation in MOST rows, not just a few
+//
+// Garbage data (random bytes interpreted as map) typically:
+//   - Zigzags wildly (direction reverses every 1-2 cells)
+//   - Has a flat fill region with random-looking border rows
+//   - Has huge jumps between adjacent cells
+function scoreMapData(phys: number[][], category: string): number {
+  const rows = phys.length
+  const cols = phys[0]?.length ?? 0
+  if (rows === 0 || cols === 0) return 0
+  const range = PHYS_RANGES[category] ?? PHYS_RANGES.misc
+  const total = rows * cols
+
+  // ── 1. Range check: are values within expected physical range? ──
+  let inRange = 0, sum = 0, vMin = Infinity, vMax = -Infinity
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const v = phys[r][c]; sum += v
+      if (v < vMin) vMin = v; if (v > vMax) vMax = v
+      if (v >= range.min && v <= range.max) inRange++
+    }
+  }
+  if (total === 0) return 0
+  const rangeFrac = inRange / total
+  if (rangeFrac < 0.85) return 0
+
+  // ── 1b. Category-specific minimum value sanity checks ──
+  // Real torque maps always have some cells > 30 Nm — even the smallest production engines.
+  // False positives from calSearch often read correction tables or index data with values
+  // of 1–25 Nm which pass the range check (-10 to 700) but aren't real torque ceilings.
+  // Similarly, boost maps should have peak values above 0.1 bar (100 mbar) to be real.
+  if (category === 'torque' && vMax < 30) return 0
+
+  // ── 2. Mode/fill check: reject blocks dominated by a single value ──
+  const valCounts = new Map<number, number>()
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const key = Math.round(phys[r][c] * 100) / 100
+      valCounts.set(key, (valCounts.get(key) ?? 0) + 1)
+    }
+  }
+  let modeCount = 0
+  for (const cnt of valCounts.values()) { if (cnt > modeCount) modeCount = cnt }
+  const modeFrac = modeCount / total
+  // If >60% of cells are the same value → fill/padding region, not a real map
+  if (modeFrac > 0.60) return 0.02
+
+  // ── 3. Constant-row check: reject if too many rows are completely flat ──
+  let constRows = 0
+  for (let r = 0; r < rows; r++) {
+    let allSame = true
+    for (let c = 1; c < cols; c++) {
+      if (Math.abs(phys[r][c] - phys[r][0]) > 0.01) { allSame = false; break }
+    }
+    if (allSame) constRows++
+  }
+  // If more than 40% of rows are completely constant, suspicious
+  // Real maps may have 1-2 constant rows (at idle or at max) but not 50%+
+  if (constRows > rows * 0.40) return 0.03
+
+  // ── 3b. Outlier check: reject maps where a few cells dominate the range ──
+  // Real tuning maps have smooth gradients. If max is >10× median, it's likely
+  // garbage (e.g. axis data leaking into map data, or uninitialized cells).
+  const sorted = phys.flat().sort((a, b) => a - b)
+  const median = sorted[Math.floor(sorted.length / 2)]
+  if (median > 0.1 && vMax > median * 15) return 0.02  // extreme outlier vs bulk
+  if (median < 0.5 && vMax > 50 && category !== 'emission') return 0.02  // most cells near-zero but max is large
+
+  // ── 4. Smoothness: adjacent cells shouldn't jump wildly ──
+  let adjDiffSum = 0, adjCount = 0
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (c + 1 < cols) { adjDiffSum += Math.abs(phys[r][c + 1] - phys[r][c]); adjCount++ }
+      if (r + 1 < rows) { adjDiffSum += Math.abs(phys[r + 1][c] - phys[r][c]); adjCount++ }
+    }
+  }
+  const meanAdj = adjCount > 0 ? adjDiffSum / adjCount : 999
+  const physRange = vMax - vMin
+  const smoothness = physRange > 0 ? Math.max(0, 1 - (meanAdj / physRange) * 2) : 0
+
+  // ── 5. Zigzag detection: real maps trend smoothly, garbage reverses direction ──
+  // Count direction reversals per row and column.
+  // Real map row:    5, 10, 18, 25, 30, 35 → 0 reversals (monotonic)
+  // Real with peak:  5, 15, 25, 20, 15, 10 → 1 reversal
+  // Garbage row:     4, 50, 1, 191, 47, 191 → 4 reversals in 5 transitions
+  let totalReversals = 0, totalTransitions = 0
+  // Check rows
+  for (let r = 0; r < rows; r++) {
+    for (let c = 1; c < cols - 1; c++) {
+      const d1 = phys[r][c] - phys[r][c - 1]
+      const d2 = phys[r][c + 1] - phys[r][c]
+      // Only count as reversal if both differences are significant (>0.5% of range)
+      const threshold = physRange * 0.005
+      if ((d1 > threshold && d2 < -threshold) || (d1 < -threshold && d2 > threshold)) {
+        totalReversals++
+      }
+      totalTransitions++
+    }
+  }
+  // Check columns
+  for (let c = 0; c < cols; c++) {
+    for (let r = 1; r < rows - 1; r++) {
+      const d1 = phys[r][c] - phys[r - 1][c]
+      const d2 = phys[r + 1][c] - phys[r][c]
+      const threshold = physRange * 0.005
+      if ((d1 > threshold && d2 < -threshold) || (d1 < -threshold && d2 > threshold)) {
+        totalReversals++
+      }
+      totalTransitions++
+    }
+  }
+  // Zigzag ratio: 0 = perfectly monotonic, 1 = every cell reverses
+  // Real maps: 0.0 - 0.15 (smooth with occasional inflection)
+  // Garbage:   0.3 - 0.6+ (random direction changes)
+  const zigzagRatio = totalTransitions > 0 ? totalReversals / totalTransitions : 0
+  // Hard reject if zigzag is extreme (>35% of transitions reverse)
+  if (zigzagRatio > 0.50) return 0.03
+  // Soft penalty: scale from 1.0 (no zigzag) to 0.0 (50% zigzag)
+  // Relaxed from 0.35 — EDC16 smoke limiters have zigzag ~0.38 due to
+  // multi-copy map blocks where cells alternate between copies.
+  const zigzagScore = Math.max(0, 1 - zigzagRatio / 0.50)
+
+  // ── 6. Non-triviality: CV and unique values ──
+  const mean = sum / total
+  let varianceSum = 0
+  for (let r = 0; r < rows; r++) { for (let c = 0; c < cols; c++) { varianceSum += (phys[r][c] - mean) ** 2 } }
+  const stdDev = Math.sqrt(varianceSum / total)
+  const absMean = Math.abs(mean)
+  const cv = absMean > 1 ? stdDev / absMean : stdDev
+
+  const uniqueVals = new Set<number>()
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      uniqueVals.add(Math.round(phys[r][c] * 100) / 100)
+    }
+  }
+  const uniqueRatio = uniqueVals.size / total
+
+  // CV scoring: 0→1 (CV < 0.05 → low, CV > 0.3 → full)
+  const cvScore = Math.min(1, Math.max(0, (cv - 0.03) / 0.25))
+  // Unique ratio scoring: 0→1
+  const uniqueScore = Math.min(1, uniqueRatio / 0.20)
+  const nonTrivial = Math.max(cvScore, uniqueScore) * 0.7 + Math.min(cvScore, uniqueScore) * 0.3
+
+  // ── Combine all scores ──
+  return rangeFrac * smoothness * zigzagScore * nonTrivial
+}
+
+// ─── EDC15 0xEA38 marker search ──────────────────────────────────────────────
+// When signatures and fixedOffset fail for EDC15, scan the cal region for
+// 0xEA38 axis markers and match structurally-found maps to the requested mapDef
+// by category-specific value range heuristics.
+//
+// EDC15 (C167) stores maps in this structure:
+//   [0xEA38:u16_LE][X_count:u16_LE][X_axis][sep:u16][Y_count:u16_LE][Y_axis][DATA]
+//
+// Many EDC15 binaries do NOT contain the ASCII symbol strings (LADSOLL, MENZK, etc.)
+// that the signature scanner looks for. The 0xEA38 marker is the only reliable way
+// to find maps in these "stripped" ROMs.
+//
+// Also handles dimension mismatches: mapDef might say 1×8 (from one variant) but
+// the real binary has the map as 8×11 or 16×12 (different variant). We match by
+// value range, not just dimensions.
+function searchEDC15Markers(
+  buffer: ArrayBuffer, mapDef: MapDef
+): { offset: number; raw: number[][]; phys: number[][]; score: number; actualRows: number; actualCols: number } | null {
+  // 0xEA38 format stores all data as uint16 LE. If mapDef says uint8/int8, the real
+  // binary may still store it as uint16 in this variant. We try matching with the
+  // mapDef's factor applied to uint16 data. If factor is wrong for uint16, the physical
+  // values won't match the category range and the map won't be claimed. Safe to try.
+
+  const view = new DataView(buffer)
+  const len = buffer.byteLength
+  const le = true  // EDC15 C167 is little-endian
+  const MARKER = 59960  // 0xEA38
+
+  // EDC15 cal region bounds
+  const calStart = len <= 0x100000
+    ? Math.floor(len * 0.53) & ~1   // 512KB: ~53%
+    : Math.floor(len * 0.60) & ~1   // 1MB: ~60%
+  const calEnd = Math.min(
+    len <= 0x100000 ? Math.floor(len * 0.78) : Math.floor(len * 0.80),
+    len - 32
+  )
+
+  // Wider physical ranges per category (broader than PHYS_RANGES to catch EDC15 variants)
+  const WIDE: Record<string, { min: number; max: number; minSpread: number }> = {
+    boost:    { min: 0,    max: 4500,  minSpread: 300 },   // mbar 0-4500
+    fuel:     { min: -5,   max: 200,   minSpread: 10  },   // mg/st (wider than PHYS_RANGES 100)
+    torque:   { min: -50,  max: 1000,  minSpread: 50  },   // Nm
+    smoke:    { min: -5,   max: 250,   minSpread: 5   },   // mg/st (wider than PHYS_RANGES 50)
+    limiter:  { min: 0,    max: 10000, minSpread: 100 },
+    emission: { min: -10,  max: 500,   minSpread: 5   },
+    ignition: { min: -80,  max: 100,   minSpread: 5   },
+    misc:     { min: -5000,max: 10000, minSpread: 10  },
+  }
+  const wideRange = WIDE[mapDef.category] ?? WIDE.misc
+
+  let bestOffset = -1, bestScore = 0
+  let bestRaw: number[][] | null = null, bestPhys: number[][] | null = null
+  let bestRows = 0, bestCols = 0
+
+  for (let i = calStart; i < calEnd - 8; i += 2) {
+    if (view.getUint16(i, le) !== MARKER) continue
+
+    // Read X axis count
+    const xCount = view.getUint16(i + 2, le)
+    if (xCount < 2 || xCount > 24) continue
+
+    const xStart = i + 4
+    const xEnd = xStart + xCount * 2
+    if (xEnd + 4 > len) continue
+
+    // Read X axis — must be monotonically increasing
+    const xAxis: number[] = []
+    let xOk = true
+    for (let j = 0; j < xCount; j++) {
+      const v = view.getUint16(xStart + j * 2, le)
+      if (j > 0 && v <= xAxis[j - 1]) { xOk = false; break }
+      if (v > 50000) { xOk = false; break }
+      xAxis.push(v)
+    }
+    if (!xOk || xAxis.length !== xCount) continue
+    if (xAxis[xCount - 1] - xAxis[0] < 50) continue
+
+    // Skip separator word, read Y count
+    const yCountOff = xEnd + 2
+    if (yCountOff + 2 > len) continue
+    const yCount = view.getUint16(yCountOff, le)
+    if (yCount < 2 || yCount > 24) continue
+    if (xCount * yCount < 8) continue
+
+    const yStart = yCountOff + 2
+    const yEnd = yStart + yCount * 2
+    if (yEnd > len) continue
+
+    // Read Y axis — must be monotonically increasing
+    const yAxis: number[] = []
+    let yOk = true
+    for (let j = 0; j < yCount; j++) {
+      const v = view.getUint16(yStart + j * 2, le)
+      if (j > 0 && v <= yAxis[j - 1]) { yOk = false; break }
+      if (v > 50000) { yOk = false; break }
+      yAxis.push(v)
+    }
+    if (!yOk || yAxis.length !== yCount) continue
+
+    // Data block follows Y axis
+    const dataStart = yEnd
+    const dataBytes = xCount * yCount * 2
+    if (dataStart + dataBytes > len) continue
+
+    // Read full data block (xCount rows × yCount cols)
+    const rows = xCount, cols = yCount
+    const raw: number[][] = []
+    const phys: number[][] = []
+    let ok = true, rMin = Infinity, rMax = -Infinity, pMin = Infinity, pMax = -Infinity
+    for (let r = 0; r < rows && ok; r++) {
+      const rawRow: number[] = [], physRow: number[] = []
+      for (let c = 0; c < cols; c++) {
+        const off = dataStart + (r * cols + c) * 2
+        if (off + 2 > len) { ok = false; break }
+        const rv = view.getUint16(off, le)
+        const pv = rv * mapDef.factor + mapDef.offsetVal
+        rawRow.push(rv); physRow.push(pv)
+        if (rv < rMin) rMin = rv; if (rv > rMax) rMax = rv
+        if (pv < pMin) pMin = pv; if (pv > pMax) pMax = pv
+      }
+      if (ok) { raw.push(rawRow); phys.push(physRow) }
+    }
+    if (!ok || raw.length !== rows) { i = dataStart + dataBytes - 2; continue }
+
+    // Skip constant/flat data
+    if (rMax - rMin < 2) { i = dataStart + dataBytes - 2; continue }
+
+    // Check physical values against wide category range
+    let inRange = 0
+    const total = rows * cols
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (phys[r][c] >= wideRange.min && phys[r][c] <= wideRange.max) inRange++
+      }
+    }
+    const rangeFrac = inRange / total
+    if (rangeFrac < 0.65) { i = dataStart + dataBytes - 2; continue }
+
+    // Physical spread must be meaningful for this category
+    const physSpread = pMax - pMin
+    if (physSpread < wideRange.minSpread) { i = dataStart + dataBytes - 2; continue }
+
+    // Smoothness check (inline — don't use scoreMapData which has tight PHYS_RANGES)
+    const range = rMax - rMin || 1
+    let smoothH = 0, smoothV = 0, totalH = 0, totalV = 0
+    for (let r = 0; r < rows; r++) {
+      for (let c = 1; c < cols; c++) {
+        totalH++
+        if (Math.abs(raw[r][c] - raw[r][c - 1]) < range * 0.4) smoothH++
+      }
+    }
+    for (let r = 1; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        totalV++
+        if (Math.abs(raw[r][c] - raw[r - 1][c]) < range * 0.4) smoothV++
+      }
+    }
+    const smoothness = Math.max(
+      totalH > 0 ? smoothH / totalH : 0,
+      totalV > 0 ? smoothV / totalV : 0
+    )
+    if (smoothness < 0.30) { i = dataStart + dataBytes - 2; continue }
+
+    // Dimension match scoring: exact match (possibly transposed) = 1.0, flexible = lower
+    let dimScore = 0
+    if ((mapDef.rows === rows && mapDef.cols === cols) ||
+        (mapDef.rows === cols && mapDef.cols === rows)) {
+      dimScore = 1.0
+    } else {
+      // mapDef is 1D (1×8) but real map is 2D — common in EDC15 variants
+      const defCells = mapDef.rows * mapDef.cols
+      const actCells = rows * cols
+      if (defCells <= 16 && actCells >= 16) {
+        dimScore = 0.35  // allow 1D→2D upgrade
+      } else {
+        const ratio = Math.min(defCells, actCells) / Math.max(defCells, actCells)
+        dimScore = ratio * 0.25
+      }
+    }
+
+    // ClampMax proximity check (same as Kf_ search)
+    let clampScore = 0.5
+    const stageClamps0 = [mapDef.stage1, mapDef.stage2, mapDef.stage3]
+      .filter(s => s && typeof (s as any).clampMax === 'number')
+      .map(s => (s as any).clampMax as number)
+    if (stageClamps0.length > 0) {
+      const maxClamp = Math.max(...stageClamps0)
+      const sortedRaw0 = raw.flat().sort((a, b) => a - b)
+      const medianRaw0 = sortedRaw0[Math.floor(sortedRaw0.length / 2)]
+      if (maxClamp > 0 && medianRaw0 > maxClamp * 2.5) {
+        i = dataStart + dataBytes - 2; continue
+      }
+      clampScore = medianRaw0 <= maxClamp ? 1.0 : Math.max(0, 1 - (medianRaw0 - maxClamp) / maxClamp)
+    }
+
+    // Combined score: smoothness + range compliance + dimension match + clampMax proximity
+    const totalScore = smoothness * 0.25 + rangeFrac * 0.25 + dimScore * 0.25 + clampScore * 0.25
+
+    if (totalScore > bestScore) {
+      bestScore = totalScore; bestOffset = dataStart
+      bestRaw = raw; bestPhys = phys
+      bestRows = rows; bestCols = cols
+    }
+
+    // Skip past this map's data
+    i = dataStart + dataBytes - 2
+  }
+
+  if (bestOffset < 0 || !bestRaw || !bestPhys) return null
+  return { offset: bestOffset, raw: bestRaw, phys: bestPhys, score: bestScore, actualRows: bestRows, actualCols: bestCols }
+}
+
+// ─── ME7/ME9 Kf_ inline format search ────────────────────────────────────────
+// Bosch ME7/ME9/MED9 store maps in Kf_ inline format:
+//   [cols:u16_LE][rows:u16_LE][X_axis: cols×u16_LE][Y_axis: rows×u16_LE][DATA: rows×cols×u16_LE]
+//
+// extractMap() uses calSearch for these "pointer architecture" ECUs, but calSearch
+// fails for most maps because:
+//   1. ME7 mapDefs have le:false (BE), but Kf_ data is ACTUALLY little-endian (C167 native)
+//      → calSearch reads with wrong endianness → garbage values → rejected
+//   2. calStartPct defaults to 0.40 but ME7 cal region starts at ~0.10 (10% of 1MB)
+//   3. 1D mapDefs (LDRXN 1×16, MXMOMI 1×8) don't meet calSearch min 4×4 requirement
+//   4. Kf_ data starts after header+axes — stride-based scanning misses exact start
+//
+// Only uint8 maps (like KFLDHBN) work in calSearch because they have no byte order issue.
+//
+// This function scans the ME7 cal region for Kf_ headers, reads data as LE (matching
+// the real format), and matches against the mapDef by category + value range + dimensions.
+function searchKfMarkers(
+  buffer: ArrayBuffer, mapDef: MapDef
+): { offset: number; raw: number[][]; phys: number[][]; score: number; actualRows: number; actualCols: number } | null {
+  const view = new DataView(buffer)
+  const len = buffer.byteLength
+  const le = true  // ME7/ME9 Kf_ data is LE (C167 native byte order, confirmed by scanner)
+
+  // ME7 cal region: scanner finds Kf_ maps from ~10% to ~65% of 1MB files
+  // For smaller files (512KB), use 10% to 80%
+  const calStart = Math.floor(len * 0.08) & ~1
+  const calEnd = Math.min(Math.floor(len * 0.70), len - 32)
+
+  // Wider physical ranges per category for ME7
+  const WIDE: Record<string, { min: number; max: number; minSpread: number }> = {
+    boost:    { min: -1,   max: 200,   minSpread: 5   },   // % load (factor 0.023438)
+    fuel:     { min: -5,   max: 500,   minSpread: 5   },   // various units
+    torque:   { min: -100, max: 2000,  minSpread: 5   },   // Nm or % load
+    smoke:    { min: -5,   max: 300,   minSpread: 5   },
+    limiter:  { min: 0,    max: 10000, minSpread: 100 },
+    emission: { min: -10,  max: 500,   minSpread: 5   },
+    ignition: { min: -60,  max: 80,    minSpread: 3   },   // °BTDC (int8 × 0.75)
+    misc:     { min: -5000,max: 10000, minSpread: 5   },
+  }
+  const wideRange = WIDE[mapDef.category] ?? WIDE.misc
+
+  let bestOffset = -1, bestScore = 0
+  let bestRaw: number[][] | null = null, bestPhys: number[][] | null = null
+  let bestRows = 0, bestCols = 0
+
+  for (let i = calStart; i <= calEnd - 8; i += 2) {
+    const d0 = view.getUint16(i, le)      // cols
+    const d1 = view.getUint16(i + 2, le)  // rows
+
+    // Valid Kf_ dimension range
+    if (d0 < 3 || d0 > 24 || d1 < 3 || d1 > 24) continue
+    if (d0 * d1 < 9) continue  // at least 3×3
+
+    const cols = d0, rows = d1
+    const xStart = i + 4
+    const yStart = xStart + cols * 2
+    const dataStart = yStart + rows * 2
+    const dataBytes = rows * cols * 2
+    if (dataStart + dataBytes > len) continue
+
+    // Validate X axis — monotonically increasing
+    const xAxis: number[] = []
+    let xOk = true
+    for (let j = 0; j < cols; j++) {
+      const v = view.getUint16(xStart + j * 2, le)
+      if (j > 0 && v <= xAxis[j - 1]) { xOk = false; break }
+      if (v > 50000) { xOk = false; break }
+      xAxis.push(v)
+    }
+    if (!xOk || xAxis.length !== cols) continue
+
+    // Validate Y axis — monotonically increasing
+    const yAxis: number[] = []
+    let yOk = true
+    for (let j = 0; j < rows; j++) {
+      const v = view.getUint16(yStart + j * 2, le)
+      if (j > 0 && v <= yAxis[j - 1]) { yOk = false; break }
+      if (v > 50000) { yOk = false; break }
+      yAxis.push(v)
+    }
+    if (!yOk || yAxis.length !== rows) continue
+
+    // Axis span checks
+    if (xAxis[cols - 1] - xAxis[0] < 20) continue
+    if (yAxis[rows - 1] - yAxis[0] < 5) continue
+
+    // At least one axis should have engine-range values
+    const maxAxisVal = Math.max(xAxis[cols - 1], yAxis[rows - 1])
+    if (maxAxisVal < 200) continue
+
+    // Read data block (rows × cols, all uint16 LE)
+    const raw: number[][] = []
+    const phys: number[][] = []
+    let ok = true, pMin = Infinity, pMax = -Infinity, rMin = Infinity, rMax = -Infinity
+    for (let r = 0; r < rows && ok; r++) {
+      const rawRow: number[] = [], physRow: number[] = []
+      for (let c = 0; c < cols; c++) {
+        const off = dataStart + (r * cols + c) * 2
+        if (off + 2 > len) { ok = false; break }
+        const rv = view.getUint16(off, le)
+        const pv = rv * mapDef.factor + mapDef.offsetVal
+        rawRow.push(rv); physRow.push(pv)
+        if (rv < rMin) rMin = rv; if (rv > rMax) rMax = rv
+        if (pv < pMin) pMin = pv; if (pv > pMax) pMax = pv
+      }
+      if (ok) { raw.push(rawRow); phys.push(physRow) }
+    }
+    if (!ok || raw.length !== rows) { i = dataStart + dataBytes - 2; continue }
+
+    // Skip flat data
+    if (rMax - rMin < 2) { i = dataStart + dataBytes - 2; continue }
+
+    // Physical values must fit the category
+    let inRange = 0
+    const total = rows * cols
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (phys[r][c] >= wideRange.min && phys[r][c] <= wideRange.max) inRange++
+      }
+    }
+    const rangeFrac = inRange / total
+    if (rangeFrac < 0.60) { i = dataStart + dataBytes - 2; continue }
+
+    const physSpread = pMax - pMin
+    if (physSpread < wideRange.minSpread) { i = dataStart + dataBytes - 2; continue }
+
+    // Smoothness check
+    const range = rMax - rMin || 1
+    let smoothH = 0, smoothV = 0, totalH = 0, totalV = 0
+    for (let r = 0; r < rows; r++) {
+      for (let c = 1; c < cols; c++) {
+        totalH++
+        if (Math.abs(raw[r][c] - raw[r][c - 1]) < range * 0.4) smoothH++
+      }
+    }
+    for (let r = 1; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        totalV++
+        if (Math.abs(raw[r][c] - raw[r - 1][c]) < range * 0.4) smoothV++
+      }
+    }
+    const smoothness = Math.max(
+      totalH > 0 ? smoothH / totalH : 0,
+      totalV > 0 ? smoothV / totalV : 0
+    )
+    if (smoothness < 0.25) { i = dataStart + dataBytes - 2; continue }
+
+    // Dimension match scoring
+    let dimScore = 0
+    if ((mapDef.rows === rows && mapDef.cols === cols) ||
+        (mapDef.rows === cols && mapDef.cols === rows)) {
+      dimScore = 1.0
+    } else {
+      const defCells = mapDef.rows * mapDef.cols
+      const actCells = rows * cols
+      if (defCells <= 16 && actCells >= 8) {
+        dimScore = 0.35  // 1D→2D upgrade
+      } else {
+        const ratio = Math.min(defCells, actCells) / Math.max(defCells, actCells)
+        dimScore = ratio * 0.25
+      }
+    }
+
+    // ClampMax proximity: if the mapDef has stage clampMax, the data's raw values
+    // should be in a reasonable range relative to it. Maps whose raw values far exceed
+    // the expected operational max are wrong matches (e.g., raw 12000 for a map with
+    // clampMax 5000 means phys values are 2.4× the tuned ceiling — not this map).
+    let clampScore = 0.5  // neutral if no clampMax available
+    const stageClamps = [mapDef.stage1, mapDef.stage2, mapDef.stage3]
+      .filter(s => s && typeof (s as any).clampMax === 'number')
+      .map(s => (s as any).clampMax as number)
+    if (stageClamps.length > 0) {
+      const maxClamp = Math.max(...stageClamps)
+      // Expected operational raw max: clampMax is the ceiling after tuning.
+      // Stock raw values should be below clampMax. If median raw > 2× clampMax,
+      // this is almost certainly the wrong map.
+      const sortedRaw = raw.flat().sort((a, b) => a - b)
+      const medianRaw = sortedRaw[Math.floor(sortedRaw.length / 2)]
+      if (maxClamp > 0 && medianRaw > maxClamp * 2.5) {
+        // Way too high — skip this match entirely
+        i = dataStart + dataBytes - 2; continue
+      }
+      // Score: 1.0 if median is below clampMax, drops as it exceeds
+      clampScore = medianRaw <= maxClamp ? 1.0 : Math.max(0, 1 - (medianRaw - maxClamp) / maxClamp)
+    }
+
+    const totalScore = smoothness * 0.25 + rangeFrac * 0.25 + dimScore * 0.25 + clampScore * 0.25
+
+    if (totalScore > bestScore) {
+      bestScore = totalScore; bestOffset = dataStart
+      bestRaw = raw; bestPhys = phys
+      bestRows = rows; bestCols = cols
+    }
+
+    i = dataStart + dataBytes - 2
+  }
+
+  if (bestOffset < 0 || !bestRaw || !bestPhys) return null
+  return { offset: bestOffset, raw: bestRaw, phys: bestPhys, score: bestScore, actualRows: bestRows, actualCols: bestCols }
+}
+
+// ─── Cal-region smart search (optimised) ──────────────────────────────────────
+// Searches the calibration region for data blocks matching a MapDef.
+// FAST: checks first row only as quick filter, then scores full block on hits.
+// Only used for 2D maps (≥4 rows × ≥4 cols) to avoid false positives.
+function searchCalRegion(
+  buffer: ArrayBuffer, mapDef: MapDef, family: string
+): { offset: number; raw: number[][]; phys: number[][]; score: number } | null {
+  const view = new DataView(buffer)
+  const len = buffer.byteLength
+  const elSize = dtypeSize(mapDef.dtype)
+  const blockBytes = mapDef.rows * mapDef.cols * elSize
+  const cells = mapDef.rows * mapDef.cols
+
+  // Skip 1D maps and tiny maps — too many false positives
+  if (mapDef.rows < 4 || mapDef.cols < 4 || cells < 32) return null
+
+  const fam = family.toUpperCase()
+  let calStartPct = 0.40
+  if (fam.includes('EDC16')) calStartPct = 0.78
+  // MED17.5 StageX mappack: boost at 0x4FE0C (24%), ignition at 0x5F32E (29%), torque at 0x40346 (12%).
+  // Previous 0.72 missed ALL maps in MED17.5 2MB files. Cal region starts at ~12% for this family.
+  else if (fam.includes('MED17') || fam.includes('MEVD17')) calStartPct = len >= 0x400000 ? 0.50 : 0.10
+  // EDC17C46 StageX: SOI at 0x26C0E (15%), boost at ~25%, gearbox at 0x7E2xx (50%).
+  // Previous 0.65 missed ALL SOI and boost maps. Cal region starts at ~10% for EDC17.
+  else if (fam.includes('EDC17')) calStartPct = 0.10
+  else if (fam.includes('EDC15')) calStartPct = 0.45
+  else if (fam.includes('ME7') || fam.includes('ME9') || fam.includes('MED9')) calStartPct = 0.08
+  const calStart = Math.floor(len * calStartPct) & ~1
+  const calEnd = len - blockBytes
+
+  const range = PHYS_RANGES[mapDef.category] ?? PHYS_RANGES.misc
+  let bestOffset = -1, bestScore = 0
+  let bestRaw: number[][] | null = null, bestPhys: number[][] | null = null
+
+  // Step size: 4 bytes balances coverage vs speed.
+  // stride=16 missed maps (alignment issues), stride=2 was too slow (Preview froze).
+  // stride=4 catches all 4-byte-aligned maps (standard Bosch alignment) while
+  // scanning 4× faster than stride=2. Maps at odd 2-byte alignments are rare.
+  const stride = 4
+
+  for (let pos = calStart; pos <= calEnd; pos += stride) {
+    // Quick reject: check first 4 values of first row
+    let bail = false
+    for (let c = 0; c < Math.min(4, mapDef.cols); c++) {
+      const rv = readVal(view, pos + c * elSize, mapDef.dtype, mapDef.le)
+      const pv = rv * mapDef.factor + mapDef.offsetVal
+      if (pv < range.min || pv > range.max) { bail = true; break }
+    }
+    if (bail) continue
+
+    // Check last row too (quick cross-check)
+    const lastRowOff = pos + (mapDef.rows - 1) * mapDef.cols * elSize
+    if (lastRowOff + elSize <= len) {
+      const rv = readVal(view, lastRowOff, mapDef.dtype, mapDef.le)
+      const pv = rv * mapDef.factor + mapDef.offsetVal
+      if (pv < range.min || pv > range.max) continue
+    }
+
+    // Read full block and score
+    const raw: number[][] = [], phys: number[][] = []
+    let ok = true
+    for (let r = 0; r < mapDef.rows && ok; r++) {
+      const rawRow: number[] = [], physRow: number[] = []
+      for (let c = 0; c < mapDef.cols; c++) {
+        const off = pos + (r * mapDef.cols + c) * elSize
+        if (off + elSize > len) { ok = false; break }
+        const rv = readVal(view, off, mapDef.dtype, mapDef.le)
+        const pv = rv * mapDef.factor + mapDef.offsetVal
+        // Early bail if value way out of range
+        if (pv < range.min - 10 || pv > range.max + 10) { ok = false; break }
+        rawRow.push(rv); physRow.push(pv)
+      }
+      if (ok) { raw.push(rawRow); phys.push(physRow) }
+    }
+    if (!ok || raw.length !== mapDef.rows) continue
+
+    const score = scoreMapData(phys, mapDef.category)
+    if (score > bestScore && score > 0.10) {
+      bestScore = score; bestOffset = pos; bestRaw = raw; bestPhys = phys
+    }
+  }
+
+  if (bestOffset < 0 || !bestRaw || !bestPhys) return null
+  return { offset: bestOffset, raw: bestRaw, phys: bestPhys, score: bestScore }
+}
+
 // ─── Extract a single map ─────────────────────────────────────────────────────
-export function extractMap(buffer: ArrayBuffer, mapDef: MapDef): ExtractedMap {
+export function extractMap(buffer: ArrayBuffer, mapDef: MapDef, ecuFamily?: string): ExtractedMap {
   const bytes = new Uint8Array(buffer)
   const view = new DataView(buffer)
   const elSize = dtypeSize(mapDef.dtype)
-  const needed = mapDef.rows * mapDef.cols * elSize
 
-  const readAt = (pos: number) => {
+  const readAt = (pos: number, rows = mapDef.rows, cols = mapDef.cols) => {
+    const needed = rows * cols * elSize
     if (pos < 0 || pos + needed > buffer.byteLength) return null
     const raw: number[][] = []
     const phys: number[][] = []
-    for (let r = 0; r < mapDef.rows; r++) {
+    for (let r = 0; r < rows; r++) {
       raw.push([])
       phys.push([])
-      for (let c = 0; c < mapDef.cols; c++) {
-        const rawVal = readVal(view, pos + (r * mapDef.cols + c) * elSize, mapDef.dtype, mapDef.le)
+      for (let c = 0; c < cols; c++) {
+        const rawVal = readVal(view, pos + (r * cols + c) * elSize, mapDef.dtype, mapDef.le)
         raw[r].push(rawVal)
         phys[r].push(rawVal * mapDef.factor + mapDef.offsetVal)
       }
@@ -229,21 +928,127 @@ export function extractMap(buffer: ArrayBuffer, mapDef: MapDef): ExtractedMap {
     return { raw, phys }
   }
 
-  // Try each signature
-  for (const sig of mapDef.signatures) {
-    let pos = findSignature(bytes, sig)
-    if (pos === -1) continue
-    pos += mapDef.sigOffset
-    const result = readAt(pos)
-    if (!result) continue
-    return { mapDef, data: result.phys, rawData: result.raw, offset: pos, found: true, source: 'signature' }
-  }
+  // All ECUs: try signature → fixedOffset → calSearch (same path for everyone).
+  // The Remap Builder works by finding maps via their signature byte patterns in the binary.
+  // This was working correctly for EDC16, ME7, MED17, EDC17 before pointer-arch changes broke it.
+  const fam = (ecuFamily ?? '').toUpperCase()
+  {
+    // Signature search — primary method, works for all ECU families
+    for (const sig of mapDef.signatures) {
+      // matchIndex support: when a signature matches multiple locations (e.g. two consecutive
+      // 8×8 maps with identical headers), skip to the Nth match (0-based, default 0 = first).
+      const targetMatch = mapDef.matchIndex ?? 0
+      let pos = -1
+      let searchFrom = 0
+      for (let m = 0; m <= targetMatch; m++) {
+        pos = findSignature(bytes, sig, searchFrom)
+        if (pos === -1) break
+        if (m < targetMatch) searchFrom = pos  // pos is after sig, so next search won't re-find it
+      }
+      if (pos === -1) continue
 
-  // Fallback: use fixedOffset if provided (known variant-specific location)
-  if (mapDef.fixedOffset !== undefined && mapDef.fixedOffset >= 0) {
-    const result = readAt(mapDef.fixedOffset)
-    if (result) {
-      return { mapDef, data: result.phys, rawData: result.raw, offset: mapDef.fixedOffset, found: true, source: 'fixedOffset' }
+      // Kf_ header auto-detection: Bosch Kennfeld inline format starts with
+      // [cols:u16, rows:u16, X_axis(cols×u16), Y_axis(rows×u16), DATA...].
+      // When detected, sigOffset is ignored — dataPos is calculated from the header dims.
+      // Actual dimensions from the header override mapDef.rows/cols, handling variants
+      // with different map sizes than the definition default.
+      //
+      // Two endiannesses:
+      //   BE (MED9.1, ME7): sig starts with 0x00 (high byte of cols < 256)
+      //   LE (EDC17, EDC16 LE): sig[1] === 0x00 (high byte of cols in second position)
+      // ASCII sigs (0x41+) skip Kf_ detection entirely — they use sigOffset.
+      //
+      // IMPORTANT: findSignature returns position AFTER the sig. The signature bytes
+      // ARE the start of the Kf_ header, so we read from headerPos = pos - sig.length.
+      let kfDetected = false
+      let kfCols = 0, kfRows = 0
+      const headerPos = pos - sig.length
+      if (sig.length >= 4 && headerPos >= 0) {
+        // Big-endian Kf_ header (MED9.1, ME7) — sig[0] === 0x00
+        if (sig[0] === 0x00) {
+          kfCols = (bytes[headerPos] << 8) | bytes[headerPos + 1]
+          kfRows = (bytes[headerPos + 2] << 8) | bytes[headerPos + 3]
+          if (kfCols >= 2 && kfCols <= 25 && kfRows >= 2 && kfRows <= 25) {
+            kfDetected = true
+          }
+        }
+        // Little-endian Kf_ header (EDC17 C46, stripped variants) — sig[1] === 0x00
+        if (!kfDetected && sig[1] === 0x00 && sig[0] >= 2 && sig[0] <= 25) {
+          kfCols = bytes[headerPos] | (bytes[headerPos + 1] << 8)
+          kfRows = bytes[headerPos + 2] | (bytes[headerPos + 3] << 8)
+          if (kfCols >= 2 && kfCols <= 25 && kfRows >= 2 && kfRows <= 25) {
+            kfDetected = true
+          }
+        }
+      }
+
+      let dataPos: number, actualRows: number, actualCols: number
+      if (kfDetected) {
+        actualCols = kfCols
+        actualRows = kfRows
+        dataPos = headerPos + 4 + kfCols * 2 + kfRows * 2
+      } else {
+        actualCols = mapDef.cols
+        actualRows = mapDef.rows
+        dataPos = pos + mapDef.sigOffset
+      }
+
+      const result = readAt(dataPos, actualRows, actualCols)
+      if (!result) continue
+      const quality = scoreMapData(result.phys, mapDef.category)
+      if (quality > 0.15) {
+        const actualMapDef = (kfDetected && (actualRows !== mapDef.rows || actualCols !== mapDef.cols))
+          ? { ...mapDef, rows: actualRows, cols: actualCols }
+          : mapDef
+        return { mapDef: actualMapDef, data: result.phys, rawData: result.raw, offset: dataPos, found: true, source: 'signature', quality }
+      }
+    }
+
+    // fixedOffset fallback
+    if (mapDef.fixedOffset !== undefined && mapDef.fixedOffset >= 0) {
+      const result = readAt(mapDef.fixedOffset)
+      if (result) {
+        const quality = scoreMapData(result.phys, mapDef.category)
+        if (quality > 0.15) {
+          return { mapDef, data: result.phys, rawData: result.raw, offset: mapDef.fixedOffset, found: true, source: 'fixedOffset', quality }
+        }
+      }
+    }
+
+    // Cal-region smart search as final fallback for non-pointer ECUs too
+    if (ecuFamily && mapDef.rows >= 4 && mapDef.cols >= 4) {
+      const found = searchCalRegion(buffer, mapDef, ecuFamily)
+      if (found) {
+        return { mapDef, data: found.phys, rawData: found.raw, offset: found.offset, found: true, source: 'calSearch', quality: found.score }
+      }
+    }
+
+    // EDC15 0xEA38 marker search — catches maps that signatures/fixedOffset/calSearch all miss.
+    // Many EDC15 binaries have NO ASCII symbol strings (MENZK, MXMOM, LSMK, SDATF, LADSOLL).
+    // The 0xEA38 axis marker is the only reliable structural format in these "stripped" ROMs.
+    // Also handles dimension mismatches: mapDef may say 1×8 but real map is 8×11 in this variant.
+    if (fam.includes('EDC15')) {
+      const markerResult = searchEDC15Markers(buffer, mapDef)
+      if (markerResult) {
+        // Build a modified mapDef with actual dimensions from the marker scan
+        // so the grid displays correctly AND write-back uses the correct block size.
+        const actualMapDef: MapDef = {
+          ...mapDef,
+          rows: markerResult.actualRows,
+          cols: markerResult.actualCols,
+          dtype: 'uint16',   // 0xEA38 format is always uint16
+          le: true,          // EDC15 C167 is always LE
+        }
+        return {
+          mapDef: actualMapDef,
+          data: markerResult.phys,
+          rawData: markerResult.raw,
+          offset: markerResult.offset,
+          found: true,
+          source: 'calSearch',
+          quality: markerResult.score,
+        }
+      }
     }
   }
 
@@ -253,8 +1058,38 @@ export function extractMap(buffer: ArrayBuffer, mapDef: MapDef): ExtractedMap {
 }
 
 // ─── Extract all maps for an ECU ─────────────────────────────────────────────
+// Tracks used offsets to prevent multiple mapDefs from claiming the same data block.
+// Without deduplication, 3+ maps writing to the same offset corrupt each other's data.
+// Critical maps get priority (processed first) so they claim the best offsets.
 export function extractAllMaps(buffer: ArrayBuffer, ecuDef: EcuDef): ExtractedMap[] {
-  return ecuDef.maps.map(m => extractMap(buffer, m))
+  // Sort: critical maps first, then by map index for stability
+  const indexed = ecuDef.maps.map((m, i) => ({ m, i }))
+  indexed.sort((a, b) => {
+    if (a.m.critical && !b.m.critical) return -1
+    if (!a.m.critical && b.m.critical) return 1
+    return a.i - b.i
+  })
+
+  const usedOffsets = new Set<number>()
+  const results: ExtractedMap[] = new Array(ecuDef.maps.length)
+
+  for (const { m, i } of indexed) {
+    const result = extractMap(buffer, m, ecuDef.family)
+    if (result.found && result.offset >= 0) {
+      if (usedOffsets.has(result.offset)) {
+        // Offset already claimed by another map — mark as not found to prevent corruption
+        const empty = Array.from({ length: m.rows }, () => Array(m.cols).fill(0))
+        results[i] = { mapDef: m, data: empty, rawData: empty, offset: -1, found: false, source: 'none' }
+      } else {
+        usedOffsets.add(result.offset)
+        results[i] = result
+      }
+    } else {
+      results[i] = result
+    }
+  }
+
+  return results
 }
 
 // ─── Write value to buffer ────────────────────────────────────────────────────

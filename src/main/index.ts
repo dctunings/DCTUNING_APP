@@ -96,12 +96,12 @@ app.whenReady().then(() => {
     if (result.canceled) return null
     const filePath = result.filePaths[0]
     const data = fs.readFileSync(filePath)
-    // Return buffer as plain number array (safe across Electron IPC boundary)
-    // Also return full path so renderer can extract part numbers from parent folder name
+    // Return buffer as number array for IPC transfer.
+    // For 4MB files this is ~32MB heap but it works reliably across Electron IPC.
     return {
       path: filePath,
       name: filePath.split(/[\\/]/).pop(),
-      size: data.length,
+      size: (data as Buffer).length,
       buffer: Array.from(data as unknown as Uint8Array),
     }
   })

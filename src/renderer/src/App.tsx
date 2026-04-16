@@ -28,6 +28,7 @@ import { useSubscription } from './lib/useSubscription'
 import type { A2LMapDef } from './lib/a2lParser'
 import type { DRTConvertedMap } from './lib/drtParser'
 import type { DetectedEcu } from './lib/binaryParser'
+import type { ClassificationResult } from './lib/mapClassifier'
 
 export interface EcuFileState {
   fileName: string
@@ -35,6 +36,8 @@ export interface EcuFileState {
   detected: DetectedEcu | null
   a2lMaps: A2LMapDef[]
   drtMaps: DRTConvertedMap[]
+  scanResult?: ClassificationResult | null
+  extractedMaps?: import('./lib/binaryParser').ExtractedMap[]  // Maps found via signatures (from Remap Builder)
 }
 import './styles/app.css'
 
