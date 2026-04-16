@@ -55,6 +55,10 @@ export interface MapDef {
   axisYValues?: number[]   // physical Y-axis values (rows), length must equal rows
   critical: boolean     // if true, warn if map not found
   showPreview: boolean
+  // Minimum quality score for map detection (default 0.15). Set to 0 for maps that are expected
+  // to be flat/uniform (e.g. torque monitor — all cells same value in ORI), which would otherwise
+  // be rejected by the mode-fraction check in scoreMapData.
+  minQuality?: number
 }
 
 export interface EcuDef {
@@ -1614,18 +1618,25 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'edc17_torque_monitor',
         name: 'Torque Monitoring Map',
         category: 'torque',
-        desc: 'Torque monitoring / plausibility check. If actual torque exceeds this by more than the tolerance, ECU throws P060A. MUST be raised when tuning torque maps to prevent limp mode.',
+        desc: 'Torque monitoring / plausibility check. If actual torque exceeds this by more than the tolerance, ECU throws P060A. MUST be raised when tuning torque maps to prevent limp mode. This map is intentionally flat in ORI (all cells = same ceiling value) — Stage1 maxes it out to disable monitoring.',
         a2lNames: ['TrqMon_IQ2NM_MAP', 'MQBEGR_MON', 'TqMon_trqMax_MAP', 'TrqMon_MAP'],
         signatures: [
-          // TODO: needs sig extraction from real binary — database study has 12×12 candidates
+          // No Kf_ header — uses Y axis (IQ axis 0..18000 mg/100st, step 2000) as unique pattern.
+          // Verified unique: exactly 1 match per 2MB C46 binary. Consistent across 18 tested files
+          // (FJ, CA, BT, LH, LK, AG, HR variants) at different offsets.
+          // Data (10×10 uint16) starts immediately after the 20-byte Y axis.
+          [0x00,0x00,0xd0,0x07,0xa0,0x0f,0x70,0x17,0x40,0x1f,0x10,0x27,0xe0,0x2e,0xb0,0x36,0x80,0x3e,0x50,0x46],
         ],
-        sigOffset: 0,
-        rows: 12, cols: 12, dtype: 'uint16', le: true,
+        sigOffset: 0,  // data starts immediately after the Y axis pattern
+        rows: 10, cols: 10, dtype: 'uint16', le: true,
         factor: 0.1, offsetVal: 0, unit: 'Nm',
-        stage1: { multiplier: 1.30 },
-        stage2: { multiplier: 1.45 },
-        stage3: { multiplier: 1.65, clampMax: 65000 },
+        // ORI: all cells = 10000 (1000 Nm ceiling). Stage1: max out to 32767 (3276.7 Nm) to disable.
+        stage1: { multiplier: 3.28, clampMax: 32767 },
+        stage2: { multiplier: 3.28, clampMax: 32767 },
+        stage3: { multiplier: 3.28, clampMax: 32767 },
         critical: true, showPreview: true,
+        // Map is intentionally flat (all cells identical) — skip quality mode-fraction rejection
+        minQuality: 0,
       },
       {
         id: 'edc17_rail_limit',
@@ -7958,7 +7969,8 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         desc: 'Renault dCi smoke limiter. Caps fuel at low boost/cold start to limit smoke. K9K is prone to smoke if over-fuelled below 1500 RPM. Raise proportionally with fuel map.',
         a2lNames: ['KFMRRBKH', 'KFRSMOKE', 'KFMRR'],
         signatures: [
-          // LE Kf_ 7×4 — no sig found in study yet, placeholder for manual extraction
+          // LE Kf_ 7×4 smoke limiter (X: RPM 2000,2500,3000,3500) — database study: 32 C46 files
+          [0x07,0x00,0x04,0x00,0xd0,0x07,0xc4,0x09,0xb8,0x0b,0xac,0x0d],
         ],
         sigOffset: 0,
         rows: 4, cols: 7, dtype: 'uint16', le: true,
@@ -7975,7 +7987,8 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         desc: 'Renault K9K EGR map. The 1.5 dCi has severe EGR-related inlet manifold fouling issues at high mileage — one of the most common complaints on Renault/Dacia diesels. EGR-off addon with inlet clean recommended on any K9K over 100k km.',
         a2lNames: ['KFEGR', 'KFEGRMX', 'EGR_rDes'],
         signatures: [
-          // TODO: needs sig extraction from real binary — database study has 7×4 candidates
+          // LE Kf_ 7×4 EGR position (X: 2431,2531,2731,2931) — database study: 8 CP04 files
+          [0x07,0x00,0x04,0x00,0x7f,0x09,0xe3,0x09,0xab,0x0a,0x73,0x0b],
         ],
         sigOffset: 0,
         rows: 4, cols: 7, dtype: 'uint16', le: true,
@@ -8103,7 +8116,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         desc: 'PSA EDC17 EGR flow map. DV6 1.6 HDi has a well-documented EGR/swirl-flap carbon fouling problem — one of the most common failures on high-mileage PSA/Vauxhall diesels. EGR-off addon strongly recommended alongside inlet clean on any DV6 over 80k km.',
         a2lNames: ['KFEGR', 'KFEGRMX', 'EGR_rDes'],
         signatures: [
-          // TODO: needs sig extraction from real binary — database study has 8×5 candidates
+          // LE Kf_ 8×5 EGR position (X: 882,924,2016,3780) — database study: 24 C46 files
+          [0x08,0x00,0x05,0x00,0x72,0x03,0x9c,0x03,0xe0,0x07,0xc4,0x0e],
+          // LE Kf_ 8×5 EGR alt axis (X: 0,1300,1900,2000) — database study: 23 CP04 files
+          [0x08,0x00,0x05,0x00,0x00,0x00,0x14,0x05,0x6c,0x07,0xd0,0x07],
         ],
         sigOffset: 0,
         rows: 5, cols: 8, dtype: 'uint16', le: true,
@@ -8232,7 +8248,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         desc: 'Ford TDCi EGR flow map. Ford 2.0 Duratorq high-pressure EGR causes heavy inlet carbon build-up at high mileage — particularly Transit and Focus 2.0. EGR-off addon recommended on vehicles over 100k km showing rough idle or low power.',
         a2lNames: ['KFEGR', 'KFEGRMX'],
         signatures: [
-          // TODO: needs sig extraction from real binary — database study has 8×5 candidates
+          // LE Kf_ 8×5 EGR (X: 0,1300,1900,2000) — database study: 23 CP04 files (Ford uses CP04/C10)
+          [0x08,0x00,0x05,0x00,0x00,0x00,0x14,0x05,0x6c,0x07,0xd0,0x07],
+          // LE Kf_ 8×5 EGR alt axis (X: 1800,2000,2500,3500) — database study: 8 CP20 files
+          [0x08,0x00,0x05,0x00,0x08,0x07,0xd0,0x07,0xc4,0x09,0xac,0x0d],
         ],
         sigOffset: 0,
         rows: 5, cols: 8, dtype: 'uint16', le: true,
@@ -8484,7 +8503,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         desc: 'Mercedes OM651 EGR map. OM651 has documented EGR swirl-flap and inlet carbon issues at high mileage — particularly 2011-2014 models. EGR-off with inlet clean is one of the most common OM651 service items in Ireland.',
         a2lNames: ['KFEGR', 'KFEGRMX'],
         signatures: [
-          // TODO: needs sig extraction from real binary — database study has 8×5 candidates
+          // LE Kf_ 8×5 EGR (X: 882,924,2016,3780) — database study: 24 C46 files
+          [0x08,0x00,0x05,0x00,0x72,0x03,0x9c,0x03,0xe0,0x07,0xc4,0x0e],
+          // LE Kf_ 8×5 EGR alt (X: 2431,2531,2731,2911) — database study: 32 CP44 files (OM651 uses C57/C43)
+          [0x08,0x00,0x05,0x00,0x7f,0x09,0xe3,0x09,0xab,0x0a,0x5f,0x0b],
         ],
         sigOffset: 0,
         rows: 5, cols: 8, dtype: 'uint16', le: true,
@@ -8595,7 +8617,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         desc: 'Fiat Multijet EGR flow map. 1.3/1.6 Multijet have notorious inlet swirl-flap and EGR fouling issues at high mileage. EGR-off addon with inlet clean is the most requested Fiat/Alfa service. Giulietta 2.0 JTDM swirl flap failure is extremely common over 80k km.',
         a2lNames: ['KFEGR', 'KFEGRMX'],
         signatures: [
-          // TODO: needs sig extraction from real binary — database study has 7×4 candidates
+          // LE Kf_ 7×4 EGR (X: 2431,2531,2731,2931) — database study: 8 CP04 files (Fiat uses C49/C69)
+          [0x07,0x00,0x04,0x00,0x7f,0x09,0xe3,0x09,0xab,0x0a,0x73,0x0b],
+          // LE Kf_ 7×4 EGR alt (X: 2000,2500,3000,3500) — database study: 32 C46 files
+          [0x07,0x00,0x04,0x00,0xd0,0x07,0xc4,0x09,0xb8,0x0b,0xac,0x0d],
         ],
         sigOffset: 0,
         rows: 4, cols: 7, dtype: 'uint16', le: true,
@@ -8836,7 +8861,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         desc: 'BMW N47 EGR map. High-mileage N47 engines suffer from EGR valve seizure and inlet manifold fouling — particularly 2007-2012 models. EGR-off addon recommended on vehicles over 100k km.',
         a2lNames: ['KFEGR', 'KFEGRMX'],
         signatures: [
-          // TODO: needs sig extraction from real binary — database study has 8×5 candidates
+          // LE Kf_ 8×5 EGR (X: 0,1300,1900,2000) — database study: 23 CP04 files (N47 uses C06/C41)
+          [0x08,0x00,0x05,0x00,0x00,0x00,0x14,0x05,0x6c,0x07,0xd0,0x07],
+          // LE Kf_ 8×5 EGR alt (X: 2431,2531,2731,2911) — database study: 32 CP44 files
+          [0x08,0x00,0x05,0x00,0x7f,0x09,0xe3,0x09,0xab,0x0a,0x5f,0x0b],
         ],
         sigOffset: 0,
         rows: 5, cols: 8, dtype: 'uint16', le: true,
@@ -8947,7 +8975,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         desc: 'Hyundai/Kia CRDi EGR map. All D4FB/D4FC/D4HB engines experience inlet carbon fouling at high mileage. EGR-off addon with walnut blast clean is the most requested Korean diesel service. Particularly common on Sportage/Tucson with high mileage.',
         a2lNames: ['KFEGR', 'KFEGRMX'],
         signatures: [
-          // TODO: needs sig extraction from real binary — database study has 7×4 candidates
+          // LE Kf_ 7×4 EGR (X: 2000,2500,3000,3500) — database study: 32 C46 files
+          [0x07,0x00,0x04,0x00,0xd0,0x07,0xc4,0x09,0xb8,0x0b,0xac,0x0d],
+          // LE Kf_ 7×4 EGR alt (X: 3711,3731,3751,3831) — database study: 8 CP44 files
+          [0x07,0x00,0x04,0x00,0x7f,0x0e,0x93,0x0e,0xa7,0x0e,0xf7,0x0e],
         ],
         sigOffset: 0,
         rows: 4, cols: 7, dtype: 'uint16', le: true,
@@ -9057,7 +9088,8 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         desc: 'VAG 3.0 V6 TDI smoke limiter. Large displacement means less smoke tendency than smaller diesels. Raise proportionally with fuel map.',
         a2lNames: ['KFMRRBKH', 'KFRSMOKE'],
         signatures: [
-          // TODO: needs sig extraction from real binary — database study has 9×6 candidates
+          // LE Kf_ 9×6 smoke limiter (X: 1700,1820,1900,2500) — database study: 16 CP44 files (V6 uses CP44/CP54)
+          [0x09,0x00,0x06,0x00,0xa4,0x06,0x1c,0x07,0x6c,0x07,0xc4,0x09],
         ],
         sigOffset: 0,
         rows: 6, cols: 9, dtype: 'uint16', le: true,
@@ -9074,7 +9106,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         desc: 'VAG 3.0 V6 TDI AdBlue/SCR dosing map (post-2016 EU6 variants). Adblue dosing fault codes and warnings are a common issue at high mileage. Use adblue addon to suppress faults on vehicles with SCR delete.',
         a2lNames: ['KFSCR', 'KFUREA', 'scrDos'],
         signatures: [
-          // TODO: needs sig extraction from real binary — database study has 8×5 candidates
+          // LE Kf_ 8×5 SCR/AdBlue (X: 2431,2531,2731,2911) — database study: 32 CP44 files (V6 uses CP44/CP54)
+          [0x08,0x00,0x05,0x00,0x7f,0x09,0xe3,0x09,0xab,0x0a,0x5f,0x0b],
+          // LE Kf_ 8×5 SCR alt (X: 1800,2000,2500,3500) — database study: 8 CP20 files
+          [0x08,0x00,0x05,0x00,0x08,0x07,0xd0,0x07,0xc4,0x09,0xac,0x0d],
         ],
         sigOffset: 0,
         rows: 5, cols: 8, dtype: 'uint16', le: true,

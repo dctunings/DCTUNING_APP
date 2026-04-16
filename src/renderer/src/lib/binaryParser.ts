@@ -996,7 +996,9 @@ export function extractMap(buffer: ArrayBuffer, mapDef: MapDef, ecuFamily?: stri
       const result = readAt(dataPos, actualRows, actualCols)
       if (!result) continue
       const quality = scoreMapData(result.phys, mapDef.category)
-      if (quality > 0.15) {
+      // minQuality <= 0 bypasses quality check entirely (for flat maps like torque monitor)
+      const minQ = mapDef.minQuality ?? 0.15
+      if (minQ <= 0 || quality > minQ) {
         const actualMapDef = (kfDetected && (actualRows !== mapDef.rows || actualCols !== mapDef.cols))
           ? { ...mapDef, rows: actualRows, cols: actualCols }
           : mapDef
@@ -1009,7 +1011,8 @@ export function extractMap(buffer: ArrayBuffer, mapDef: MapDef, ecuFamily?: stri
       const result = readAt(mapDef.fixedOffset)
       if (result) {
         const quality = scoreMapData(result.phys, mapDef.category)
-        if (quality > 0.15) {
+        const minQ = mapDef.minQuality ?? 0.15
+        if (minQ <= 0 || quality > minQ) {
           return { mapDef, data: result.phys, rawData: result.raw, offset: mapDef.fixedOffset, found: true, source: 'fixedOffset', quality }
         }
       }
