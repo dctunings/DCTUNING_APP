@@ -1396,6 +1396,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
           [0x10,0x00,0x14,0x00,0xb0,0x04,0xd0,0x07,0xc4,0x09,0xb8,0x0b],
           // C46 — LE Kf_ 16×16 rail pressure map #1 (unique)
           [0x10,0x00,0x10,0x00,0x00,0x00,0x0a,0x00,0x58,0x02,0x20,0x03],
+          // LE Kf_ 16×16 rail pressure (RPM axis 1000,1600,2000,2500) — Stage1 changed 3 copies
+          [0x10,0x00,0x10,0x00,0xe8,0x03,0x40,0x06,0xd0,0x07,0xc4,0x09],
+          // LE Kf_ 16×16 rail pressure (RPM axis 1600,2000,2500,3000) — 3 matches, changed at idx 2
+          // Needs matchIndex:2 but that would break other sigs — use extended sig or separate map def
+          // [0x10,0x00,0x10,0x00,0x40,0x06,0xd0,0x07,0xc4,0x09,0xb8,0x0b],  // DISABLED: multi-match conflict
         ],
         sigOffset: 4,
         // A2L Rail_pSetPointBase_MAP = 16×16 but signatures find different-sized blocks.
@@ -1444,6 +1449,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
           [0x4C,0x4C,0x53,0x4F,0x4C,0x4C,0x44,0x52], [0x42,0x53,0x54,0x47,0x54,0x44,0x43], [0x8C,0xF8,0x73,0xF8],
           // C46 stripped (03L906018FJ) — LE Kf_ 16×10 boost target (unique), factor 0.001 bar matches
           [0x10,0x00,0x0a,0x00,0xb0,0x04,0xd0,0x07,0xc4,0x09,0xb8,0x0b],
+          // LE Kf_ 16×13 boost target (RPM axis 1200,2000,2500,3000) — Stage1 changed all 4 matches
+          // 4 copies with X:1200 axis (all tuned in Stage1). 4 more with X:1560 axis have different sig.
+          [0x10,0x00,0x0d,0x00,0xb0,0x04,0xd0,0x07,0xc4,0x09,0xb8,0x0b],
         ],
         sigOffset: 4,
         rows: 16, cols: 16, dtype: 'uint16', le: true,
@@ -1971,7 +1979,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         desc: 'Base ignition advance map (KFZW). 12 load rows × 16 RPM cols, int8, factor 0.75, offset 0. Confirmed from prj/me7-tools KFZW.audi.xml: X-axis=SNM16ZUUB (16 RPM pts), Y-axis=SRL12ZUUB (12 load pts). Stage 2/3 adds advance in mid-range where knock margin allows. NOTE: some tools display axes transposed as "12 RPM × 16 load" — the physical axes are 16 RPM columns × 12 load rows.',
         // "KFZW\0" = 0x4B,0x46,0x5A,0x57,0x00 — confirmed symbol in ME7.5 C167 ROM
         // "KFZW2\0" = variant for VVT-active condition (cam advance active / FNWUE=1)
-        signatures: [[0x4B,0x46,0x5A,0x57,0x00], [0x4B,0x46,0x5A,0x57,0x32,0x00]],
+        signatures: [
+          [0x4B,0x46,0x5A,0x57,0x00], [0x4B,0x46,0x5A,0x57,0x32,0x00],
+          // LE Kf_ 16×12 ignition (RPM axis 0,2621,5243,7864) — database study: 25 ME7 files
+          [0x10,0x00,0x0c,0x00,0x00,0x00,0x3d,0x0a,0x7b,0x14,0xb8,0x1e],
+        ],
         sigOffset: 2,
         // CONFIRMED: 12 load rows × 16 RPM cols — prj/me7-tools KFZW.audi.xml axis names:
         // X=SNM16ZUUB (16 RPM points), Y=SRL12ZUUB (12 load points). AJQ 06A906032AF addr: 0x160A9.
@@ -2291,7 +2303,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // "KFPBRK\0" = 0x4B,0x46,0x50,0x42,0x52,0x4B,0x00 — confirmed ME7.5 DAMOS symbol
         // Companion KFPBRKNW = same structure for NW (cam-on) cylinder condition
         a2lNames: ['KFPBRK', 'KFPBRKNW', 'KFPBRK0'],
-        signatures: [[0x4B,0x46,0x50,0x42,0x52,0x4B,0x00]],
+        signatures: [
+          [0x4B,0x46,0x50,0x42,0x52,0x4B,0x00],
+          // LE Kf_ 10×10 VE correction (RPM axis 2800,4000,6080,8000) — database study: 32 ME7 files
+          [0x0a,0x00,0x0a,0x00,0xf0,0x0a,0xa0,0x0f,0xc0,0x17,0x40,0x1f],
+        ],
         sigOffset: 2,
         rows: 10, cols: 10, dtype: 'uint16', le: true,
         // factor 0.001526: raw 655 = 1.000 (unity correction). Stock cells should be 0.95–1.05 range.
