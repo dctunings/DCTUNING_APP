@@ -1429,8 +1429,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
           [0x4E,0x37,0x35,0x44,0x55,0x54,0x59,0x44], [0x57,0x47,0x44,0x55,0x54,0x59,0x4D,0x41],
           // C46 stripped (03L906018FJ) — LE Kf_ 17×16 N75/wastegate (unique), factor 0.012207 matches
           [0x11,0x00,0x10,0x00,0x40,0x06,0xd0,0x07,0xc4,0x09,0xb8,0x0b],
-          // LE Kf_ 16×13 N75 wastegate (RPM axis 1200,2000,2500,3000) — found in 168 EDC17 files
-          [0x10,0x00,0x0d,0x00,0xb0,0x04,0xd0,0x07,0xc4,0x09,0xb8,0x0b],
+          // NOTE: 16×13 sig [0x10,0x00,0x0d,0x00,...] removed — collides with edc17_boost_target
         ],
         sigOffset: 4,
         rows: 13, cols: 16, dtype: 'uint16', le: true,
@@ -1824,7 +1823,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'simos18_ignition',
         name: 'Ignition Timing Base',
         category: 'ignition',
-        desc: 'Base ignition advance map. SIMOS18 EA888 Gen3 uses float32 timing maps. Stage 2/3 adds advance where knock margin allows on premium fuel.',
+        desc: 'Base ignition advance map. SIMOS18 EA888 Gen3 may use float32 timing maps in some variants — dtype may need updating when sigs are added. Stage 2/3 adds advance where knock margin allows on premium fuel.',
         signatures: [],
         sigOffset: 0,
         rows: 16, cols: 16, dtype: 'int16', le: true,
@@ -2475,20 +2474,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage3: { multiplier: 1.32, clampMax: 55000 },
         critical: true, showPreview: true,
       },
-      {
-        id: 'me9_fuel_map',
-        name: 'Fuel Injection Map',
-        category: 'fuel',
-        desc: 'Injection quantity and timing map (KFZW). Adjust to match increased airflow from boost increase.',
-        signatures: [[0x4B,0x46,0x5A,0x57,0x00], [0x4B,0x46,0x5A,0x57,0x32,0x00]],
-        sigOffset: 2,
-        rows: 16, cols: 16, dtype: 'int8', le: false,
-        factor: 0.75, offsetVal: -48, unit: '°',
-        stage1: { multiplier: 1.08 },
-        stage2: { multiplier: 1.15 },
-        stage3: { multiplier: 1.22, clampMax: 127 },
-        critical: true, showPreview: true,
-      },
+      // NOTE: me9_fuel_map was removed — it was a mislabeled ignition map (KFZW sigs, int8, factor 0.75°).
+      // The KFZW sigs have been moved to me9_ignition below where they belong.
+      // ME9 fuel injection detection requires A2L symbol matching (KFMIRL, KFPED, etc.)
       {
         id: 'me9_torque_limit',
         name: 'Torque Limit (MXMOM)',
@@ -2507,9 +2495,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'me9_ignition',
         name: 'Ignition Timing Map',
         category: 'ignition',
-        desc: 'Spark advance map. Focus ST/RS 2.5T responds well to timing advance on premium fuel — primary Stage 2 modification.',
-        signatures: [],
-        sigOffset: 0,
+        desc: 'Spark advance map (KFZW). Focus ST/RS 2.5T responds well to timing advance on premium fuel — primary Stage 2 modification.',
+        signatures: [
+          // ASCII "KFZW\0" and "KFZW2\0" — Kennfeld Zündwinkel (ignition timing map)
+          [0x4B,0x46,0x5A,0x57,0x00], [0x4B,0x46,0x5A,0x57,0x32,0x00],
+        ],
+        sigOffset: 2,
         rows: 16, cols: 16, dtype: 'int8', le: false,
         factor: 0.75, offsetVal: -48, unit: '°BTDC',
         stage1: { addend: 0 },
@@ -8505,8 +8496,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         signatures: [
           // LE Kf_ 8×5 EGR (X: 882,924,2016,3780) — database study: 24 C46 files
           [0x08,0x00,0x05,0x00,0x72,0x03,0x9c,0x03,0xe0,0x07,0xc4,0x0e],
-          // LE Kf_ 8×5 EGR alt (X: 2431,2531,2731,2911) — database study: 32 CP44 files (OM651 uses C57/C43)
-          [0x08,0x00,0x05,0x00,0x7f,0x09,0xe3,0x09,0xab,0x0a,0x5f,0x0b],
+          // NOTE: 8×5 X:2431 sig removed — collides with merc_om651_smoke
         ],
         sigOffset: 0,
         rows: 5, cols: 8, dtype: 'uint16', le: true,
@@ -8863,8 +8853,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         signatures: [
           // LE Kf_ 8×5 EGR (X: 0,1300,1900,2000) — database study: 23 CP04 files (N47 uses C06/C41)
           [0x08,0x00,0x05,0x00,0x00,0x00,0x14,0x05,0x6c,0x07,0xd0,0x07],
-          // LE Kf_ 8×5 EGR alt (X: 2431,2531,2731,2911) — database study: 32 CP44 files
-          [0x08,0x00,0x05,0x00,0x7f,0x09,0xe3,0x09,0xab,0x0a,0x5f,0x0b],
+          // NOTE: X:2431 sig [0x08..0x5f,0x0b] removed — collides with bmw_n47_smoke (same 8×5 Kf_ header)
         ],
         sigOffset: 0,
         rows: 5, cols: 8, dtype: 'uint16', le: true,
