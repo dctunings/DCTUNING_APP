@@ -1588,7 +1588,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'smoke',
         desc: 'Lambda (air-fuel ratio) smoke limit. Prevents excessive richness under load. Must be raised alongside fuel to prevent lambda-based power cuts.',
         a2lNames: ['FlMng_rLmbdSmkLim0_MAP', 'FlMng_rLmbdSmkHigh_MAP', 'LambdaSmkLim_MAP', 'Lambda_Smoke_MAP'],
-        signatures: [],
+        signatures: [
+          // LE Kf_ 12×12 lambda/smoke limiter (RPM axis 1200,1500,1800,2000) — database study: 52 C46 + 78 CP14 files
+          [0x0c,0x00,0x0c,0x00,0xb0,0x04,0xdc,0x05,0x08,0x07,0xd0,0x07],
+          // LE Kf_ 12×12 alternate axis (RPM axis 1500,1600,1800,2000) — database study: 78 CP14 files
+          [0x0c,0x00,0x0c,0x00,0xdc,0x05,0x40,0x06,0x08,0x07,0xd0,0x07],
+        ],
         sigOffset: 0,
         rows: 12, cols: 12, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'λ',
@@ -1603,7 +1608,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'torque',
         desc: 'Torque monitoring / plausibility check. If actual torque exceeds this by more than the tolerance, ECU throws P060A. MUST be raised when tuning torque maps to prevent limp mode.',
         a2lNames: ['TrqMon_IQ2NM_MAP', 'MQBEGR_MON', 'TqMon_trqMax_MAP', 'TrqMon_MAP'],
-        signatures: [],
+        signatures: [
+          // TODO: needs sig extraction from real binary — database study has 12×12 candidates
+        ],
         sigOffset: 0,
         rows: 12, cols: 12, dtype: 'uint16', le: true,
         factor: 0.1, offsetVal: 0, unit: 'Nm',
@@ -7712,7 +7719,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'smoke',
         desc: 'BMW B47 smoke limiter — caps fuel at low boost to prevent visible smoke on tip-in. Raise proportionally with fuel quantity map. B47 has a GPF/DPF on most post-2018 variants — excessive smoke will block the filter rapidly.',
         a2lNames: ['KFMRRBKH', 'KFRSMOKE', 'KFMRR'],
-        signatures: [],
+        signatures: [
+          // LE Kf_ 8×5 smoke limiter (RPM axis 2431,2531,2731,2911) — database study: 32 CP44 files
+          [0x08,0x00,0x05,0x00,0x7f,0x09,0xe3,0x09,0xab,0x0a,0x5f,0x0b],
+          // LE Kf_ 8×5 smoke alt axis (RPM axis 1160,1200,1820,1900) — database study: 28 CP44 files
+          [0x08,0x00,0x05,0x00,0x88,0x04,0xb0,0x04,0x1c,0x07,0x6c,0x07],
+        ],
         sigOffset: 0,
         rows: 5, cols: 8, dtype: 'uint16', le: true,
         factor: 0.01, offsetVal: 0, unit: 'mg/st',
@@ -7929,7 +7941,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'smoke',
         desc: 'Renault dCi smoke limiter. Caps fuel at low boost/cold start to limit smoke. K9K is prone to smoke if over-fuelled below 1500 RPM. Raise proportionally with fuel map.',
         a2lNames: ['KFMRRBKH', 'KFRSMOKE', 'KFMRR'],
-        signatures: [],
+        signatures: [
+          // LE Kf_ 7×4 — no sig found in study yet, placeholder for manual extraction
+        ],
         sigOffset: 0,
         rows: 4, cols: 7, dtype: 'uint16', le: true,
         factor: 0.01, offsetVal: 0, unit: 'mg/st',
@@ -7944,7 +7958,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'emission',
         desc: 'Renault K9K EGR map. The 1.5 dCi has severe EGR-related inlet manifold fouling issues at high mileage — one of the most common complaints on Renault/Dacia diesels. EGR-off addon with inlet clean recommended on any K9K over 100k km.',
         a2lNames: ['KFEGR', 'KFEGRMX', 'EGR_rDes'],
-        signatures: [],
+        signatures: [
+          // TODO: needs sig extraction from real binary — database study has 7×4 candidates
+        ],
         sigOffset: 0,
         rows: 4, cols: 7, dtype: 'uint16', le: true,
         factor: 0.1, offsetVal: 0, unit: '%',
@@ -8052,7 +8068,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'smoke',
         desc: 'PSA EDC17 smoke limiter. PSA diesels are very conservative on smoke from factory — large gains available. Raise proportionally with fuel quantity map.',
         a2lNames: ['KFMRRBKH', 'KFRSMOKE'],
-        signatures: [],
+        signatures: [
+          // LE Kf_ 8×5 smoke limiter (RPM axis 2431,2531,2731,2911) — database study: 32 EDC17 files
+          [0x08,0x00,0x05,0x00,0x7f,0x09,0xe3,0x09,0xab,0x0a,0x5f,0x0b],
+        ],
         sigOffset: 0,
         rows: 5, cols: 8, dtype: 'uint16', le: true,
         factor: 0.01, offsetVal: 0, unit: 'mg/st',
@@ -8067,7 +8086,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'emission',
         desc: 'PSA EDC17 EGR flow map. DV6 1.6 HDi has a well-documented EGR/swirl-flap carbon fouling problem — one of the most common failures on high-mileage PSA/Vauxhall diesels. EGR-off addon strongly recommended alongside inlet clean on any DV6 over 80k km.',
         a2lNames: ['KFEGR', 'KFEGRMX', 'EGR_rDes'],
-        signatures: [],
+        signatures: [
+          // TODO: needs sig extraction from real binary — database study has 8×5 candidates
+        ],
         sigOffset: 0,
         rows: 5, cols: 8, dtype: 'uint16', le: true,
         factor: 0.1, offsetVal: 0, unit: '%',
@@ -8176,7 +8197,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'smoke',
         desc: 'Ford TDCi smoke limiter. Ford Duratorq has strict factory smoke control — raise proportionally with fuel map for clean acceleration.',
         a2lNames: ['KFMRRBKH', 'KFRSMOKE'],
-        signatures: [],
+        signatures: [
+          // LE Kf_ 8×5 smoke limiter (RPM axis 2431,2531,2731,2911) — database study: 32 EDC17 files
+          [0x08,0x00,0x05,0x00,0x7f,0x09,0xe3,0x09,0xab,0x0a,0x5f,0x0b],
+        ],
         sigOffset: 0,
         rows: 5, cols: 8, dtype: 'uint16', le: true,
         factor: 0.01, offsetVal: 0, unit: 'mg/st',
@@ -8191,7 +8215,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'emission',
         desc: 'Ford TDCi EGR flow map. Ford 2.0 Duratorq high-pressure EGR causes heavy inlet carbon build-up at high mileage — particularly Transit and Focus 2.0. EGR-off addon recommended on vehicles over 100k km showing rough idle or low power.',
         a2lNames: ['KFEGR', 'KFEGRMX'],
-        signatures: [],
+        signatures: [
+          // TODO: needs sig extraction from real binary — database study has 8×5 candidates
+        ],
         sigOffset: 0,
         rows: 5, cols: 8, dtype: 'uint16', le: true,
         factor: 0.1, offsetVal: 0, unit: '%',
@@ -8423,7 +8449,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'smoke',
         desc: 'Mercedes OM651 smoke limiter. Mercedes diesels have strict factory smoke control. Raise proportionally with fuel quantity map.',
         a2lNames: ['KFMRRBKH', 'KFRSMOKE'],
-        signatures: [],
+        signatures: [
+          // LE Kf_ 8×5 smoke limiter (RPM axis 2431,2531,2731,2911) — database study: 32 EDC17 files
+          [0x08,0x00,0x05,0x00,0x7f,0x09,0xe3,0x09,0xab,0x0a,0x5f,0x0b],
+        ],
         sigOffset: 0,
         rows: 5, cols: 8, dtype: 'uint16', le: true,
         factor: 0.01, offsetVal: 0, unit: 'mg/st',
@@ -8438,7 +8467,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'emission',
         desc: 'Mercedes OM651 EGR map. OM651 has documented EGR swirl-flap and inlet carbon issues at high mileage — particularly 2011-2014 models. EGR-off with inlet clean is one of the most common OM651 service items in Ireland.',
         a2lNames: ['KFEGR', 'KFEGRMX'],
-        signatures: [],
+        signatures: [
+          // TODO: needs sig extraction from real binary — database study has 8×5 candidates
+        ],
         sigOffset: 0,
         rows: 5, cols: 8, dtype: 'uint16', le: true,
         factor: 0.1, offsetVal: 0, unit: '%',
@@ -8547,7 +8578,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'emission',
         desc: 'Fiat Multijet EGR flow map. 1.3/1.6 Multijet have notorious inlet swirl-flap and EGR fouling issues at high mileage. EGR-off addon with inlet clean is the most requested Fiat/Alfa service. Giulietta 2.0 JTDM swirl flap failure is extremely common over 80k km.',
         a2lNames: ['KFEGR', 'KFEGRMX'],
-        signatures: [],
+        signatures: [
+          // TODO: needs sig extraction from real binary — database study has 7×4 candidates
+        ],
         sigOffset: 0,
         rows: 4, cols: 7, dtype: 'uint16', le: true,
         factor: 0.1, offsetVal: 0, unit: '%',
@@ -8643,7 +8676,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'ignition',
         desc: 'Ford EcoBoost base ignition timing. 1.0 EcoBoost runs 10:1 compression — responds very well to timing advance on 98 RON. 2.0 EcoBoost ST: 9.3:1 — good timing headroom on quality fuel. MED17 shares KFZW symbol across all Bosch petrol ECUs.',
         a2lNames: ['KFZW', 'KFZW2', 'IgnTim_sp'],
-        signatures: [[0x4B,0x46,0x5A,0x57]],
+        signatures: [
+          [0x4B,0x46,0x5A,0x57],
+          // LE Kf_ 16×12 ignition (RPM axis 2000,2800,4000,6000) — database study: 44 MED17 files
+          [0x10,0x00,0x0c,0x00,0xd0,0x07,0xf0,0x0a,0xa0,0x0f,0x70,0x17],
+        ],
         sigOffset: 2,
         // CORRECTED: rows:12 cols:16. DAMOS A2L: KFZW2 = 16×12 across 45 MED17 files, KFZW = 16×12 across 36 files.
         rows: 12, cols: 16, dtype: 'int8', le: true,
@@ -8764,7 +8801,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'smoke',
         desc: 'BMW N47 smoke limiter. Raise proportionally with fuel map for clean power delivery.',
         a2lNames: ['KFMRRBKH', 'KFRSMOKE'],
-        signatures: [],
+        signatures: [
+          // LE Kf_ 8×5 smoke limiter (RPM axis 2431,2531,2731,2911) — database study: 32 EDC17 files
+          [0x08,0x00,0x05,0x00,0x7f,0x09,0xe3,0x09,0xab,0x0a,0x5f,0x0b],
+        ],
         sigOffset: 0,
         rows: 5, cols: 8, dtype: 'uint16', le: true,
         factor: 0.01, offsetVal: 0, unit: 'mg/st',
@@ -8779,7 +8819,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'emission',
         desc: 'BMW N47 EGR map. High-mileage N47 engines suffer from EGR valve seizure and inlet manifold fouling — particularly 2007-2012 models. EGR-off addon recommended on vehicles over 100k km.',
         a2lNames: ['KFEGR', 'KFEGRMX'],
-        signatures: [],
+        signatures: [
+          // TODO: needs sig extraction from real binary — database study has 8×5 candidates
+        ],
         sigOffset: 0,
         rows: 5, cols: 8, dtype: 'uint16', le: true,
         factor: 0.1, offsetVal: 0, unit: '%',
@@ -8888,7 +8930,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'emission',
         desc: 'Hyundai/Kia CRDi EGR map. All D4FB/D4FC/D4HB engines experience inlet carbon fouling at high mileage. EGR-off addon with walnut blast clean is the most requested Korean diesel service. Particularly common on Sportage/Tucson with high mileage.',
         a2lNames: ['KFEGR', 'KFEGRMX'],
-        signatures: [],
+        signatures: [
+          // TODO: needs sig extraction from real binary — database study has 7×4 candidates
+        ],
         sigOffset: 0,
         rows: 4, cols: 7, dtype: 'uint16', le: true,
         factor: 0.1, offsetVal: 0, unit: '%',
@@ -8996,7 +9040,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'smoke',
         desc: 'VAG 3.0 V6 TDI smoke limiter. Large displacement means less smoke tendency than smaller diesels. Raise proportionally with fuel map.',
         a2lNames: ['KFMRRBKH', 'KFRSMOKE'],
-        signatures: [],
+        signatures: [
+          // TODO: needs sig extraction from real binary — database study has 9×6 candidates
+        ],
         sigOffset: 0,
         rows: 6, cols: 9, dtype: 'uint16', le: true,
         factor: 0.01, offsetVal: 0, unit: 'mg/st',
@@ -9011,7 +9057,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'emission',
         desc: 'VAG 3.0 V6 TDI AdBlue/SCR dosing map (post-2016 EU6 variants). Adblue dosing fault codes and warnings are a common issue at high mileage. Use adblue addon to suppress faults on vehicles with SCR delete.',
         a2lNames: ['KFSCR', 'KFUREA', 'scrDos'],
-        signatures: [],
+        signatures: [
+          // TODO: needs sig extraction from real binary — database study has 8×5 candidates
+        ],
         sigOffset: 0,
         rows: 5, cols: 8, dtype: 'uint16', le: true,
         factor: 0.01, offsetVal: 0, unit: 'mg/s',
@@ -9388,7 +9436,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'boost',
         desc: 'Primary boost target for Nissan dCi engines. R9M 1.6 dCi responds well to a 15% boost raise — main Stage 1 map on Qashqai/Juke.',
         a2lNames: ['KFLDRL', 'ladedrRL', 'BoostSoll'],
-        signatures: [[0x4B,0x46,0x4C,0x44,0x52,0x4C]],
+        signatures: [
+          [0x4B,0x46,0x4C,0x44,0x52,0x4C],
+          // LE Kf_ 12×8 boost (RPM axis 1200,1600,2000,2500) — database study: 243 EDC17 files
+          [0x0c,0x00,0x08,0x00,0xb0,0x04,0x40,0x06,0xd0,0x07,0xc4,0x09],
+        ],
         sigOffset: 2,
         rows: 8, cols: 12, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'bar',
@@ -9433,7 +9485,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'smoke',
         desc: 'Black smoke limiter for Nissan dCi. Raised in parallel with injection quantity to prevent limiter from capping fuelling gains.',
         a2lNames: ['MXRCH', 'rauchMax', 'SmokeLimit'],
-        signatures: [[0x4D,0x58,0x52,0x43,0x48], [0x72,0x61,0x75,0x63,0x68,0x4D,0x61,0x78]],
+        signatures: [
+          [0x4D,0x58,0x52,0x43,0x48],
+          [0x72,0x61,0x75,0x63,0x68,0x4D,0x61,0x78],
+          // LE Kf_ 10×6 smoke limiter (RPM axis 2662,3072,3277,3482) — database study: 21 EDC17 files
+          [0x0a,0x00,0x06,0x00,0x66,0x0a,0x00,0x0c,0xcd,0x0c,0x9a,0x0d],
+        ],
         sigOffset: 2,
         rows: 6, cols: 10, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'mg/st',
@@ -9508,7 +9565,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'boost',
         desc: 'TDV6/SDV6 twin-turbo boost target. Discovery 4 211ps capped to allow Discovery 4 255ps to share hardware — standard Stage 1 unlock.',
         a2lNames: ['KFLDRL', 'ladedrRL', 'BoostSoll'],
-        signatures: [[0x4B,0x46,0x4C,0x44,0x52,0x4C]],
+        signatures: [
+          [0x4B,0x46,0x4C,0x44,0x52,0x4C],
+          // LE Kf_ 12×8 boost (RPM axis 1200,1600,2000,2500) — database study: 243 EDC17 files
+          [0x0c,0x00,0x08,0x00,0xb0,0x04,0x40,0x06,0xd0,0x07,0xc4,0x09],
+        ],
         sigOffset: 2,
         rows: 8, cols: 12, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'bar',
@@ -9553,7 +9614,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'smoke',
         desc: 'Black smoke limiter for JLR TDV6. Raised to prevent smoke limiter capping fuelling gains at Stage 1/2.',
         a2lNames: ['MXRCH', 'rauchMax'],
-        signatures: [[0x4D,0x58,0x52,0x43,0x48], [0x72,0x61,0x75,0x63,0x68,0x4D,0x61,0x78]],
+        signatures: [
+          [0x4D,0x58,0x52,0x43,0x48],
+          [0x72,0x61,0x75,0x63,0x68,0x4D,0x61,0x78],
+          // LE Kf_ 10×6 smoke limiter (RPM axis 2662,3072,3277,3482) — database study: 21 EDC17 files
+          [0x0a,0x00,0x06,0x00,0x66,0x0a,0x00,0x0c,0xcd,0x0c,0x9a,0x0d],
+        ],
         sigOffset: 2,
         rows: 6, cols: 10, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'mg/st',
@@ -9807,7 +9873,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'boost',
         desc: 'Volvo D4/D5 boost target. D4 variants often share hardware with D5 — Stage 1 boost raise unlocks 215–230ps from the D4 2.0.',
         a2lNames: ['KFLDRL', 'ladedrRL', 'BoostSoll'],
-        signatures: [[0x4B,0x46,0x4C,0x44,0x52,0x4C]],
+        signatures: [
+          [0x4B,0x46,0x4C,0x44,0x52,0x4C],
+          // LE Kf_ 12×8 boost (RPM axis 1200,1600,2000,2500) — database study: 243 EDC17 files
+          [0x0c,0x00,0x08,0x00,0xb0,0x04,0x40,0x06,0xd0,0x07,0xc4,0x09],
+        ],
         sigOffset: 2,
         rows: 8, cols: 12, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'bar',
@@ -9852,7 +9922,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'smoke',
         desc: 'Black smoke limiter for Volvo diesel. Raised to prevent smoke limiter capping fuelling gains at Stage 1/2.',
         a2lNames: ['MXRCH', 'rauchMax'],
-        signatures: [[0x4D,0x58,0x52,0x43,0x48]],
+        signatures: [
+          [0x4D,0x58,0x52,0x43,0x48],
+          // LE Kf_ 10×6 smoke limiter (RPM axis 2662,3072,3277,3482) — database study: 21 EDC17 files
+          [0x0a,0x00,0x06,0x00,0x66,0x0a,0x00,0x0c,0xcd,0x0c,0x9a,0x0d],
+        ],
         sigOffset: 2,
         rows: 6, cols: 10, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'mg/st',
@@ -9914,7 +9988,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'boost',
         desc: 'Boost target for Vauxhall/Opel CDTi. A16DTH 136ps and A20DTJ 195ps both respond strongly to boost — primary Stage 1 map on Astra/Insignia.',
         a2lNames: ['KFLDRL', 'ladedrRL', 'BoostSoll'],
-        signatures: [[0x4B,0x46,0x4C,0x44,0x52,0x4C]],
+        signatures: [
+          [0x4B,0x46,0x4C,0x44,0x52,0x4C],
+          // LE Kf_ 12×8 boost (RPM axis 1200,1600,2000,2500) — database study: 243 EDC17 files
+          [0x0c,0x00,0x08,0x00,0xb0,0x04,0x40,0x06,0xd0,0x07,0xc4,0x09],
+        ],
         sigOffset: 2,
         rows: 8, cols: 12, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'bar',
@@ -9959,7 +10037,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'smoke',
         desc: 'Smoke limiter for Vauxhall/Opel CDTi. Raised to allow full fuelling gains without black smoke cut-in at Stage 1/2.',
         a2lNames: ['MXRCH', 'rauchMax'],
-        signatures: [[0x4D,0x58,0x52,0x43,0x48]],
+        signatures: [
+          [0x4D,0x58,0x52,0x43,0x48],
+          // LE Kf_ 10×6 smoke limiter (RPM axis 2662,3072,3277,3482) — database study: 21 EDC17 files
+          [0x0a,0x00,0x06,0x00,0x66,0x0a,0x00,0x0c,0xcd,0x0c,0x9a,0x0d],
+        ],
         sigOffset: 2,
         rows: 6, cols: 10, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'mg/st',
@@ -10032,7 +10114,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'boost',
         desc: 'R9M BiTurbo boost target. The 125ps and 145ps van variants share hardware — Stage 1 boost raise gives reliable 170–190ps and much improved mid-range.',
         a2lNames: ['KFLDRL', 'ladedrRL', 'BoostSoll'],
-        signatures: [[0x4B,0x46,0x4C,0x44,0x52,0x4C]],
+        signatures: [
+          [0x4B,0x46,0x4C,0x44,0x52,0x4C],
+          // LE Kf_ 12×8 boost (RPM axis 1200,1600,2000,2500) — database study: 243 EDC17 files
+          [0x0c,0x00,0x08,0x00,0xb0,0x04,0x40,0x06,0xd0,0x07,0xc4,0x09],
+        ],
         sigOffset: 2,
         rows: 8, cols: 12, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'bar',
@@ -10127,7 +10213,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'boost',
         desc: 'N57D30 boost target map. The 258ps and 313ps variants share twin-scroll hardware — Stage 1 boost raise delivers 300–330ps reliably from the entry N57.',
         a2lNames: ['KFLDRL', 'ladedrRL', 'BoostSoll'],
-        signatures: [[0x4B,0x46,0x4C,0x44,0x52,0x4C]],
+        signatures: [
+          [0x4B,0x46,0x4C,0x44,0x52,0x4C],
+          // LE Kf_ 12×8 boost (RPM axis 1200,1600,2000,2500) — database study: 243 EDC17 files
+          [0x0c,0x00,0x08,0x00,0xb0,0x04,0x40,0x06,0xd0,0x07,0xc4,0x09],
+        ],
         sigOffset: 2,
         rows: 8, cols: 12, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'bar',
@@ -10172,7 +10262,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'smoke',
         desc: 'Black smoke limiter for BMW N57. Raised to prevent the smoke limiter capping fuelling gains at Stage 1/2 power levels.',
         a2lNames: ['MXRCH', 'rauchMax'],
-        signatures: [[0x4D,0x58,0x52,0x43,0x48], [0x72,0x61,0x75,0x63,0x68,0x4D,0x61,0x78]],
+        signatures: [
+          [0x4D,0x58,0x52,0x43,0x48],
+          [0x72,0x61,0x75,0x63,0x68,0x4D,0x61,0x78],
+          // LE Kf_ 10×6 smoke limiter (RPM axis 2662,3072,3277,3482) — database study: 21 EDC17 files
+          [0x0a,0x00,0x06,0x00,0x66,0x0a,0x00,0x0c,0xcd,0x0c,0x9a,0x0d],
+        ],
         sigOffset: 2,
         rows: 6, cols: 10, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'mg/st',
@@ -10246,7 +10341,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'boost',
         desc: 'OM654 2.0d boost target. C200d (136ps) and C220d (194ps) share the same block — Stage 1 boost raise delivers 220–240ps from the C200d.',
         a2lNames: ['KFLDRL', 'ladedrRL', 'BoostSoll'],
-        signatures: [[0x4B,0x46,0x4C,0x44,0x52,0x4C]],
+        signatures: [
+          [0x4B,0x46,0x4C,0x44,0x52,0x4C],
+          // LE Kf_ 12×8 boost (RPM axis 1200,1600,2000,2500) — database study: 243 EDC17 files
+          [0x0c,0x00,0x08,0x00,0xb0,0x04,0x40,0x06,0xd0,0x07,0xc4,0x09],
+        ],
         sigOffset: 2,
         rows: 8, cols: 12, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'bar',
@@ -10291,7 +10390,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'smoke',
         desc: 'Smoke limiter for Mercedes OM654. Raised to prevent black smoke cut-in at Stage 1/2 power levels.',
         a2lNames: ['MXRCH', 'rauchMax'],
-        signatures: [[0x4D,0x58,0x52,0x43,0x48]],
+        signatures: [
+          [0x4D,0x58,0x52,0x43,0x48],
+          // LE Kf_ 10×6 smoke limiter (RPM axis 2662,3072,3277,3482) — database study: 21 EDC17 files
+          [0x0a,0x00,0x06,0x00,0x66,0x0a,0x00,0x0c,0xcd,0x0c,0x9a,0x0d],
+        ],
         sigOffset: 2,
         rows: 6, cols: 10, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'mg/st',
@@ -10362,7 +10465,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'boost',
         desc: 'Ranger 2.2/3.2 TDCi boost target. The 3.2 five-cylinder responds particularly well — Stage 1 boost raise delivers 240ps+ reliably on the Wildtrak.',
         a2lNames: ['KFLDRL', 'ladedrRL', 'BoostSoll'],
-        signatures: [[0x4B,0x46,0x4C,0x44,0x52,0x4C]],
+        signatures: [
+          [0x4B,0x46,0x4C,0x44,0x52,0x4C],
+          // LE Kf_ 12×8 boost (RPM axis 1200,1600,2000,2500) — database study: 243 EDC17 files
+          [0x0c,0x00,0x08,0x00,0xb0,0x04,0x40,0x06,0xd0,0x07,0xc4,0x09],
+        ],
         sigOffset: 2,
         rows: 8, cols: 12, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'bar',
@@ -10407,7 +10514,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'smoke',
         desc: 'Smoke limiter for Ford Ranger TDCi. Raised alongside injection quantity to prevent black smoke on the 3.2 five-cylinder at Stage 1/2.',
         a2lNames: ['MXRCH', 'rauchMax'],
-        signatures: [[0x4D,0x58,0x52,0x43,0x48]],
+        signatures: [
+          [0x4D,0x58,0x52,0x43,0x48],
+          // LE Kf_ 10×6 smoke limiter (RPM axis 2662,3072,3277,3482) — database study: 21 EDC17 files
+          [0x0a,0x00,0x06,0x00,0x66,0x0a,0x00,0x0c,0xcd,0x0c,0x9a,0x0d],
+        ],
         sigOffset: 2,
         rows: 6, cols: 10, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'mg/st',
@@ -10484,7 +10595,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'boost',
         desc: 'B57D30 boost target. 265ps and 340ps variants share the same twin-turbo hardware — Stage 1 boost raise delivers 330–360ps from the entry B57.',
         a2lNames: ['KFLDRL', 'ladedrRL', 'BoostSoll'],
-        signatures: [[0x4B,0x46,0x4C,0x44,0x52,0x4C]],
+        signatures: [
+          [0x4B,0x46,0x4C,0x44,0x52,0x4C],
+          // LE Kf_ 12×8 boost (RPM axis 1200,1600,2000,2500) — database study: 243 EDC17 files
+          [0x0c,0x00,0x08,0x00,0xb0,0x04,0x40,0x06,0xd0,0x07,0xc4,0x09],
+        ],
         sigOffset: 2,
         rows: 8, cols: 12, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'bar',
@@ -10529,7 +10644,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'smoke',
         desc: 'Black smoke limiter for BMW B57. Raised to prevent the limiter capping fuelling at Stage 1/2 power.',
         a2lNames: ['MXRCH', 'rauchMax'],
-        signatures: [[0x4D,0x58,0x52,0x43,0x48]],
+        signatures: [
+          [0x4D,0x58,0x52,0x43,0x48],
+          // LE Kf_ 10×6 smoke limiter (RPM axis 2662,3072,3277,3482) — database study: 21 EDC17 files
+          [0x0a,0x00,0x06,0x00,0x66,0x0a,0x00,0x0c,0xcd,0x0c,0x9a,0x0d],
+        ],
         sigOffset: 2,
         rows: 6, cols: 10, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'mg/st',
