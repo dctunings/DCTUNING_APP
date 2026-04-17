@@ -68,24 +68,19 @@ jobs:
           body: |
             ## DCTuning Desktop v${{ steps.pkg.outputs.version }}
 
-            ### What's new — the actual fix for map extraction
-            v3.5.7 added correct signatures but they were still being rejected by the quality
-            score because PHYS_RANGES['fuel'] = [-5, 150] mg/st, while rail pressure is in
-            bar (200-1050). Signature match → scoreMapData returns 0 → falls through to
-            calSearch → picks up wrong data.
+            ### What's new — Audi A4 03L906018JL (EDC17 C46 119.9 kW) variant support
+            Verified against the Audi A4 2.0 TDI 119.9 kW binary. The C46 family has multiple
+            sub-variants (Leon 103 kW, Audi 119.9 kW, etc.) with slightly different axis breakpoints
+            and map dimensions. Added variant-specific Kf_ signatures:
 
-            - **Added `skipCalSearch` flag** on MapDef + wired into extractMap. Disables the
-              calSearch fallback for specific maps where a false-positive would be worse than
-              "Not Found" (C46 stripped variants missing generic IQ / Lambda).
-            - **Rail Pressure**: minQuality:0 bypasses the fuel-range check so the real
-              signature match at 0x4B458 (202-1050 bar) wins. skipCalSearch prevents fallback.
-            - **Injection Quantity Map**: skipCalSearch — C46 variants now correctly show
-              "Not Found" instead of axis-garbage at 0x04E8AA. Real IQ map for C46 is
-              `Injection Quantity Base (C46)` at 0x027DB8.
-            - **Lambda Smoke Limiter**: skipCalSearch — C46 shows "Not Found" instead of
-              0-18 λ nonsense at 0x06D68A.
-            - **Torque Monitoring Map**: added `allowUniform` flag so the "⚠ Uniform"
-              warning no longer fires on maps that are intentionally flat-by-design.
+            - **SOI (JL variant)**: 11×10 int16 @ 0x4386C. Added sig + skipCalSearch to prevent
+              calSearch from matching the 16×15 boost target at 0x066932 with impossible 22°-56° BTDC.
+            - **Rail Pressure (JL variants)**: Added 13×12, 8×12, 10×11 signatures covering
+              260-1100 bar range across three sub-variants.
+            - **Smoke Limiter MAF (JL)**: 8×5 @ 0x3D81A (X=0x2987, different from Leon 0x29EB).
+              Added skipCalSearch — prevented 0x03AB82 false match showing zeros.
+            - **Torque-to-IQ C46**: skipCalSearch — this 16×8 map only exists in Leon variant;
+              Audi JL uses the general Torque→IQ map instead.
 
             ### Installation
             Download `DCTuning-Installer-{version}.exe`. Wizard walks you through install.

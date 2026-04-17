@@ -1409,14 +1409,19 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         a2lNames: ['Rail_pSetPointBase_MAP', 'RailPres_MAP', 'RDSOLLKF_MAP', 'pRailSetMax_MAP', 'Rail_MAP', 'CRpres_MAP', 'rdsoll_MAP', 'Rail_PointBase', 'Rail_PointMax', 'Rail_PointLimTem', 'PCR_DesBas', 'PCR_DesMaxAP', 'PCR_DesMax', 'PCR_CtlBas', 'Rail_pSetPointMax_MAP'],
         signatures: [
           [0x52,0x41,0x49,0x4C,0x50,0x52,0x53,0x50], [0x43,0x52,0x50,0x52,0x45,0x53,0x53],
-          // C46 stripped (03L906018FJ) — LE Kf_ 12×12 rail pressure target
-          // Verified data at 0x4B458: raw 2020-10500 = 202-1050 bar (factor 0.1). UNIQUE axis (X=1200,1500,1800,2000).
-          // Prev DB study classified this as "lambda limiter" — WRONG. It's rail pressure.
+          // C46 stripped (03L906018FJ Leon 103 kW) — LE Kf_ 12×12 rail pressure target
+          // Verified at 0x4B458: raw 2020-10500 = 202-1050 bar (factor 0.1). X=1200,1500,1800,2000.
           [0x0c,0x00,0x0c,0x00,0xb0,0x04,0xdc,0x05,0x08,0x07,0xd0,0x07],
-          // C46 — LE Kf_ 12×12 rail pressure variant (X=1500,1600,1800,2000)
-          // Verified data at 0x4B8DE: raw 2800-11000 = 280-1100 bar. UNIQUE.
+          // C46 Leon alt — LE Kf_ 12×12 (X=1500,1600,1800,2000). At 0x4B8DE: 280-1100 bar.
           [0x0c,0x00,0x0c,0x00,0xdc,0x05,0x40,0x06,0x08,0x07,0xd0,0x07],
-          // C46 — earlier 16×16 variants from DB study
+          // C46 stripped (03L906018JL Audi A4 119.9 kW) — LE Kf_ 13×12 rail pressure target
+          // Verified at 0x4F4AA: raw 2600-9500 = 260-950 bar. X=1200,1500,1800,2000. UNIQUE.
+          [0x0c,0x00,0x0d,0x00,0xb0,0x04,0xdc,0x05,0x08,0x07,0xd0,0x07],
+          // C46 Audi alt — LE Kf_ 8×12. At 0x4F380: 280-1100 bar. X=1500,1600,1800,2000. UNIQUE.
+          [0x0c,0x00,0x08,0x00,0xdc,0x05,0x40,0x06,0x08,0x07,0xd0,0x07],
+          // C46 Audi variant — LE Kf_ 10×11. At 0x4EF7A: 320-1100 bar. UNIQUE.
+          [0x0b,0x00,0x0a,0x00,0xdc,0x05,0x40,0x06,0x08,0x07,0xd0,0x07],
+          // C46 — earlier 16×16 / 16×20 variants from DB study
           [0x10,0x00,0x14,0x00,0xb0,0x04,0xd0,0x07,0xc4,0x09,0xb8,0x0b],
           [0x10,0x00,0x10,0x00,0x00,0x00,0x0a,0x00,0x58,0x02,0x20,0x03],
           [0x10,0x00,0x10,0x00,0xe8,0x03,0x40,0x06,0xd0,0x07,0xc4,0x09],
@@ -1496,17 +1501,25 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         a2lNames: ['InjCrv_phiMI1Bas_MAP', 'SOI_MAP', 'SOIKF_MAP', 'InjTiming_MAP', 'phi_SOI_MAP', 'soi_MAP', 'SPRKF_MAP', 'InjCrv_Bas1', 'InjCrv_Bas2', 'InjCrv_Bas3', 'InjCrv_Bas4', 'InjCrv_Bas5'],
         signatures: [
           [0x53,0x4F,0x49,0x4D,0x41,0x50,0x44,0x43], [0x49,0x4E,0x4A,0x54,0x49,0x4D,0x44,0x43],
-          // C46 stripped (03L906018FJ) — LE Kf_ 12×10 SOI int16 (UNIQUE axis X=2000,2500,3000,3500)
-          // Verified at 0x407FE: raw int16 -280..830 → -6.15° to +18.24° BTDC at factor 0.021973.
-          // Matches 3 times (main/pilot/post injection SOIs); matchIndex 0 targets the main map.
+          // C46 stripped (03L906018FJ Leon 103 kW) — LE Kf_ 12×10 SOI int16
+          // Verified at 0x407FE: raw int16 -280..830 → -6.15° to +18.24° BTDC (factor 0.021973).
+          // 3 copies (main/pilot/post); matchIndex 0 = main injection.
           [0x0a,0x00,0x0c,0x00,0xd0,0x07,0xc4,0x09,0xb8,0x0b,0xac,0x0d],
+          // C46 stripped (03L906018JL Audi A4 119.9 kW) — LE Kf_ 11×10 SOI int16
+          // Verified at 0x4386C: raw int16 -420..720 → -9.2° to +15.8° BTDC.
+          // 3 copies (main/pilot/post); matchIndex 0 = main injection.
+          [0x0a,0x00,0x0b,0x00,0xd0,0x07,0xc4,0x09,0xb8,0x0b,0xac,0x0d],
         ],
         matchIndex: 0,
         sigOffset: 4,
         // CORRECTED: rows:12 cols:16. DAMOS A2L: InjCrv_phiMI1Bas0Rgn1_MAP = 16×12 across 507 files.
-        // C46 stripped variant shows 12×10 with Kf_ header auto-detect overriding these defaults.
+        // C46 stripped variant shows 12×10 or 11×10 with Kf_ header auto-detect overriding defaults.
         rows: 12, cols: 16, dtype: 'int16', le: true,
         factor: 0.021973, offsetVal: 0, unit: '°DBTC',
+        // Skip calSearch: without it, calSearch finds the 16×15 boost target at 0x066932
+        // (raw 1000-2550 passes ignition range -50..70 at factor 0.021973 = 22°-56° which is
+        // physically impossible for main injection). Skip fallback to show Not Found instead.
+        skipCalSearch: true,
         // addend is in raw units. factor ≈ 0.021973 °/unit → 1° ≈ 46 units, 3° ≈ 137 units.
         // Stage 1 = no SOI change (safe for daily driver). Stage 2 = +1°, Stage 3 = +3°.
         stage1: { addend: 0 },
@@ -1698,14 +1711,20 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'edc17_smoke_lim_maf',
         name: 'Smoke Limiter (MAF-based)',
         category: 'smoke',
-        desc: 'Second smoke limiter indexed by MAF airflow. Stripped EDC17 C46 variants have two small smoke limiters (6×7 + 5×8) instead of one large 14×16. Both must be raised or the ECU silently clips fuel gains.',
+        desc: 'Second smoke limiter indexed by MAF airflow. Stripped EDC17 C46 variants have two small smoke limiters instead of one large 14×16. Both must be raised or the ECU silently clips fuel gains.',
         signatures: [
-          // C46 stripped — LE Kf_ 5×8 MAF smoke limiter (unique)
+          // C46 Leon 03L906018FJ — LE Kf_ 5×8 MAF smoke limiter
           [0x05,0x00,0x08,0x00,0xeb,0x29,0x4f,0x2a,0xb3,0x2a,0x17,0x2b],
+          // C46 Audi 03L906018JL — LE Kf_ 5×8 MAF smoke limiter (different X axis: starts 0x2987)
+          // Verified at 0x3D81A: raw 6191-8191 = 61.9-81.9 mg/st. 2 copies.
+          [0x05,0x00,0x08,0x00,0x87,0x29,0xeb,0x29,0x4f,0x2a,0xb3,0x2a],
         ],
         sigOffset: 0,
         rows: 8, cols: 5, dtype: 'uint16', le: true,
         factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        // Skip calSearch: in Audi JL, calSearch picks 0x03AB82 (random bytes with 0-27 range)
+        // instead of the real MAF smoke map. Only trust explicit Kf_ signature matches.
+        skipCalSearch: true,
         stage1: { multiplier: 1.12 },
         stage2: { multiplier: 1.20 },
         stage3: { multiplier: 1.30, clampMax: 6200 },
@@ -1734,14 +1753,17 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'edc17_trq2iq_c46',
         name: 'Torque-to-IQ Conversion (C46)',
         category: 'fuel',
-        desc: 'Torque-to-injection quantity conversion for stripped EDC17 C46. 16×8 map converts torque demand into mg/stroke. Must be raised alongside torque limiter to allow extra fuel delivery.',
+        desc: 'Torque-to-injection quantity conversion for stripped EDC17 C46 (03L906018FJ Leon variant). 16×8 map. Not present in all C46 variants — the main Torque→IQ (edc17_torque_to_iq) covers this function when absent.',
         signatures: [
-          // C46 stripped — LE Kf_ 16×8 torque-to-IQ conversion (unique)
+          // C46 Leon 03L906018FJ — LE Kf_ 16×8 torque-to-IQ conversion
           [0x10,0x00,0x08,0x00,0x00,0x00,0xca,0x02,0x94,0x05,0x5e,0x08],
         ],
         sigOffset: 0,
         rows: 8, cols: 16, dtype: 'uint16', le: true,
         factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        // Skip calSearch: Audi variants don't have a 16×8 map here, and calSearch can match
+        // the wrong data. Better to show Not Found — the general Torque→IQ covers this.
+        skipCalSearch: true,
         stage1: { multiplier: 1.08 },
         stage2: { multiplier: 1.15 },
         stage3: { multiplier: 1.24, clampMax: 6200 },
