@@ -1471,7 +1471,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'edc17_boost_target',
         name: 'Boost Pressure Target',
         category: 'boost',
-        desc: 'Desired boost pressure vs RPM and IQ. Raising this tells the ECU how much boost to build — must be paired with N75 adjustment to prevent spikes and smoke limiter raise to allow the extra airflow to carry more fuel. StageX EDC17C46: boost at 0x653EE (16×15), 0x65C94 (13×16), 0x6675E limit (18×16). Region 40-42% of 2MB.',
+        desc: 'Desired boost pressure vs RPM and IQ. Raising this tells the ECU how much boost to build — must be paired with N75 adjustment to prevent spikes and smoke limiter raise to allow the extra airflow to carry more fuel.',
         // A2L ground truth: AirCtl_pBstPresRef_MAP (factor 1.0 hPa = 0.001 bar) confirmed in EDC17L01.
         // PCR_pLadeMax_MAP / PCR_pDesBas_MAP = charge pressure setpoints (hPa → bar via factor 0.001).
         a2lNames: ['AirCtl_pBstPresRef_MAP', 'Turb_pSetPoint_MAP', 'PCR_pLadeMax_MAP', 'PCR_pDesBas_MAP', 'BoostTarget_MAP', 'LDESOLL_MAP', 'Boost_MAP', 'pBoostSet_MAP', 'ldesoll_MAP', 'LDESOLLKF_MAP'],
@@ -1520,6 +1520,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // (raw 1000-2550 passes ignition range -50..70 at factor 0.021973 = 22°-56° which is
         // physically impossible for main injection). Skip fallback to show Not Found instead.
         skipCalSearch: true,
+        // minQuality:0 — SOI maps fail the smoothness/zigzag scoring because injection timing
+        // jumps between pilot (early) and main (late) events across cells, producing a high
+        // zigzag ratio (~48%). Real SOI data scores ~0.025 quality which is below the 0.15
+        // default threshold. The signatures are unique enough to trust without quality gating.
+        minQuality: 0,
         // addend is in raw units. factor ≈ 0.021973 °/unit → 1° ≈ 46 units, 3° ≈ 137 units.
         // Stage 1 = no SOI change (safe for daily driver). Stage 2 = +1°, Stage 3 = +3°.
         stage1: { addend: 0 },
@@ -1734,7 +1739,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'edc17_iq_base_c46',
         name: 'Injection Quantity Base (C46)',
         category: 'fuel',
-        desc: 'Base injection quantity map for stripped EDC17 C46 (03L906018FJ). 14×10 RPM vs IQ demand. The core fuel delivery map — raising this is the primary power increase. Factor 0.01 mg/stroke (A2L convention). Multiple copies exist; this finds the first.',
+        desc: 'Base injection quantity map for stripped EDC17 C46 variants. RPM vs IQ demand. The core fuel delivery map — raising this is the primary power increase. Factor 0.01 mg/stroke (A2L convention). Multiple copies exist; this finds the first.',
         signatures: [
           // C46 stripped — LE Kf_ 14×10 IQ base (unique sig — different axis from the 11-copy group)
           [0x0e,0x00,0x0a,0x00,0x90,0x01,0x14,0x05,0x40,0x06,0xd0,0x07],
@@ -1753,7 +1758,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'edc17_trq2iq_c46',
         name: 'Torque-to-IQ Conversion (C46)',
         category: 'fuel',
-        desc: 'Torque-to-injection quantity conversion for stripped EDC17 C46 (03L906018FJ Leon variant). 16×8 map. Not present in all C46 variants — the main Torque→IQ (edc17_torque_to_iq) covers this function when absent.',
+        desc: 'Secondary torque-to-injection quantity conversion (16×8) used in some EDC17 C46 variants alongside the main Torque→IQ map. Not present in every variant — the general Torque→IQ covers this function when this map is absent.',
         signatures: [
           // C46 Leon 03L906018FJ — LE Kf_ 16×8 torque-to-IQ conversion
           [0x10,0x00,0x08,0x00,0x00,0x00,0xca,0x02,0x94,0x05,0x5e,0x08],
