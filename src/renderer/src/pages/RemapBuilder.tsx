@@ -132,7 +132,7 @@ function heatColor(pct: number): string {
 }
 
 // ─── Mini heatmap grid ────────────────────────────────────────────────────────
-function MiniHeatmap({ data, label, mapCategory }: { data: number[][], label: string, mapCategory?: string }) {
+function MiniHeatmap({ data, label, mapCategory, allowUniform }: { data: number[][], label: string, mapCategory?: string, allowUniform?: boolean }) {
   const PREVIEW_ROWS = 5
   const PREVIEW_COLS = 4
   // Show mid-map region (60% down rows, 30% across cols) — avoids the low-load
@@ -159,7 +159,7 @@ function MiniHeatmap({ data, label, mapCategory }: { data: number[][], label: st
   //   • All-0xFF bytes  → mapMax = 1536 (= 65535 × 0.023438): KFMIRL at erased flash
   // Dropping the mapMax < 0 guard catches both — if mapRange < 0.5 on a boost/torque map,
   // it's wrong regardless of whether the flat value is negative, zero, or some large constant.
-  const isUniform = allMapVals.length > 4 && (
+  const isUniform = !allowUniform && allMapVals.length > 4 && (
     positiveExpected
       ? mapRange < 0.5 || sampleAllNegative  // any flat read (zero, max, or negative) = wrong address
       : mapRange < 0.001                      // ignition/misc: strict check only
@@ -2641,7 +2641,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                   : null
                 return (
                   <div style={{ display: 'flex', gap: 20, marginTop: 8 }}>
-                    <MiniHeatmap data={m.data} label="Before (stock)" mapCategory={m.mapDef.category} />
+                    <MiniHeatmap data={m.data} label="Before (stock)" mapCategory={m.mapDef.category} allowUniform={m.mapDef.allowUniform} />
                     <div style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)', fontSize: 14 }}>→</div>
                     <MiniHeatmap
                       data={m.data.map((row, r) => row.map((v, c) => {
@@ -2664,6 +2664,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                       }))}
                       label={`After (Stage ${stage}${addons.length > 0 ? ' + addons' : ''}${hasZone ? ' + zones' : ''})`}
                       mapCategory={m.mapDef.category}
+                      allowUniform={m.mapDef.allowUniform}
                     />
                   </div>
                 )

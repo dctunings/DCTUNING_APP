@@ -1018,8 +1018,11 @@ export function extractMap(buffer: ArrayBuffer, mapDef: MapDef, ecuFamily?: stri
       }
     }
 
-    // Cal-region smart search as final fallback for non-pointer ECUs too
-    if (ecuFamily && mapDef.rows >= 4 && mapDef.cols >= 4) {
+    // Cal-region smart search as final fallback for non-pointer ECUs too.
+    // skipCalSearch:true — explicit opt-out for mapDefs where a false-positive calSearch
+    // match would be worse than "Not Found" (e.g. C46 stripped variants where the generic
+    // IQ/Lambda maps don't exist and calSearch picks up axis-breakpoint regions as data).
+    if (ecuFamily && mapDef.rows >= 4 && mapDef.cols >= 4 && !mapDef.skipCalSearch) {
       const found = searchCalRegion(buffer, mapDef, ecuFamily)
       if (found) {
         return { mapDef, data: found.phys, rawData: found.raw, offset: found.offset, found: true, source: 'calSearch', quality: found.score }

@@ -59,6 +59,14 @@ export interface MapDef {
   // to be flat/uniform (e.g. torque monitor — all cells same value in ORI), which would otherwise
   // be rejected by the mode-fraction check in scoreMapData.
   minQuality?: number
+  // When true, the cal-region smart search (calSearch) fallback is skipped. Signatures and
+  // fixedOffset are still tried. Use for maps where a false-positive calSearch hit is worse
+  // than "Not Found" — typically maps that don't exist in every ECU variant (e.g. a generic
+  // IQ map for Bosch C46 stripped binaries that use only the C46-specific IQ map instead).
+  skipCalSearch?: boolean
+  // When true, suppress the "⚠ Uniform" warning in heatmap previews. For maps that are
+  // intentionally flat in ORI (e.g. torque monitor ceiling = single value across all cells).
+  allowUniform?: boolean
 }
 
 export interface EcuDef {
@@ -1359,10 +1367,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 4,
         rows: 16, cols: 16, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'mg/st',
-        // Require strong calSearch quality — the previous threshold allowed matching axis-like
-        // data at 0x04E8AA in C46 binaries (raw values 0-700 descending/ascending = axis
-        // breakpoints, NOT real IQ data). 0.5 threshold rejects these false positives.
-        minQuality: 0.5,
+        // Skip calSearch: in C46 stripped binaries the ASCII sigs don't match and calSearch
+        // returns axis-breakpoint garbage at 0x04E8AA (raw 0-700 descending = axis values).
+        // Better to show "Not Found" and let the C46-specific edc17_iq_base_c46 (at 0x027DB8)
+        // provide the real fuel delivery map for this variant.
+        skipCalSearch: true,
         stage1: { multiplier: 1.15 },
         stage2: { multiplier: 1.24 },
         stage3: { multiplier: 1.35, clampMax: 62000 },
@@ -1419,9 +1428,14 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // Raw uint16 values in units of 0.1 bar (e.g. 14000 raw = 1400 bar).
         // 2.0 TDI CR runs 700–1600 bar at full load; ceiling 2200 bar = 22000 raw.
         factor: 0.1, offsetVal: 0, unit: 'bar',
-        // Require strong calSearch quality — prevents matching axis-breakpoint regions like
-        // 0x068C46 where linear-monotonic data LOOKS like a map but is just RPM breakpoints.
-        minQuality: 0.4,
+        // IMPORTANT: rail pressure is category 'fuel' but PHYS_RANGES.fuel caps at 150 mg/st.
+        // Real rail pressure is 200-2200 bar — outside the 'fuel' physical range check, so
+        // scoreMapData returns 0 and signature matches get rejected. minQuality:0 bypasses
+        // the quality check entirely — we trust the 12-byte Kf_ signature to pinpoint the
+        // right location. skipCalSearch stops the fallback from finding axis-breakpoint data
+        // (e.g. 0x05C962 where values 0-118 "pass" fuel range but are garbage).
+        minQuality: 0,
+        skipCalSearch: true,
         stage1: { multiplier: 1.08 },
         stage2: { multiplier: 1.14 },
         stage3: { multiplier: 1.20, clampMax: 22000 },
@@ -1624,7 +1638,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 4,
         rows: 12, cols: 12, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'λ',
-        minQuality: 0.5,
+        // Skip calSearch: lambda maps are 'smoke' category which allows 0-150 range, so
+        // calSearch readily finds any 12×12 block with values in that range and returns it
+        // as "lambda" (e.g. 0x06D68A showing 0-18 λ is impossible). Better to show Not Found
+        // in C46 stripped binaries where a proper Kf_ lambda sig is unknown.
+        skipCalSearch: true,
         stage1: { multiplier: 0.95 },
         stage2: { multiplier: 0.90 },
         stage3: { multiplier: 0.85, clampMin: 700 },
@@ -1652,7 +1670,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage3: { multiplier: 3.28, clampMax: 32767 },
         critical: true, showPreview: true,
         // Map is intentionally flat (all cells identical) — skip quality mode-fraction rejection
+        // and suppress the "⚠ Uniform" heatmap warning (flat-by-design, not a broken match).
         minQuality: 0,
+        allowUniform: true,
       },
       {
         id: 'edc17_rail_limit',

@@ -68,24 +68,24 @@ jobs:
           body: |
             ## DCTuning Desktop v${{ steps.pkg.outputs.version }}
 
-            ### What's new — EDC17 C46 map corrections (verified on real binary)
-            All 4 previously-suspect maps on Seat Leon 03L906018FJ have been fixed by
-            directly analyzing the binary and matching real data:
+            ### What's new — the actual fix for map extraction
+            v3.5.7 added correct signatures but they were still being rejected by the quality
+            score because PHYS_RANGES['fuel'] = [-5, 150] mg/st, while rail pressure is in
+            bar (200-1050). Signature match → scoreMapData returns 0 → falls through to
+            calSearch → picks up wrong data.
 
-            - **Rail Pressure Setpoint** — added correct C46 Kf_ signature.
-              Now finds the real 12×12 rail pressure target at 0x4B458 (202-1050 bar),
-              instead of hitting axis-breakpoint garbage at 0x068C46 (0-69 bar).
-            - **Lambda Smoke Limiter** — removed database-study signatures that were actually
-              matching rail-pressure maps (raw 2020-10500 interpreted as 2-10 λ = impossible).
-              C46 stripped variants correctly show "Not Found" for lambda now.
-            - **SOI (Start of Injection)** — added C46 Kf_ signature. Now finds the real
-              12×10 int16 SOI map at 0x407FE with values -6.2° to +18.2° BTDC (realistic).
-            - **Injection Quantity Map** — raised `minQuality` to 0.5 to reject calSearch
-              false-positives (previously matching axis data at 0x04E8AA showing 0-0.3 mg/st).
-              C46 variants fall through to the correct `Injection Quantity Base (C46)` map.
-
-            Previous v3.5.6 changes still included: EDC17/DCM6.2 detection fix, wizard
-            installer, distinctive installer filename.
+            - **Added `skipCalSearch` flag** on MapDef + wired into extractMap. Disables the
+              calSearch fallback for specific maps where a false-positive would be worse than
+              "Not Found" (C46 stripped variants missing generic IQ / Lambda).
+            - **Rail Pressure**: minQuality:0 bypasses the fuel-range check so the real
+              signature match at 0x4B458 (202-1050 bar) wins. skipCalSearch prevents fallback.
+            - **Injection Quantity Map**: skipCalSearch — C46 variants now correctly show
+              "Not Found" instead of axis-garbage at 0x04E8AA. Real IQ map for C46 is
+              `Injection Quantity Base (C46)` at 0x027DB8.
+            - **Lambda Smoke Limiter**: skipCalSearch — C46 shows "Not Found" instead of
+              0-18 λ nonsense at 0x06D68A.
+            - **Torque Monitoring Map**: added `allowUniform` flag so the "⚠ Uniform"
+              warning no longer fires on maps that are intentionally flat-by-design.
 
             ### Installation
             Download `DCTuning-Installer-{version}.exe`. Wizard walks you through install.
