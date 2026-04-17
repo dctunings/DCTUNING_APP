@@ -1415,21 +1415,22 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
 
   // ─── Library search ───────────────────────────────────────────────────────
   const searchLibrary = useCallback(async (query: string, page = 0): Promise<number> => {
-    if (!query.trim()) { setLibResults([]); setLibTotal(0); setLibOriginalNum(''); return 0 }
+    const q = query.trim()
+    if (!q) { setLibResults([]); setLibTotal(0); setLibOriginalNum(''); return 0 }
     setLibLoading(true)
     setLibFallbackNote('')
     setLibOriginalNum('')
     try {
       // Bosch SW numbers: "389289" ↔ "1037389289" — search both forms so KP files are found
       // whether the user types the short WinOLS suffix or the full embedded SW number.
-      const boschFull   = /^(\d{6})$/.exec(query.trim())   // 6-digit → also try 1037XXXXXX
-      const boschShort  = /^1037(\d{6})$/.exec(query.trim()) // 10-digit → also try 6-digit suffix
+      const boschFull   = /^(\d{6})$/.exec(q)   // 6-digit → also try 1037XXXXXX
+      const boschShort  = /^1037(\d{6})$/.exec(q) // 10-digit → also try 6-digit suffix
       const altQuery    = boschFull   ? `1037${boschFull[1]}`  :
                           boschShort  ? boschShort[1]           : null
 
       const orFilter = altQuery
-        ? `filename.ilike.%${query}%,filename.ilike.%${altQuery}%,ecu_family.ilike.%${query}%,make.ilike.%${query}%,model.ilike.%${query}%,driver_name.ilike.%${query}%`
-        : `filename.ilike.%${query}%,ecu_family.ilike.%${query}%,make.ilike.%${query}%,model.ilike.%${query}%,driver_name.ilike.%${query}%`
+        ? `filename.ilike.%${q}%,filename.ilike.%${altQuery}%,ecu_family.ilike.%${q}%,make.ilike.%${q}%,model.ilike.%${q}%,driver_name.ilike.%${q}%`
+        : `filename.ilike.%${q}%,ecu_family.ilike.%${q}%,make.ilike.%${q}%,model.ilike.%${q}%,driver_name.ilike.%${q}%`
 
       const { data, count } = await supabase
         .from('definitions_index')
@@ -1438,10 +1439,32 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         .not('filename', 'ilike', '._%')
         .order('filename')
         .range(page * LIB_PAGE_SIZE, (page + 1) * LIB_PAGE_SIZE - 1)
-      setLibResults((data ?? []) as DefinitionEntry[])
-      setLibTotal(count ?? 0)
+
+      // STRICT TOKEN MATCH: Postgres ilike %query% is a fuzzy substring match, which for
+      // short part numbers like "00020023" matches hundreds of unrelated files where those
+      // digits appear inside a longer number. Post-filter so the query only counts if it
+      // appears as a bounded token (surrounded by non-alphanumeric chars or at start/end).
+      //
+      // User request: 'when click search SHOULD NOT LOAD LOADS A2L AND DRT FILES ONLY IF
+      // ITS A MATCH' — so we apply strict bounded matching on filename.
+      const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const boundaryRe = new RegExp(`(^|[^A-Za-z0-9])(${escape(q)}${altQuery ? '|' + escape(altQuery) : ''})([^A-Za-z0-9]|$)`, 'i')
+      const strict = (data ?? []).filter(entry => boundaryRe.test(entry.filename))
+
+      // If strict match produced results, use those. If strict gave 0 but fuzzy found some,
+      // keep the fuzzy list but annotate — the user might be searching by family name or
+      // partial string where fuzzy IS what they want.
+      const finalList = strict.length > 0 ? strict : (data ?? [])
+      if (strict.length > 0 && strict.length < (data ?? []).length) {
+        setLibFallbackNote(`${strict.length} of ${(data ?? []).length} fuzzy matches are exact part-number matches — showing only those.`)
+      } else if (strict.length === 0 && (data ?? []).length > 0) {
+        setLibFallbackNote(`No exact matches for "${q}". Showing ${(data ?? []).length} fuzzy matches — review filenames carefully.`)
+      }
+
+      setLibResults(finalList as DefinitionEntry[])
+      setLibTotal(strict.length > 0 ? strict.length : (count ?? 0))
       setLibPage(page)
-      return count ?? 0
+      return strict.length > 0 ? strict.length : (count ?? 0)
     } finally {
       setLibLoading(false)
     }
