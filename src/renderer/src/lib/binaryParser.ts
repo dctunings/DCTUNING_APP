@@ -15,7 +15,7 @@ export interface ExtractedMap {
   rawData: number[][]   // raw integer values as stored in binary
   offset: number        // byte offset where map was found (-1 = not found)
   found: boolean
-  source: 'signature' | 'fixedOffset' | 'calSearch' | 'a2l' | 'drt' | 'none'
+  source: 'signature' | 'fixedOffset' | 'calSearch' | 'a2l' | 'drt' | 'kp' | 'scanner' | 'none'
   quality?: number      // 0-1 data quality score (smoothness × range × non-trivial)
   // Optional per-cell multiplier grid for ECM Titanium-style zone editing.
   // When present, each cell uses its own multiplier instead of the stage-level uniform multiplier.

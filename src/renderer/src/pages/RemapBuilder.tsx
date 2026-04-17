@@ -907,6 +907,51 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       setA2lFallbackCount(c => c + kpCount)
     }
 
+    // Scanner fallback: for ECUs like Delphi DCM6.2 where definitions have no signatures,
+    // use the classified scanner candidates (built at upload time) to locate maps.
+    // The scanner finds axis-inline patterns via scanDelphiCountPrefixed/scanKfRegion etc.,
+    // then classifyCandidates() matches them to mapDefs by category/dimensions/axis fingerprint.
+    // This is the ONLY way to find maps in Delphi/count-prefixed formats that lack headers.
+    if (scanResult && scanResult.candidates.length > 0) {
+      const scannerUsedOffsets = new Set<number>()
+      for (const em of maps) { if (em.found && em.offset >= 0) scannerUsedOffsets.add(em.offset) }
+      let scannerCount = 0
+      maps = maps.map(em => {
+        if (em.found) return em
+        // Find classified candidates that matched this mapDef in the classifier assignment
+        const assignedMatches = scanResult.candidates.filter(
+          cc => cc.assigned && cc.bestMatch?.mapDefId === em.mapDef.id
+        )
+        if (assignedMatches.length === 0) return em
+        // Pick the highest-scoring assignment
+        const best = [...assignedMatches].sort(
+          (a, b) => (b.bestMatch?.score ?? 0) - (a.bestMatch?.score ?? 0)
+        )[0]
+        const cand = best.candidate
+        if (scannerUsedOffsets.has(cand.offset)) return em
+        // Synthetic mapDef: keep the mapDef's factor/offset/unit/stage params,
+        // override dimensions/dtype/le/fixedOffset with what the scanner actually found.
+        const synthDef = {
+          ...em.mapDef,
+          rows: cand.rows,
+          cols: cand.cols,
+          dtype: cand.dtype,
+          le: cand.le,
+          fixedOffset: cand.offset,
+          signatures: [],
+          sigOffset: 0,
+        }
+        const result = extractMap(fileBuffer, synthDef)
+        if (result.found) {
+          scannerUsedOffsets.add(result.offset)
+          scannerCount++
+          return { ...result, source: 'scanner' as const }
+        }
+        return em
+      })
+      setA2lFallbackCount(c => c + scannerCount)
+    }
+
     setExtractedMaps(maps)
     // Share extracted maps with Performance page via parent state
     const foundMaps = maps.filter(m => m.found)
@@ -2338,6 +2383,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                 )}
                 {m.source === 'fixedOffset' && (
                   <span title="Located by hardcoded offset — lower confidence than signature match" style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)' }}>OFFSET</span>
+                )}
+                {m.source === 'scanner' && (
+                  <span title="Located by binary scanner + classifier — matches axis pattern to map definition. Used for Delphi/non-Bosch formats." style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: 'rgba(168,85,247,0.12)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.3)' }}>SCAN</span>
                 )}
                 <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', flex: 1 }}>
                   {m.mapDef.name}

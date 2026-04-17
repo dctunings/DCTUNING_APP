@@ -69,14 +69,15 @@ jobs:
             ## DCTuning Desktop v${{ steps.pkg.outputs.version }}
 
             ### What's new
-            - UI: Removed scanner "UNKNOWN candidates" clutter from Remap Builder preview — only matched maps are shown now
-            - Fix: Installer now installs to Program Files (per-machine) so shortcuts work reliably
-            - Fix: Desktop shortcut now always created/refreshed on install, no more "can't find .exe" errors
-            - Previous fixes still included: Remap Builder blank-screen fix, Zone Editor axis labels (Load/RPM correctly oriented), 70+ database-verified map signatures
+            - **Fix: Delphi DCM6.2 (VAG 1.6/2.0 TDI) maps now found** via scanner-classifier fallback
+              (count-prefixed axis-inline format has no signatures — classifier matches by axis pattern + dimensions)
+            - Scanner fallback now runs for any ECU whose definitions have empty signatures (not just DCM6.2)
+            - Added SCAN badge (purple) to show which maps were located by the scanner vs signature/A2L/DRT/KP
+            - Previous v3.5.3 fixes still included: per-machine installer, reliable shortcuts, scanner clutter removed
 
             ### Installation
             Download and run the `.exe` installer. Administrator rights required.
-            **Important:** Uninstall any previous version first — this release switches to per-machine install (Program Files).
+            **Important:** Uninstall any previous version first — v3.5.3+ installs to Program Files.
           files: |
             release/*.exe
             release/*.exe.blockmap
