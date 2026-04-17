@@ -271,9 +271,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 4,
         rows: 12, cols: 16, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'bar',
-        stage1: { multiplier: 1.18 },
-        stage2: { multiplier: 1.30 },
-        stage3: { multiplier: 1.45, clampMax: 58000 },
+        // Toned down from 1.18 → 1.06 on Stage 1 — petrol boost increase realistic for Stage 1.
+        stage1: { multiplier: 1.06 },
+        stage2: { multiplier: 1.18 },
+        stage3: { multiplier: 1.35, clampMax: 58000 },
         critical: true, showPreview: true,
       },
       {
@@ -289,9 +290,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 4,
         rows: 16, cols: 16, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'ms',
-        stage1: { multiplier: 1.12 },
-        stage2: { multiplier: 1.20 },
-        stage3: { multiplier: 1.30, clampMax: 60000 },
+        // Toned down from 1.12 → 1.05 on Stage 1 — petrol fuel map realistic increase.
+        stage1: { multiplier: 1.05 },
+        stage2: { multiplier: 1.15 },
+        stage3: { multiplier: 1.25, clampMax: 60000 },
         critical: true, showPreview: true,
       },
       {
@@ -308,6 +310,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage2: { multiplier: 1.40 },
         stage3: { multiplier: 1.60, clampMax: 65000 },
         critical: true, showPreview: true,
+        // NOTE: Stage 1 values below are the "100% intensity" baseline. The UI-level
+        // Stage Intensity slider in the Remap Builder scales these globally so the user
+        // can go Conservative (50%), Standard (100%), Aggressive (150%) without editing
+        // per-ECU definitions. See handleBuildRemap() scaleStageParams for details.
       },
       {
         id: 'med17_ign_timing',
@@ -941,9 +947,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // 8×8 torque ceiling map. Keep 8×8 for signature/calSearch path.
         rows: 8, cols: 8, dtype: 'uint16', le: false,
         factor: 0.1, offsetVal: 0, unit: 'Nm',
-        stage1: { multiplier: 1.28 },
-        stage2: { multiplier: 1.42 },
-        stage3: { multiplier: 1.60, clampMax: 65000 },
+        // Toned down from 1.28 → 1.10 on Stage 1 — pro-tune realistic.
+        stage1: { multiplier: 1.10 },
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.45, clampMax: 65000 },
         critical: true, showPreview: true,
       },
       {
@@ -964,9 +971,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // Default dims for ASCII sig path; Kf_ header auto-detection overrides with actual dims
         rows: 8, cols: 12, dtype: 'uint16', le: false,
         factor: 0.1, offsetVal: 0, unit: 'Nm',
-        stage1: { multiplier: 1.12 },
-        stage2: { multiplier: 1.18 },
-        stage3: { multiplier: 1.25, clampMax: 65000 },
+        // Toned down from 1.12 → 1.00 on Stage 1. Driver's Wish left stock matches pro-tune
+        // convention — sharper pedal response only on Stage 2/3.
+        stage1: { multiplier: 1.00 },
+        stage2: { multiplier: 1.10 },
+        stage3: { multiplier: 1.20, clampMax: 65000 },
         critical: true, showPreview: true,
       },
       // ── FUEL CHAIN — torque request → IQ conversion → injector → smoke ceiling ──
@@ -988,9 +997,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // Default 18×16 for ASCII sig path (A2L DAMOS standard). Kf_ header overrides with actual dims.
         rows: 18, cols: 16, dtype: 'uint16', le: false,
         factor: 0.01, offsetVal: 0, unit: 'mg/st',
-        stage1: { multiplier: 1.12 },
-        stage2: { multiplier: 1.20 },
-        stage3: { multiplier: 1.30, clampMax: 65000 },
+        // Toned down from 1.12 → 1.05 on Stage 1 — pro-tune realistic.
+        stage1: { multiplier: 1.05 },
+        stage2: { multiplier: 1.15 },
+        stage3: { multiplier: 1.25, clampMax: 65000 },
         critical: true, showPreview: true,
       },
       {
@@ -1025,9 +1035,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // AngleCrS: COEFFS 0 42.6666... 0 0 0 1 → factor = f/b = 1/42.667 ≈ 0.023437 °/LSB
         // Matches the classic WinOLS "duration map factor" of 0.023437 for Bosch EDC16.
         factor: 0.023437, offsetVal: 0, unit: 'deg',
-        stage1: { multiplier: 1.12 },
-        stage2: { multiplier: 1.20 },
-        stage3: { multiplier: 1.30 },
+        // Toned down from 1.12 → 1.05 on Stage 1 — pro-tune realistic injection duration.
+        stage1: { multiplier: 1.05 },
+        stage2: { multiplier: 1.15 },
+        stage3: { multiplier: 1.25 },
         critical: true, showPreview: true,
       },
       {
@@ -1088,9 +1099,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // Rail pressure is managed internally by the ECU in this calibration variant.
         // critical:false — Not Found is expected and correct for EDC16U34 SW389289.
         factor: 1, offsetVal: 0, unit: 'bar',
-        stage1: { multiplier: 1.06 },
-        stage2: { multiplier: 1.10 },
-        stage3: { multiplier: 1.15, clampMax: 1900 },
+        // Toned down to 1.00 on Stage 1 — pro tune doesn't touch rail pressure.
+        stage1: { multiplier: 1.00 },
+        stage2: { multiplier: 1.06 },
+        stage3: { multiplier: 1.12, clampMax: 1900 },
         critical: false, showPreview: true,
       },
       // ── BOOST ────────────────────────────────────────────────────────────────
@@ -1113,9 +1125,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // CORRECTED: rows:10 (was 11). Real binary Kf_: cols=16(IQ 0-4746), rows=10(load 0-4500).
         rows: 10, cols: 16, dtype: 'uint16', le: false,
         factor: 0.001, offsetVal: 0, unit: 'bar',
-        stage1: { multiplier: 1.18 },
-        stage2: { multiplier: 1.28 },
-        stage3: { multiplier: 1.40, clampMax: 54000 },
+        // Toned down from 1.18 → 1.04 on Stage 1 — pro-tune realistic boost increase.
+        stage1: { multiplier: 1.04 },
+        stage2: { multiplier: 1.15 },
+        stage3: { multiplier: 1.30, clampMax: 54000 },
         critical: true, showPreview: true,
       },
       // ── TIMING ───────────────────────────────────────────────────────────────
@@ -1146,7 +1159,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // Previous 10×10 was from one binary variant. DAMOS confirms 14×16 as standard.
         rows: 14, cols: 16, dtype: 'int16', le: false,
         factor: 0.021973, offsetVal: 0, unit: '°DBTC',
-        // addend in raw units. factor ≈ 0.021973 °/unit → 1° ≈ 46 units, 3° ≈ 137 units.
+        // Addend-based Zone Editor (per-cell degrees) — same as EDC17 SOI.
+        // factor 0.021973 °/unit → 1° ≈ 46 raw, 0.5° ≈ 23 raw.
+        tuningMode: 'addend',
+        zoneStep: 0.5,
         stage1: { addend: 0 },
         stage2: { addend: 46 },
         stage3: { addend: 137 },
