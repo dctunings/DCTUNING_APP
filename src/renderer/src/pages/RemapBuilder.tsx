@@ -876,8 +876,32 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     reader.readAsArrayBuffer(file)
   }, [processFile])
 
+  // Loading state for the Preview Changes button — inline scanner for Delphi/no-signature
+  // ECUs takes 3-5 seconds on a 4MB binary and blocks the UI thread. Without this flag
+  // the button appears unresponsive and user thinks the app is stuck.
+  const [isExtracting, setIsExtracting] = useState(false)
+
   // ─── Step 2→3: extract maps ───────────────────────────────────────────────
+  // Wrapped in setTimeout so React can paint the 'Extracting...' state before the heavy
+  // synchronous scanner work starts. Otherwise the user clicks, UI freezes for 3-5s with
+  // no feedback, looking stuck.
   const handleConfigureNext = () => {
+    if (!fileBuffer || !selectedEcu || isExtracting) return
+    setIsExtracting(true)
+    // Let React paint the disabled/loading button before we hog the main thread
+    setTimeout(() => {
+      try {
+        doExtraction()
+      } catch (e) {
+        console.error('Map extraction crashed:', e)
+        alert('Map extraction failed. Check console for details.\n\n' + String(e))
+      } finally {
+        setIsExtracting(false)
+      }
+    }, 30)
+  }
+
+  const doExtraction = () => {
     if (!fileBuffer || !selectedEcu) return
     let maps = extractAllMaps(fileBuffer, selectedEcu)
 
@@ -2426,9 +2450,14 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       })()}
 
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <button className="btn-secondary" onClick={() => setStep(1)}>Back</button>
-        <button className="btn-primary" onClick={handleConfigureNext}>
-          Preview Changes →
+        <button className="btn-secondary" onClick={() => setStep(1)} disabled={isExtracting}>Back</button>
+        <button
+          className="btn-primary"
+          onClick={handleConfigureNext}
+          disabled={isExtracting}
+          style={isExtracting ? { opacity: 0.7, cursor: 'wait' } : undefined}
+        >
+          {isExtracting ? '⏳ Extracting maps… (can take 3-5s on large binaries)' : 'Preview Changes →'}
         </button>
       </div>
     </div>
