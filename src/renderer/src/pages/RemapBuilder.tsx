@@ -1,8 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { ECU_DEFINITIONS, ADDONS } from '../lib/ecuDefinitions'
 import type { EcuDef } from '../lib/ecuDefinitions'
-import { detectEcu, detectEcuFromFilename, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, syntheticMapDefFromDRT, extractPartNumberFromBinary, scanBinaryForMaps as scanBinarySimple } from '../lib/binaryParser'
-import type { DetectedEcu, ExtractedMap, A2LValidationResult, ScannedMap } from '../lib/binaryParser'
+import { detectEcu, detectEcuFromFilename, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, syntheticMapDefFromDRT, extractPartNumberFromBinary } from '../lib/binaryParser'
+import type { DetectedEcu, ExtractedMap, A2LValidationResult } from '../lib/binaryParser'
 import { buildRemap, buildFilename } from '../lib/remapEngine'
 import type { Stage, AddonId, RemapResult } from '../lib/remapEngine'
 import { verifyChecksum, correctChecksum, correctBlockChecksums } from '../lib/checksumEngine'
@@ -632,11 +632,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [showScanner, setShowScanner] = useState(false)
   const [scannerBusy, setScannerBusy] = useState(false)
   const [scannerDebug, setScannerDebug] = useState('')
-  // Binary scanner state (simple Kf_ scan — used in step 2 panel & step 3 auto-scan)
-  const [scanStatus, setScanStatus] = useState<'idle' | 'scanning' | 'done'>('idle')
-  const [scannedMaps, setScannedMaps] = useState<ScannedMap[]>([])
-  const [addedScanIds, setAddedScanIds] = useState<Set<string>>(new Set())
-  const [scanPanelOpen, setScanPanelOpen] = useState(false)
+  // Scanner state removed — UNKNOWN candidates were noise
 
   // Library search state
   const [libSearch, setLibSearch] = useState('')
@@ -1295,20 +1291,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detected, fileName, fileBuffer])
 
-  // ── Auto-scan binary when step 3 is reached ─────────────────────────────────
-  // Fires automatically so the user never needs to find or click the scan button.
-  useEffect(() => {
-    if (step === 3 && fileBuffer && scanStatus === 'idle') {
-      setScanStatus('scanning')
-      setScanPanelOpen(true)
-      setTimeout(() => {
-        const found = scanBinarySimple(fileBuffer)
-        setScannedMaps(found)
-        setScanStatus('done')
-      }, 80)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, fileBuffer])
+  // Auto-scan removed — scanner candidates were noise in the preview
 
   const loadDefinitionFromLibrary = async (entry: DefinitionEntry) => {
     setLibLoadingId(entry.id)
@@ -1540,107 +1523,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         )}
       </div>
 
-      {/* ── Binary Map Scanner — always visible regardless of A2L/DRT/KP ── */}
-      {fileBuffer && (
-        <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 10, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(184,240,42,0.15)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <button
-              onClick={() => {
-                if (scanStatus === 'scanning') return
-                setScanStatus('scanning')
-                setScanPanelOpen(true)
-                setTimeout(() => {
-                  const found = scanBinarySimple(fileBuffer)
-                  setScannedMaps(found)
-                  setScanStatus('done')
-                }, 50)
-              }}
-              style={{
-                fontSize: 12, fontWeight: 800, padding: '7px 18px', borderRadius: 7,
-                cursor: scanStatus === 'scanning' ? 'wait' : 'pointer',
-                border: '1px solid rgba(184,240,42,0.5)',
-                background: 'rgba(184,240,42,0.1)',
-                color: '#b8f02a', letterSpacing: '0.04em',
-              }}
-            >
-              {scanStatus === 'scanning' ? '⏳ Scanning...' : scanStatus === 'done' ? `🔍 Rescan .bin (${scannedMaps.length} found)` : '🔍 Scan .bin for Maps'}
-            </button>
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>
-              Finds maps directly from raw binary — no A2L/DRT/KP needed
-            </span>
-          </div>
-
-          {/* Results */}
-          {scanStatus === 'done' && scannedMaps.length > 0 && (
-            <div style={{ marginTop: 12, maxHeight: 320, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 5 }}>
-              {scannedMaps.map(sm => {
-                const isAdded = addedScanIds.has(sm.id)
-                const confColor = sm.confidence > 0.7 ? '#b8f02a' : sm.confidence > 0.45 ? '#fb923c' : '#f87171'
-                const flat = sm.dataPreview.flat()
-                const cellSize = Math.max(3, Math.min(7, Math.floor(100 / Math.max(sm.cols, 1))))
-                return (
-                  <div key={sm.id} style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px',
-                    background: isAdded ? 'rgba(184,240,42,0.07)' : 'rgba(255,255,255,0.02)',
-                    border: `1px solid ${isAdded ? 'rgba(184,240,42,0.3)' : 'rgba(255,255,255,0.07)'}`,
-                    borderRadius: 6,
-                  }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${sm.cols}, ${cellSize}px)`, gap: 0, flexShrink: 0 }}>
-                      {flat.map((v, i) => {
-                        const t = sm.dataMax > sm.dataMin ? (v - sm.dataMin) / (sm.dataMax - sm.dataMin) : 0
-                        return <div key={i} style={{ width: cellSize, height: cellSize, background: `rgb(${Math.round(20+t*60)},${Math.round(60+t*160)},20)` }} />
-                      })}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: sm.embeddedName ? '#b8f02a' : 'rgba(255,255,255,0.75)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {sm.embeddedName ? `📛 ${sm.embeddedName}` : sm.name}
-                      </div>
-                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', display: 'flex', gap: 6, marginTop: 2 }}>
-                        <span>0x{sm.offset.toString(16).toUpperCase()}</span>
-                        <span>{sm.rows}×{sm.cols}</span>
-                        <span>{sm.dtype}{sm.le ? ' LE' : ' BE'}</span>
-                        <span style={{ color: confColor }}>{Math.round(sm.confidence * 100)}%</span>
-                        <span style={{ color: '#6ee7b7', textTransform: 'uppercase', fontSize: 8 }}>{sm.category}</span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => {
-                        if (isAdded) return
-                        const mapDef = {
-                          id: sm.id, name: sm.embeddedName ?? sm.name,
-                          rows: sm.rows, cols: sm.cols,
-                          dtype: (sm.dtype === 'uint16' ? 'uint16' : 'uint8') as 'uint8' | 'uint16',
-                          factor: 1, offsetVal: 0, le: sm.le,
-                          category: sm.category as 'fuel' | 'ignition' | 'boost' | 'torque' | 'unknown',
-                          fixedOffset: sm.offset, signatures: [], sigOffset: 0, showPreview: true,
-                          stage1: { multiplier: 1 }, stage2: { multiplier: 1 }, stage3: { multiplier: 1 },
-                        }
-                        const newMap: ExtractedMap = {
-                          mapDef, data: sm.dataPreview, rawData: sm.dataPreview,
-                          offset: sm.offset, found: true, source: 'fixedOffset',
-                        }
-                        setExtractedMaps(prev => [...prev, newMap])
-                        setAddedScanIds(prev => new Set([...prev, sm.id]))
-                      }}
-                      style={{
-                        fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 4, cursor: isAdded ? 'default' : 'pointer', flexShrink: 0,
-                        border: `1px solid ${isAdded ? 'rgba(184,240,42,0.2)' : 'rgba(184,240,42,0.5)'}`,
-                        background: isAdded ? 'rgba(184,240,42,0.05)' : 'rgba(184,240,42,0.12)',
-                        color: isAdded ? 'rgba(184,240,42,0.4)' : '#b8f02a',
-                      }}
-                    >
-                      {isAdded ? '✓' : '+ Add'}
-                    </button>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-          {scanStatus === 'done' && scannedMaps.length === 0 && (
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 8 }}>No maps detected in this binary.</div>
-          )}
-        </div>
-      )}
+      {/* Scanner panel removed — UNKNOWN candidates were useless clutter */}
     </div>
   )
 
@@ -2316,141 +2199,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         </span>
       </div>
 
-      {/* ── Binary Map Scanner ─────────────────────────────────────────────── */}
-      {fileBuffer && (
-        <div style={{ marginBottom: 16, padding: '12px 16px', borderRadius: 10, background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(184,240,42,0.2)' }}>
-          {/* Header row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: scanStatus === 'done' && scannedMaps.length > 0 ? 12 : 0, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 12, fontWeight: 800, color: '#b8f02a', letterSpacing: '0.05em' }}>
-              🔍 BINARY MAP SCANNER
-            </span>
-            {scanStatus === 'scanning' && (
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>⏳ Scanning binary...</span>
-            )}
-            {scanStatus === 'done' && (
-              <span style={{ fontSize: 11, color: scannedMaps.length > 0 ? '#b8f02a' : 'rgba(255,255,255,0.35)', fontWeight: 700 }}>
-                {scannedMaps.length > 0 ? `${scannedMaps.length} candidate maps found` : 'No maps detected'}
-              </span>
-            )}
-            <button
-              onClick={() => {
-                if (scanStatus === 'scanning') return
-                setScanStatus('idle')
-                setTimeout(() => {
-                  setScanStatus('scanning')
-                  setTimeout(() => {
-                    const found = scanBinarySimple(fileBuffer)
-                    setScannedMaps(found)
-                    setScanStatus('done')
-                  }, 80)
-                }, 10)
-              }}
-              style={{
-                fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 5,
-                cursor: scanStatus === 'scanning' ? 'wait' : 'pointer',
-                border: '1px solid rgba(184,240,42,0.3)', background: 'rgba(184,240,42,0.06)',
-                color: '#b8f02a', marginLeft: 'auto',
-              }}
-            >
-              {scanStatus === 'scanning' ? '⏳' : '↺ Rescan'}
-            </button>
-          </div>
-
-          {/* Results panel — always open, no toggle */}
-          {scanStatus === 'done' && (
-            <div style={{ marginTop: 10, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(184,240,42,0.15)', borderRadius: 10, padding: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: '#b8f02a', marginBottom: 10 }}>
-                SCAN RESULTS — {scannedMaps.length} candidate maps found in binary
-              </div>
-              {scannedMaps.length === 0 && (
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>No maps detected. The binary may use an unusual axis format or be encrypted.</div>
-              )}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 420, overflowY: 'auto' }}>
-                {scannedMaps.map(sm => {
-                  const isAdded = addedScanIds.has(sm.id)
-                  const confColor = sm.confidence > 0.7 ? '#b8f02a' : sm.confidence > 0.45 ? '#fb923c' : '#f87171'
-                  // Mini heatmap: flatten grid, compute colours
-                  const flat = sm.dataPreview.flat()
-                  const mn = sm.dataMin, mx = sm.dataMax
-                  const cellSize = Math.max(3, Math.min(8, Math.floor(120 / Math.max(sm.cols, 1))))
-                  return (
-                    <div key={sm.id} style={{
-                      display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px',
-                      background: isAdded ? 'rgba(184,240,42,0.07)' : 'rgba(255,255,255,0.02)',
-                      border: `1px solid ${isAdded ? 'rgba(184,240,42,0.3)' : 'rgba(255,255,255,0.07)'}`,
-                      borderRadius: 7,
-                    }}>
-                      {/* Mini heatmap */}
-                      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${sm.cols}, ${cellSize}px)`, gap: 0, flexShrink: 0 }}>
-                        {flat.map((v, i) => {
-                          const t = mx > mn ? (v - mn) / (mx - mn) : 0
-                          const r = Math.round(20 + t * 60), g = Math.round(60 + t * 160), b = Math.round(20)
-                          return <div key={i} style={{ width: cellSize, height: cellSize, background: `rgb(${r},${g},${b})` }} />
-                        })}
-                      </div>
-                      {/* Info */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: sm.embeddedName ? '#b8f02a' : 'rgba(255,255,255,0.8)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {sm.embeddedName ? `📛 ${sm.embeddedName}` : sm.name}
-                        </div>
-                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                          <span>Offset: <b style={{ color: 'rgba(255,255,255,0.55)' }}>0x{sm.offset.toString(16).toUpperCase()}</b></span>
-                          <span>Size: <b style={{ color: 'rgba(255,255,255,0.55)' }}>{sm.rows}×{sm.cols}</b></span>
-                          <span>Type: <b style={{ color: 'rgba(255,255,255,0.55)' }}>{sm.dtype}{sm.le ? ' LE' : ' BE'}</b></span>
-                          <span>Range: <b style={{ color: 'rgba(255,255,255,0.55)' }}>{sm.dataMin}–{sm.dataMax}</b></span>
-                          <span style={{ color: confColor }}>Confidence: {Math.round(sm.confidence * 100)}%</span>
-                          <span style={{ color: '#6ee7b7', textTransform: 'uppercase', fontSize: 8 }}>{sm.category}</span>
-                        </div>
-                        <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>
-                          RPM: {sm.yVals[0]}–{sm.yVals[sm.yVals.length-1]} · Load: {sm.xVals[0]}–{sm.xVals[sm.xVals.length-1]}
-                        </div>
-                      </div>
-                      {/* Add button */}
-                      <button
-                        onClick={() => {
-                          if (isAdded) return
-                          // Create a synthetic ExtractedMap from the scan result
-                          const mapDef = {
-                            id: sm.id,
-                            name: sm.name,
-                            rows: sm.rows, cols: sm.cols,
-                            dtype: (sm.dtype === 'uint16' ? 'uint16' : 'uint8') as 'uint8' | 'uint16',
-                            factor: 1, offsetVal: 0,
-                            le: sm.le,
-                            category: sm.category as 'fuel' | 'ignition' | 'boost' | 'torque' | 'unknown',
-                            fixedOffset: sm.offset,
-                            signatures: [], sigOffset: 0,
-                            showPreview: true,
-                            stage1: { multiplier: 1 }, stage2: { multiplier: 1 }, stage3: { multiplier: 1 },
-                          }
-                          const newMap: ExtractedMap = {
-                            mapDef,
-                            data: sm.dataPreview,
-                            rawData: sm.dataPreview,
-                            offset: sm.offset,
-                            found: true,
-                            source: 'fixedOffset',
-                          }
-                          setExtractedMaps(prev => [...prev, newMap])
-                          setAddedScanIds(prev => new Set([...prev, sm.id]))
-                        }}
-                        style={{
-                          fontSize: 10, fontWeight: 800, padding: '4px 12px', borderRadius: 5, cursor: isAdded ? 'default' : 'pointer', flexShrink: 0,
-                          border: `1px solid ${isAdded ? 'rgba(184,240,42,0.3)' : 'rgba(184,240,42,0.5)'}`,
-                          background: isAdded ? 'rgba(184,240,42,0.08)' : 'rgba(184,240,42,0.14)',
-                          color: isAdded ? 'rgba(184,240,42,0.5)' : '#b8f02a',
-                        }}
-                      >
-                        {isAdded ? '✓ Added' : '+ Add'}
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Scanner candidates removed — only show definition-matched maps */}
 
       {/* A2L fallback diagnostic — shown when all maps fail */}
       {extractedMaps.length > 0 && extractedMaps.filter(m => m.found).length === 0 && a2lValidation.length > 0 && (() => {

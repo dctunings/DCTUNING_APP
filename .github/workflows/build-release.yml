@@ -69,15 +69,14 @@ jobs:
             ## DCTuning Desktop v${{ steps.pkg.outputs.version }}
 
             ### What's new
-            - Fix: Remap Builder blank screen on ECU file load (missing state declarations + duplicate import)
-            - Fix: Desktop/Start Menu shortcut creation (explicit NSIS config)
-            - Scanner: 70+ maps given real database-verified signatures from 507-file study
-            - Scanner: LE Kf_ header detection for stripped EDC17 variants (C46)
-            - Scanner: matchIndex for multi-occurrence maps, minQuality bypass for flat maps
-            - Scanner: Audit fixes — removed 4 duplicate/mislabeled map definitions
+            - UI: Removed scanner "UNKNOWN candidates" clutter from Remap Builder preview — only matched maps are shown now
+            - Fix: Installer now installs to Program Files (per-machine) so shortcuts work reliably
+            - Fix: Desktop shortcut now always created/refreshed on install, no more "can't find .exe" errors
+            - Previous fixes still included: Remap Builder blank-screen fix, Zone Editor axis labels (Load/RPM correctly oriented), 70+ database-verified map signatures
 
             ### Installation
             Download and run the `.exe` installer. Administrator rights required.
+            **Important:** Uninstall any previous version first — this release switches to per-machine install (Program Files).
           files: |
             release/*.exe
             release/*.exe.blockmap
