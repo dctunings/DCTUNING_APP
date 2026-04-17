@@ -38,8 +38,7 @@
     "artifactName": "DCTuning-Installer-${version}.${ext}",
     "win": {
       "target": "nsis",
-      "icon": "resources/icon.ico",
-      "requestedExecutionLevel": "requireAdministrator"
+      "icon": "resources/icon.ico"
     },
     "nsis": {
       "oneClick": true,

@@ -1,19 +1,24 @@
-; Custom NSIS macros for electron-builder
-; Runs after the main install completes.
-;
-; Purpose: delete the downloaded installer .exe after successful install so the user
-; isn't left with a DCTuning-Installer-*.exe file sitting next to their DCTuning shortcut.
-; $EXEPATH is the path to the running installer — we can't delete it while running,
-; so we spawn a detached cmd that waits for us to exit then deletes it.
+; Custom NSIS macros for electron-builder DCTuning installer.
+; Ensures a clean single-click install experience.
 
 !macro customInstallMode
-  ; per-machine install default (packaged in package.json; this is documentation only)
+  ; Force per-machine install (C:\Program Files\DCTuning) — matches package.json config.
   StrCpy $isForceMachineInstall 1
 !macroend
 
+!macro customInit
+  ; Before anything runs — if the DCTuning app is currently open, kill it silently so the
+  ; installer doesn't see 'file in use' errors and retry (which makes it look like it runs twice).
+  nsExec::Exec 'taskkill /F /IM DCTuning.exe'
+  nsExec::Exec 'taskkill /F /IM j2534helper.exe'
+  Sleep 500
+!macroend
+
 !macro customInstall
-  ; Schedule self-deletion of the downloaded installer after our process exits.
-  ; Uses cmd.exe detached via ExecShell — ping is a trick for "sleep" in cmd (~3s),
-  ; then it deletes the installer file and removes itself.
-  ExecShell "" "cmd.exe" '/C ping 127.0.0.1 -n 4 >nul & del /f /q "$EXEPATH"' SW_HIDE
+  ; After install completes, delete the downloaded installer .exe from wherever the user
+  ; ran it from (typically Desktop or Downloads). Can't delete a running process, so spawn
+  ; a detached cmd that waits for us to exit first.
+  ;
+  ; Uses 'timeout' (cleaner than ping trick). SW_HIDE so no visible flash.
+  ExecShell "" "cmd.exe" '/C timeout /t 3 /nobreak >nul && del /f /q "$EXEPATH"' SW_HIDE
 !macroend
