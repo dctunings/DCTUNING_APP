@@ -15,3 +15,9 @@ dist
 logs
 *.log
 release/
+# TypeScript incremental build cache — per-machine, should never be committed
+*.tsbuildinfo
+# Netlify CLI state — per-machine cache
+.netlify/
+# Local build helper scripts
+build.bat

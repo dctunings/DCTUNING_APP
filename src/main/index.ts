@@ -2,23 +2,15 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import fs from 'fs'
-import { execSync, spawnSync, spawn } from 'child_process'
+import { spawn } from 'child_process'
 
-// Re-launch as Administrator if not already elevated (required for J2534/SmUsb access)
-if (process.platform === 'win32' && !is.dev) {
-  try {
-    execSync('net session', { windowsHide: true, stdio: 'ignore' })
-  } catch {
-    // Not admin — re-launch elevated via PowerShell
-    const exePath = process.execPath
-    spawnSync('powershell.exe', [
-      '-WindowStyle', 'Hidden',
-      '-Command',
-      `Start-Process -FilePath "${exePath}" -Verb RunAs`
-    ], { windowsHide: true })
-    app.quit()
-  }
-}
+// NOTE: previously here was a block that auto-relaunched the app as Administrator on
+// every startup (net session check → PowerShell Start-Process -Verb RunAs → app.quit()).
+// That block is what caused the 'runs twice' install/launch experience — every launch
+// of DCTuning killed the fresh process and spawned a new admin instance via UAC.
+// Removed in v3.5.20. App now runs at the privilege it was launched with. For J2534
+// hardware operations that need admin, user right-clicks DCTuning shortcut → Run as
+// administrator. Remap builder (offline file editing) works without admin.
 import {
   obdConnect,
   obdDisconnect,
