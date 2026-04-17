@@ -69,15 +69,18 @@ jobs:
             ## DCTuning Desktop v${{ steps.pkg.outputs.version }}
 
             ### What's new
-            - **Fix: Delphi DCM6.2 (VAG 1.6/2.0 TDI) maps now found** via scanner-classifier fallback
-              (count-prefixed axis-inline format has no signatures — classifier matches by axis pattern + dimensions)
-            - Scanner fallback now runs for any ECU whose definitions have empty signatures (not just DCM6.2)
-            - Added SCAN badge (purple) to show which maps were located by the scanner vs signature/A2L/DRT/KP
-            - Previous v3.5.3 fixes still included: per-machine installer, reliable shortcuts, scanner clutter removed
+            - **Scanner fallback rewritten** — now runs synchronously inline (no async timing issues),
+              pools classified + unmatched candidates, matches by dimension + physical value plausibility.
+              Delphi DCM6.2 (VAG 1.6/2.0 TDI) maps should now be located.
+            - **Classifier hard-disqualifiers softened** — D0B16 reference-binary hints no longer
+              reject legitimate variants from customer binaries (Seat Leon, Audi A3, Skoda etc.)
+            - **Installer switched to wizard mode** (oneClick: false) — proper Next/Install/Finish
+              flow, better UAC handling, less likely to need running twice
+            - SCAN badge (purple) shows which maps came from the scanner
 
             ### Installation
-            Download and run the `.exe` installer. Administrator rights required.
-            **Important:** Uninstall any previous version first — v3.5.3+ installs to Program Files.
+            Download and run the `.exe` installer. Wizard will guide you through install.
+            **Important:** Uninstall any previous version first.
           files: |
             release/*.exe
             release/*.exe.blockmap

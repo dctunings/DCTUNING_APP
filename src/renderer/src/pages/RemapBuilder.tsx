@@ -907,49 +907,118 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       setA2lFallbackCount(c => c + kpCount)
     }
 
-    // Scanner fallback: for ECUs like Delphi DCM6.2 where definitions have no signatures,
-    // use the classified scanner candidates (built at upload time) to locate maps.
-    // The scanner finds axis-inline patterns via scanDelphiCountPrefixed/scanKfRegion etc.,
-    // then classifyCandidates() matches them to mapDefs by category/dimensions/axis fingerprint.
-    // This is the ONLY way to find maps in Delphi/count-prefixed formats that lack headers.
-    if (scanResult && scanResult.candidates.length > 0) {
-      const scannerUsedOffsets = new Set<number>()
-      for (const em of maps) { if (em.found && em.offset >= 0) scannerUsedOffsets.add(em.offset) }
-      let scannerCount = 0
-      maps = maps.map(em => {
-        if (em.found) return em
-        // Find classified candidates that matched this mapDef in the classifier assignment
-        const assignedMatches = scanResult.candidates.filter(
-          cc => cc.assigned && cc.bestMatch?.mapDefId === em.mapDef.id
-        )
-        if (assignedMatches.length === 0) return em
-        // Pick the highest-scoring assignment
-        const best = [...assignedMatches].sort(
-          (a, b) => (b.bestMatch?.score ?? 0) - (a.bestMatch?.score ?? 0)
-        )[0]
-        const cand = best.candidate
-        if (scannerUsedOffsets.has(cand.offset)) return em
-        // Synthetic mapDef: keep the mapDef's factor/offset/unit/stage params,
-        // override dimensions/dtype/le/fixedOffset with what the scanner actually found.
-        const synthDef = {
-          ...em.mapDef,
-          rows: cand.rows,
-          cols: cand.cols,
-          dtype: cand.dtype,
-          le: cand.le,
-          fixedOffset: cand.offset,
-          signatures: [],
-          sigOffset: 0,
+    // Scanner fallback: for ECUs like Delphi DCM6.2 (VAG TDI) where definitions have
+    // no signatures (count-prefixed axis-inline format, no byte patterns to match),
+    // use the binary scanner directly. Runs inline/synchronously so we don't depend
+    // on the async scanner from upload time.
+    //
+    // Strategy: gather ALL scanner candidates (classified + unmatched + fresh scan),
+    // then match each unfound mapDef by dimension + raw-data-range plausibility.
+    // Classifier's strict axis-hints are bypassed here because they're tuned for one
+    // specific reference binary (D0B16) and reject variants.
+    const needsScanner = maps.some(m => !m.found && m.mapDef.signatures.length === 0)
+    if (needsScanner) {
+      try {
+        // Run scanner + classifier inline (synchronous — no async timing issues)
+        const freshCandidates = scanBinaryForMaps(fileBuffer, selectedEcu)
+        const freshResult = freshCandidates.length > 0
+          ? classifyCandidates(freshCandidates, selectedEcu)
+          : null
+        // Use fresh result if async scanResult is empty/stale
+        const scanData = freshResult ?? scanResult
+        if (scanData) {
+          // Pool all candidates (both classified and unmatched) — classifier may have
+          // rejected real DCM6.2 maps due to overly strict hints.
+          const allScanned = [...scanData.candidates, ...scanData.unmatched]
+          const scannerUsedOffsets = new Set<number>()
+          for (const em of maps) { if (em.found && em.offset >= 0) scannerUsedOffsets.add(em.offset) }
+          let scannerCount = 0
+
+          maps = maps.map(em => {
+            if (em.found) return em
+            const mdRows = em.mapDef.rows, mdCols = em.mapDef.cols
+            const mdFactor = em.mapDef.factor, mdOffset = em.mapDef.offsetVal ?? 0
+
+            // Expected physical value range for this category (from classifier's PHYSICAL_RANGES)
+            // We recompute here to avoid tight coupling to mapClassifier internals.
+            const expectedRange = (() => {
+              switch (em.mapDef.category) {
+                case 'boost': return [0, 5000]   // bar or mbar
+                case 'torque': return [0, 650]
+                case 'fuel': return [0, 80]
+                case 'smoke': return [0, 80]
+                case 'ignition': return [-50, 70]
+                case 'limiter': return [50, 8500]
+                case 'emission': return [0, 100]
+                default: return [0, 1e6]
+              }
+            })()
+
+            // Score every candidate by dimension + physical plausibility
+            let bestScore = -1
+            let bestCand: typeof allScanned[number]['candidate'] | null = null
+            for (const cc of allScanned) {
+              const c = cc.candidate
+              if (scannerUsedOffsets.has(c.offset)) continue
+
+              // DIMENSION SCORE (0-100)
+              let dimScore = 0
+              if (c.rows === mdRows && c.cols === mdCols) dimScore = 100
+              else if (c.rows === mdCols && c.cols === mdRows) dimScore = 80  // transposed
+              else if (Math.abs(c.rows - mdRows) <= 1 && Math.abs(c.cols - mdCols) <= 1) dimScore = 40
+              else continue  // dimensions too far off — skip
+
+              // PHYSICAL PLAUSIBILITY SCORE (0-50)
+              // Apply mapDef's factor to see if raw data falls in expected physical range
+              const physMin = c.valueRange.min * mdFactor + mdOffset
+              const physMax = c.valueRange.max * mdFactor + mdOffset
+              let physScore = 0
+              if (physMax >= expectedRange[0] && physMin <= expectedRange[1]) {
+                // Some overlap with expected range
+                const spanOk = (physMax - physMin) > (expectedRange[1] - expectedRange[0]) * 0.05
+                physScore = spanOk ? 50 : 20
+              }
+
+              // CLASSIFIER BONUS (0-30): if classifier agreed this was our map
+              let clsBonus = 0
+              if (cc.bestMatch?.mapDefId === em.mapDef.id) clsBonus = 30
+              else if (cc.bestMatch?.category === em.mapDef.category) clsBonus = 15
+
+              const total = dimScore + physScore + clsBonus
+              if (total > bestScore) {
+                bestScore = total
+                bestCand = c
+              }
+            }
+
+            // Require at least 100 points (exact dim match OR dim + category agreement)
+            if (!bestCand || bestScore < 100) return em
+
+            // Build synthetic mapDef with scanner's actual dimensions/dtype/offset
+            const synthDef = {
+              ...em.mapDef,
+              rows: bestCand.rows,
+              cols: bestCand.cols,
+              dtype: bestCand.dtype,
+              le: bestCand.le,
+              fixedOffset: bestCand.offset,
+              signatures: [],
+              sigOffset: 0,
+            }
+            const result = extractMap(fileBuffer, synthDef)
+            if (result.found) {
+              scannerUsedOffsets.add(result.offset)
+              scannerCount++
+              return { ...result, source: 'scanner' as const }
+            }
+            return em
+          })
+          setA2lFallbackCount(c => c + scannerCount)
         }
-        const result = extractMap(fileBuffer, synthDef)
-        if (result.found) {
-          scannerUsedOffsets.add(result.offset)
-          scannerCount++
-          return { ...result, source: 'scanner' as const }
-        }
-        return em
-      })
-      setA2lFallbackCount(c => c + scannerCount)
+      } catch (e) {
+        // Scanner/classifier crashed — not fatal, just skip fallback
+        console.warn('Scanner fallback failed:', e)
+      }
     }
 
     setExtractedMaps(maps)

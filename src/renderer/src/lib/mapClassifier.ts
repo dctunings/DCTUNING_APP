@@ -1130,22 +1130,31 @@ function scoreAxisFingerprint(cand: ScannedCandidate, md: MapDef): number {
     const yMin = cand.axisY.min
     const yMax = cand.axisY.max
 
-    // HARD DISQUALIFIER: if dataRange is specified and raw values are outside bounds,
-    // this candidate cannot be this map type. Return 0 immediately.
+    // SOFT PENALTY (was HARD DISQUALIFIER): dataRange bounds signal wrong map type,
+    // but hints were tuned against a single reference binary (D0B16). Other variants
+    // of the same ECU family have different raw data ranges — killing score to 0
+    // rejected legitimate maps from customer binaries. Now we just skip the bonus.
+    let dataRangeOk = true
     if (hint.dataRange) {
-      if (cand.valueRange.max > hint.dataRange[1] * 1.2 || cand.valueRange.min > hint.dataRange[1]) {
-        return 0  // raw data WAY too high — wrong map
+      if (cand.valueRange.max > hint.dataRange[1] * 1.5 || cand.valueRange.min > hint.dataRange[1] * 1.2) {
+        dataRangeOk = false
       }
     }
 
-    // HARD DISQUALIFIER: Y-axis start must be in expected range for pressure-based maps.
-    // The real DCM6.2 tuning maps all have Y starting at ~3200 mbar (atmospheric+).
-    // Maps with Y starting at 16000+ are correction maps, not tuning maps.
+    // SOFT PENALTY (was HARD DISQUALIFIER): Y-axis start range. Same reasoning —
+    // tuned for D0B16, rejecting other variants. Widened the band; outside it = no bonus
+    // but not immediate rejection.
+    let yStartOk = true
     if (hint.yStartRange) {
-      if (yMin < hint.yStartRange[0] || yMin > hint.yStartRange[1]) {
-        return 0  // Y-axis start outside expected range — wrong map
+      const widenedMin = hint.yStartRange[0] * 0.5
+      const widenedMax = hint.yStartRange[1] * 3
+      if (yMin < widenedMin || yMin > widenedMax) {
+        yStartOk = false
       }
     }
+    // Only take the big penalty if BOTH checks fail — a candidate can legitimately
+    // differ on one dimension but not both and still be the correct map.
+    if (!dataRangeOk && !yStartOk) return 0
 
     // Y-axis range overlap with expected hint
     if (yMin >= hint.yMin - 200 && yMax <= hint.yMax + 500) score += 7
