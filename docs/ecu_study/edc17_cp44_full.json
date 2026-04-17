@@ -1,0 +1,325 @@
+{
+  "family": "EDC17_CP44",
+  "totalPairs": 9,
+  "maps": [
+    {
+      "sigHex": "06001500f4015802bc022003",
+      "sigBytes": [
+        6,
+        0,
+        21,
+        0,
+        244,
+        1,
+        88,
+        2,
+        188,
+        2,
+        32,
+        3
+      ],
+      "rows": 21,
+      "cols": 6,
+      "xAxis": [
+        500,
+        600,
+        700,
+        800,
+        900,
+        950
+      ],
+      "yAxis": [
+        1600,
+        2000,
+        2500,
+        2800,
+        3000,
+        3500,
+        4000,
+        4500,
+        5000,
+        5500,
+        6000,
+        6500,
+        7000,
+        7500,
+        8000,
+        8500,
+        8800,
+        9000,
+        9500,
+        10000,
+        11000
+      ],
+      "le": true,
+      "occurrences": 9,
+      "occurrencePct": 100,
+      "avgPctChange": 23.359555749524517,
+      "medianPctChange": 19.999666681480832,
+      "sampleFiles": [
+        "Audi_Q5_3.0_TDI_2011_Turbo-Diesel___176.5KWKW_Bosch__4G0907401___518172_A7A3.Original",
+        "Audi_Q5_3.0_TDI_2011_Turbo-Diesel___176.5KWKW_Bosch__4G0907401___518172_A7A3.Original",
+        "Audi_Q5_3.0_TDI_2011_Turbo-Diesel___176.5KWKW_Bosch__4G0907401___518172_A7A3.Original"
+      ]
+    },
+    {
+      "sigHex": "06000400a00f301188135014",
+      "sigBytes": [
+        6,
+        0,
+        4,
+        0,
+        160,
+        15,
+        48,
+        17,
+        136,
+        19,
+        80,
+        20
+      ],
+      "rows": 4,
+      "cols": 6,
+      "xAxis": [
+        4000,
+        4400,
+        5000,
+        5200,
+        7400,
+        10000
+      ],
+      "yAxis": [
+        0,
+        1500,
+        3000,
+        17000
+      ],
+      "le": true,
+      "occurrences": 8,
+      "occurrencePct": 88.88888888888889,
+      "avgPctChange": 218.18181818181816,
+      "medianPctChange": 233.33333333333334,
+      "sampleFiles": [
+        "Audi_A6_3.0_TDI_CR_2019_Turbo-Diesel__147.9KWKW_Bosch_4g0_907_311_e_4G0907401___532819_0672.Original",
+        "Audi_A6_3.0_TDI_CR_2019_Turbo-Diesel__147.9KWKW_Bosch_4g0_907_311_e_4G0907401___532819_0672.Original",
+        "Audi_A6_3.0_TDI_CR_2014_Turbo-Diesel__147.9KWKW_Bosch_4g0_907_311_e_4G0907401___532819_0672.Original"
+      ]
+    },
+    {
+      "sigHex": "0f0007007805d007c409b80b",
+      "sigBytes": [
+        15,
+        0,
+        7,
+        0,
+        120,
+        5,
+        208,
+        7,
+        196,
+        9,
+        184,
+        11
+      ],
+      "rows": 7,
+      "cols": 15,
+      "xAxis": [
+        1400,
+        2000,
+        2500,
+        3000,
+        3500,
+        4000,
+        5000,
+        6000,
+        7000,
+        7500,
+        8000,
+        8500,
+        8800,
+        9600,
+        10400
+      ],
+      "yAxis": [
+        500,
+        700,
+        750,
+        800,
+        850,
+        900,
+        950
+      ],
+      "le": true,
+      "occurrences": 8,
+      "occurrencePct": 88.88888888888889,
+      "avgPctChange": 14.129831016671545,
+      "medianPctChange": 19.368445818768485,
+      "sampleFiles": [
+        "Audi_A6_3.0_TDI_CR_2019_Turbo-Diesel__147.9KWKW_Bosch_4g0_907_311_e_4G0907401___532819_0672.Original",
+        "Audi_A6_3.0_TDI_CR_2014_Turbo-Diesel__147.9KWKW_Bosch_4g0_907_311_e_4G0907401___532819_0672.Original",
+        "Audi_A8_3.0_TDI_CR_2011_Turbo-Diesel__184KWKW_Bosch__4G0907401___518081_B846.Original"
+      ]
+    },
+    {
+      "sigHex": "100008007805d007c409b80b",
+      "sigBytes": [
+        16,
+        0,
+        8,
+        0,
+        120,
+        5,
+        208,
+        7,
+        196,
+        9,
+        184,
+        11
+      ],
+      "rows": 8,
+      "cols": 16,
+      "xAxis": [
+        1400,
+        2000,
+        2500,
+        3000,
+        3500,
+        4000,
+        5000,
+        6000,
+        7000,
+        7500,
+        8000,
+        8500,
+        9000,
+        9500,
+        10000,
+        10500
+      ],
+      "yAxis": [
+        500,
+        600,
+        700,
+        750,
+        800,
+        850,
+        900,
+        950
+      ],
+      "le": true,
+      "occurrences": 6,
+      "occurrencePct": 66.66666666666666,
+      "avgPctChange": 14.220930418349814,
+      "medianPctChange": 16.34122214911038,
+      "sampleFiles": [
+        "Audi_A6_3.0_TDI_CR_2019_Turbo-Diesel__147.9KWKW_Bosch_4g0_907_311_e_4G0907401___532819_0672.Original",
+        "Audi_A6_3.0_TDI_CR_2014_Turbo-Diesel__147.9KWKW_Bosch_4g0_907_311_e_4G0907401___532819_0672.Original",
+        "Audi_Q5_3.0_TDI_2011_Turbo-Diesel___176.5KWKW_Bosch__4G0907401___518172_A7A3.Original"
+      ]
+    },
+    {
+      "sigHex": "0c0004000a0190012003b004",
+      "sigBytes": [
+        12,
+        0,
+        4,
+        0,
+        10,
+        1,
+        144,
+        1,
+        32,
+        3,
+        176,
+        4
+      ],
+      "rows": 4,
+      "cols": 12,
+      "xAxis": [
+        266,
+        400,
+        800,
+        1200,
+        1600,
+        2000,
+        2666,
+        3000,
+        3500,
+        4000,
+        10000,
+        11000
+      ],
+      "yAxis": [
+        0,
+        2000,
+        4000,
+        6000
+      ],
+      "le": true,
+      "occurrences": 4,
+      "occurrencePct": 44.44444444444444,
+      "avgPctChange": 1.9980266403551994,
+      "medianPctChange": 1.9980266403551994,
+      "sampleFiles": [
+        "Audi_A6_3.0_TDI_CR_2019_Turbo-Diesel__147.9KWKW_Bosch_4g0_907_311_e_4G0907401___532819_0672.Original",
+        "Audi_A6_3.0_TDI_CR_2014_Turbo-Diesel__147.9KWKW_Bosch_4g0_907_311_e_4G0907401___532819_0672.Original",
+        "Audi_A6_3.0_TDI_CR_2014_Turbo-Diesel__147.9KWKW_Bosch_4g0_907_311_e_4G0907401___532819_0672.Original"
+      ]
+    },
+    {
+      "sigHex": "0f0009007805d007c409b80b",
+      "sigBytes": [
+        15,
+        0,
+        9,
+        0,
+        120,
+        5,
+        208,
+        7,
+        196,
+        9,
+        184,
+        11
+      ],
+      "rows": 9,
+      "cols": 15,
+      "xAxis": [
+        1400,
+        2000,
+        2500,
+        3000,
+        3500,
+        4000,
+        5000,
+        6000,
+        7000,
+        7500,
+        8000,
+        8500,
+        8800,
+        9600,
+        10400
+      ],
+      "yAxis": [
+        500,
+        600,
+        650,
+        700,
+        750,
+        800,
+        850,
+        900,
+        950
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 11.11111111111111,
+      "avgPctChange": 10.06218061114419,
+      "medianPctChange": 10.06218061114419,
+      "sampleFiles": [
+        "Porsche_Cayenne_Diesel_3.0_TDI_CR__Turbo-Diesel___180.2KWKW_Bosch__4G0907401___518039_1FB8.Original"
+      ]
+    }
+  ]
+}

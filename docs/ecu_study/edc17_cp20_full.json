@@ -1,0 +1,252 @@
+{
+  "family": "EDC17_CP20",
+  "totalPairs": 8,
+  "maps": [
+    {
+      "sigHex": "0e000a00c800900158022003",
+      "sigBytes": [
+        14,
+        0,
+        10,
+        0,
+        200,
+        0,
+        144,
+        1,
+        88,
+        2,
+        32,
+        3
+      ],
+      "rows": 10,
+      "cols": 14,
+      "xAxis": [
+        200,
+        400,
+        600,
+        800,
+        1000,
+        1200,
+        1600,
+        2000,
+        4000,
+        6000,
+        8000,
+        9600,
+        10300,
+        11000
+      ],
+      "yAxis": [
+        0,
+        100,
+        200,
+        300,
+        500,
+        2500,
+        5500,
+        6500,
+        7500,
+        8500
+      ],
+      "le": true,
+      "occurrences": 8,
+      "occurrencePct": 100,
+      "avgPctChange": 2.086655456762232,
+      "medianPctChange": 2.086655456762232,
+      "sampleFiles": [
+        "VW_Passat_2.0_TDI_CR_2009_Turbo-Diesel___80.9KWKW_Bosch__03L906022MS_399859_C90C.Original",
+        "VW_Passat_2.0_TDI_CR_2009_Turbo-Diesel___80.9KWKW_Bosch__03L906022MS_399859_C90C.Original",
+        "VW_Passat_2.0_TDI_CR_2009_Turbo-Diesel___80.9KWKW_Bosch__03L906022MS_399859_C90C.Original"
+      ]
+    },
+    {
+      "sigHex": "080008007017282329232a23",
+      "sigBytes": [
+        8,
+        0,
+        8,
+        0,
+        112,
+        23,
+        40,
+        35,
+        41,
+        35,
+        42,
+        35
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        6000,
+        9000,
+        9001,
+        9002,
+        9003,
+        9004,
+        9005,
+        9006
+      ],
+      "yAxis": [
+        3931,
+        4221,
+        4222,
+        4223,
+        4224,
+        4225,
+        4226,
+        4227
+      ],
+      "le": true,
+      "occurrences": 4,
+      "occurrencePct": 50,
+      "avgPctChange": 13.888888888888884,
+      "medianPctChange": 13.888888888888884,
+      "sampleFiles": [
+        "VW_Passat_2.0_TDI_CR_2009_Turbo-Diesel___80.9KWKW_Bosch__03L906022MS_399859_C90C.Original",
+        "VW_Passat_2.0_TDI_CR_2009_Turbo-Diesel___80.9KWKW_Bosch__03L906022MS_399859_C90C.Original",
+        "VW_Passat_2.0_TDI_CR_2009_Turbo-Diesel___80.9KWKW_Bosch__03L906022MS_399859_C90C.Original"
+      ]
+    },
+    {
+      "sigHex": "0008000814501a901f402710",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        8,
+        20,
+        80,
+        26,
+        144,
+        31,
+        64,
+        39,
+        16
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        5200,
+        6800,
+        8000,
+        10000,
+        12000,
+        16000,
+        20000,
+        24000
+      ],
+      "yAxis": [
+        10240,
+        11520,
+        14080,
+        17920,
+        23040,
+        28160,
+        33280,
+        38400
+      ],
+      "le": false,
+      "occurrences": 1,
+      "occurrencePct": 12.5,
+      "avgPctChange": 38.56186735061007,
+      "medianPctChange": 38.56186735061007,
+      "sampleFiles": [
+        "Ford_Focus_ST_2.5_Turbo_2005_Turbo-Benzin___165.5KWKW_Bosch_0261209048__393284_18B5.Original"
+      ]
+    },
+    {
+      "sigHex": "000c0008064008200c7f0c80",
+      "sigBytes": [
+        0,
+        12,
+        0,
+        8,
+        6,
+        64,
+        8,
+        32,
+        12,
+        127,
+        12,
+        128
+      ],
+      "rows": 8,
+      "cols": 12,
+      "xAxis": [
+        1600,
+        2080,
+        3199,
+        3200,
+        4960,
+        6080,
+        7040,
+        8000,
+        10080,
+        12000,
+        14080,
+        16000
+      ],
+      "yAxis": [
+        0,
+        363,
+        364,
+        1504,
+        2064,
+        2432,
+        2800,
+        3536
+      ],
+      "le": false,
+      "occurrences": 1,
+      "occurrencePct": 12.5,
+      "avgPctChange": 36.04166666666666,
+      "medianPctChange": 36.04166666666666,
+      "sampleFiles": [
+        "Ford_Focus_ST_2.5_Turbo_2005_Turbo-Benzin___165.5KWKW_Bosch_0261209048__393284_18B5.Original"
+      ]
+    },
+    {
+      "sigHex": "0004000700190032004b0064",
+      "sigBytes": [
+        0,
+        4,
+        0,
+        7,
+        0,
+        25,
+        0,
+        50,
+        0,
+        75,
+        0,
+        100
+      ],
+      "rows": 7,
+      "cols": 4,
+      "xAxis": [
+        25,
+        50,
+        75,
+        100
+      ],
+      "yAxis": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        6,
+        7
+      ],
+      "le": false,
+      "occurrences": 1,
+      "occurrencePct": 12.5,
+      "avgPctChange": 224.97077887578368,
+      "medianPctChange": 224.97077887578368,
+      "sampleFiles": [
+        "Ford_Focus_ST_2.5_Turbo_2005_Turbo-Benzin___165.5KWKW_Bosch_0261209048__393284_18B5.Original"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,176 @@
+{
+  "family": "EDC7",
+  "totalPairs": 5,
+  "maps": [
+    {
+      "sigHex": "000400040514079e0a8c0af0",
+      "sigBytes": [
+        0,
+        4,
+        0,
+        4,
+        5,
+        20,
+        7,
+        158,
+        10,
+        140,
+        10,
+        240
+      ],
+      "rows": 4,
+      "cols": 4,
+      "xAxis": [
+        1300,
+        1950,
+        2700,
+        2800
+      ],
+      "yAxis": [
+        600,
+        700,
+        800,
+        900
+      ],
+      "le": false,
+      "occurrences": 2,
+      "occurrencePct": 40,
+      "avgPctChange": 4.989898989898989,
+      "medianPctChange": 4.989898989898989,
+      "sampleFiles": [
+        "Iveco_Truck_Stralis_AT_D_Euro5_2010_Turbo-Diesel___132.4KWKW_Bosch___378081_725D.Original",
+        "Iveco_Truck_Stralis_AT_D_Euro5_2010_Turbo-Diesel___132.4KWKW_Bosch___378081_725D.Original"
+      ]
+    },
+    {
+      "sigHex": "00140010025802bc03200384",
+      "sigBytes": [
+        0,
+        20,
+        0,
+        16,
+        2,
+        88,
+        2,
+        188,
+        3,
+        32,
+        3,
+        132
+      ],
+      "rows": 16,
+      "cols": 20,
+      "xAxis": [
+        600,
+        700,
+        800,
+        900,
+        1010,
+        1080,
+        1200,
+        1300,
+        1380,
+        1500,
+        1600,
+        1675,
+        1750,
+        1850,
+        2000,
+        2120,
+        2200,
+        2400,
+        2470,
+        2471
+      ],
+      "yAxis": [
+        500,
+        600,
+        700,
+        800,
+        900,
+        1000,
+        1100,
+        1200,
+        1300,
+        1400,
+        1500,
+        1600,
+        1700,
+        1800,
+        1900,
+        2000
+      ],
+      "le": false,
+      "occurrences": 1,
+      "occurrencePct": 20,
+      "avgPctChange": 9.999779915047213,
+      "medianPctChange": 9.999779915047213,
+      "sampleFiles": [
+        "Iveco_Truck_Stralis_AD_310_2004_Turbo-Diesel___228KWKW_Bosch___378082_59D6.Original"
+      ]
+    },
+    {
+      "sigHex": "0010001002ee038403e8044c",
+      "sigBytes": [
+        0,
+        16,
+        0,
+        16,
+        2,
+        238,
+        3,
+        132,
+        3,
+        232,
+        4,
+        76
+      ],
+      "rows": 16,
+      "cols": 16,
+      "xAxis": [
+        750,
+        900,
+        1000,
+        1100,
+        1200,
+        1250,
+        1300,
+        1400,
+        1550,
+        1750,
+        1950,
+        2100,
+        2250,
+        2400,
+        2550,
+        2700
+      ],
+      "yAxis": [
+        0,
+        205,
+        410,
+        614,
+        819,
+        1024,
+        1229,
+        1434,
+        1638,
+        1843,
+        2048,
+        2253,
+        2458,
+        2662,
+        4096,
+        8192
+      ],
+      "le": false,
+      "occurrences": 1,
+      "occurrencePct": 20,
+      "avgPctChange": 10.249519281723618,
+      "medianPctChange": 10.249519281723618,
+      "sampleFiles": [
+        "Iveco_Truck_Stralis_AT_D_Euro5_2010_Turbo-Diesel___132.4KWKW_Bosch___378081_725D.Original"
+      ]
+    }
+  ]
+}

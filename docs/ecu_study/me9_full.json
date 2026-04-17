@@ -1,0 +1,98 @@
+{
+  "family": "ME9",
+  "totalPairs": 27,
+  "maps": [
+    {
+      "sigHex": "000c000817701f4027102ee0",
+      "sigBytes": [
+        0,
+        12,
+        0,
+        8,
+        23,
+        112,
+        31,
+        64,
+        39,
+        16,
+        46,
+        224
+      ],
+      "rows": 8,
+      "cols": 12,
+      "xAxis": [
+        6000,
+        8000,
+        10000,
+        12000,
+        14000,
+        16000,
+        20200,
+        22000,
+        24000,
+        26000,
+        27200,
+        28000
+      ],
+      "yAxis": [
+        13107,
+        13575,
+        14043,
+        14511,
+        14980,
+        15448,
+        15916,
+        16384
+      ],
+      "le": false,
+      "occurrences": 2,
+      "occurrencePct": 7.4074074074074066,
+      "avgPctChange": 46.997522234311276,
+      "medianPctChange": 65.51645756643958,
+      "sampleFiles": [
+        "MB_C63_63_AMG_2009_Benzin___336.1KWKW_Bosch_0261209515_Bosch__505227_868D.Original",
+        "MB_C63_63_AMG_2009_Benzin___336.1KWKW_Bosch_0261209515_Bosch__505227_868D.Original"
+      ]
+    },
+    {
+      "sigHex": "000400040e100fa019001f40",
+      "sigBytes": [
+        0,
+        4,
+        0,
+        4,
+        14,
+        16,
+        15,
+        160,
+        25,
+        0,
+        31,
+        64
+      ],
+      "rows": 4,
+      "cols": 4,
+      "xAxis": [
+        3600,
+        4000,
+        6400,
+        8000
+      ],
+      "yAxis": [
+        6554,
+        9830,
+        13107,
+        16384
+      ],
+      "le": false,
+      "occurrences": 2,
+      "occurrencePct": 7.4074074074074066,
+      "avgPctChange": 14.893617021276606,
+      "medianPctChange": 14.893617021276606,
+      "sampleFiles": [
+        "Opel_Vectra-C_2.8_Turbo_2006_Turbo-Benzin___205.9KWKW_Bosch____67FA.Original",
+        "Opel_Vectra-C_2.8_Turbo_2006_Turbo-Benzin___205.9KWKW_Bosch____67FA.Original"
+      ]
+    }
+  ]
+}

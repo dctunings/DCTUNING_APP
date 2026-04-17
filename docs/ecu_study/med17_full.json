@@ -1,0 +1,315 @@
+{
+  "family": "MED17",
+  "totalPairs": 53,
+  "maps": [
+    {
+      "sigHex": "040004001027e02e204e9065",
+      "sigBytes": [
+        4,
+        0,
+        4,
+        0,
+        16,
+        39,
+        224,
+        46,
+        32,
+        78,
+        144,
+        101
+      ],
+      "rows": 4,
+      "cols": 4,
+      "xAxis": [
+        10000,
+        12000,
+        20000,
+        26000
+      ],
+      "yAxis": [
+        32768,
+        39322,
+        45875,
+        58982
+      ],
+      "le": true,
+      "occurrences": 8,
+      "occurrencePct": 15.09433962264151,
+      "avgPctChange": 95.87762426175418,
+      "medianPctChange": 171.75759222773289,
+      "sampleFiles": [
+        "Ford_Mondeo_2.0_SCTI_2011_Turbo-Benzin__176.5KWKW_Bosch___513771_41BA.Original",
+        "Ford_Mondeo_2.0_SCTI_2011_Turbo-Benzin__176.5KWKW_Bosch___513771_41BA.Original",
+        "Volvo_V70_2.0_T_2011_Turbo-Benzin__119.9KWKW_Bosch___523065_0C91.Original"
+      ]
+    },
+    {
+      "sigHex": "080008000000a00f401fe02e",
+      "sigBytes": [
+        8,
+        0,
+        8,
+        0,
+        0,
+        0,
+        160,
+        15,
+        64,
+        31,
+        224,
+        46
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        0,
+        4000,
+        8000,
+        12000,
+        16000,
+        20000,
+        24000,
+        28000
+      ],
+      "yAxis": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70
+      ],
+      "le": true,
+      "occurrences": 4,
+      "occurrencePct": 7.547169811320755,
+      "avgPctChange": 70.20533352595947,
+      "medianPctChange": 70.20533352595947,
+      "sampleFiles": [
+        "Peugeot_508_1.6_THP_2017___114KWKW_Bosch___517036_AC27.Original",
+        "Peugeot_508_1.6_THP_2012___114KWKW_Bosch___517036_AC27.Original",
+        "Peugeot_RCZ_1.6THP_2010_Turbo-Benzin__114.7KWKW_Bosch___505552_736B.Original"
+      ]
+    },
+    {
+      "sigHex": "040004001027b036204e9065",
+      "sigBytes": [
+        4,
+        0,
+        4,
+        0,
+        16,
+        39,
+        176,
+        54,
+        32,
+        78,
+        144,
+        101
+      ],
+      "rows": 4,
+      "cols": 4,
+      "xAxis": [
+        10000,
+        14000,
+        20000,
+        26000
+      ],
+      "yAxis": [
+        29491,
+        36045,
+        42598,
+        49152
+      ],
+      "le": true,
+      "occurrences": 3,
+      "occurrencePct": 5.660377358490567,
+      "avgPctChange": 196.12604711646054,
+      "medianPctChange": 196.12604711646054,
+      "sampleFiles": [
+        "Alfa_159_1750TBI_2017_Turbo-Benzin__147.1KWKW_Bosch_0261S07354_51901122_515934_0AEB.Original",
+        "Alfa_159_1750TBI_2012_Turbo-Benzin__147.1KWKW_Bosch_0261S07354_51901122_515934_0AEB.Original",
+        "Alfa_159_1750TBI_2017_Turbo-Benzin__147.1KWKW_Bosch_0261S07354_51901122_515934_0AEB.Original"
+      ]
+    },
+    {
+      "sigHex": "08000400190032004b006400",
+      "sigBytes": [
+        8,
+        0,
+        4,
+        0,
+        25,
+        0,
+        50,
+        0,
+        75,
+        0,
+        100,
+        0
+      ],
+      "rows": 4,
+      "cols": 8,
+      "xAxis": [
+        25,
+        50,
+        75,
+        100,
+        125,
+        150,
+        175,
+        188
+      ],
+      "yAxis": [
+        65526,
+        65530,
+        65532,
+        65534
+      ],
+      "le": true,
+      "occurrences": 2,
+      "occurrencePct": 3.7735849056603774,
+      "avgPctChange": -50.7514450867052,
+      "medianPctChange": -50.7514450867052,
+      "sampleFiles": [
+        "Audi_RS5_4.2_FSI_V8_2011_Benzin___331KWKW_Bosch_0261S07236_8T2907560___523849_B5D7.Original",
+        "Audi_RS5_4.2_FSI_V8_2011_Benzin___331KWKW_Bosch_0261S07236_8T2907560___523849_B5D7.Original"
+      ]
+    },
+    {
+      "sigHex": "080007000000010002000300",
+      "sigBytes": [
+        8,
+        0,
+        7,
+        0,
+        0,
+        0,
+        1,
+        0,
+        2,
+        0,
+        3,
+        0
+      ],
+      "rows": 7,
+      "cols": 8,
+      "xAxis": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "yAxis": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 1.8867924528301887,
+      "avgPctChange": 6.923076923076921,
+      "medianPctChange": 6.923076923076921,
+      "sampleFiles": [
+        "Peugeot_508_1.6THP_2011_Turbo-Benzin__114.7KWKW_Bosch___515869_7323.Original"
+      ]
+    },
+    {
+      "sigHex": "08000500a00f581b401f1027",
+      "sigBytes": [
+        8,
+        0,
+        5,
+        0,
+        160,
+        15,
+        88,
+        27,
+        64,
+        31,
+        16,
+        39
+      ],
+      "rows": 5,
+      "cols": 8,
+      "xAxis": [
+        4000,
+        7000,
+        8000,
+        10000,
+        12000,
+        16000,
+        20000,
+        26000
+      ],
+      "yAxis": [
+        11228,
+        12081,
+        12508,
+        12934,
+        13361
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 1.8867924528301887,
+      "avgPctChange": 24.875105850568822,
+      "medianPctChange": 24.875105850568822,
+      "sampleFiles": [
+        "Volvo_V70_2.0_T_2011_Turbo-Benzin__119.9KWKW_Bosch___523065_0C91.Original"
+      ]
+    },
+    {
+      "sigHex": "08000500a00f581be02e803e",
+      "sigBytes": [
+        8,
+        0,
+        5,
+        0,
+        160,
+        15,
+        88,
+        27,
+        224,
+        46,
+        128,
+        62
+      ],
+      "rows": 5,
+      "cols": 8,
+      "xAxis": [
+        4000,
+        7000,
+        12000,
+        16000,
+        20000,
+        22000,
+        24000,
+        26000
+      ],
+      "yAxis": [
+        11228,
+        12081,
+        12508,
+        12934,
+        13361
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 1.8867924528301887,
+      "avgPctChange": 27.86829409707643,
+      "medianPctChange": 27.86829409707643,
+      "sampleFiles": [
+        "Volvo_XC60_2.5_T5_2013_Turbo-Benzin__176.5KWKW_Bosch___524905_8B49.Original"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "family": "EDC16_U34",
+  "totalPairs": 20,
+  "maps": [
+    {
+      "sigHex": "000a000a04e205dc06d607d0",
+      "sigBytes": [
+        0,
+        10,
+        0,
+        10,
+        4,
+        226,
+        5,
+        220,
+        6,
+        214,
+        7,
+        208
+      ],
+      "rows": 10,
+      "cols": 10,
+      "xAxis": [
+        1250,
+        1500,
+        1750,
+        2000,
+        2250,
+        2500,
+        3000,
+        3250,
+        4250,
+        4500
+      ],
+      "yAxis": [
+        0,
+        600,
+        800,
+        1000,
+        1500,
+        2000,
+        2500,
+        3000,
+        3500,
+        4500
+      ],
+      "le": false,
+      "occurrences": 8,
+      "occurrencePct": 40,
+      "avgPctChange": 12.018339017531263,
+      "medianPctChange": 12.018339017531265,
+      "sampleFiles": [
+        "VW_Caddy_1.9_TDI_PD_2006_Turbodiesel___77.2KWKW_Bosch_0281013652_03G906021HS_381007_A0C9.Original",
+        "VW_Caddy_1.9_TDI_PD_2006_Turbodiesel___77.2KWKW_Bosch_0281013652_03G906021HS_381007_A0C9.Original",
+        "VW_Caddy_1.9_TDI_PD_2006_Turbodiesel___77.2KWKW_Bosch_0281013652_03G906021HS_381007_A0C9.Original"
+      ]
+    },
+    {
+      "sigHex": "000a000a05d206cf077708c7",
+      "sigBytes": [
+        0,
+        10,
+        0,
+        10,
+        5,
+        210,
+        6,
+        207,
+        7,
+        119,
+        8,
+        199
+      ],
+      "rows": 10,
+      "cols": 10,
+      "xAxis": [
+        1490,
+        1743,
+        1911,
+        2247,
+        2499,
+        3003,
+        3507,
+        3990,
+        4242,
+        4494
+      ],
+      "yAxis": [
+        600,
+        650,
+        700,
+        750,
+        800,
+        850,
+        900,
+        930,
+        960,
+        1100
+      ],
+      "le": false,
+      "occurrences": 1,
+      "occurrencePct": 5,
+      "avgPctChange": 8.00623555340536,
+      "medianPctChange": 8.00623555340536,
+      "sampleFiles": [
+        "Skoda_Octavia_2.0_TDI_2006_Turbodiesel___103KWKW_Bosch_0281013187_03G906021LD_379738_2CE5.Original"
+      ]
+    }
+  ]
+}

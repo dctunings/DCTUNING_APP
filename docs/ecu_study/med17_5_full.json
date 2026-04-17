@@ -1,0 +1,597 @@
+{
+  "family": "MED17_5",
+  "totalPairs": 281,
+  "maps": [
+    {
+      "sigHex": "0500060064002c01f4015802",
+      "sigBytes": [
+        5,
+        0,
+        6,
+        0,
+        100,
+        0,
+        44,
+        1,
+        244,
+        1,
+        88,
+        2
+      ],
+      "rows": 6,
+      "cols": 5,
+      "xAxis": [
+        100,
+        300,
+        500,
+        600,
+        700
+      ],
+      "yAxis": [
+        8000,
+        8800,
+        9200,
+        10000,
+        12000,
+        13000
+      ],
+      "le": true,
+      "occurrences": 37,
+      "occurrencePct": 13.167259786476867,
+      "avgPctChange": 96.41830667532155,
+      "medianPctChange": 102.10866709334053,
+      "sampleFiles": [
+        "Audi_A3_1.8_TFSI__2008_Turbo-Benzin___117.7KWKW_Bosch_0261S04939_8P7907115L__399902_BCA3.Original",
+        "Audi_A3_1.8_TFSI__Turbo-Benzin___117.7KWKW_Bosch_0261S04939_8P0907115Q__399448_B7BA.Original",
+        "Audi_A3_1.8_TFSI__Turbo-Benzin___117.7KWKW_Bosch_0261S04939_8P0907115Q__503713_BD36.Original"
+      ]
+    },
+    {
+      "sigHex": "080008005014401fe02e803e",
+      "sigBytes": [
+        8,
+        0,
+        8,
+        0,
+        80,
+        20,
+        64,
+        31,
+        224,
+        46,
+        128,
+        62
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        5200,
+        8000,
+        12000,
+        16000,
+        20000,
+        22000,
+        24000,
+        28000
+      ],
+      "yAxis": [
+        10240,
+        12800,
+        17920,
+        23040,
+        28160,
+        33280,
+        35840,
+        38400
+      ],
+      "le": true,
+      "occurrences": 32,
+      "occurrencePct": 11.387900355871885,
+      "avgPctChange": 11.28865595841155,
+      "medianPctChange": 10.408119705370812,
+      "sampleFiles": [
+        "VW_Golf5_1.4_TSI_2008_Turbo-Benzin___125KWKW_Bosch_0261201539_03C906032___387541_AF53.Original",
+        "VW_Golf5_1.4_TSI_2008_Turbo-Benzin___89.7KWKW_Bosch_0261201355_03C906032E__383956_B61F.Original",
+        "VW_Golf5_1.4_TSI_2008_Turbodiesel___103KWKW_Bosch_0261201768_03C906032C__393651_B503.Original"
+      ]
+    },
+    {
+      "sigHex": "0a000a000000200340066009",
+      "sigBytes": [
+        10,
+        0,
+        10,
+        0,
+        0,
+        0,
+        32,
+        3,
+        64,
+        6,
+        96,
+        9
+      ],
+      "rows": 10,
+      "cols": 10,
+      "xAxis": [
+        0,
+        800,
+        1600,
+        2400,
+        3200,
+        4000,
+        4800,
+        5600,
+        6400,
+        7200
+      ],
+      "yAxis": [
+        0,
+        2000,
+        4000,
+        6000,
+        8000,
+        10000,
+        12000,
+        14000,
+        16000,
+        18000
+      ],
+      "le": true,
+      "occurrences": 30,
+      "occurrencePct": 10.676156583629894,
+      "avgPctChange": 170.14492753623185,
+      "medianPctChange": 30.434782608695656,
+      "sampleFiles": [
+        "Skoda_New_Octavia_1.4_TSI_2017_Turbo-Benzin___91.9KWKW_Bosch_0261S06485_03C906016AQ_516946_6515.Original",
+        "Audi_A3_1.4_TFSI_2010_Turbo-Benzin__91.9KWKW_Bosch_0261S04859_03C906016S__505087_D2FB.Original",
+        "Audi_A3_1.4_TFSI_2010_Turbo-Benzin__91.9KWKW_Bosch_0261S04859_03C906016S__505087_D2FB.Original"
+      ]
+    },
+    {
+      "sigHex": "080006007017401f1027e02e",
+      "sigBytes": [
+        8,
+        0,
+        6,
+        0,
+        112,
+        23,
+        64,
+        31,
+        16,
+        39,
+        224,
+        46
+      ],
+      "rows": 6,
+      "cols": 8,
+      "xAxis": [
+        6000,
+        8000,
+        10000,
+        12000,
+        14000,
+        16000,
+        20000,
+        24600
+      ],
+      "yAxis": [
+        11469,
+        12288,
+        13107,
+        14746,
+        15565,
+        16384
+      ],
+      "le": true,
+      "occurrences": 26,
+      "occurrencePct": 9.252669039145907,
+      "avgPctChange": 33.298639748901174,
+      "medianPctChange": 37.74871858529747,
+      "sampleFiles": [
+        "Skoda_New_Octavia_1.4_TSI_2017_Turbo-Benzin___91.9KWKW_Bosch_0261S06485_03C906016AQ_516946_6515.Original",
+        "Audi_A3_1.4_TFSI_2010_Turbo-Benzin__91.9KWKW_Bosch_0261S04859_03C906016S__505087_D2FB.Original",
+        "Audi_A3_1.4_TFSI_2010_Turbo-Benzin__91.9KWKW_Bosch_0261S04859_03C906016S__505087_D2FB.Original"
+      ]
+    },
+    {
+      "sigHex": "060008007800f000e001c003",
+      "sigBytes": [
+        6,
+        0,
+        8,
+        0,
+        120,
+        0,
+        240,
+        0,
+        224,
+        1,
+        192,
+        3
+      ],
+      "rows": 8,
+      "cols": 6,
+      "xAxis": [
+        120,
+        240,
+        480,
+        960,
+        1920,
+        3840
+      ],
+      "yAxis": [
+        24454,
+        28721,
+        32988,
+        37254,
+        41521,
+        43654,
+        45788,
+        47921
+      ],
+      "le": true,
+      "occurrences": 24,
+      "occurrencePct": 8.540925266903916,
+      "avgPctChange": 4.018253981694745,
+      "medianPctChange": 4.007214822404381,
+      "sampleFiles": [
+        "VW_Golf5_1.4_TSI_2008_Turbo-Benzin___125KWKW_Bosch_0261201539_03C906032___387541_AF53.Original",
+        "VW_Golf5_1.4_TSI_2008_Turbo-Benzin___89.7KWKW_Bosch_0261201355_03C906032E__383956_B61F.Original",
+        "VW_Golf5_1.4_TSI_2008_Turbodiesel___103KWKW_Bosch_0261201768_03C906032C__393651_B503.Original"
+      ]
+    },
+    {
+      "sigHex": "06000800b4002c01e001c003",
+      "sigBytes": [
+        6,
+        0,
+        8,
+        0,
+        180,
+        0,
+        44,
+        1,
+        224,
+        1,
+        192,
+        3
+      ],
+      "rows": 8,
+      "cols": 6,
+      "xAxis": [
+        180,
+        300,
+        480,
+        960,
+        1920,
+        3840
+      ],
+      "yAxis": [
+        24454,
+        28721,
+        32988,
+        37254,
+        41521,
+        43654,
+        45788,
+        47921
+      ],
+      "le": true,
+      "occurrences": 24,
+      "occurrencePct": 8.540925266903916,
+      "avgPctChange": 4.039940546716324,
+      "medianPctChange": 4.039940546716325,
+      "sampleFiles": [
+        "VW_Golf5_1.4_TSI_2008_Turbo-Benzin___125KWKW_Bosch_0261201539_03C906032___387541_AF53.Original",
+        "VW_Golf5_1.4_TSI_2008_Turbo-Benzin___89.7KWKW_Bosch_0261201355_03C906032E__383956_B61F.Original",
+        "VW_Golf5_1.4_TSI_2008_Turbodiesel___103KWKW_Bosch_0261201768_03C906032C__393651_B503.Original"
+      ]
+    },
+    {
+      "sigHex": "08000800f00ac012201c8025",
+      "sigBytes": [
+        8,
+        0,
+        8,
+        0,
+        240,
+        10,
+        192,
+        18,
+        32,
+        28,
+        128,
+        37
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        2800,
+        4800,
+        7200,
+        9600,
+        14000,
+        18000,
+        22000,
+        26000
+      ],
+      "yAxis": [
+        320,
+        640,
+        1070,
+        1494,
+        1920,
+        2560,
+        3200,
+        4053
+      ],
+      "le": true,
+      "occurrences": 16,
+      "occurrencePct": 5.6939501779359425,
+      "avgPctChange": -7.874583443825435,
+      "medianPctChange": -7.538374343205345,
+      "sampleFiles": [
+        "VW_Golf_2.0_TFSI_GTI_2008_Turbo-Benzin___155.2KWKW_Bosch_0261S04951_1K0907115AA_501817_E654.Original",
+        "VW_Golf_2.0_TFSI_GTI_2008_Turbo-Benzin___155.2KWKW_Bosch_0261S04951_1K0907115AA_501817_E654.Original",
+        "VW_Golf_6_GTI_2.0_TFSI_2009_Turbo-Benzin___155.2KWKW_Bosch_0261S04952_5K0907115A__501818_E421.Original"
+      ]
+    },
+    {
+      "sigHex": "070006001027e02eb036803e",
+      "sigBytes": [
+        7,
+        0,
+        6,
+        0,
+        16,
+        39,
+        224,
+        46,
+        176,
+        54,
+        128,
+        62
+      ],
+      "rows": 6,
+      "cols": 7,
+      "xAxis": [
+        10000,
+        12000,
+        14000,
+        16000,
+        20000,
+        24000,
+        28000
+      ],
+      "yAxis": [
+        11469,
+        12288,
+        13107,
+        14746,
+        15565,
+        16384
+      ],
+      "le": true,
+      "occurrences": 7,
+      "occurrencePct": 2.491103202846975,
+      "avgPctChange": 7.5133685560210495,
+      "medianPctChange": 6.591161350456387,
+      "sampleFiles": [
+        "Audi_A1_1.4_TFSI_2017_Turbo-Benzin__136.1KWKW_Bosch__03C906027CF_517923_D620.Original",
+        "Audi_A1_1.4_TFSI_2012_Turbo-Benzin__136.1KWKW_Bosch__03C906027CF_517923_D620.Original",
+        "Audi_A1_1.4_TFSI_2012_Turbo-Benzin__136.1KWKW_Bosch__03C906027CF_517923_D620.Original"
+      ]
+    },
+    {
+      "sigHex": "05000600dc30313106328632",
+      "sigBytes": [
+        5,
+        0,
+        6,
+        0,
+        220,
+        48,
+        49,
+        49,
+        6,
+        50,
+        134,
+        50
+      ],
+      "rows": 6,
+      "cols": 5,
+      "xAxis": [
+        12508,
+        12593,
+        12806,
+        12934,
+        13361
+      ],
+      "yAxis": [
+        9830,
+        11469,
+        12288,
+        13107,
+        14746,
+        16384
+      ],
+      "le": true,
+      "occurrences": 7,
+      "occurrencePct": 2.491103202846975,
+      "avgPctChange": 9.02629686425065,
+      "medianPctChange": 9.925790957323176,
+      "sampleFiles": [
+        "VW_Tiguan_1.4_TSI_02-05-2017___117.7KWKW_Bosch__03C906027DB_517845_06ED.Original",
+        "Seat_Ibiza_1.4_TFSI_2009_Turbo-Benzin__131.7KWKW_Bosch__03C906027AD_518221_E0C6.Original",
+        "VW_Tiguan_1.4_TSI_02-05-2012___117.7KWKW_Bosch__03C906027DB_517845_06ED.Original"
+      ]
+    },
+    {
+      "sigHex": "10000800f401e803dc05d007",
+      "sigBytes": [
+        16,
+        0,
+        8,
+        0,
+        244,
+        1,
+        232,
+        3,
+        220,
+        5,
+        208,
+        7
+      ],
+      "rows": 8,
+      "cols": 16,
+      "xAxis": [
+        500,
+        1000,
+        1500,
+        2000,
+        2453,
+        3000,
+        4000,
+        5000,
+        6000,
+        7000,
+        8000,
+        9000,
+        10000,
+        11000,
+        12000,
+        14400
+      ],
+      "yAxis": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "le": true,
+      "occurrences": 4,
+      "occurrencePct": 1.4234875444839856,
+      "avgPctChange": 18.69344515559479,
+      "medianPctChange": 18.69344515559479,
+      "sampleFiles": [
+        "VW_Golf5_1.4_TSI_2008_Turbo-Benzin___103KWKW_Bosch_0261201355_03C906032___387599_A21E.Original",
+        "VW_Golf5_1.4_TSI_2008_Turbo-Benzin___103KWKW_Bosch_0261201355_03C906032___387599_A21E.Original",
+        "VW_Golf5_1.4_TSI_2008_Turbo-Benzin___103KWKW_Bosch_0261201355_03C906032___387599_A21E.Original"
+      ]
+    },
+    {
+      "sigHex": "10000c004006800ca00f6013",
+      "sigBytes": [
+        16,
+        0,
+        12,
+        0,
+        64,
+        6,
+        128,
+        12,
+        160,
+        15,
+        96,
+        19
+      ],
+      "rows": 12,
+      "cols": 16,
+      "xAxis": [
+        1600,
+        3200,
+        4000,
+        4960,
+        6080,
+        8000,
+        10000,
+        11000,
+        12000,
+        14080,
+        16000,
+        18080,
+        20000,
+        22080,
+        24000,
+        26080
+      ],
+      "yAxis": [
+        427,
+        853,
+        1280,
+        1707,
+        2133,
+        2987,
+        3840,
+        4693,
+        5120,
+        5973,
+        6613,
+        7253
+      ],
+      "le": true,
+      "occurrences": 4,
+      "occurrencePct": 1.4234875444839856,
+      "avgPctChange": 7.618479738219253,
+      "medianPctChange": 7.618479738219253,
+      "sampleFiles": [
+        "VW_Golf_1.8_TFSI_2009_Turbo-Benzin__117.7KWKW_Bosch_0261S05897_1K0907115AA_502936_BBA2.Original",
+        "VW_Golf_1.8_TFSI_2009_Turbo-Benzin__117.7KWKW_Bosch_0261S05897_1K0907115AA_502936_BBA2.Original",
+        "VW_Golf_1.8_TFSI_2009_Turbo-Benzin__117.7KWKW_Bosch_0261S05897_1K0907115AA_502936_BBA2.Original"
+      ]
+    },
+    {
+      "sigHex": "08000600401f1027e02eb036",
+      "sigBytes": [
+        8,
+        0,
+        6,
+        0,
+        64,
+        31,
+        16,
+        39,
+        224,
+        46,
+        176,
+        54
+      ],
+      "rows": 6,
+      "cols": 8,
+      "xAxis": [
+        8000,
+        10000,
+        12000,
+        14000,
+        16000,
+        20000,
+        24000,
+        28000
+      ],
+      "yAxis": [
+        11469,
+        12288,
+        13107,
+        14746,
+        15565,
+        16384
+      ],
+      "le": true,
+      "occurrences": 4,
+      "occurrencePct": 1.4234875444839856,
+      "avgPctChange": 51.79396117225126,
+      "medianPctChange": 51.79396117225126,
+      "sampleFiles": [
+        "VW_Scirocco_1.4_TSI_2010_Turbo-Benzin___117.7KWKW_Bosch_0261S05810_03C906027AT_509113_FEA4.Original",
+        "VW_Scirocco_1.4_TSI_2010_Turbo-Benzin___117.7KWKW_Bosch_0261S05810_03C906027AT_509113_FEA4.Original",
+        "VW_Scirocco_1.4_TSI_2010_Turbo-Benzin___117.7KWKW_Bosch_0261S05810_03C906027AT_509113_FEA4.Original"
+      ]
+    }
+  ]
+}
