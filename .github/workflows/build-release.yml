@@ -68,21 +68,28 @@ jobs:
           body: |
             ## DCTuning Desktop v${{ steps.pkg.outputs.version }}
 
-            ### What's new — CRITICAL detection fix
-            - **Fix: Bosch EDC17 binaries no longer misdetected as Delphi DCM6.2**
-              Removed `EV_ECM16TDI`, `EV_ECM20TDI`, `04L906` from DCM6.2 identStrings —
-              those are generic VW software-class markers present in Bosch EDC17 too,
-              causing Seat Leon 2.0 TDI CR (03L906018FJ) to wrongly show "Delphi DCM6.2 · 0/6 maps".
-            - **Fix: EDC17 C46 variants now strongly identified** via `P643X5L8`, `C643X5L8`,
-              `EDC17C46` code strings — Bosch scores 0.46 vs DCM6.2 0.30 for these binaries.
-            - **Installer artifact renamed to `DCTuning-Installer-{version}.exe`** so it's
-              visually distinct from the `DCTuning` shortcut (no more clicking installer twice).
-            - Previous v3.5.5 changes still included: scanner fallback, classifier lenient hints,
-              wizard-mode installer.
+            ### What's new — EDC17 C46 map corrections (verified on real binary)
+            All 4 previously-suspect maps on Seat Leon 03L906018FJ have been fixed by
+            directly analyzing the binary and matching real data:
+
+            - **Rail Pressure Setpoint** — added correct C46 Kf_ signature.
+              Now finds the real 12×12 rail pressure target at 0x4B458 (202-1050 bar),
+              instead of hitting axis-breakpoint garbage at 0x068C46 (0-69 bar).
+            - **Lambda Smoke Limiter** — removed database-study signatures that were actually
+              matching rail-pressure maps (raw 2020-10500 interpreted as 2-10 λ = impossible).
+              C46 stripped variants correctly show "Not Found" for lambda now.
+            - **SOI (Start of Injection)** — added C46 Kf_ signature. Now finds the real
+              12×10 int16 SOI map at 0x407FE with values -6.2° to +18.2° BTDC (realistic).
+            - **Injection Quantity Map** — raised `minQuality` to 0.5 to reject calSearch
+              false-positives (previously matching axis data at 0x04E8AA showing 0-0.3 mg/st).
+              C46 variants fall through to the correct `Injection Quantity Base (C46)` map.
+
+            Previous v3.5.6 changes still included: EDC17/DCM6.2 detection fix, wizard
+            installer, distinctive installer filename.
 
             ### Installation
-            Download `DCTuning-Installer-{version}.exe` and run it. Wizard walks you through
-            the install. **Uninstall any previous version first** from Add/Remove Programs.
+            Download `DCTuning-Installer-{version}.exe`. Wizard walks you through install.
+            **Uninstall any previous version first** from Add/Remove Programs.
           files: |
             release/*.exe
             release/*.exe.blockmap

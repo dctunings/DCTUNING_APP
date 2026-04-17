@@ -1353,12 +1353,16 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'edc17_fuel_quantity',
         name: 'Injection Quantity Map',
         category: 'fuel',
-        desc: 'Fuel injection quantity in mg/stroke vs RPM and load. Primary power map for diesel — raising this increases torque across all RPM.',
+        desc: 'Fuel injection quantity in mg/stroke vs RPM and load. Primary power map for diesel — raising this increases torque across all RPM. For C46 stripped variants (no ASCII labels), this map is not present — use "Injection Quantity Base (C46)" instead.',
         a2lNames: ['Qmain_MAP', 'InjQty_MAP', 'QKENNFELD_MAP', 'Qfuel_MAP', 'QMain_MAP', 'Inj_qSetPoint_MAP', 'qmain_MAP'],
         signatures: [[0x49,0x4E,0x4A,0x51,0x54,0x59,0x44,0x43], [0x46,0x55,0x45,0x4C,0x51,0x54,0x59,0x01]],
         sigOffset: 4,
         rows: 16, cols: 16, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'mg/st',
+        // Require strong calSearch quality — the previous threshold allowed matching axis-like
+        // data at 0x04E8AA in C46 binaries (raw values 0-700 descending/ascending = axis
+        // breakpoints, NOT real IQ data). 0.5 threshold rejects these false positives.
+        minQuality: 0.5,
         stage1: { multiplier: 1.15 },
         stage2: { multiplier: 1.24 },
         stage3: { multiplier: 1.35, clampMax: 62000 },
@@ -1396,23 +1400,28 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         a2lNames: ['Rail_pSetPointBase_MAP', 'RailPres_MAP', 'RDSOLLKF_MAP', 'pRailSetMax_MAP', 'Rail_MAP', 'CRpres_MAP', 'rdsoll_MAP', 'Rail_PointBase', 'Rail_PointMax', 'Rail_PointLimTem', 'PCR_DesBas', 'PCR_DesMaxAP', 'PCR_DesMax', 'PCR_CtlBas', 'Rail_pSetPointMax_MAP'],
         signatures: [
           [0x52,0x41,0x49,0x4C,0x50,0x52,0x53,0x50], [0x43,0x52,0x50,0x52,0x45,0x53,0x53],
-          // C46 stripped (03L906018FJ) — LE Kf_ 16×20 rail pressure base, factor 0.1 bar matches
+          // C46 stripped (03L906018FJ) — LE Kf_ 12×12 rail pressure target
+          // Verified data at 0x4B458: raw 2020-10500 = 202-1050 bar (factor 0.1). UNIQUE axis (X=1200,1500,1800,2000).
+          // Prev DB study classified this as "lambda limiter" — WRONG. It's rail pressure.
+          [0x0c,0x00,0x0c,0x00,0xb0,0x04,0xdc,0x05,0x08,0x07,0xd0,0x07],
+          // C46 — LE Kf_ 12×12 rail pressure variant (X=1500,1600,1800,2000)
+          // Verified data at 0x4B8DE: raw 2800-11000 = 280-1100 bar. UNIQUE.
+          [0x0c,0x00,0x0c,0x00,0xdc,0x05,0x40,0x06,0x08,0x07,0xd0,0x07],
+          // C46 — earlier 16×16 variants from DB study
           [0x10,0x00,0x14,0x00,0xb0,0x04,0xd0,0x07,0xc4,0x09,0xb8,0x0b],
-          // C46 — LE Kf_ 16×16 rail pressure map #1 (unique)
           [0x10,0x00,0x10,0x00,0x00,0x00,0x0a,0x00,0x58,0x02,0x20,0x03],
-          // LE Kf_ 16×16 rail pressure (RPM axis 1000,1600,2000,2500) — Stage1 changed 3 copies
           [0x10,0x00,0x10,0x00,0xe8,0x03,0x40,0x06,0xd0,0x07,0xc4,0x09],
-          // LE Kf_ 16×16 rail pressure (RPM axis 1600,2000,2500,3000) — 3 matches, changed at idx 2
-          // Needs matchIndex:2 but that would break other sigs — use extended sig or separate map def
-          // [0x10,0x00,0x10,0x00,0x40,0x06,0xd0,0x07,0xc4,0x09,0xb8,0x0b],  // DISABLED: multi-match conflict
         ],
         sigOffset: 4,
-        // A2L Rail_pSetPointBase_MAP = 16×16 but signatures find different-sized blocks.
-        // Keep 12×16 for signature/calSearch path.
-        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        // Kf_ header auto-detection overrides rows/cols from the matched signature.
+        // Default 12×12 for the C46 primary match. Factor 0.1 bar.
+        rows: 12, cols: 12, dtype: 'uint16', le: true,
         // Raw uint16 values in units of 0.1 bar (e.g. 14000 raw = 1400 bar).
         // 2.0 TDI CR runs 700–1600 bar at full load; ceiling 2200 bar = 22000 raw.
         factor: 0.1, offsetVal: 0, unit: 'bar',
+        // Require strong calSearch quality — prevents matching axis-breakpoint regions like
+        // 0x068C46 where linear-monotonic data LOOKS like a map but is just RPM breakpoints.
+        minQuality: 0.4,
         stage1: { multiplier: 1.08 },
         stage2: { multiplier: 1.14 },
         stage3: { multiplier: 1.20, clampMax: 22000 },
@@ -1471,10 +1480,17 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'ignition',
         desc: 'Injection timing advance vs RPM and IQ in degrees before TDC. Advancing SOI improves combustion efficiency and power — standard Stage 2/3 mod. Too much advance raises exhaust gas temperature (EGT) and triggers the EGT limiter.',
         a2lNames: ['InjCrv_phiMI1Bas_MAP', 'SOI_MAP', 'SOIKF_MAP', 'InjTiming_MAP', 'phi_SOI_MAP', 'soi_MAP', 'SPRKF_MAP', 'InjCrv_Bas1', 'InjCrv_Bas2', 'InjCrv_Bas3', 'InjCrv_Bas4', 'InjCrv_Bas5'],
-        signatures: [[0x53,0x4F,0x49,0x4D,0x41,0x50,0x44,0x43], [0x49,0x4E,0x4A,0x54,0x49,0x4D,0x44,0x43]],
+        signatures: [
+          [0x53,0x4F,0x49,0x4D,0x41,0x50,0x44,0x43], [0x49,0x4E,0x4A,0x54,0x49,0x4D,0x44,0x43],
+          // C46 stripped (03L906018FJ) — LE Kf_ 12×10 SOI int16 (UNIQUE axis X=2000,2500,3000,3500)
+          // Verified at 0x407FE: raw int16 -280..830 → -6.15° to +18.24° BTDC at factor 0.021973.
+          // Matches 3 times (main/pilot/post injection SOIs); matchIndex 0 targets the main map.
+          [0x0a,0x00,0x0c,0x00,0xd0,0x07,0xc4,0x09,0xb8,0x0b,0xac,0x0d],
+        ],
+        matchIndex: 0,
         sigOffset: 4,
         // CORRECTED: rows:12 cols:16. DAMOS A2L: InjCrv_phiMI1Bas0Rgn1_MAP = 16×12 across 507 files.
-        // StageX EDC17C46 showed 18×14 for ONE variant, but 507 A2L files confirm 16×12 as standard.
+        // C46 stripped variant shows 12×10 with Kf_ header auto-detect overriding these defaults.
         rows: 12, cols: 16, dtype: 'int16', le: true,
         factor: 0.021973, offsetVal: 0, unit: '°DBTC',
         // addend is in raw units. factor ≈ 0.021973 °/unit → 1° ≈ 46 units, 3° ≈ 137 units.
@@ -1597,17 +1613,18 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'edc17_lambda_limiter',
         name: 'Lambda Smoke Limiter',
         category: 'smoke',
-        desc: 'Lambda (air-fuel ratio) smoke limit. Prevents excessive richness under load. Must be raised alongside fuel to prevent lambda-based power cuts.',
+        desc: 'Lambda (air-fuel ratio) smoke limit. Prevents excessive richness under load. C46 stripped variants may not expose this as a separate table — the smoke MAF limiters handle the clipping.',
         a2lNames: ['FlMng_rLmbdSmkLim0_MAP', 'FlMng_rLmbdSmkHigh_MAP', 'LambdaSmkLim_MAP', 'Lambda_Smoke_MAP'],
-        signatures: [
-          // LE Kf_ 12×12 lambda/smoke limiter (RPM axis 1200,1500,1800,2000) — database study: 52 C46 + 78 CP14 files
-          [0x0c,0x00,0x0c,0x00,0xb0,0x04,0xdc,0x05,0x08,0x07,0xd0,0x07],
-          // LE Kf_ 12×12 alternate axis (RPM axis 1500,1600,1800,2000) — database study: 78 CP14 files
-          [0x0c,0x00,0x0c,0x00,0xdc,0x05,0x40,0x06,0x08,0x07,0xd0,0x07],
-        ],
-        sigOffset: 0,
+        // DB-study sigs removed — they were incorrectly classifying rail-pressure 12×12 maps
+        // as lambda (raw data 2020-10500 at factor 0.001 = 2-10 λ is impossible; factor 0.1
+        // gives 202-1050 bar which IS rail pressure). The real rail-pressure targets moved
+        // into edc17_rail_pressure. Lambda sigs remain ASCII-only — won't match in C46
+        // stripped binaries, which correctly reports "Not Found" rather than false data.
+        signatures: [[0x4C,0x41,0x4D,0x42,0x44,0x41,0x53,0x4D], [0x4C,0x4D,0x42,0x44,0x53,0x4D,0x4B]],
+        sigOffset: 4,
         rows: 12, cols: 12, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'λ',
+        minQuality: 0.5,
         stage1: { multiplier: 0.95 },
         stage2: { multiplier: 0.90 },
         stage3: { multiplier: 0.85, clampMin: 700 },
