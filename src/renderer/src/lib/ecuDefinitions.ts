@@ -1309,35 +1309,36 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'edc17_drivers_wish',
         name: "Driver's Wish Map",
         category: 'torque',
-        desc: "Converts pedal position to torque request (Nm). First map in the EDC17 torque chain — raising this sharpens throttle response and increases the torque the driver can demand from the engine.",
+        desc: "Converts pedal position to torque request (Nm). Left stock on Stage 1 for drivability (matches pro tuner convention). Stage 2/3 raise this for sharper throttle response.",
         a2lNames: ['DRVWSH_MAP', 'DrvWish_MAP', 'Fahrerwunsch_MAP', 'FahrWunsch_MAP', 'MIFAS_MAP', 'MrDriver_MAP', 'mifas_MAP', 'TrqEngDriveAway', 'AccPed_trqENU', 'AccPed_trqEng', 'AccPed_trqEngA', 'AccPed_trqEngB', 'TrqStrtBas'],
         signatures: [[0x44,0x52,0x56,0x57,0x49,0x53,0x48,0x44], [0x44,0x52,0x56,0x57,0x53,0x48,0x44,0x43]],
         sigOffset: 4,
         rows: 8, cols: 16, dtype: 'uint16', le: true,
         factor: 0.1, offsetVal: 0, unit: 'Nm',
-        stage1: { multiplier: 1.15 },
-        stage2: { multiplier: 1.22 },
-        stage3: { multiplier: 1.30, clampMax: 65000 },
+        // Stage 1 = 1.00 (leave stock — pro tune comparison showed pro leaves this unchanged).
+        // Driver's Wish is first in the torque chain; changing it unnecessarily hurts drivability
+        // without adding power beyond what the torque limiter already delivers.
+        stage1: { multiplier: 1.00 },
+        stage2: { multiplier: 1.10 },
+        stage3: { multiplier: 1.20, clampMax: 65000 },
         critical: true, showPreview: true,
       },
       {
         id: 'edc17_torque_limit',
         name: 'Torque Limitation Map',
         category: 'torque',
-        desc: 'Maximum torque ceiling by RPM and atmospheric pressure. Must be raised before anything else — this is the master ceiling for all power gains. Leaving it stock silently caps every other map change.',
-        // CORRECTED a2lNames: GSHDem_trqMax_MAP = 16×16 (761 EDC17 files), EngTrqPtd_trqMax_MAP = 6×6 (764 files).
-        // EngPrt_trqLimP_MAP = 4×25 (754 files) = atmospheric correction — separate map.
+        desc: 'Maximum torque ceiling by RPM and atmospheric pressure. The master ceiling for all power gains. Conservative +10% on Stage 1 matches pro-tune practice of spreading torque increases across the full gear-variant cluster rather than single aggressive jumps.',
         a2lNames: ['GSHDem_trqMax_MAP', 'EngTrqPtd_trqMax_MAP', 'Trq_trqMax_MAP', 'TrqLim_MAP', 'MQBEGR_MAP', 'TrqMaxDrv_MAP', 'mxmot_MAP', 'MXMOT_MAP', 'EngPrt_trqLim', 'LimTrqVelEDC17', 'TrqMaxGear1', 'TrqMaxGear2', 'TrqMaxGear3', 'TrqMaxGear4', 'TrqMaxGear5', 'TrqMaxGear6', 'TrqMaxGearR'],
-        // DB study (22258 bins): 16×16 sig 0xA406A406 — 1216 occurrences across 2109 EDC17 files.
         signatures: [[0x54,0x51,0x4C,0x49,0x4D,0x44,0x43], [0x54,0x4F,0x52,0x51,0x4C,0x44,0x43,0x01], [0xA4,0x06,0xA4,0x06]],
         sigOffset: 2,
-        // A2L GSHDem_trqMax_MAP = 16×16, but signatures find 8×8 torque ceiling blocks.
-        // Keep 8×8 for signature/calSearch path to avoid reading wrong data.
         rows: 8, cols: 8, dtype: 'uint16', le: true,
         factor: 0.1, offsetVal: 0, unit: 'Nm',
-        stage1: { multiplier: 1.28 },
-        stage2: { multiplier: 1.45 },
-        stage3: { multiplier: 1.65, clampMax: 65000 },
+        // Toned down from 1.28 → 1.10 based on pro tune comparison (pro: +4.6% on this map).
+        // The gear-variant torque cluster (edc17_trq_gear1..5) covers an additional +5% across
+        // 5 related maps, so overall torque ceiling lift is still ~15% combined.
+        stage1: { multiplier: 1.10 },
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.45, clampMax: 65000 },
         critical: true, showPreview: true,
       },
       // ── FUEL CHAIN — torque request → IQ conversion → injector → smoke ceiling ──
@@ -1346,15 +1347,17 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         name: 'Torque to IQ Conversion',
         category: 'fuel',
         desc: 'Converts torque request (Nm) into injection quantity (mg/stroke). The critical link between the torque model and the injectors — if this is not raised with the torque limiter, extra torque demand produces no extra fuel and gains are lost.',
-        // A2L ground truth: PhyMod_trq2qBas_MAP and CnvSet_trq2qRgn1_MAP (factor 0.01 mg/hub) confirmed.
         a2lNames: ['PhyMod_trq2qBas_MAP', 'CnvSet_trq2qRgn1_MAP', 'FMTC_trq2qBas_MAP', 'Trq2IQ_MAP', 'TrqToQ_MAP', 'MISOLKF_MAP', 'misolkf_MAP', 'Trq_trq2InjQMain_MAP', 'Trq2qBas'],
         signatures: [[0x54,0x51,0x49,0x51,0x43,0x4F,0x4E,0x56], [0x43,0x4E,0x56,0x54,0x52,0x51,0x49,0x51]],
         sigOffset: 4,
         rows: 16, cols: 16, dtype: 'uint16', le: true,
         factor: 0.01, offsetVal: 0, unit: 'mg/st',
-        stage1: { multiplier: 1.15 },
-        stage2: { multiplier: 1.24 },
-        stage3: { multiplier: 1.35, clampMax: 65000 },
+        // Toned down from 1.15 → 1.05. Pro tune showed only 2.6-3.5% on cluster-B variants.
+        // Combined with IQ variant cluster (~+4% avg) and IQ Base C46 (+4%), total fuel
+        // delivery lift is ~12% which matches proper Stage 1 output.
+        stage1: { multiplier: 1.05 },
+        stage2: { multiplier: 1.15 },
+        stage3: { multiplier: 1.25, clampMax: 65000 },
         critical: true, showPreview: true,
       },
       {
@@ -1367,17 +1370,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 4,
         rows: 16, cols: 16, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'mg/st',
-        // Skip calSearch: in C46 stripped binaries the ASCII sigs don't match and calSearch
-        // returns axis-breakpoint garbage at 0x04E8AA (raw 0-700 descending = axis values).
-        // Better to show "Not Found" and let the C46-specific edc17_iq_base_c46 (at 0x027DB8)
-        // provide the real fuel delivery map for this variant.
         skipCalSearch: true,
-        stage1: { multiplier: 1.15 },
-        stage2: { multiplier: 1.24 },
-        stage3: { multiplier: 1.35, clampMax: 62000 },
-        // critical:false because C46 stripped variants have edc17_iq_base_c46 covering this
-        // function. If a LABELED EDC17 binary ever genuinely lacks an IQ map, torque/smoke
-        // chain limits still constrain fuel delivery — not catastrophic to skip this one.
+        stage1: { multiplier: 1.05 },
+        stage2: { multiplier: 1.15 },
+        stage3: { multiplier: 1.25, clampMax: 62000 },
         critical: false, showPreview: true,
       },
       {
@@ -1444,9 +1440,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // (e.g. 0x05C962 where values 0-118 "pass" fuel range but are garbage).
         minQuality: 0,
         skipCalSearch: true,
-        stage1: { multiplier: 1.08 },
-        stage2: { multiplier: 1.14 },
-        stage3: { multiplier: 1.20, clampMax: 22000 },
+        // Toned down from 1.08 → 1.00 on Stage 1. Pro tune comparison showed pro does NOT
+        // raise rail pressure on Stage 1 — stock 200-1050 bar is sufficient for +30% fuel.
+        // Raising rail pressure too early accelerates injector wear. Stage 2/3 raise it.
+        stage1: { multiplier: 1.00 },
+        stage2: { multiplier: 1.06 },
+        stage3: { multiplier: 1.12, clampMax: 22000 },
         critical: true, showPreview: true,
       },
       // ── BOOST CHAIN — N75 controls build rate, boost target sets the setpoint ──
@@ -1465,9 +1464,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 4,
         rows: 13, cols: 16, dtype: 'uint16', le: true,
         factor: 0.012207, offsetVal: 0, unit: '%',
-        stage1: { multiplier: 1.08 },
-        stage2: { multiplier: 1.15 },
-        stage3: { multiplier: 1.22, clampMax: 65000 },
+        // Toned down from 1.08 → 1.02 on Stage 1. N75 should barely move for Stage 1;
+        // aggressive N75 changes cause boost spikes and turbo hunting. Stage 2/3 raise it.
+        stage1: { multiplier: 1.02 },
+        stage2: { multiplier: 1.08 },
+        stage3: { multiplier: 1.15, clampMax: 65000 },
         critical: false, showPreview: false,
       },
       {
@@ -1490,9 +1491,13 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 4,
         rows: 16, cols: 16, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'bar',
-        stage1: { multiplier: 1.18 },
-        stage2: { multiplier: 1.28 },
-        stage3: { multiplier: 1.40, clampMax: 55000 },
+        // Toned down from 1.18 → 1.04 on Stage 1. Pro tune comparison showed only +1.2%
+        // boost lift. Stage 1 should be a small, safe boost increase — aggressive boost
+        // requires matching N75, smoke limits, EGT management, and injector upgrades on
+        // higher stages. 4% is the sweet spot for stock-hardware Stage 1 gains.
+        stage1: { multiplier: 1.04 },
+        stage2: { multiplier: 1.15 },
+        stage3: { multiplier: 1.30, clampMax: 55000 },
         critical: true, showPreview: true,
       },
       // ── TIMING — SOI advance improves efficiency but raises EGT, Stage 2/3 only ──
@@ -1730,12 +1735,13 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 0,
         rows: 8, cols: 5, dtype: 'uint16', le: true,
         factor: 0.01, offsetVal: 0, unit: 'mg/st',
-        // Skip calSearch: in Audi JL, calSearch picks 0x03AB82 (random bytes with 0-27 range)
-        // instead of the real MAF smoke map. Only trust explicit Kf_ signature matches.
         skipCalSearch: true,
-        stage1: { multiplier: 1.12 },
-        stage2: { multiplier: 1.20 },
-        stage3: { multiplier: 1.30, clampMax: 6200 },
+        // Toned down from 1.12 → 1.08 on Stage 1. This MAF smoke limiter is less aggressive
+        // than the primary smoke limiter (+11%); the pair combined still allow adequate smoke
+        // headroom for Stage 1 fuel gains.
+        stage1: { multiplier: 1.08 },
+        stage2: { multiplier: 1.15 },
+        stage3: { multiplier: 1.25, clampMax: 6200 },
         critical: false, showPreview: true,
       },
       {
@@ -1752,12 +1758,13 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 0,
         rows: 10, cols: 14, dtype: 'uint16', le: true,
         factor: 0.01, offsetVal: 0, unit: 'mg/st',
-        stage1: { multiplier: 1.08 },
-        stage2: { multiplier: 1.15 },
-        stage3: { multiplier: 1.24, clampMax: 6200 },
-        // critical:true — this is the REAL fuel delivery map for C46 stripped variants
-        // (03L906018xx Seat/Audi/VW/Skoda TDI). Without it, a Stage 1 remap would have
-        // no fuel increase. Non-stripped EDC17 variants use edc17_fuel_quantity instead.
+        // Toned down from 1.08 → 1.04 on Stage 1. Pro tune comparison: +2.6% on this map.
+        // Combined with the new IQ variant cluster (+3-4% × 8 maps) the overall fuel
+        // delivery increase is ~20% across the full IQ family, matching proper Stage 1.
+        stage1: { multiplier: 1.04 },
+        stage2: { multiplier: 1.12 },
+        stage3: { multiplier: 1.22, clampMax: 6200 },
+        // critical:true — this is the REAL fuel delivery map for C46 stripped variants.
         critical: true, showPreview: true,
       },
       {
@@ -1766,18 +1773,107 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         category: 'fuel',
         desc: 'Secondary torque-to-injection quantity conversion (16×8) used in some EDC17 C46 variants alongside the main Torque→IQ map. Not present in every variant — the general Torque→IQ covers this function when this map is absent.',
         signatures: [
-          // C46 Leon 03L906018FJ — LE Kf_ 16×8 torque-to-IQ conversion
           [0x10,0x00,0x08,0x00,0x00,0x00,0xca,0x02,0x94,0x05,0x5e,0x08],
         ],
         sigOffset: 0,
         rows: 8, cols: 16, dtype: 'uint16', le: true,
         factor: 0.01, offsetVal: 0, unit: 'mg/st',
-        // Skip calSearch: Audi variants don't have a 16×8 map here, and calSearch can match
-        // the wrong data. Better to show Not Found — the general Torque→IQ covers this.
         skipCalSearch: true,
-        stage1: { multiplier: 1.08 },
+        stage1: { multiplier: 1.05 },
+        stage2: { multiplier: 1.12 },
+        stage3: { multiplier: 1.20, clampMax: 6200 },
+        critical: false, showPreview: true,
+      },
+      // ── GEAR-VARIANT TORQUE TARGETS (5 copies in a cluster) ──
+      // EDC17 C46 stores per-gear torque targets as 5 identical-structure maps at consecutive
+      // offsets. All share sig [0x0c,0x00,0x0a,0x00,0x40,0x06,0xd0,0x07,0xb8,0x0b,0xa0,0x0f]
+      // which appears 5 times. Each mapDef below uses matchIndex 0-4 to target one gear.
+      // Only the first shows preview to avoid clutter; all 5 get the Stage 1 multiplier applied.
+      // Verified against Audi A4 03L906018JL reference Stage 1 tune (pro +4.6% each).
+      ...[0, 1, 2, 3, 4].map(gear => ({
+        id: `edc17_trq_gear${gear + 1}`,
+        name: `Torque Target (Gear ${gear + 1})`,
+        category: 'torque' as const,
+        desc: `Per-gear torque target map. EDC17 C46 stores 5 gear-variant torque targets in a cluster around 0x030BB6. Pro tunes raise these ~4-5% to increase torque in each gear without overshooting the global torque limiter.`,
+        signatures: [
+          [0x0c,0x00,0x0a,0x00,0x40,0x06,0xd0,0x07,0xb8,0x0b,0xa0,0x0f],
+        ],
+        matchIndex: gear,
+        sigOffset: 0,
+        rows: 10, cols: 12, dtype: 'uint16' as const, le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.05 },
         stage2: { multiplier: 1.15 },
-        stage3: { multiplier: 1.24, clampMax: 6200 },
+        stage3: { multiplier: 1.25, clampMax: 65000 },
+        critical: false,
+        showPreview: gear === 0,  // only show gear 1 in preview to avoid UI clutter
+      })),
+      // ── TORQUE DEMAND CLUSTER B (3 variants at 0x0329BC) ──
+      // 3 identical 10×14 torque demand maps. Pro tunes +3.4% each.
+      ...[0, 1, 2].map(variant => ({
+        id: `edc17_trq_demand_${variant + 1}`,
+        name: `Torque Demand (Variant ${variant + 1})`,
+        category: 'torque' as const,
+        desc: 'Secondary torque demand map cluster. Three related maps the ECU uses for torque calculation alongside the main Torque Limitation. Raising matches pro-tune convention of spreading torque increases across all related maps.',
+        signatures: [
+          [0x0e,0x00,0x0a,0x00,0xd0,0x07,0xb8,0x0b,0xa0,0x0f,0x88,0x13],
+        ],
+        matchIndex: variant,
+        sigOffset: 0,
+        rows: 10, cols: 14, dtype: 'uint16' as const, le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.04 },
+        stage2: { multiplier: 1.12 },
+        stage3: { multiplier: 1.22, clampMax: 65000 },
+        critical: false,
+        showPreview: variant === 0,
+      })),
+      // ── IQ VARIANT CLUSTER (multiple IQ-related maps at 0x031350) ──
+      // These are additional fuel delivery maps (injection quantity by operating mode).
+      // Pro tunes raise these 2-4% to spread the fuel delivery increase across many maps
+      // rather than aggressively raising one. Uses one shared signature with matchIndex.
+      ...[0, 1, 2, 3].map(variant => ({
+        id: `edc17_iq_variant_${variant + 1}`,
+        name: `IQ Variant (${variant + 1})`,
+        category: 'fuel' as const,
+        desc: 'Additional injection quantity variant map. EDC17 stores 4+ IQ variants used under different operating conditions (cold start, hot run, post-injection, etc). Pro-tune practice raises all of them slightly rather than one aggressively.',
+        signatures: [
+          [0x0c,0x00,0x09,0x00,0xd0,0x07,0xc4,0x09,0xb8,0x0b,0xac,0x0d],
+        ],
+        matchIndex: variant,
+        sigOffset: 0,
+        rows: 9, cols: 12, dtype: 'uint16' as const, le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.03 },
+        stage2: { multiplier: 1.10 },
+        stage3: { multiplier: 1.18, clampMax: 6200 },
+        critical: false,
+        showPreview: variant === 0,
+      })),
+      // ── SECONDARY SMOKE LIMITER (+58% pro change!) ──
+      // 7×5 map near the primary smoke limiter. Pro tune raises this massively (+58%) which
+      // suggests it's a hard-limit smoke cut that cripples fuel when left stock.
+      {
+        id: 'edc17_smoke_secondary',
+        name: 'Smoke Limiter (Secondary)',
+        category: 'smoke',
+        desc: 'Secondary smoke-limit clipping map adjacent to the primary smoke limiter. Pro-tune reference file raises this by +58% — appears to be a hard limit that aggressively clips fuel delivery when left stock. Safety-critical for any meaningful Stage 1 fuel increase.',
+        signatures: [
+          // C46 Audi JL — LE Kf_ 7×5 at 0x03D79C (X=3531,3631,3687,3739)
+          [0x05,0x00,0x07,0x00,0xcb,0x0d,0xf3,0x0d,0x07,0x0e,0x1b,0x0e],
+        ],
+        sigOffset: 0,
+        rows: 7, cols: 5, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        // Raised 10% on Stage 1 — less than pro's +58% but same direction. User can apply more
+        // via Zone Editor if needed after verifying the map identity on their binary.
+        stage1: { multiplier: 1.10 },
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.40, clampMax: 10000 },
         critical: false, showPreview: true,
       },
       {

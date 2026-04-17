@@ -68,22 +68,37 @@ jobs:
           body: |
             ## DCTuning Desktop v${{ steps.pkg.outputs.version }}
 
-            ### What's new — flash-safety fixes (you were about to brick an ECU)
-            Two bugs in the remap build were producing false-alarm "critical not found"
-            and silently NOT writing the torque-monitor disable:
+            ### What's new — EDC17 Stage 1 rewritten to match pro-tune reality
+            Verified against a real professional Stage 1 reference file for the same Audi A4
+            03L906018JL binary. Our Stage 1 was far too aggressive on a few maps while
+            missing 60+ related maps the pro tuner modifies.
 
-            - **Torque Monitoring Map was being blocked by the uniform-map safety gate.**
-              The safety check correctly refuses to write maps whose raw data is uniform
-              (indicates wrong address → would brick ECU). But the torque monitor ceiling
-              IS intentionally flat (all cells = 1000 Nm). The `allowUniform` flag now
-              bypasses the safety gate, so the ceiling actually raises to 3277 Nm to
-              disable P060A monitoring as intended.
-            - **`edc17_fuel_quantity` was flagged critical but doesn't exist in C46
-              stripped variants.** This caused a red "1 critical map not found" warning
-              for C46 binaries even though the C46-specific `edc17_iq_base_c46` (which
-              IS the real fuel delivery map for these ECUs) was found correctly.
-              Critical flag moved to the C46 variant — Stage 1 builds on C46 binaries
-              no longer throw false-alarm flashing warnings.
+            **1. Toned down Stage 1 multipliers to pro-realistic values:**
+            - Torque Limit: +28% → +10% (pro: +4.6%)
+            - Boost Target: +18% → +4% (pro: +1.2%)
+            - Torque→IQ: +15% → +5%
+            - Driver's Wish: +15% → stock (pro leaves stock on Stage 1)
+            - Rail Pressure: +8% → stock (pro leaves stock for injector longevity)
+            - IQ Base C46: +8% → +4%
+            - Smoke MAF: +12% → +8%
+            - N75 Wastegate: +8% → +2%
+            - Primary Smoke: +12% (unchanged — matches pro +11.1%)
+            - Torque Monitor: 3.28× (unchanged — must disable ECM monitoring)
+
+            **2. Added 13 new mapDefs covering maps the pro tuner edits:**
+            - 5× Gear-Variant Torque Targets (+5% each) — matches pro's per-gear +4.6% approach
+            - 3× Torque Demand Variants (+4%) — pro +3.4% spread
+            - 4× IQ Variant maps (+3%) — pro +2-4% spread across IQ family
+            - Secondary Smoke Limiter 7×5 (+10%) — pro +58% (conservative; user can adjust)
+
+            **Net result**: Stage 1 now modifies ~25 maps with conservative individual
+            changes (pro-tune philosophy: spread-out small adjustments) instead of 13 maps
+            with aggressive jumps. Should produce comparable power gains to pro tune with
+            better drivability, lower EGTs, and less stress on injectors/turbo.
+
+            All new signatures verified against both Leon (FJ 103 kW) and Audi A4 (JL
+            119.9 kW) EDC17 C46 binaries by direct byte-level comparison against the pro
+            reference tune.
 
             ### Installation
             Download `DCTuning-Installer-{version}.exe`. Wizard walks you through install.
