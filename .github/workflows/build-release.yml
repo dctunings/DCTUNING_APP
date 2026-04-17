@@ -68,15 +68,22 @@ jobs:
           body: |
             ## DCTuning Desktop v${{ steps.pkg.outputs.version }}
 
-            ### What's new
-            - **SOI bug fix** — quality scoring was wrongly rejecting correct SOI matches with
-              0.025 quality (below 0.15 threshold) because SOI timing maps have high zigzag
-              ratio (pilot/main/post injection alternate). Added `minQuality: 0` to SOI def
-              so signature matches are trusted without the smoothness/zigzag gating.
-              Now resolves SOI correctly on all EDC17 C46 variants.
-            - **UI cleanup** — removed development-cruft part numbers ("03L906018FJ", "Leon
-              variant", "Region 40-42% of 2MB") from user-visible map descriptions. Only
-              relevant tuning info is shown now.
+            ### What's new — flash-safety fixes (you were about to brick an ECU)
+            Two bugs in the remap build were producing false-alarm "critical not found"
+            and silently NOT writing the torque-monitor disable:
+
+            - **Torque Monitoring Map was being blocked by the uniform-map safety gate.**
+              The safety check correctly refuses to write maps whose raw data is uniform
+              (indicates wrong address → would brick ECU). But the torque monitor ceiling
+              IS intentionally flat (all cells = 1000 Nm). The `allowUniform` flag now
+              bypasses the safety gate, so the ceiling actually raises to 3277 Nm to
+              disable P060A monitoring as intended.
+            - **`edc17_fuel_quantity` was flagged critical but doesn't exist in C46
+              stripped variants.** This caused a red "1 critical map not found" warning
+              for C46 binaries even though the C46-specific `edc17_iq_base_c46` (which
+              IS the real fuel delivery map for these ECUs) was found correctly.
+              Critical flag moved to the C46 variant — Stage 1 builds on C46 binaries
+              no longer throw false-alarm flashing warnings.
 
             ### Installation
             Download `DCTuning-Installer-{version}.exe`. Wizard walks you through install.

@@ -1375,7 +1375,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { multiplier: 1.15 },
         stage2: { multiplier: 1.24 },
         stage3: { multiplier: 1.35, clampMax: 62000 },
-        critical: true, showPreview: true,
+        // critical:false because C46 stripped variants have edc17_iq_base_c46 covering this
+        // function. If a LABELED EDC17 binary ever genuinely lacks an IQ map, torque/smoke
+        // chain limits still constrain fuel delivery — not catastrophic to skip this one.
+        critical: false, showPreview: true,
       },
       {
         id: 'edc17_smoke_limiter',
@@ -1752,7 +1755,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { multiplier: 1.08 },
         stage2: { multiplier: 1.15 },
         stage3: { multiplier: 1.24, clampMax: 6200 },
-        critical: false, showPreview: true,
+        // critical:true — this is the REAL fuel delivery map for C46 stripped variants
+        // (03L906018xx Seat/Audi/VW/Skoda TDI). Without it, a Stage 1 remap would have
+        // no fuel increase. Non-stripped EDC17 variants use edc17_fuel_quantity instead.
+        critical: true, showPreview: true,
       },
       {
         id: 'edc17_trq2iq_c46',
