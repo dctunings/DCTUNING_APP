@@ -1,6 +1,6 @@
 {
   "name": "dctuning-desktop",
-  "version": "3.5.5",
+  "version": "3.5.6",
   "description": "DCTuning Ireland — Professional ECU Tuning Suite",
   "main": "out/main/index.js",
   "scripts": {
@@ -35,6 +35,7 @@
   "build": {
     "appId": "ie.dctuning.desktop",
     "productName": "DCTuning",
+    "artifactName": "DCTuning-Installer-${version}.${ext}",
     "win": {
       "target": "nsis",
       "icon": "resources/icon.ico",

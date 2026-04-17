@@ -1271,7 +1271,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     family: 'EDC17',
     // EDC17 uses Infineon Tricore TC1796/TC1797 — NO embedded ASCII symbol names.
     // Part numbers: 0281017xxx+ uniquely identify EDC17 (0281030xxx+ = later variants).
-    identStrings: ['EDC17', 'EDC 17', '0281017', '0281018', '0281019', '0281020', '0281030', 'EDC17C', 'EDC17CP', 'EDC17U', 'EDC17C41', 'EDC17C54', 'EDC17CP14', 'EDC17CP20'],
+    identStrings: ['EDC17', 'EDC 17', '0281017', '0281018', '0281019', '0281020', '0281030', 'EDC17C', 'EDC17CP', 'EDC17U', 'EDC17C41', 'EDC17C46', 'EDC17C54', 'EDC17CP14', 'EDC17CP20', 'P643X5L8', 'C643X5L8', 'P643A', 'P643B', 'P643C', 'C643A', 'C643B', 'C643C'],
     fileSizeRange: [524288, 4194304],   // 512KB – 4MB (TC1796=2MB, TC1797=4MB)
     vehicles: ['VW Golf GTD Mk6/7', 'Audi A4 2.0 TDI', 'BMW 320d/520d', 'VW Passat TDI', 'Skoda Superb TDI', 'Seat Ibiza TDI'],
     // CHECKSUM: EDC17 has TWO checksum layers — both must be corrected before flashing:
@@ -5787,7 +5787,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // D0B16 = variant code, VAGAPP = VAG application, 04L906056 = VW part number.
     // 1MVAGAPP = "1st gen VAG app". EV_ECM16TDI = software ID string.
     // Also search for common VW diesel part prefixes.
-    identStrings: ['D0B16', 'VAGAPP', '1MVAGAPP', '04L906056', 'EV_ECM16TDI', 'EV_ECM20TDI', 'DCM6.2', 'DCM62', '04L906'],
+    // Strict Delphi-only identStrings — removed 'EV_ECM16TDI', 'EV_ECM20TDI', '04L906'
+    // because these are VW engine-class strings present in Bosch EDC17 binaries too,
+    // causing false-positive detection of Bosch 2.0 TDI ECUs as DCM6.2 (Seat Leon 03L906018FJ).
+    // Only keep markers that are genuinely Delphi-specific.
+    identStrings: ['D0B16', 'VAGAPP', '1MVAGAPP', '04L906056', 'DCM6.2', 'DCM62'],
     fileSizeRange: [2097152, 4194304],   // 2MB – 4MB (MPC5xxx, actual files are 4MB)
     vehicles: ['VW Golf Mk7 1.6 TDI CR', 'VW Golf Mk7 2.0 TDI CR', 'VW Passat B8 1.6 TDI', 'Audi A3 1.6 TDI (2013+)', 'Skoda Octavia 1.6 TDI (2013+)', 'Seat Leon 1.6 TDI', 'VW Tiguan 2.0 TDI (2017+)'],
     checksumAlgo: 'unknown',

@@ -68,19 +68,21 @@ jobs:
           body: |
             ## DCTuning Desktop v${{ steps.pkg.outputs.version }}
 
-            ### What's new
-            - **Scanner fallback rewritten** — now runs synchronously inline (no async timing issues),
-              pools classified + unmatched candidates, matches by dimension + physical value plausibility.
-              Delphi DCM6.2 (VAG 1.6/2.0 TDI) maps should now be located.
-            - **Classifier hard-disqualifiers softened** — D0B16 reference-binary hints no longer
-              reject legitimate variants from customer binaries (Seat Leon, Audi A3, Skoda etc.)
-            - **Installer switched to wizard mode** (oneClick: false) — proper Next/Install/Finish
-              flow, better UAC handling, less likely to need running twice
-            - SCAN badge (purple) shows which maps came from the scanner
+            ### What's new — CRITICAL detection fix
+            - **Fix: Bosch EDC17 binaries no longer misdetected as Delphi DCM6.2**
+              Removed `EV_ECM16TDI`, `EV_ECM20TDI`, `04L906` from DCM6.2 identStrings —
+              those are generic VW software-class markers present in Bosch EDC17 too,
+              causing Seat Leon 2.0 TDI CR (03L906018FJ) to wrongly show "Delphi DCM6.2 · 0/6 maps".
+            - **Fix: EDC17 C46 variants now strongly identified** via `P643X5L8`, `C643X5L8`,
+              `EDC17C46` code strings — Bosch scores 0.46 vs DCM6.2 0.30 for these binaries.
+            - **Installer artifact renamed to `DCTuning-Installer-{version}.exe`** so it's
+              visually distinct from the `DCTuning` shortcut (no more clicking installer twice).
+            - Previous v3.5.5 changes still included: scanner fallback, classifier lenient hints,
+              wizard-mode installer.
 
             ### Installation
-            Download and run the `.exe` installer. Wizard will guide you through install.
-            **Important:** Uninstall any previous version first.
+            Download `DCTuning-Installer-{version}.exe` and run it. Wizard walks you through
+            the install. **Uninstall any previous version first** from Add/Remove Programs.
           files: |
             release/*.exe
             release/*.exe.blockmap
