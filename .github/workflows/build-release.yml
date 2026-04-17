@@ -68,7 +68,33 @@ jobs:
           body: |
             ## DCTuning Desktop v${{ steps.pkg.outputs.version }}
 
-            ### What's new — EDC17 Stage 1 rewritten to match pro-tune reality
+            ### What's new — Zone Editor flipped to pro tuning convention (RPM left, Load top)
+            Zone Editor now displays with **RPM down the left column** and **Load across the top row**,
+            matching ECM Titanium / WinOLS / KESS / MPPS convention. Previously was rows=Load /
+            cols=RPM which is how the Kf_ binary stores the data internally but NOT how pro tuners
+            expect to see it.
+
+            - **Row headers (going down)** = RPM axis values (increasing top → bottom)
+            - **Column headers (across top)** = Load/IQ axis values (increasing left → right)
+            - **Corner cell** label: RPM on top line, Load on bottom line
+            - **Binary write path unchanged** — the transpose is display-only. Cell coordinates
+              stored in edits still use (dataRow, dataCol) = (Load idx, RPM idx) internally so
+              writeMap hits the correct binary bytes.
+            - Select, drag, Pg+/Pg- all work exactly the same in view coords; the binary bytes
+              modified are the correct ones.
+
+            Previous v3.5.12 changes (Stage 1 tone-down + 13 new pro-comparison-verified mapDefs)
+            still in effect — see v3.5.12 notes for the tuning values that were corrected.
+
+            ### Installation
+            Download `DCTuning-Installer-{version}.exe`. Wizard walks you through install.
+            **Uninstall any previous version first** from Add/Remove Programs.
+
+            ---
+
+            (Previous v3.5.12 notes retained below for reference)
+
+            ### Previous — EDC17 Stage 1 rewritten to match pro-tune reality
             Verified against a real professional Stage 1 reference file for the same Audi A4
             03L906018JL binary. Our Stage 1 was far too aggressive on a few maps while
             missing 60+ related maps the pro tuner modifies.

@@ -258,6 +258,20 @@ interface ZoneEditorProps {
 }
 
 function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, unit, axisXLabel, axisYLabel, axisXVals, axisYVals, onApply, onClearAll }: ZoneEditorProps) {
+  // ─── VIEW TRANSPOSE: ECM Titanium / WinOLS convention ─────────────────────
+  // Binary Kf_ stores data as rows=Load/IQ (Y), cols=RPM (X). But professional
+  // tuning convention displays RPM DOWN the left column and Load ACROSS the top.
+  // So we transpose the display only — the internal edit keys and physData access
+  // stay in (dataRow=Load, dataCol=RPM) format so writeMap stays correct.
+  //
+  //   VIEW coords: (viewR = RPM index, viewC = Load index)    ← what user sees
+  //   DATA coords: (dataR = Load index, dataC = RPM index)    ← how binary is stored
+  //
+  //   Mapping:  dataR = viewC,  dataC = viewR
+  //   Edit key format stays "${dataR},${dataC}" so nothing downstream needs to change.
+  const viewRows = cols   // RPM count — displayed going DOWN the left
+  const viewCols = rows   // Load count — displayed going ACROSS the top
+
   const [selStart, setSelStart] = useState<{ r: number; c: number } | null>(null)
   const [selEnd, setSelEnd]     = useState<{ r: number; c: number } | null>(null)
   const [dragging, setDragging] = useState(false)
@@ -266,21 +280,30 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
   const editCount = Object.keys(edits).length
   const hasAxes = (axisXVals && axisXVals.length > 0) || (axisYVals && axisYVals.length > 0)
 
+  // Selection is stored in VIEW coords (what user sees)
   const sel = selStart && selEnd ? {
     r1: Math.min(selStart.r, selEnd.r), r2: Math.max(selStart.r, selEnd.r),
     c1: Math.min(selStart.c, selEnd.c), c2: Math.max(selStart.c, selEnd.c),
   } : null
 
-  const isSelected = (r: number, c: number) =>
-    sel !== null && r >= sel.r1 && r <= sel.r2 && c >= sel.c1 && c <= sel.c2
+  const isSelected = (viewR: number, viewC: number) =>
+    sel !== null && viewR >= sel.r1 && viewR <= sel.r2 && viewC >= sel.c1 && viewC <= sel.c2
 
-  const getMul = (r: number, c: number) => edits[`${r},${c}`] ?? stageMul
-  const isEdited = (r: number, c: number) => edits[`${r},${c}`] !== undefined
+  // Edits use DATA coords (so writeMap gets the right cells)
+  const getMul = (viewR: number, viewC: number) => {
+    const dataR = viewC, dataC = viewR
+    return edits[`${dataR},${dataC}`] ?? stageMul
+  }
+  const isEdited = (viewR: number, viewC: number) => {
+    const dataR = viewC, dataC = viewR
+    return edits[`${dataR},${dataC}`] !== undefined
+  }
 
-  // Modified physical value for display
-  const getDisplayVal = (r: number, c: number) => {
-    const orig = physData[r]?.[c] ?? 0
-    const mul = getMul(r, c)
+  // Modified physical value for display — fetch from transposed data
+  const getDisplayVal = (viewR: number, viewC: number) => {
+    const dataR = viewC, dataC = viewR
+    const orig = physData[dataR]?.[dataC] ?? 0
+    const mul = getMul(viewR, viewC)
     const raw = factor !== 0 ? (orig - offsetVal) / factor : 0
     return raw * mul * factor + offsetVal
   }
@@ -288,9 +311,10 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
   const applyStep = (sign: 1 | -1) => {
     if (!sel) return
     const next = { ...edits }
-    for (let r = sel.r1; r <= sel.r2; r++) {
-      for (let c = sel.c1; c <= sel.c2; c++) {
-        const key = `${r},${c}`
+    for (let viewR = sel.r1; viewR <= sel.r2; viewR++) {
+      for (let viewC = sel.c1; viewC <= sel.c2; viewC++) {
+        const dataR = viewC, dataC = viewR  // transpose to data coords for the edit key
+        const key = `${dataR},${dataC}`
         const cur = next[key] ?? stageMul
         next[key] = Math.max(0.01, Math.min(5.0, cur + sign * step / 100))
       }
@@ -298,13 +322,13 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
     onApply(next)
   }
 
-  const selectAll = () => { setSelStart({ r: 0, c: 0 }); setSelEnd({ r: rows - 1, c: cols - 1 }) }
+  const selectAll = () => { setSelStart({ r: 0, c: 0 }); setSelEnd({ r: viewRows - 1, c: viewCols - 1 }) }
 
-  // Cell sizing — narrower when axes shown to keep total width reasonable
-  const cellW = cols > 14 ? 36 : cols > 10 ? 42 : cols > 7 ? 50 : 58
+  // Cell sizing — narrower when many display cols (which is Load count = rows internally)
+  const cellW = viewCols > 14 ? 36 : viewCols > 10 ? 42 : viewCols > 7 ? 50 : 58
   const cellH = 28
-  const rowHdrW = 44   // always show RPM header column
-  const colHdrH = 20   // always show Load header row
+  const rowHdrW = 52   // slightly wider — holds RPM labels like "10.8k"
+  const colHdrH = 20
 
   const selSizeLabel = sel
     ? `${sel.r2 - sel.r1 + 1}×${sel.c2 - sel.c1 + 1} selected`
@@ -313,13 +337,18 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
   // Format axis value for header display
   const fmtAxis = (v: number) => v >= 10000 ? `${Math.round(v / 100) / 10}k` : v >= 1000 ? `${Math.round(v / 10) / 100}k` : v.toFixed(v % 1 === 0 ? 0 : 1)
 
-  // Build evenly-spaced axis values if none provided
-  const xVals = axisXVals && axisXVals.length === cols ? axisXVals
+  // Display axis values:
+  //   Row headers (left, going down) show RPM = axisXVals (length = cols = viewRows)
+  //   Col headers (top, going across) show Load = axisYVals (length = rows = viewCols)
+  const rowAxisVals = axisXVals && axisXVals.length === cols ? axisXVals
     : axisXVals && axisXVals.length > 0 ? axisXVals
     : null
-  const yVals = axisYVals && axisYVals.length === rows ? axisYVals
+  const colAxisVals = axisYVals && axisYVals.length === rows ? axisYVals
     : axisYVals && axisYVals.length > 0 ? axisYVals
     : null
+  // Display axis LABELS (also swapped — rows now show X-axis label, cols now show Y-axis label)
+  const rowAxisLabel = axisXLabel || 'RPM'
+  const colAxisLabel = axisYLabel || 'Load'
 
   return (
     <div
@@ -330,7 +359,7 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
       {/* ── Toolbar ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 11, fontWeight: 800, color: '#b8f02a', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Zone Editor</span>
-        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.22)' }}>{rows}×{cols}</span>
+        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.22)' }}>{viewRows}×{viewCols}  (RPM × Load)</span>
 
         {/* Step input */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '3px 8px' }}>
@@ -385,12 +414,12 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
         )}
       </div>
 
-      {/* ── Grid with axis headers — ECM Titanium style ── */}
+      {/* ── Grid with axis headers — ECM Titanium style (RPM left, Load top) ── */}
       <div style={{ display: 'inline-block' }}>
 
-        {/* ── Top: corner + column header row ── */}
+        {/* ── Top: corner + Load header row ── */}
         <div style={{ display: 'flex', gap: 1, marginBottom: 1 }}>
-          {/* Corner cell — Y axis label (rows, left) / X axis label (cols, top) */}
+          {/* Corner cell — RPM label (left axis, rows) / Load label (top axis, cols) */}
           <div style={{
             width: rowHdrW, height: colHdrH, flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -399,11 +428,11 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
             border: '1px solid rgba(180,40,40,0.5)',
             borderRadius: 2, lineHeight: 1.1, textAlign: 'center',
           }}>
-            {axisYLabel || 'Load'}<br/>{axisXLabel || 'RPM'}
+            {rowAxisLabel}<br/>{colAxisLabel}
           </div>
-          {/* Column headers — X axis (typically RPM) */}
-          {Array.from({ length: cols }, (_, c) => (
-            <div key={c} style={{
+          {/* Column headers — Load axis (across the top) */}
+          {Array.from({ length: viewCols }, (_, viewC) => (
+            <div key={viewC} style={{
               width: cellW, height: colHdrH,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 7, fontWeight: 700, color: '#fff',
@@ -411,16 +440,16 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
               border: '1px solid rgba(180,40,40,0.45)',
               borderRadius: 2, overflow: 'hidden', flexShrink: 0,
             }}>
-              {xVals ? fmtAxis(xVals[c]) : c + 1}
+              {colAxisVals ? fmtAxis(colAxisVals[viewC]) : viewC + 1}
             </div>
           ))}
         </div>
 
-        {/* ── Data rows with Y axis (Load/IQ) headers on left ── */}
+        {/* ── Data rows with RPM headers on left (going down) ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {Array.from({ length: rows }, (_, r) => (
-            <div key={r} style={{ display: 'flex', gap: 1 }}>
-              {/* Row header — Y axis (typically Load/IQ) */}
+          {Array.from({ length: viewRows }, (_, viewR) => (
+            <div key={viewR} style={{ display: 'flex', gap: 1 }}>
+              {/* Row header — RPM (vertical axis, top→bottom = low→high RPM) */}
               <div style={{
                 width: rowHdrW, height: cellH, flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -429,17 +458,19 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
                 border: '1px solid rgba(180,40,40,0.45)',
                 borderRadius: 2, overflow: 'hidden',
               }}>
-                {yVals ? fmtAxis(yVals[r]) : r + 1}
+                {rowAxisVals ? fmtAxis(rowAxisVals[viewR]) : viewR + 1}
               </div>
 
               {/* Data cells */}
-              {Array.from({ length: cols }, (_, c) => {
-                const key = `${r},${c}`
-                const edited = isEdited(r, c)
-                const selected = isSelected(r, c)
-                const mul = getMul(r, c)
+              {Array.from({ length: viewCols }, (_, viewC) => {
+                // Internal data coords: dataR = Load idx = viewC, dataC = RPM idx = viewR
+                const dataR = viewC, dataC = viewR
+                const key = `${dataR},${dataC}`
+                const edited = isEdited(viewR, viewC)
+                const selected = isSelected(viewR, viewC)
+                const mul = getMul(viewR, viewC)
                 const pct = ((mul - 1) * 100)
-                const dispVal = getDisplayVal(r, c)
+                const dispVal = getDisplayVal(viewR, viewC)
 
                 const stagePct = (stageMul - 1) * 100
                 const extraPct = pct - stagePct  // how much beyond stage default
@@ -490,7 +521,7 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
                 return (
                   <div
                     key={key}
-                    title={`[${r},${c}]${yVals ? ` ${axisYLabel || 'Load'}:${fmtAxis(yVals[r])}` : ''}${xVals ? ` ${axisXLabel || 'RPM'}:${fmtAxis(xVals[c])}` : ''} — ${pct >= 0 ? '+' : ''}${pct.toFixed(1)}% → ${dispVal.toFixed(dispVal > 10 ? 1 : 2)}${unit ? ' ' + unit : ''}`}
+                    title={`${rowAxisLabel}:${rowAxisVals ? fmtAxis(rowAxisVals[viewR]) : viewR + 1}  ${colAxisLabel}:${colAxisVals ? fmtAxis(colAxisVals[viewC]) : viewC + 1} — ${pct >= 0 ? '+' : ''}${pct.toFixed(1)}% → ${dispVal.toFixed(dispVal > 10 ? 1 : 2)}${unit ? ' ' + unit : ''}`}
                     style={{
                       width: cellW, height: cellH,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -502,8 +533,8 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
                       borderRadius: 2,
                       transition: 'background 0.06s',
                     }}
-                    onMouseDown={e => { e.preventDefault(); setSelStart({ r, c }); setSelEnd({ r, c }); setDragging(true) }}
-                    onMouseEnter={() => { if (dragging) setSelEnd({ r, c }) }}
+                    onMouseDown={e => { e.preventDefault(); setSelStart({ r: viewR, c: viewC }); setSelEnd({ r: viewR, c: viewC }); setDragging(true) }}
+                    onMouseEnter={() => { if (dragging) setSelEnd({ r: viewR, c: viewC }) }}
                     onMouseUp={() => { setDragging(false) }}
                   >
                     {dispVal.toFixed(dispVal > 100 ? 0 : dispVal > 10 ? 1 : 2)}
