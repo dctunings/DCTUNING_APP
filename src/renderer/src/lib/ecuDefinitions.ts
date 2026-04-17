@@ -1792,9 +1792,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
       // Verified against Audi A4 03L906018JL reference Stage 1 tune (pro +4.6% each).
       ...[0, 1, 2, 3, 4].map(gear => ({
         id: `edc17_trq_gear${gear + 1}`,
-        name: `Torque Target (Gear ${gear + 1})`,
+        name: `Torque Target (Gear ${gear + 1} of 5)`,
         category: 'torque' as const,
-        desc: `Per-gear torque target map. EDC17 C46 stores 5 gear-variant torque targets in a cluster around 0x030BB6. Pro tunes raise these ~4-5% to increase torque in each gear without overshooting the global torque limiter.`,
+        desc: `Per-gear torque target map — one of 5 gear variants clustered around 0x030BB6. All 5 gears are modified in sync at +5% by Stage 1 (only Gear 1 is shown in preview to avoid clutter, but gears 2-5 are also modified behind the scenes — visible in the build summary's "Maps Modified" count).`,
         signatures: [
           [0x0c,0x00,0x0a,0x00,0x40,0x06,0xd0,0x07,0xb8,0x0b,0xa0,0x0f],
         ],
@@ -1813,9 +1813,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
       // 3 identical 10×14 torque demand maps. Pro tunes +3.4% each.
       ...[0, 1, 2].map(variant => ({
         id: `edc17_trq_demand_${variant + 1}`,
-        name: `Torque Demand (Variant ${variant + 1})`,
+        name: `Torque Demand (Variant ${variant + 1} of 3)`,
         category: 'torque' as const,
-        desc: 'Secondary torque demand map cluster. Three related maps the ECU uses for torque calculation alongside the main Torque Limitation. Raising matches pro-tune convention of spreading torque increases across all related maps.',
+        desc: 'Secondary torque demand map cluster — 3 related maps the ECU uses for torque calculation alongside the main Torque Limitation. All 3 variants modified in sync at +4%. Only variant 1 shown in preview.',
         signatures: [
           [0x0e,0x00,0x0a,0x00,0xd0,0x07,0xb8,0x0b,0xa0,0x0f,0x88,0x13],
         ],
@@ -1836,9 +1836,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
       // rather than aggressively raising one. Uses one shared signature with matchIndex.
       ...[0, 1, 2, 3].map(variant => ({
         id: `edc17_iq_variant_${variant + 1}`,
-        name: `IQ Variant (${variant + 1})`,
+        name: `IQ Variant (${variant + 1} of 4)`,
         category: 'fuel' as const,
-        desc: 'Additional injection quantity variant map. EDC17 stores 4+ IQ variants used under different operating conditions (cold start, hot run, post-injection, etc). Pro-tune practice raises all of them slightly rather than one aggressively.',
+        desc: 'Additional injection quantity variant map — 4 variants used under different operating conditions (cold start, hot run, post-injection, etc). All 4 modified in sync at +3%. Only variant 1 shown in preview.',
         signatures: [
           [0x0c,0x00,0x09,0x00,0xd0,0x07,0xc4,0x09,0xb8,0x0b,0xac,0x0d],
         ],

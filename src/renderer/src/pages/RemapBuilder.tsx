@@ -2334,14 +2334,26 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             Addons: {addons.join(', ')}
           </span>
         )}
-        <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
-          {extractedMaps.filter(m => m.found && m.mapDef.showPreview).length} / {extractedMaps.filter(m => m.mapDef.showPreview).length} maps found
-          {a2lFallbackCount > 0 && (
-            <span style={{ marginLeft: 8, color: '#22c55e', fontWeight: 700 }}>
-              ({a2lFallbackCount} via A2L/DRT ✓)
+        {(() => {
+          const visibleFound = extractedMaps.filter(m => m.found && m.mapDef.showPreview).length
+          const visibleTotal = extractedMaps.filter(m => m.mapDef.showPreview).length
+          const totalFound = extractedMaps.filter(m => m.found).length
+          const totalAll = extractedMaps.length
+          const hiddenFound = totalFound - visibleFound
+          return (
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
+              <strong style={{ color: 'var(--text-primary)' }}>{visibleFound}</strong> / {visibleTotal} shown
+              <span style={{ marginLeft: 6, opacity: 0.6 }}>
+                · <strong style={{ color: 'var(--text-primary)' }}>{totalFound}</strong> / {totalAll} total {hiddenFound > 0 ? `(+${hiddenFound} background)` : ''}
+              </span>
+              {a2lFallbackCount > 0 && (
+                <span style={{ marginLeft: 8, color: '#22c55e', fontWeight: 700 }}>
+                  ({a2lFallbackCount} via A2L/DRT ✓)
+                </span>
+              )}
             </span>
-          )}
-        </span>
+          )
+        })()}
       </div>
 
       {/* Scanner candidates removed — only show definition-matched maps */}
