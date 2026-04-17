@@ -1,6 +1,6 @@
 {
   "name": "dctuning-desktop",
-  "version": "3.5.17",
+  "version": "3.5.18",
   "description": "DCTuning Ireland — Professional ECU Tuning Suite",
   "main": "out/main/index.js",
   "scripts": {
@@ -42,17 +42,18 @@
       "requestedExecutionLevel": "requireAdministrator"
     },
     "nsis": {
-      "oneClick": false,
+      "oneClick": true,
       "perMachine": true,
       "allowElevation": true,
-      "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
       "shortcutName": "DCTuning",
       "menuCategory": false,
       "runAfterFinish": true,
       "deleteAppDataOnUninstall": false,
-      "uninstallDisplayName": "DCTuning Ireland"
+      "uninstallDisplayName": "DCTuning Ireland",
+      "differentialPackage": false,
+      "include": "build/installer.nsh"
     },
     "extraResources": [
       {
