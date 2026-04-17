@@ -67,6 +67,16 @@ export interface MapDef {
   // When true, suppress the "⚠ Uniform" warning in heatmap previews. For maps that are
   // intentionally flat in ORI (e.g. torque monitor ceiling = single value across all cells).
   allowUniform?: boolean
+  // Tuning mode — what the Zone Editor stores per cell:
+  //   'multiplier' (default) — cell anchors are multipliers (1.05 = +5%)
+  //   'addend'              — cell anchors are RAW ADDEND values (e.g. 46 = +1° on SOI where factor=0.021973)
+  // Used by SOI and other addend-based maps where degree/absolute adjustments make more sense
+  // than percentage scaling (e.g. adding +1° BTDC means exactly +46 raw regardless of cell value).
+  tuningMode?: 'multiplier' | 'addend'
+  // Step size for Zone Editor Pg+/Pg- in the NATIVE unit of this map.
+  //   For multiplier mode: step is in percent (default 0.5 = +0.5% per press)
+  //   For addend mode:     step is in PHYSICAL units (e.g. 0.5 = +0.5° for SOI)
+  zoneStep?: number
 }
 
 export interface EcuDef {
@@ -1533,8 +1543,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // zigzag ratio (~48%). Real SOI data scores ~0.025 quality which is below the 0.15
         // default threshold. The signatures are unique enough to trust without quality gating.
         minQuality: 0,
-        // addend is in raw units. factor ≈ 0.021973 °/unit → 1° ≈ 46 units, 3° ≈ 137 units.
+        // Addend-based tuning: Zone Editor stores per-cell RAW ADDEND values.
+        // factor 0.021973 °/unit → 1° ≈ 46 raw units, 0.5° ≈ 23 raw units, 3° ≈ 137 raw units.
         // Stage 1 = no SOI change (safe for daily driver). Stage 2 = +1°, Stage 3 = +3°.
+        tuningMode: 'addend',
+        zoneStep: 0.5,  // Pg+/Pg- step in degrees
         stage1: { addend: 0 },
         stage2: { addend: 46 },
         stage3: { addend: 137 },

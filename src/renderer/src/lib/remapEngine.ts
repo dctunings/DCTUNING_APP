@@ -40,7 +40,7 @@ export interface RemapResult {
 // Used for popcorn limiter — retards timing only in the highest-RPM cells.
 // cellGrid: optional per-cell multiplier grid (zone editor). When supplied, each cell
 // uses its own multiplier instead of the uniform params.multiplier.
-function applyParams(raw: number[][], params: StageParams, mapDef: MapDef, cellGrid?: number[][]): number[][] {
+function applyParams(raw: number[][], params: StageParams, mapDef: MapDef, cellGrid?: number[][], cellAddendGrid?: number[][]): number[][] {
   const rowStart = params.lastNRows !== undefined ? Math.max(0, raw.length - params.lastNRows) : 0
   return raw.map((row, r) => {
     const colStart = params.lastNCols !== undefined ? Math.max(0, row.length - params.lastNCols) : 0
@@ -55,7 +55,14 @@ function applyParams(raw: number[][], params: StageParams, mapDef: MapDef, cellG
       } else if (params.multiplier !== undefined) {
         result *= params.multiplier
       }
-      if (params.addend !== undefined) result += params.addend
+      // Per-cell addend (addend-mode zone editor, e.g. SOI degrees) — replaces stage-level addend.
+      // If no per-cell addend set, use the stage-level addend (or 0 if neither).
+      const cellAdd = cellAddendGrid?.[r]?.[c]
+      if (cellAdd !== undefined) {
+        result += cellAdd
+      } else if (params.addend !== undefined) {
+        result += params.addend
+      }
       if (params.clampMax !== undefined) result = Math.min(result, params.clampMax)
       if (params.clampMin !== undefined) result = Math.max(result, params.clampMin)
       // Respect data type limits (float32 is never rounded — preserve precision)
@@ -145,14 +152,14 @@ export function buildRemap(
     // If no modification needed, record as unchanged.
     // A masked param (lastNRows/lastNCols) is never identity even with neutral multiplier/addend.
     // A cell grid is also never identity — the tuner set it explicitly.
-    const hasCellGrid = extracted.cellMultiplierGrid !== undefined
+    const hasCellGrid = extracted.cellMultiplierGrid !== undefined || extracted.cellAddendGrid !== undefined
     const isIdentity = !hasCellGrid &&
                        (params.multiplier === undefined || params.multiplier === 1) &&
                        (params.addend === undefined || params.addend === 0) &&
                        params.clampMax === undefined && params.clampMin === undefined &&
                        params.lastNRows === undefined && params.lastNCols === undefined
 
-    const newRaw = isIdentity ? rawData : applyParams(rawData, params, mapDef, extracted.cellMultiplierGrid)
+    const newRaw = isIdentity ? rawData : applyParams(rawData, params, mapDef, extracted.cellMultiplierGrid, extracted.cellAddendGrid)
     const physAfter = newRaw.map((row, r) =>
       row.map((v, c) => {
         if (!isIdentity) return v * mapDef.factor + mapDef.offsetVal

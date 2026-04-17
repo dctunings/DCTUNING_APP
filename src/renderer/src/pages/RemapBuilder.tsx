@@ -230,21 +230,24 @@ function CatBadge({ cat }: { cat: string }) {
 // then Pg+ / Pg- applies the step% to every selected cell cumulatively.
 // Cells without an override use the stage default. No interpolation — pure manual.
 export function computeCellGrid(
-  edits: Record<string, number>,  // "r,c" → absolute multiplier
+  edits: Record<string, number>,
   rows: number,
   cols: number,
-  defaultMul: number,
+  defaultVal: number,
 ): number[][] {
   return Array.from({ length: rows }, (_, r) =>
-    Array.from({ length: cols }, (_, c) => edits[`${r},${c}`] ?? defaultMul)
+    Array.from({ length: cols }, (_, c) => edits[`${r},${c}`] ?? defaultVal)
   )
 }
 
 interface ZoneEditorProps {
   rows: number
   cols: number
-  edits: Record<string, number>          // "r,c" → absolute multiplier
-  stageMul: number                        // uniform stage default (e.g. 1.12)
+  // Per-cell edit values. In multiplier mode: absolute multipliers (1.05=+5%).
+  // In addend mode: raw addend deltas (46 = +1° on SOI where factor=0.021973).
+  edits: Record<string, number>
+  // Uniform stage default. In multiplier mode: 1.12 = +12%. In addend mode: raw addend (0 = stock).
+  stageMul: number
   physData: number[][]                    // original physical values for display
   factor: number
   offsetVal: number
@@ -255,9 +258,14 @@ interface ZoneEditorProps {
   axisYVals?: number[]                    // row header values (RPM breakpoints)
   onApply: (newEdits: Record<string, number>) => void
   onClearAll: () => void
+  // Tuning mode: 'multiplier' (default, % adjustments) or 'addend' (absolute delta in physical unit, e.g. degrees for SOI)
+  tuningMode?: 'multiplier' | 'addend'
+  // Default step size in the native unit (% for multiplier, physical unit for addend)
+  defaultStep?: number
 }
 
-function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, unit, axisXLabel, axisYLabel, axisXVals, axisYVals, onApply, onClearAll }: ZoneEditorProps) {
+function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, unit, axisXLabel, axisYLabel, axisXVals, axisYVals, onApply, onClearAll, tuningMode = 'multiplier', defaultStep }: ZoneEditorProps) {
+  const isAddendMode = tuningMode === 'addend'
   // ─── VIEW TRANSPOSE: ECM Titanium / WinOLS convention ─────────────────────
   // Binary Kf_ stores data as rows=Load/IQ (Y), cols=RPM (X). But professional
   // tuning convention displays RPM DOWN the left column and Load ACROSS the top.
@@ -275,7 +283,8 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
   const [selStart, setSelStart] = useState<{ r: number; c: number } | null>(null)
   const [selEnd, setSelEnd]     = useState<{ r: number; c: number } | null>(null)
   const [dragging, setDragging] = useState(false)
-  const [step, setStep] = useState(0.5)   // % per Pg+ press
+  // Pg+/Pg- step. In multiplier mode: percent (0.5 = +0.5%). In addend mode: physical delta (0.5 = +0.5° for SOI).
+  const [step, setStep] = useState(defaultStep ?? 0.5)
 
   const editCount = Object.keys(edits).length
   const hasAxes = (axisXVals && axisXVals.length > 0) || (axisYVals && axisYVals.length > 0)
@@ -290,6 +299,8 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
     sel !== null && viewR >= sel.r1 && viewR <= sel.r2 && viewC >= sel.c1 && viewC <= sel.c2
 
   // Edits use DATA coords (so writeMap gets the right cells)
+  // In multiplier mode: returns absolute multiplier (default = stageMul, e.g. 1.05 for +5%).
+  // In addend mode:     returns raw addend delta (default = stageMul which is 0 for stock).
   const getMul = (viewR: number, viewC: number) => {
     const dataR = viewC, dataC = viewR
     return edits[`${dataR},${dataC}`] ?? stageMul
@@ -303,9 +314,27 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
   const getDisplayVal = (viewR: number, viewC: number) => {
     const dataR = viewC, dataC = viewR
     const orig = physData[dataR]?.[dataC] ?? 0
-    const mul = getMul(viewR, viewC)
+    const val = getMul(viewR, viewC)
     const raw = factor !== 0 ? (orig - offsetVal) / factor : 0
-    return raw * mul * factor + offsetVal
+    if (isAddendMode) {
+      // val is raw addend — add to raw then convert to physical
+      const newRaw = raw + val
+      return newRaw * factor + offsetVal
+    } else {
+      // val is multiplier — multiply raw then convert to physical
+      return raw * val * factor + offsetVal
+    }
+  }
+
+  // Delta in display/native unit (% for multiplier, physical for addend)
+  const getDeltaForDisplay = (viewR: number, viewC: number): number => {
+    const val = getMul(viewR, viewC)
+    if (isAddendMode) {
+      // raw addend → physical delta (e.g. 46 raw * 0.021973 = +1.0°)
+      return val * factor
+    } else {
+      return (val - 1) * 100
+    }
   }
 
   const applyStep = (sign: 1 | -1) => {
@@ -313,10 +342,20 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
     const next = { ...edits }
     for (let viewR = sel.r1; viewR <= sel.r2; viewR++) {
       for (let viewC = sel.c1; viewC <= sel.c2; viewC++) {
-        const dataR = viewC, dataC = viewR  // transpose to data coords for the edit key
+        const dataR = viewC, dataC = viewR
         const key = `${dataR},${dataC}`
         const cur = next[key] ?? stageMul
-        next[key] = Math.max(0.01, Math.min(5.0, cur + sign * step / 100))
+        if (isAddendMode) {
+          // step is in physical units (e.g. 0.5°). Convert to raw via factor.
+          // factor 0.021973 °/unit means 1° = 1/0.021973 = 45.5 raw units per degree.
+          const stepRaw = factor !== 0 ? step / factor : step
+          const newVal = cur + sign * stepRaw
+          // Clamp: allow ±20° for SOI (generous range; stage clampMax handles final safety)
+          const maxRaw = factor !== 0 ? 20 / factor : 1000
+          next[key] = Math.max(-maxRaw, Math.min(maxRaw, newVal))
+        } else {
+          next[key] = Math.max(0.01, Math.min(5.0, cur + sign * step / 100))
+        }
       }
     }
     onApply(next)
@@ -359,35 +398,39 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
       {/* ── Toolbar ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 11, fontWeight: 800, color: '#b8f02a', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Zone Editor</span>
-        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.22)' }}>{viewRows}×{viewCols}  (RPM × Load)</span>
+        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.22)' }}>
+          {viewRows}×{viewCols}  (RPM × Load){isAddendMode ? ` · ${unit || '°'} mode` : ''}
+        </span>
 
         {/* Step input */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '3px 8px' }}>
           <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Step</span>
           <input
-            type="number" min={0.1} max={50} step={0.5} value={step}
-            onChange={e => setStep(Math.max(0.1, Math.min(50, parseFloat(e.target.value) || 0.5)))}
+            type="number" min={0.1} max={50} step={0.1} value={step}
+            onChange={e => setStep(Math.max(0.1, Math.min(50, parseFloat(e.target.value) || (isAddendMode ? 0.5 : 0.5))))}
             style={{ width: 38, background: 'none', border: 'none', color: '#fff', fontSize: 11, fontWeight: 700, textAlign: 'center', outline: 'none' }}
           />
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>%</span>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
+            {isAddendMode ? (unit || '°') : '%'}
+          </span>
         </div>
 
         {/* Pg+ / Pg- buttons */}
         <button
           onClick={() => applyStep(1)}
           disabled={!sel}
-          title="Apply +step% to selected cells (like Pg+ in ECM Titanium)"
+          title={`Apply +${step}${isAddendMode ? (unit || '°') : '%'} to selected cells (ECM Titanium Pg+)`}
           style={{ fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 6, cursor: sel ? 'pointer' : 'not-allowed', border: '1px solid rgba(184,240,42,0.4)', background: sel ? 'rgba(184,240,42,0.12)' : 'rgba(255,255,255,0.03)', color: sel ? '#b8f02a' : 'rgba(255,255,255,0.2)', opacity: sel ? 1 : 0.5 }}
         >
-          Pg+ +{step}%
+          Pg+ +{step}{isAddendMode ? (unit || '°') : '%'}
         </button>
         <button
           onClick={() => applyStep(-1)}
           disabled={!sel}
-          title="Apply -step% to selected cells (like Pg- in ECM Titanium)"
+          title={`Apply -${step}${isAddendMode ? (unit || '°') : '%'} to selected cells (ECM Titanium Pg-)`}
           style={{ fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 6, cursor: sel ? 'pointer' : 'not-allowed', border: '1px solid rgba(251,146,60,0.4)', background: sel ? 'rgba(251,146,60,0.1)' : 'rgba(255,255,255,0.03)', color: sel ? '#fb923c' : 'rgba(255,255,255,0.2)', opacity: sel ? 1 : 0.5 }}
         >
-          Pg- -{step}%
+          Pg- -{step}{isAddendMode ? (unit || '°') : '%'}
         </button>
 
         <button onClick={selectAll} style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 5, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.55)' }}>
@@ -468,17 +511,20 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
                 const key = `${dataR},${dataC}`
                 const edited = isEdited(viewR, viewC)
                 const selected = isSelected(viewR, viewC)
-                const mul = getMul(viewR, viewC)
-                const pct = ((mul - 1) * 100)
                 const dispVal = getDisplayVal(viewR, viewC)
 
-                const stagePct = (stageMul - 1) * 100
-                const extraPct = pct - stagePct  // how much beyond stage default
-                // Scale: 6% above/below stage = full intensity. Minimum 0.15 when any edit present
-                // so the FIRST Pg+ press is already clearly visible as dark green.
-                const rawIntensity = edited ? Math.max(0, Math.min(1, Math.abs(extraPct) / 6)) : 0
+                // Delta display (in native unit): % for multiplier mode, degrees/units for addend mode
+                const deltaShown = getDeltaForDisplay(viewR, viewC)
+                // Stage default as a display delta too
+                const stageDeltaShown = isAddendMode
+                  ? stageMul * factor    // stageMul is raw addend → physical delta
+                  : (stageMul - 1) * 100
+                const extraDelta = deltaShown - stageDeltaShown
+                // Intensity scale: for multiplier mode 6% beyond stage = full, for addend ~2° beyond = full
+                const intensityScale = isAddendMode ? 2.0 : 6.0
+                const rawIntensity = edited ? Math.max(0, Math.min(1, Math.abs(extraDelta) / intensityScale)) : 0
                 const intensity = edited ? Math.max(0.15, rawIntensity) : 0
-                const isAbove = extraPct >= 0
+                const isAbove = extraDelta >= 0
 
                 // ── Colours ──────────────────────────────────────────────────
                 // SELECTED  → bright cyan (clear drag highlight)
@@ -518,10 +564,14 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
                   textCol = 'rgba(255,255,255,0.38)'
                 }
 
+                // Tooltip label: multiplier mode shows "+X%", addend mode shows "+X.X°" or "+X unit"
+                const deltaSign = deltaShown >= 0 ? '+' : ''
+                const deltaSuffix = isAddendMode ? (unit || '°') : '%'
+                const deltaLabel = `${deltaSign}${deltaShown.toFixed(1)}${deltaSuffix}`
                 return (
                   <div
                     key={key}
-                    title={`${rowAxisLabel}:${rowAxisVals ? fmtAxis(rowAxisVals[viewR]) : viewR + 1}  ${colAxisLabel}:${colAxisVals ? fmtAxis(colAxisVals[viewC]) : viewC + 1} — ${pct >= 0 ? '+' : ''}${pct.toFixed(1)}% → ${dispVal.toFixed(dispVal > 10 ? 1 : 2)}${unit ? ' ' + unit : ''}`}
+                    title={`${rowAxisLabel}:${rowAxisVals ? fmtAxis(rowAxisVals[viewR]) : viewR + 1}  ${colAxisLabel}:${colAxisVals ? fmtAxis(colAxisVals[viewC]) : viewC + 1} — ${deltaLabel} → ${dispVal.toFixed(Math.abs(dispVal) > 10 ? 1 : 2)}${unit ? ' ' + unit : ''}`}
                     style={{
                       width: cellW, height: cellH,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1098,24 +1148,42 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       const hasZoneAnchors = Object.keys(anchors).length > 0
       const custom = customMultipliers[em.mapDef.id]
 
-      // Zone editor (per-cell anchors) takes precedence over uniform slider
+      // Zone editor (per-cell anchors) takes precedence over uniform slider.
+      // Build either cellMultiplierGrid or cellAddendGrid depending on mapDef.tuningMode.
       if (hasZoneAnchors) {
         const baseStageKey = `stage${stage}` as 'stage1' | 'stage2' | 'stage3'
         const baseParams = em.mapDef[baseStageKey]
-        const defaultMul = baseParams?.multiplier ?? 1
         const { rows, cols } = em.mapDef
-        // Build the full per-cell multiplier grid from sparse anchors
-        const grid = computeCellGrid(anchors, rows, cols, defaultMul)
-        // Attach cell grid; set stage multiplier to 1 so applyParams defers to per-cell values
-        return {
-          ...em,
-          cellMultiplierGrid: grid,
-          mapDef: {
-            ...em.mapDef,
-            stage1: { ...baseParams, multiplier: 1 },
-            stage2: { ...baseParams, multiplier: 1 },
-            stage3: { ...baseParams, multiplier: 1 },
-          },
+        const isAddendMode = em.mapDef.tuningMode === 'addend'
+        if (isAddendMode) {
+          // Addend mode: anchors store raw addend deltas per cell. Default = stage-level addend.
+          const defaultAddend = baseParams?.addend ?? 0
+          const addendGrid = computeCellGrid(anchors, rows, cols, defaultAddend)
+          return {
+            ...em,
+            cellAddendGrid: addendGrid,
+            mapDef: {
+              ...em.mapDef,
+              // Zero the stage-level addend so applyParams uses the per-cell values instead
+              stage1: { ...baseParams, addend: 0 },
+              stage2: { ...baseParams, addend: 0 },
+              stage3: { ...baseParams, addend: 0 },
+            },
+          }
+        } else {
+          // Multiplier mode: anchors store per-cell multipliers. Default = stage-level multiplier.
+          const defaultMul = baseParams?.multiplier ?? 1
+          const grid = computeCellGrid(anchors, rows, cols, defaultMul)
+          return {
+            ...em,
+            cellMultiplierGrid: grid,
+            mapDef: {
+              ...em.mapDef,
+              stage1: { ...baseParams, multiplier: 1 },
+              stage2: { ...baseParams, multiplier: 1 },
+              stage3: { ...baseParams, multiplier: 1 },
+            },
+          }
         }
       }
 
@@ -2559,11 +2627,12 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                   </div>
                 )
               })()}
-              {/* ── Per-map adjustment controls — show for ALL found multiplier-based maps,
-                   including stock-default (multiplier=1) maps so the user can still Zone-Edit
-                   specific cells. Addend-only maps (SOI, limiters with no multiplier stage
-                   param) still skipped because the Zone Editor uses multiplier logic. ── */}
-              {m.found && !isSet && effectiveParams.multiplier !== undefined && (() => {
+              {/* ── Per-map adjustment controls — show for:
+                   • multiplier-based maps (always, including stock-default multiplier=1)
+                   • addend-based maps (SOI etc) — uses its own Zone Editor in degrees mode
+                   Fully addon-only maps (limiters) still skipped. ── */}
+              {m.found && !isSet && (effectiveParams.multiplier !== undefined || m.mapDef.tuningMode === 'addend') && (() => {
+                const isAddendModeCard = m.mapDef.tuningMode === 'addend'
                 const mapAnchors = cellAnchors[m.mapDef.id] ?? {}
                 const hasZone = Object.keys(mapAnchors).length > 0
                 const isZoneOpen = zoneEditorMapId === m.mapDef.id
@@ -2575,7 +2644,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
 
                 return (
                   <div style={{ marginTop: 6, marginBottom: 4 }}>
-                    {/* ── Slider row ── */}
+                    {/* ── Slider row (multiplier mode) / label-only row (addend mode) ── */}
                     <div style={{
                       display: 'flex', alignItems: 'center', gap: 10,
                       padding: '8px 10px', borderRadius: 7,
@@ -2583,37 +2652,56 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                       border: `1px solid ${hasZone ? 'rgba(184,240,42,0.35)' : isCustom ? 'rgba(184,240,42,0.2)' : 'rgba(255,255,255,0.07)'}`,
                     }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                        {hasZone ? 'Base %' : 'Adjustment'}
+                        {isAddendModeCard ? (hasZone ? 'Zone Δ°' : 'Timing Δ') : (hasZone ? 'Base %' : 'Adjustment')}
                       </span>
-                      <input
-                        type="range"
-                        min={0} max={50} step={1}
-                        value={currentPct}
-                        disabled={hasZone}
-                        onChange={e => {
-                          const pct = parseInt(e.target.value)
-                          // pct=0 → multiplier 1.0 (stock). Store a real entry rather than undefined
-                          // so the build engine honours the user's choice over any stage default.
-                          setCustomMultipliers(prev => ({ ...prev, [m.mapDef.id]: 1 + pct / 100 }))
-                        }}
-                        style={{ flex: 1, accentColor: 'var(--accent)', cursor: hasZone ? 'not-allowed' : 'pointer', minWidth: 80, opacity: hasZone ? 0.4 : 1 }}
-                      />
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <span style={{ fontSize: 13, fontWeight: 800, color: hasZone ? 'rgba(184,240,42,0.5)' : isCustom ? '#b8f02a' : 'var(--accent)', minWidth: 34, textAlign: 'right' }}>
-                          {currentPct >= 0 ? '+' : ''}{currentPct}%
+                      {isAddendModeCard ? (
+                        // Addend mode: show current stage addend in degrees, no slider (use Zone Editor for per-cell tuning)
+                        <span style={{ flex: 1, fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
+                          Stage {stage} default: <strong style={{ color: '#fff' }}>
+                            {(effectiveParams.addend ?? 0) === 0
+                              ? 'stock'
+                              : `${(effectiveParams.addend ?? 0) > 0 ? '+' : ''}${((effectiveParams.addend ?? 0) * m.mapDef.factor).toFixed(1)}${m.mapDef.unit || '°'}`}
+                          </strong>
+                          {hasZone && (
+                            <span style={{ marginLeft: 8, color: '#b8f02a', fontWeight: 700 }}>
+                              · {Object.keys(cellAnchors[m.mapDef.id] ?? {}).length} cells tuned
+                            </span>
+                          )}
+                          <span style={{ marginLeft: 8, color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>
+                            — use Zone Editor →
+                          </span>
                         </span>
-                        <input
-                          type="number" min={0} max={50}
-                          value={currentPct}
-                          disabled={hasZone}
-                          onChange={e => {
-                            const pct = Math.max(0, Math.min(50, parseInt(e.target.value) || 0))
-                            setCustomMultipliers(prev => ({ ...prev, [m.mapDef.id]: 1 + pct / 100 }))
-                          }}
-                          style={{ width: 44, padding: '3px 5px', borderRadius: 5, border: `1px solid ${isCustom ? 'rgba(184,240,42,0.35)' : 'rgba(255,255,255,0.12)'}`, background: 'rgba(0,0,0,0.3)', color: hasZone ? 'rgba(255,255,255,0.3)' : '#fff', fontSize: 12, fontWeight: 700, textAlign: 'center', outline: 'none' }}
-                        />
-                      </div>
-                      {isCustom && !hasZone && (
+                      ) : (
+                        <>
+                          <input
+                            type="range"
+                            min={0} max={50} step={1}
+                            value={currentPct}
+                            disabled={hasZone}
+                            onChange={e => {
+                              const pct = parseInt(e.target.value)
+                              setCustomMultipliers(prev => ({ ...prev, [m.mapDef.id]: 1 + pct / 100 }))
+                            }}
+                            style={{ flex: 1, accentColor: 'var(--accent)', cursor: hasZone ? 'not-allowed' : 'pointer', minWidth: 80, opacity: hasZone ? 0.4 : 1 }}
+                          />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span style={{ fontSize: 13, fontWeight: 800, color: hasZone ? 'rgba(184,240,42,0.5)' : isCustom ? '#b8f02a' : 'var(--accent)', minWidth: 34, textAlign: 'right' }}>
+                              {currentPct >= 0 ? '+' : ''}{currentPct}%
+                            </span>
+                            <input
+                              type="number" min={0} max={50}
+                              value={currentPct}
+                              disabled={hasZone}
+                              onChange={e => {
+                                const pct = Math.max(0, Math.min(50, parseInt(e.target.value) || 0))
+                                setCustomMultipliers(prev => ({ ...prev, [m.mapDef.id]: 1 + pct / 100 }))
+                              }}
+                              style={{ width: 44, padding: '3px 5px', borderRadius: 5, border: `1px solid ${isCustom ? 'rgba(184,240,42,0.35)' : 'rgba(255,255,255,0.12)'}`, background: 'rgba(0,0,0,0.3)', color: hasZone ? 'rgba(255,255,255,0.3)' : '#fff', fontSize: 12, fontWeight: 700, textAlign: 'center', outline: 'none' }}
+                            />
+                          </div>
+                        </>
+                      )}
+                      {isCustom && !hasZone && !isAddendModeCard && (
                         <button
                           onClick={() => setCustomMultipliers(prev => { const n = { ...prev }; delete n[m.mapDef.id]; return n })}
                           title={`Reset to Stage ${stage} default (+${stageDefaultPct}%)`}
@@ -2654,7 +2742,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                           rows={m.mapDef.rows}
                           cols={m.mapDef.cols}
                           edits={mapAnchors}
-                          stageMul={params.multiplier ?? stageDefaultMul}
+                          stageMul={m.mapDef.tuningMode === 'addend' ? (params.addend ?? 0) : (params.multiplier ?? stageDefaultMul)}
                           physData={m.data}
                           factor={m.mapDef.factor}
                           offsetVal={m.mapDef.offsetVal ?? 0}
@@ -2663,6 +2751,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                           axisYLabel={a2lMapForZone?.axisY?.label}
                           axisXVals={xVals}
                           axisYVals={yVals}
+                          tuningMode={m.mapDef.tuningMode ?? 'multiplier'}
+                          defaultStep={m.mapDef.zoneStep}
                           onApply={newEdits => setCellAnchors(prev => ({ ...prev, [m.mapDef.id]: newEdits }))}
                           onClearAll={() => setCellAnchors(prev => { const n = { ...prev }; delete n[m.mapDef.id]; return n })}
                         />
@@ -2680,12 +2770,17 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                 ) : null
               })()}
               {m.found && m.mapDef.showPreview && (() => {
-                // Build per-cell grid for the After preview if zone anchors are set
+                // Build per-cell grid for the After preview if zone anchors are set.
+                // Addend-mode maps use a grid of raw addends (0 = stock); multiplier-mode use
+                // absolute multipliers (1.0 = stock).
                 const mapAnchors = cellAnchors[m.mapDef.id] ?? {}
                 const hasZone = Object.keys(mapAnchors).length > 0
-                const defaultMulForGrid = params.multiplier ?? stageDefaultMul
+                const isAddendModePrev = m.mapDef.tuningMode === 'addend'
+                const defaultValForGrid = isAddendModePrev
+                  ? (params.addend ?? 0)
+                  : (params.multiplier ?? stageDefaultMul)
                 const cellGrid = hasZone
-                  ? computeCellGrid(mapAnchors, m.mapDef.rows, m.mapDef.cols, defaultMulForGrid)
+                  ? computeCellGrid(mapAnchors, m.mapDef.rows, m.mapDef.cols, defaultValForGrid)
                   : null
                 return (
                   <div style={{ display: 'flex', gap: 20, marginTop: 8 }}>
@@ -2701,13 +2796,20 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                         const f   = m.mapDef.factor   || 1
                         const off = m.mapDef.offsetVal ?? 0
                         const oldRaw = f !== 0 ? (v - off) / f : 0
-                        const cellMul = cellGrid?.[r]?.[c]
-                        let newRaw = cellMul !== undefined
-                          ? oldRaw * cellMul
-                          : params.multiplier !== undefined ? oldRaw * params.multiplier : oldRaw
-                        if (params.addend   !== undefined) newRaw += params.addend
-                        if (params.clampMax !== undefined) newRaw  = Math.min(newRaw, params.clampMax)
-                        if (params.clampMin !== undefined) newRaw  = Math.max(newRaw, params.clampMin)
+                        let newRaw = oldRaw
+                        const cellAnchorVal = cellGrid?.[r]?.[c]
+                        if (isAddendModePrev) {
+                          // Addend mode: cellGrid holds raw addend delta; fall back to stage addend
+                          if (cellAnchorVal !== undefined) newRaw = oldRaw + cellAnchorVal
+                          else if (params.addend !== undefined) newRaw = oldRaw + params.addend
+                        } else {
+                          // Multiplier mode: cellGrid holds multiplier
+                          if (cellAnchorVal !== undefined) newRaw = oldRaw * cellAnchorVal
+                          else if (params.multiplier !== undefined) newRaw = oldRaw * params.multiplier
+                          if (params.addend !== undefined) newRaw += params.addend
+                        }
+                        if (params.clampMax !== undefined) newRaw = Math.min(newRaw, params.clampMax)
+                        if (params.clampMin !== undefined) newRaw = Math.max(newRaw, params.clampMin)
                         return newRaw * f + off
                       }))}
                       label={`After (Stage ${stage}${addons.length > 0 ? ' + addons' : ''}${hasZone ? ' + zones' : ''})`}

@@ -20,6 +20,10 @@ export interface ExtractedMap {
   // Optional per-cell multiplier grid for ECM Titanium-style zone editing.
   // When present, each cell uses its own multiplier instead of the stage-level uniform multiplier.
   cellMultiplierGrid?: number[][]
+  // Optional per-cell addend grid (raw units). Used for addend-based maps (SOI, ignition timing)
+  // where the Zone Editor stores degree offsets converted to raw units per cell.
+  // When present, each cell's stored raw value gets +cellAddendGrid[r][c] applied.
+  cellAddendGrid?: number[][]
 }
 
 // ─── ECU Detection ────────────────────────────────────────────────────────────
