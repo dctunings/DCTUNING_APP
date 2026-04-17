@@ -2559,8 +2559,11 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                   </div>
                 )
               })()}
-              {/* ── Per-map adjustment controls — only for multiplier-based found maps ── */}
-              {m.found && !isSet && effectiveParams.multiplier !== undefined && effectiveParams.multiplier !== 1 && (() => {
+              {/* ── Per-map adjustment controls — show for ALL found multiplier-based maps,
+                   including stock-default (multiplier=1) maps so the user can still Zone-Edit
+                   specific cells. Addend-only maps (SOI, limiters with no multiplier stage
+                   param) still skipped because the Zone Editor uses multiplier logic. ── */}
+              {m.found && !isSet && effectiveParams.multiplier !== undefined && (() => {
                 const mapAnchors = cellAnchors[m.mapDef.id] ?? {}
                 const hasZone = Object.keys(mapAnchors).length > 0
                 const isZoneOpen = zoneEditorMapId === m.mapDef.id
@@ -2584,25 +2587,27 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                       </span>
                       <input
                         type="range"
-                        min={1} max={50} step={1}
+                        min={0} max={50} step={1}
                         value={currentPct}
                         disabled={hasZone}
                         onChange={e => {
                           const pct = parseInt(e.target.value)
+                          // pct=0 → multiplier 1.0 (stock). Store a real entry rather than undefined
+                          // so the build engine honours the user's choice over any stage default.
                           setCustomMultipliers(prev => ({ ...prev, [m.mapDef.id]: 1 + pct / 100 }))
                         }}
                         style={{ flex: 1, accentColor: 'var(--accent)', cursor: hasZone ? 'not-allowed' : 'pointer', minWidth: 80, opacity: hasZone ? 0.4 : 1 }}
                       />
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         <span style={{ fontSize: 13, fontWeight: 800, color: hasZone ? 'rgba(184,240,42,0.5)' : isCustom ? '#b8f02a' : 'var(--accent)', minWidth: 34, textAlign: 'right' }}>
-                          +{currentPct}%
+                          {currentPct >= 0 ? '+' : ''}{currentPct}%
                         </span>
                         <input
-                          type="number" min={1} max={50}
+                          type="number" min={0} max={50}
                           value={currentPct}
                           disabled={hasZone}
                           onChange={e => {
-                            const pct = Math.max(1, Math.min(50, parseInt(e.target.value) || 0))
+                            const pct = Math.max(0, Math.min(50, parseInt(e.target.value) || 0))
                             setCustomMultipliers(prev => ({ ...prev, [m.mapDef.id]: 1 + pct / 100 }))
                           }}
                           style={{ width: 44, padding: '3px 5px', borderRadius: 5, border: `1px solid ${isCustom ? 'rgba(184,240,42,0.35)' : 'rgba(255,255,255,0.12)'}`, background: 'rgba(0,0,0,0.3)', color: hasZone ? 'rgba(255,255,255,0.3)' : '#fff', fontSize: 12, fontWeight: 700, textAlign: 'center', outline: 'none' }}

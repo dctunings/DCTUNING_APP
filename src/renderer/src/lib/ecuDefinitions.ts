@@ -1794,7 +1794,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: `edc17_trq_gear${gear + 1}`,
         name: `Torque Target (Gear ${gear + 1} of 5)`,
         category: 'torque' as const,
-        desc: `Per-gear torque target map — one of 5 gear variants clustered around 0x030BB6. All 5 gears are modified in sync at +5% by Stage 1 (only Gear 1 is shown in preview to avoid clutter, but gears 2-5 are also modified behind the scenes — visible in the build summary's "Maps Modified" count).`,
+        desc: `Per-gear torque target map (one of 5 gear variants). Default Stage 1 = +5%. Use the Zone Editor on this card to tune specific cells (e.g. raise only high-RPM zones) for this gear individually — independent from the other 4 gears.`,
         signatures: [
           [0x0c,0x00,0x0a,0x00,0x40,0x06,0xd0,0x07,0xb8,0x0b,0xa0,0x0f],
         ],
@@ -1807,7 +1807,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage2: { multiplier: 1.15 },
         stage3: { multiplier: 1.25, clampMax: 65000 },
         critical: false,
-        showPreview: gear === 0,  // only show gear 1 in preview to avoid UI clutter
+        showPreview: true,  // show all 5 gears so each can be zone-tuned independently
       })),
       // ── TORQUE DEMAND CLUSTER B (3 variants at 0x0329BC) ──
       // 3 identical 10×14 torque demand maps. Pro tunes +3.4% each.
@@ -1828,7 +1828,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage2: { multiplier: 1.12 },
         stage3: { multiplier: 1.22, clampMax: 65000 },
         critical: false,
-        showPreview: variant === 0,
+        showPreview: true,  // show all variants so each can be zone-tuned independently
       })),
       // ── IQ VARIANT CLUSTER (multiple IQ-related maps at 0x031350) ──
       // These are additional fuel delivery maps (injection quantity by operating mode).
@@ -1851,7 +1851,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage2: { multiplier: 1.10 },
         stage3: { multiplier: 1.18, clampMax: 6200 },
         critical: false,
-        showPreview: variant === 0,
+        showPreview: true,  // show all variants so each can be zone-tuned independently
       })),
       // ── SECONDARY SMOKE LIMITER (+58% pro change!) ──
       // 7×5 map near the primary smoke limiter. Pro tune raises this massively (+58%) which
