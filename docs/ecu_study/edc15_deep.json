@@ -1,0 +1,94 @@
+{
+  "family": "EDC15",
+  "totalPairs": 828,
+  "maps": [
+    {
+      "sigHex": "0003000357038403f9033804",
+      "sigBytes": [
+        0,
+        3,
+        0,
+        3,
+        87,
+        3,
+        132,
+        3,
+        249,
+        3,
+        56,
+        4
+      ],
+      "rows": 3,
+      "cols": 3,
+      "xAxis": [
+        22275,
+        33795,
+        63747
+      ],
+      "yAxis": [
+        14340,
+        29700,
+        50180
+      ],
+      "le": false,
+      "occurrences": 27,
+      "occurrencePct": 3.260869565217391,
+      "avgPctChange": -56.94464808453008,
+      "medianPctChange": -62.78369157783765,
+      "sampleFiles": [
+        "VW_Transporter_1.9D_2004_Turbo-Diesel___64.7KWKW_Bosch_0281010257_038906012CE_360550_719E.Original",
+        "VW_Transporter_1.9D_2004_Turbo-Diesel___64.7KWKW_Bosch_0281010257_038906012CE_360550_719E.Original",
+        "VW_Transporter_1.9D_2004_Turbo-Diesel___64.7KWKW_Bosch_0281010257_038906012CE_360550_719E.Original"
+      ]
+    },
+    {
+      "sigHex": "08000800b80bac0da00f8813",
+      "sigBytes": [
+        8,
+        0,
+        8,
+        0,
+        184,
+        11,
+        172,
+        13,
+        160,
+        15,
+        136,
+        19
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        3000,
+        3500,
+        4000,
+        5000,
+        6000,
+        7000,
+        8000,
+        9000
+      ],
+      "yAxis": [
+        3921,
+        3941,
+        3951,
+        3971,
+        3991,
+        4011,
+        4031,
+        4051
+      ],
+      "le": true,
+      "occurrences": 8,
+      "occurrencePct": 0.966183574879227,
+      "avgPctChange": 14.998780770699044,
+      "medianPctChange": 19.999999999999996,
+      "sampleFiles": [
+        "Opel_Insignia_2.0_CDTi_2017_Turbo-Diesel___117.7KWKW_Bosch_0281017452__506515_66A6.Original",
+        "Opel_Insignia_2.0_CDTi_2017_Turbo-Diesel___117.7KWKW_Bosch_0281017452__506516_77EB.Original",
+        "Opel_Insignia_2.0_CDTi_2017_Turbo-Diesel___117.7KWKW_Bosch_0281017452__506619_1D63.Original"
+      ]
+    }
+  ]
+}

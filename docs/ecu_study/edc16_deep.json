@@ -1,0 +1,482 @@
+{
+  "family": "EDC16",
+  "totalPairs": 97,
+  "maps": [
+    {
+      "sigHex": "0004000a019001f4025802bc",
+      "sigBytes": [
+        0,
+        4,
+        0,
+        10,
+        1,
+        144,
+        1,
+        244,
+        2,
+        88,
+        2,
+        188
+      ],
+      "rows": 10,
+      "cols": 4,
+      "xAxis": [
+        400,
+        500,
+        600,
+        700
+      ],
+      "yAxis": [
+        200,
+        400,
+        600,
+        800,
+        1000,
+        1200,
+        1400,
+        1600,
+        1800,
+        2000
+      ],
+      "le": false,
+      "occurrences": 9,
+      "occurrencePct": 9.278350515463918,
+      "avgPctChange": 50,
+      "medianPctChange": 50,
+      "sampleFiles": [
+        "VW_Crafter_2.5_R5_TDI_CR_2008_Turbo-Diesel___100KWKW_Bosch__074906032AP_503940_AED5.Original",
+        "VW_Crafter_2.5_R5_TDI_CR_2008_Turbo-Diesel___119.9KWKW_Bosch__074906032BB_391557_908D.Original",
+        "VW_Crafter_2.5_TDI_2007_Turbodiesel___80.2KWKW_Bosch__074906032D__381011_6609.Original"
+      ]
+    },
+    {
+      "sigHex": "0010000a000002bc03e804e2",
+      "sigBytes": [
+        0,
+        16,
+        0,
+        10,
+        0,
+        0,
+        2,
+        188,
+        3,
+        232,
+        4,
+        226
+      ],
+      "rows": 10,
+      "cols": 16,
+      "xAxis": [
+        0,
+        700,
+        1000,
+        1250,
+        1500,
+        1750,
+        1900,
+        2050,
+        2250,
+        2650,
+        3000,
+        3220,
+        3500,
+        3750,
+        4000,
+        4100
+      ],
+      "yAxis": [
+        600,
+        650,
+        700,
+        750,
+        800,
+        850,
+        900,
+        930,
+        1000,
+        1050
+      ],
+      "le": false,
+      "occurrences": 9,
+      "occurrencePct": 9.278350515463918,
+      "avgPctChange": 5.7001871154660275,
+      "medianPctChange": 5.680656434379938,
+      "sampleFiles": [
+        "VW_Crafter_2.5_R5_TDI_CR_2008_Turbo-Diesel___100KWKW_Bosch__074906032AP_503940_AED5.Original",
+        "VW_Crafter_2.5_R5_TDI_CR_2008_Turbo-Diesel___119.9KWKW_Bosch__074906032BB_391557_908D.Original",
+        "VW_Crafter_2.5_TDI_2007_Turbodiesel___80.2KWKW_Bosch__074906032D__381011_6609.Original"
+      ]
+    },
+    {
+      "sigHex": "00100008006400c8012c0190",
+      "sigBytes": [
+        0,
+        16,
+        0,
+        8,
+        0,
+        100,
+        0,
+        200,
+        1,
+        44,
+        1,
+        144
+      ],
+      "rows": 8,
+      "cols": 16,
+      "xAxis": [
+        100,
+        200,
+        300,
+        400,
+        500,
+        600,
+        800,
+        1000,
+        1200,
+        1800,
+        2000,
+        3000,
+        3200,
+        3400,
+        3600,
+        4500
+      ],
+      "yAxis": [
+        0,
+        100,
+        200,
+        300,
+        500,
+        6000,
+        7000,
+        8000
+      ],
+      "le": false,
+      "occurrences": 9,
+      "occurrencePct": 9.278350515463918,
+      "avgPctChange": 3.9607881968511722,
+      "medianPctChange": 3.9607881968511727,
+      "sampleFiles": [
+        "VW_Crafter_2.5_R5_TDI_CR_2008_Turbo-Diesel___100KWKW_Bosch__074906032AP_503940_AED5.Original",
+        "VW_Crafter_2.5_R5_TDI_CR_2008_Turbo-Diesel___119.9KWKW_Bosch__074906032BB_391557_908D.Original",
+        "VW_Crafter_2.5_TDI_2007_Turbodiesel___80.2KWKW_Bosch__074906032D__381011_6609.Original"
+      ]
+    },
+    {
+      "sigHex": "000a000a04e205dc06d607d0",
+      "sigBytes": [
+        0,
+        10,
+        0,
+        10,
+        4,
+        226,
+        5,
+        220,
+        6,
+        214,
+        7,
+        208
+      ],
+      "rows": 10,
+      "cols": 10,
+      "xAxis": [
+        1250,
+        1500,
+        1750,
+        2000,
+        2250,
+        2500,
+        3000,
+        3250,
+        4250,
+        4500
+      ],
+      "yAxis": [
+        0,
+        600,
+        800,
+        1000,
+        1500,
+        2000,
+        2500,
+        3000,
+        3500,
+        4500
+      ],
+      "le": false,
+      "occurrences": 6,
+      "occurrencePct": 6.185567010309279,
+      "avgPctChange": 12.018339017531263,
+      "medianPctChange": 12.018339017531265,
+      "sampleFiles": [
+        "VW_Caddy_1.9_TDI_PD_2006_Turbodiesel___77.2KWKW_Bosch_0281013652_03G906021HS_381007_A0C9.Original",
+        "VW_Caddy_1.9_TDI_PD_2006_Turbodiesel___77.2KWKW_Bosch_0281013652_03G906021HS_381007_A0C9.Original",
+        "VW_Caddy_1.9_TDI_PD_2006_Turbodiesel___77.2KWKW_Bosch_0281013652_03G906021HS_381007_A0C9.Original"
+      ]
+    },
+    {
+      "sigHex": "000a000a05d206cf077708c7",
+      "sigBytes": [
+        0,
+        10,
+        0,
+        10,
+        5,
+        210,
+        6,
+        207,
+        7,
+        119,
+        8,
+        199
+      ],
+      "rows": 10,
+      "cols": 10,
+      "xAxis": [
+        1490,
+        1743,
+        1911,
+        2247,
+        2499,
+        3003,
+        3507,
+        3990,
+        4242,
+        4494
+      ],
+      "yAxis": [
+        600,
+        650,
+        700,
+        750,
+        800,
+        850,
+        900,
+        930,
+        960,
+        1100
+      ],
+      "le": false,
+      "occurrences": 5,
+      "occurrencePct": 5.154639175257731,
+      "avgPctChange": 12.404106868100966,
+      "medianPctChange": 10.004286556287845,
+      "sampleFiles": [
+        "Audi_A3_2.0_TDI_PD_2004_Turbodiesel___103KWKW_Bosch_0281011364_03G906016G__370435_197A.Original",
+        "Audi____A4_2.0_TDI_2002_Turbodiesel___103KWKW_Bosch_0281011364_03G906016G__367380_4B8B.Original",
+        "VW_Golf_5_2.0_TDI_2004_Turbodiesel___103KWKW_Bosch_0281011477_03G906016AN_368925_EF91.Original"
+      ]
+    },
+    {
+      "sigHex": "000a000a09e30a470aab0b0f",
+      "sigBytes": [
+        0,
+        10,
+        0,
+        10,
+        9,
+        227,
+        10,
+        71,
+        10,
+        171,
+        11,
+        15
+      ],
+      "rows": 10,
+      "cols": 10,
+      "xAxis": [
+        2531,
+        2631,
+        2731,
+        2831,
+        2931,
+        3131,
+        3331,
+        3531,
+        3532,
+        3533
+      ],
+      "yAxis": [
+        700,
+        1012,
+        1500,
+        2000,
+        2500,
+        3000,
+        3500,
+        4000,
+        4500,
+        5012
+      ],
+      "le": false,
+      "occurrences": 4,
+      "occurrencePct": 4.123711340206185,
+      "avgPctChange": 19.999999999999996,
+      "medianPctChange": 19.999999999999996,
+      "sampleFiles": [
+        "Alfa_159_2.0_JTDM_2017_Turbo-Diesel__100KWKW_Bosch_0281017783_51892681_515032_FC4A.Original",
+        "Alfa_Giulietta_1.6_JTDM_2017_Turbo-Diesel__77.2KWKW_Bosch_0281017785_51916024_518667_78B4.Original",
+        "Alfa_159_2.0_JTDM_2017_Turbo-Diesel__100KWKW_Bosch_0281017783_51892681_515032_FC4A.Original"
+      ]
+    },
+    {
+      "sigHex": "000a000a05dc06d607d008ca",
+      "sigBytes": [
+        0,
+        10,
+        0,
+        10,
+        5,
+        220,
+        6,
+        214,
+        7,
+        208,
+        8,
+        202
+      ],
+      "rows": 10,
+      "cols": 10,
+      "xAxis": [
+        1500,
+        1750,
+        2000,
+        2250,
+        2500,
+        3000,
+        3500,
+        4000,
+        4250,
+        4500
+      ],
+      "yAxis": [
+        600,
+        650,
+        700,
+        750,
+        800,
+        850,
+        900,
+        930,
+        960,
+        1100
+      ],
+      "le": false,
+      "occurrences": 4,
+      "occurrencePct": 4.123711340206185,
+      "avgPctChange": 9.004896281709385,
+      "medianPctChange": 10.002564891761567,
+      "sampleFiles": [
+        "Audi_A4_2.0_TDI_2004_Turbodiesel___103KWKW_Bosch_0281012113_03G906016GN_372668_62F9.Original",
+        "Audi_A4_2.0_TDI_2005_Turbodiesel___103KWKW_Bosch_0281012654_03G906016JD_378340_6D4F.Original",
+        "Audi_A4_2.0_TDI__Turbodiesel___103KWKW_Bosch_0281012726_03G906016JE_378342_85BE.Original"
+      ]
+    },
+    {
+      "sigHex": "000d000702bc03e804e205dc",
+      "sigBytes": [
+        0,
+        13,
+        0,
+        7,
+        2,
+        188,
+        3,
+        232,
+        4,
+        226,
+        5,
+        220
+      ],
+      "rows": 7,
+      "cols": 13,
+      "xAxis": [
+        700,
+        1000,
+        1250,
+        1500,
+        1750,
+        2001,
+        2500,
+        3000,
+        3499,
+        3750,
+        4000,
+        4250,
+        4500
+      ],
+      "yAxis": [
+        500,
+        700,
+        750,
+        800,
+        850,
+        900,
+        950
+      ],
+      "le": false,
+      "occurrences": 3,
+      "occurrencePct": 3.0927835051546393,
+      "avgPctChange": 8.023742732266559,
+      "medianPctChange": 8.023869282384876,
+      "sampleFiles": [
+        "Audi_A6_2.7_TDI_2005_Turbodiesel___132.4KWKW_Bosch_0281012561_4F0907401B__376966_185C.Original",
+        "Audi_A6_2.7_TDI_2005_Turbodiesel___132.4KWKW_Bosch_0281012561_4F0907401B__376966_185C.Original",
+        "Audi_A6_2.7_TDI_2005_Turbodiesel___132.4KWKW_Bosch_0281012_4F0907401B__377107_A893.Original"
+      ]
+    },
+    {
+      "sigHex": "000700080064012c01e00320",
+      "sigBytes": [
+        0,
+        7,
+        0,
+        8,
+        0,
+        100,
+        1,
+        44,
+        1,
+        224,
+        3,
+        32
+      ],
+      "rows": 8,
+      "cols": 7,
+      "xAxis": [
+        100,
+        300,
+        480,
+        800,
+        1000,
+        1400,
+        1600
+      ],
+      "yAxis": [
+        2491,
+        2551,
+        2631,
+        2729,
+        2931,
+        3131,
+        3331,
+        3531
+      ],
+      "le": false,
+      "occurrences": 3,
+      "occurrencePct": 3.0927835051546393,
+      "avgPctChange": -7.385576961113972,
+      "medianPctChange": -7.385576961113971,
+      "sampleFiles": [
+        "VW_Transporter_2.5_TDI_2005_Turbodiesel___95.6KWKW_Bosch_0281011258_070906016F__368187_6EF1.Original",
+        "VW_Transporter_2.5_TDI_2005_Turbodiesel___95.6KWKW_Bosch_0281011258_070906016F__368187_6EF1.Original",
+        "VW_Transporter_2.5_TDI_2005_Turbodiesel___95.6KWKW_Bosch_0281011258_070906016F__368187_6EF1.Original"
+      ]
+    }
+  ]
+}

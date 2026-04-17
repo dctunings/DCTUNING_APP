@@ -1,0 +1,151 @@
+{
+  "family": "ME7",
+  "totalPairs": 411,
+  "maps": [
+    {
+      "sigHex": "080008000000a40048013e02",
+      "sigBytes": [
+        8,
+        0,
+        8,
+        0,
+        0,
+        0,
+        164,
+        0,
+        72,
+        1,
+        62,
+        2
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        0,
+        164,
+        328,
+        574,
+        820,
+        1229,
+        2048,
+        4056
+      ],
+      "yAxis": [
+        3200,
+        4080,
+        6000,
+        8080,
+        10200,
+        12080,
+        16120,
+        26120
+      ],
+      "le": true,
+      "occurrences": 26,
+      "occurrencePct": 6.326034063260341,
+      "avgPctChange": 177.29513337368238,
+      "medianPctChange": 157.48730466450564,
+      "sampleFiles": [
+        "Audi_A3_1.8T_20V_2001_Turbo-Benzin___110.3KWKW_Bosch_0261207204_06A906032FC_360294_98CD.Original",
+        "Audi_A3_1.8T_20V_2003_Benzin___110.3KWKW_Bosch_0261207436_06A906032HJ_362287_F7EA.Original",
+        "Audi_A3_1.8T_20V_2003_Benzin___110.3KWKW_Bosch_0261207436_06A906032HJ_362287_F7EA.Original"
+      ]
+    },
+    {
+      "sigHex": "080008000000a00040014002",
+      "sigBytes": [
+        8,
+        0,
+        8,
+        0,
+        0,
+        0,
+        160,
+        0,
+        64,
+        1,
+        64,
+        2
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        0,
+        160,
+        320,
+        576,
+        819,
+        1229,
+        2048,
+        4096
+      ],
+      "yAxis": [
+        3200,
+        4960,
+        6080,
+        8000,
+        10000,
+        12000,
+        16000,
+        24000
+      ],
+      "le": true,
+      "occurrences": 17,
+      "occurrencePct": 4.13625304136253,
+      "avgPctChange": 130.1702437259583,
+      "medianPctChange": 141.66985885611575,
+      "sampleFiles": [
+        "Audi_A3_1.8_T_2000_Turbo-Benzin___132.4KWKW_Bosch_0261206197_06A906032S__352356_2CFC.Original",
+        "Audi_A4_1.8_T_2000_Turbo-Benzin___110.3KWKW_Bosch_0261206450_4B0906018AL_352051_F01C.Original",
+        "Audi_A6_1.8_T_2000_Turbo-Benzin___110.3KWKW_Bosch_0261206525_4B0906018BF_352710_E79D.Original"
+      ]
+    },
+    {
+      "sigHex": "060008003d0a7b14b81ef628",
+      "sigBytes": [
+        6,
+        0,
+        8,
+        0,
+        61,
+        10,
+        123,
+        20,
+        184,
+        30,
+        246,
+        40
+      ],
+      "rows": 8,
+      "cols": 6,
+      "xAxis": [
+        2621,
+        5243,
+        7864,
+        10486,
+        13107,
+        15729
+      ],
+      "yAxis": [
+        2000,
+        4000,
+        6000,
+        8000,
+        12000,
+        16000,
+        20000,
+        24000
+      ],
+      "le": true,
+      "occurrences": 4,
+      "occurrencePct": 0.9732360097323601,
+      "avgPctChange": 77.94957562686943,
+      "medianPctChange": -6.496298065440653,
+      "sampleFiles": [
+        "Audi_A4_1.8_T__Turbo-Benzin___110.3KWKW_Bosch_0261207779_8E0909018_363467_E459.Original",
+        "VW_Golf4_1.8_T__Turbo-Benzin___110.3KWKW_Bosch_0261206887_06A906032DR_360272_DF0E.Original",
+        "VW_Golf4_1.8_T__Turbo-Benzin___110.3KWKW_Bosch_0261206887_06A906032DR_360272_DF0E.Original"
+      ]
+    }
+  ]
+}
