@@ -678,15 +678,11 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   // Per-map custom multiplier overrides (keyed by mapDef.id, value = multiplier e.g. 1.15 for +15%)
   // When set, overrides the stage default in both the preview heatmap and the final build.
   const [customMultipliers, setCustomMultipliers] = useState<Record<string, number>>({})
-  // Global stage-intensity multiplier. Scales the DELTA from stock on every map's stage1/2/3
-  // multiplier and addend. 1.0 = 100% (use the ECU definition's values as-is, i.e. standard tune).
-  // 0.5 = 50% (conservative), 1.5 = 150% (aggressive), etc. This is the UI-level knob that
-  // replaces per-ECU-family tone-down edits — one slider tunes every map proportionally.
-  //
-  // Formula: scaled_multiplier = 1 + (stage_multiplier - 1) * intensity
-  //          scaled_addend     = stage_addend * intensity
-  // So a 1.28 torque limit at 50% intensity becomes 1 + 0.28*0.5 = 1.14 (+14% instead of +28%).
-  const [stageIntensity, setStageIntensity] = useState<number>(1.0)
+  // NOTE: v3.5.17 added a "Stage Intensity" slider here. Removed in v3.5.25 — the Stage 1/2/3
+  // selector on the Configure step (Step 2) was the intended UI for staging aggressiveness.
+  // Duplicating it with a global slider on the Preview page was unnecessary clutter.
+  // If Stage 1 values feel too aggressive for a specific ECU family, the fix is to tune
+  // the stage1 multipliers in ecuDefinitions.ts for that family (as done for EDC17/EDC16/MED17/MG1).
   // Per-map zone anchors for ECM Titanium-style region editing.
   // cellAnchors[mapId]["r,c"] = multiplier — sparse anchor points; non-anchor cells are IDW-interpolated.
   // When a map has anchors, cellAnchors takes precedence over customMultipliers.
@@ -1183,37 +1179,12 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const handleBuildRemap = () => {
     if (!fileBuffer || !selectedEcu || extractedMaps.length === 0) return
 
-    // Helper: scale stage params by the global Stage Intensity slider.
-    // Applies to non-addon params only (addons like EGR-off are binary on/off).
-    // scaled_multiplier = 1 + (mul - 1) * intensity    scaled_addend = addend * intensity
-    const scaleParams = <T extends { multiplier?: number; addend?: number; clampMax?: number; clampMin?: number; lastNRows?: number; lastNCols?: number }>(p: T | undefined): T | undefined => {
-      if (!p || stageIntensity === 1.0) return p
-      const out = { ...p } as T
-      if (p.multiplier !== undefined && p.multiplier !== 0) {
-        out.multiplier = 1 + (p.multiplier - 1) * stageIntensity
-      }
-      if (p.addend !== undefined) {
-        out.addend = Math.round(p.addend * stageIntensity)
-      }
-      return out
-    }
-
     // Inject custom per-map multipliers / zone grids: clone the extractedMaps and override
     // stage params for any map where the tuner has set a custom % or zone anchors.
     const mapsWithOverrides = extractedMaps.map(em => {
       const anchors = cellAnchors[em.mapDef.id] ?? {}
       const hasZoneAnchors = Object.keys(anchors).length > 0
       const custom = customMultipliers[em.mapDef.id]
-
-      // Pre-scale the stage params for the intensity slider. Zone edits + custom slider
-      // override these; plain stage-default maps get the scaled values applied directly.
-      const scaledMapDef = stageIntensity === 1.0 ? em.mapDef : {
-        ...em.mapDef,
-        stage1: scaleParams(em.mapDef.stage1) ?? em.mapDef.stage1,
-        stage2: scaleParams(em.mapDef.stage2) ?? em.mapDef.stage2,
-        stage3: scaleParams(em.mapDef.stage3) ?? em.mapDef.stage3,
-      }
-      em = { ...em, mapDef: scaledMapDef }
 
       // Zone editor (per-cell anchors) takes precedence over uniform slider.
       // Build either cellMultiplierGrid or cellAddendGrid depending on mapDef.tuningMode.
@@ -2524,52 +2495,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         })()}
       </div>
 
-      {/* ── GLOBAL STAGE INTENSITY SLIDER — scales ALL map deltas proportionally ── */}
-      <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 8, background: 'linear-gradient(135deg, rgba(184,240,42,0.05), rgba(0,174,200,0.04))', border: '1px solid rgba(184,240,42,0.25)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 12, fontWeight: 800, color: '#b8f02a', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Stage Intensity
-          </span>
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>
-            Scales every map's stage delta — one slider tunes the whole ECU file.
-          </span>
-          <span style={{ marginLeft: 'auto', fontSize: 15, fontWeight: 800, color: stageIntensity === 1 ? 'var(--accent)' : stageIntensity < 1 ? '#22c55e' : '#f59e0b', minWidth: 54, textAlign: 'right' }}>
-            {Math.round(stageIntensity * 100)}%
-          </span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 9, color: '#22c55e', fontWeight: 700, minWidth: 60 }}>Conservative</span>
-          <input
-            type="range"
-            min={0.25} max={1.5} step={0.05}
-            value={stageIntensity}
-            onChange={e => setStageIntensity(parseFloat(e.target.value))}
-            style={{ flex: 1, accentColor: '#b8f02a' }}
-          />
-          <span style={{ fontSize: 9, color: '#f59e0b', fontWeight: 700, minWidth: 60, textAlign: 'right' }}>Aggressive</span>
-          <div style={{ display: 'flex', gap: 4, marginLeft: 4 }}>
-            {[0.5, 0.75, 1.0, 1.25, 1.5].map(preset => (
-              <button
-                key={preset}
-                onClick={() => setStageIntensity(preset)}
-                title={`${Math.round(preset * 100)}% intensity preset`}
-                style={{
-                  fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 4,
-                  cursor: 'pointer',
-                  border: `1px solid ${Math.abs(stageIntensity - preset) < 0.01 ? 'rgba(184,240,42,0.6)' : 'rgba(255,255,255,0.15)'}`,
-                  background: Math.abs(stageIntensity - preset) < 0.01 ? 'rgba(184,240,42,0.15)' : 'rgba(255,255,255,0.03)',
-                  color: Math.abs(stageIntensity - preset) < 0.01 ? '#b8f02a' : 'rgba(255,255,255,0.5)',
-                }}
-              >
-                {Math.round(preset * 100)}%
-              </button>
-            ))}
-          </div>
-        </div>
-        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 6, lineHeight: 1.4 }}>
-          At 100% each map uses the ECU definition's default Stage {stage} value. 50% halves every delta (e.g. +18% boost becomes +9%). Applies proportionally to multipliers AND addends. Custom per-map sliders and Zone Editor anchors still override.
-        </div>
-      </div>
+      {/* Stage Intensity slider removed in v3.5.25 — the Stage 1/2/3 selection on the
+           Configure step is the intended UI for staging aggressiveness. */}
 
       {/* Scanner candidates removed — only show definition-matched maps */}
 
@@ -2668,29 +2595,14 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           if (!m.mapDef.showPreview) return null
           // Effective params: addon override takes precedence over stage params —
           // matches remapEngine.ts getParams() exactly so badge and preview are accurate.
-          let baseParams = m.mapDef[`stage${stage}` as 'stage1' | 'stage2' | 'stage3']
+          let effectiveParams = m.mapDef[`stage${stage}` as 'stage1' | 'stage2' | 'stage3']
           for (const addonId of addons) {
             if (m.mapDef.addonOverrides?.[addonId]) {
-              baseParams = m.mapDef.addonOverrides[addonId]
+              effectiveParams = m.mapDef.addonOverrides[addonId]
               break
             }
           }
-          // Apply global Stage Intensity scaling — DELTA from stock gets scaled by the UI slider.
-          // 100% = baseline (ECU def values). 50% = half the aggressiveness. 150% = more aggressive.
-          // Addon-override params are NOT scaled (emission deletes, launch control etc are binary).
-          const isAddonParams = addons.some(id => m.mapDef.addonOverrides?.[id] === baseParams)
-          let effectiveParams = baseParams
-          if (!isAddonParams && stageIntensity !== 1.0) {
-            const scaled: typeof baseParams = { ...baseParams }
-            if (baseParams.multiplier !== undefined && baseParams.multiplier !== 0) {
-              scaled.multiplier = 1 + (baseParams.multiplier - 1) * stageIntensity
-            }
-            if (baseParams.addend !== undefined) {
-              scaled.addend = Math.round(baseParams.addend * stageIntensity)
-            }
-            effectiveParams = scaled
-          }
-          // Apply custom multiplier override if tuner has set one (overrides stage scaling entirely)
+          // Apply custom multiplier override if tuner has set one
           const customMul = customMultipliers[m.mapDef.id]
           const params = customMul !== undefined
             ? { ...effectiveParams, multiplier: customMul }

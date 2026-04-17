@@ -3589,9 +3589,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 4,
         rows: 12, cols: 16, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'bar',
-        stage1: { multiplier: 1.20 },
-        stage2: { multiplier: 1.35 },
-        stage3: { multiplier: 1.50, clampMax: 62000 },
+        // Toned down from 1.20 → 1.06 on Stage 1 — pro-tune realistic for petrol DI.
+        stage1: { multiplier: 1.06 },
+        stage2: { multiplier: 1.18 },
+        stage3: { multiplier: 1.35, clampMax: 62000 },
         critical: true, showPreview: true,
       },
       {
@@ -3603,9 +3604,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 4,
         rows: 16, cols: 16, dtype: 'uint16', le: true,
         factor: 0.001, offsetVal: 0, unit: 'ms',
-        stage1: { multiplier: 1.15 },
-        stage2: { multiplier: 1.25 },
-        stage3: { multiplier: 1.35, clampMax: 60000 },
+        // Toned down from 1.15 → 1.05 on Stage 1 — petrol fuel map realistic increase.
+        stage1: { multiplier: 1.05 },
+        stage2: { multiplier: 1.15 },
+        stage3: { multiplier: 1.25, clampMax: 60000 },
         critical: true, showPreview: true,
       },
       {
@@ -3617,9 +3619,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 2,
         rows: 8, cols: 8, dtype: 'uint16', le: true,
         factor: 0.1, offsetVal: 0, unit: 'Nm',
-        stage1: { multiplier: 1.30 },
-        stage2: { multiplier: 1.50 },
-        stage3: { multiplier: 1.70, clampMax: 65000 },
+        // Toned down from 1.30 → 1.10 on Stage 1. Petrol torque ceiling raise kept conservative;
+        // torque-monitor and driver's-wish variants cover the rest of the torque chain.
+        stage1: { multiplier: 1.10 },
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.45, clampMax: 65000 },
         critical: true, showPreview: true,
       },
       {
@@ -3698,15 +3702,16 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'mg1_drivers_wish',
         name: "Driver's Wish Map",
         category: 'torque',
-        desc: "Pedal-to-torque demand conversion. Determines how much torque the ECU requests at each pedal position and RPM. Sharpening this gives a more responsive throttle feel.",
+        desc: "Pedal-to-torque demand conversion. Left stock on Stage 1 for drivability — sharper throttle response is a Stage 2/3 feature.",
         a2lNames: ['AccPed_trqEng0_MAP', 'DrvWish_MAP', 'AccPed_trqEngA_MAP', 'MIFAS_MAP'],
         signatures: [],
         sigOffset: 0,
         rows: 16, cols: 16, dtype: 'uint16', le: true,
         factor: 0.1, offsetVal: 0, unit: 'Nm',
-        stage1: { multiplier: 1.10 },
-        stage2: { multiplier: 1.18 },
-        stage3: { multiplier: 1.25, clampMax: 65000 },
+        // Toned down from 1.10 → 1.00 on Stage 1. Matches pro-tune convention.
+        stage1: { multiplier: 1.00 },
+        stage2: { multiplier: 1.10 },
+        stage3: { multiplier: 1.20, clampMax: 65000 },
         critical: true, showPreview: true,
       },
       {
