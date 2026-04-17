@@ -740,7 +740,11 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [a2lValidation, setA2lValidation] = useState<A2LValidationResult[]>([])
   const [showSigExport, setShowSigExport] = useState(false)
   const [sigExportText, setSigExportText] = useState('')
+  // Counts of how maps were located — split so the UI labels each source correctly.
+  // Previously everything was lumped into a2lFallbackCount which falsely labelled scanner
+  // matches as "via A2L/DRT ✓" even when the user had loaded no A2L or DRT file.
   const [a2lFallbackCount, setA2lFallbackCount] = useState(0)
+  const [scannerFallbackCount, setScannerFallbackCount] = useState(0)
 
   const selectedEcu: EcuDef | undefined = ECU_DEFINITIONS.find(e => e.id === selectedEcuId)
 
@@ -780,6 +784,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     setDrtResult(null); setDrtMaps([]); setDrtFileName('')
     setA2lValidation([])
     setA2lFallbackCount(0)
+    setScannerFallbackCount(0)
     setShowSigExport(false)
     setSigExportText('')
     setLibSearch(''); setLibResults([]); setLibTotal(0); setLibPage(0)
@@ -1103,7 +1108,10 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             }
             return em
           })
-          setA2lFallbackCount(c => c + scannerCount)
+          // Track scanner-matched count SEPARATELY from a2l/drt fallback count so the UI
+          // shows the correct source. Previously this incremented a2lFallbackCount which
+          // caused a false "via A2L/DRT ✓" indicator when no A2L/DRT was loaded.
+          setScannerFallbackCount(c => c + scannerCount)
         }
       } catch (e) {
         // Scanner/classifier crashed — not fatal, just skip fallback
@@ -2454,6 +2462,11 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                   ({a2lFallbackCount} via A2L/DRT ✓)
                 </span>
               )}
+              {scannerFallbackCount > 0 && (
+                <span style={{ marginLeft: 8, color: '#a855f7', fontWeight: 700 }} title="Located by binary scanner + classifier — axis-pattern match to map definition">
+                  ({scannerFallbackCount} via SCAN)
+                </span>
+              )}
             </span>
           )
         })()}
@@ -3103,7 +3116,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
               // Clear A2L / DRT definition state — old definition must not bleed into a new file
               setA2lResult(null); setA2lMaps([]); setA2lFileName('')
               setDrtResult(null); setDrtMaps([]); setDrtFileName('')
-              setA2lValidation([]); setA2lFallbackCount(0); setShowSigExport(false); setSigExportText('')
+              setA2lValidation([]); setA2lFallbackCount(0); setScannerFallbackCount(0); setShowSigExport(false); setSigExportText('')
               // Clear library search state
               setLibSearch(''); setLibResults([]); setLibTotal(0); setLibPage(0)
               setLibFallbackNote(''); setLibOriginalNum(''); setLibLoadError('')
