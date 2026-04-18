@@ -2075,19 +2075,23 @@ export const ECU_DEFINITIONS: EcuDef[] = [
   // edc17 def (above) catches all other EDC17 files.
   {
     id: 'edc17_c46_398757',
-    name: 'Bosch EDC17 C46 (03L906022BQ/FG — Audi A3/A4/A6/Allroad 2.0 TDI CR 140ps cluster)',
+    name: 'Bosch EDC17 C46 (03L906022BQ/G — Audi A3+VW Golf 2.0 TDI CR shared 0x1EF502 cluster)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    // Verified via pair analysis across 7+ pairs (398757 + 399349/399350/500141/
-    // 503995 03L906022FG variants — see pair_analysis_log.md pairs #692-696).
-    // ALL share identical big-region offsets at 0x1EF502/0x1EFF46 (398757) or
-    // 0x1EE306/0x1EED4A (FG cluster — slightly shifted). The fixedOffset values
-    // below match the 398757 layout; the FG variants need a separate def.
-    // For now this def matches 398757 only — FG variants documented for
-    // future split into edc17_c46_03l906022fg_399_503 cluster def.
-    identStrings: ['398757', '03L906022BQ'],
+    // Verified via pair analysis across 13+ pairs of MULTIPLE SW versions:
+    //   Audi A3 2.0 TDI CR sw398757 (03L906022BQ) — 6+ confirmation pairs
+    //   VW Golf 2.0 TDI CR (03L906022G) sw 397892, 398784, 398791, 399393,
+    //     399395 — 8+ pairs (see pair_analysis_log.md VW pairs #210-#223)
+    //
+    // ALL hit EXACT SAME offsets 0x1EF502 (2KB) + 0x1EFF46 (512B) with
+    // identical raw 14259→57390 (+302%) treatment.
+    //
+    // The 03L906022FG variant (sw 399349/399350/500141/503995/etc.) hits
+    // offsets shifted to 0x1EE306/0x1EED4A — handled by sister def
+    // edc17_c46_03l906022fg below.
+    identStrings: ['398757', '03L906022BQ', '397892', '398784', '398791', '399393', '399395'],
     fileSizeRange: [2097152, 2097152],   // exactly 2 MB
-    vehicles: ['Audi A3 2.0 TDI CR 140ps (03L906022BQ sw 398757, 2008-2010)'],
+    vehicles: ['Audi A3 2.0 TDI CR 140ps (03L906022BQ sw 398757)', 'VW Golf 2.0 TDI CR 80-103kW (03L906022G sw 397xxx-399xxx, 2008-2010)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFFC,
     checksumLength: 4,

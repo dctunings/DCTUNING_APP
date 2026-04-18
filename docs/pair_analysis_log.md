@@ -70,6 +70,58 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #209–224 — Golf 03L906022G shares 398757 SGO (5 SWs added to wired def)
+
+**MAJOR cross-chassis confirmation: VW Golf 03L906022G shares
+EXACT 398757 SGO** (`0x1EF502 + 0x1EFF46` cluster):
+- sw399393 (#211/#212/#213 — 3 files same SW) → IDENTICAL offsets
+- sw399395 (#214/#215 — 2 files same SW) → IDENTICAL offsets
+- sw398784 (#218) → IDENTICAL offsets
+- sw396029 (#219/#220 — 2 files) → `0x1EEE62/0x1EF8A6` (Δ=0x6A0
+  shifted, same SGO family)
+- sw397892 (#221/#222 — 2 files) → IDENTICAL offsets
+- sw398791 (#223) → IDENTICAL offsets
+
+**8 pairs across 5 distinct SWs of VW Golf 03L906022G** all hit the
+SAME offsets as my wired Audi A3 398757 def. Added all 5 SWs
+(397892/398784/398791/399393/399395) to the existing
+`edc17_c46_398757` def's identStrings and renamed it to reflect
+shared Audi+VW coverage.
+
+The 398757 def now covers **13+ pairs across 6 distinct SW versions**
+spanning Audi A3 + VW Golf 2.0 TDI CR. Single wire entry catches
+two chassis lines.
+
+**Pair #209** 03L906022LK/G sw398791 (524KB) → `0x0657D6 6B raw
+15788→53338` — joins my just-wired `0x06625E` IQ release cluster
+(at sister offset Δ=0xFA0). sw398791 already in identStrings of
+that def — confirmed.
+
+**Pair #210** 03L906018AT sw505436 → `0x069EB2 2KB +274%` cluster
+— matches my wired Caddy 03L906018xx 0x06ADCA cluster at Δ=-0xF18
+(sister sub-cluster, but offset shift means it wouldn't match my
+fixedOffset). Could be added to Caddy def with offset variation
+note, or wire as separate sub-def.
+
+**Pair #216** 03L906022G sw505938 (2MB) — **13.5% changed (282KB)
+stage1+++ full recal** with 1157 regions. Cal targets at 0x1DE704
++162105% (raw 15→24587 IQ ceiling) + 0x1B75E8 16B (raw 32→39180).
+Different SGO from sw399xxx cluster — newer 505xxx generation has
+shifted to ANOTHER 12×15-shape cluster.
+
+**Pair #217** 03L906018BB sw525556 (2MB, 125kW) → `0x07E036 200B
++1481% + 0x07CCDA 510B +452%` — different cluster from 03L906018BB
+sw510943 (#193 hit `0x056AB2`). So sw525556 03L906018BB has its own
+SGO sub-cluster.
+
+**Pair #218** 03L906019AM sw509988 (61.8 kW Golf 2.0 TDI CR) → only
+small emission disable + 0x02E7D4 6B at -84% — light tune.
+
+**Wire actions taken**:
+- Added sw 397892/398784/398791/399393/399395 to existing 398757
+  def. ID renamed `edc17_c46_398757` to reflect 6-SW Audi+VW
+  coverage. Maps unchanged (same offsets).
+
 ## VW Pairs #193–208 — Golf 2.0 TDI CR 03L906022xx HUGE cluster + DSG files
 
 **STRONG cluster: 03L906022LF/LM/MC share IDENTICAL offsets (524KB)**:
