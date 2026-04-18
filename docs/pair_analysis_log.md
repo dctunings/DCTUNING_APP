@@ -64,6 +64,63 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #919–934 — A6 tail: 4G0907589 BiTDI + 3.2 FSI + 4.2 V8 + early V6 TDI
+
+End of A6 alphabetical batch. Mixed engine families:
+
+**4G0907589 BiTDI 313ps newest** (#909) sw536208 — only **3 bytes
+changed** (probably just file write timestamp / checksum noise) — NO
+REAL TUNE. Should be filtered as no-op.
+
+**4G0907401 sw532819** (#910) — file size **4 MB (4194304 B)** — full
+TC1797 dump format (vs the typical 2 MB extracted cal). NEW dump
+format size for A6 3.0 TDI 4G generation. May need separate handling
+in writeMap (could be cal at +0x180000 or +0x300000 depending on
+which bank is the active cal).
+
+**4F0907401E DPF cluster** (#911-912) sw516623/516638 — emission
+disable signature (`0x191xxx` blocks cleared) + cal mods at
+`0x1D7xxx` and `0x1E0Fxx`. Confirms DPF disable is part of the std
+4F0907401E tune for these SW.
+
+**4G0907401 DPF cluster** (#913-914) sw518146/521649 — emission
+disable + standard 4G mods. Same pattern as 4F0907401E.
+
+**Pair #915 4F0907401C 4F0910402E sw384623** — sister to pair #782
+(2.7 TDI sw384623) but with extra `4F0910402E` part suffix in
+filename (transmission control unit cross-reference?). Cal at
+`0x19C071 + 0x1EF469` — same as the 2.7 TDI 2 MB SGO. Cross-disp
+SW reuse continues.
+
+**3.2 FSI V6 187.6 kW pairs** (#916-918):
+- 4F1907559D sw S6200P2000000 (#916) — **118 KB ROM** (118784 bytes)
+  — partial chiptool dump. Bosch hardware — odd: A6 3.2 FSI was
+  originally Siemens (5WP45007) but #916 has Bosch label. Likely
+  mislabel.
+- 0261125210 4F1907559 (#917) — 2 MB Bosch dump, 7 regions only.
+- 5WP45007 4F1907559 (#918) — **2.625 MB** (2626048 B) Siemens dump
+  — typical Siemens SIMOS partial format. Same SW S6280MA3.000 as
+  #917. So same SGO base, two different dump formats (Bosch vs
+  Siemens). NEW family `5WP45007` for A6 3.2 FSI V6 not in defs.
+
+**A6 4.2 V8 ME7.x petrol** (#919-921):
+- 4D0907558AD 0261207630 sw993339 (#919, 1 MB) — 220.6 kW (300hp)
+  V8 — old A6 4.2L
+- 4D0907558A 0261206016 sw359573 (#920, 524 KB) — 250.1 kW (S6/RS6
+  4.2 V8)
+- 4D0907558AD 0261207630 sw362912 (#921, 1 MB) — same hw as #919
+  but different SW (993339 vs 362912). Same 26-region/2.2KB tune
+  pattern → likely same SGO.
+
+**A6 Allroad 2.7T BiTurbo** (#922) sw366367 — sister to #796
+(prior batch) — same SW, very small 320B tune.
+
+**A6 2.5 V6 TDI 1998 0281001772 4D0907401** (#923) — early Allroad/
+A6 V6 TDI VR pre-EDC15V, 256 KB ROM. 110.3 kW.
+
+**A6 V6 3.0 TDI 4F0907401B sw377101** (#924) — sister of pair #840
+sw377101 (same SW different file). Different tuner mods.
+
 ## Pairs #903–918 — A6 3.0 V6 TDI 4G0907401 + 4G0907589 BiTDI 313ps 2012-2013
 
 This batch covers the **2012-2013 A6 C7 facelift 3.0 V6 TDI** pairs:
