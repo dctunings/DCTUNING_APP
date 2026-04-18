@@ -7435,18 +7435,40 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
-  // ─── Bosch PPD1.x (VW/Audi 1.9/2.0 TDI Pumpe Düse) ──────────────────────
+  // ─── Siemens PPD1.x (VW/Audi 1.9/2.0 TDI Pumpe Düse) ──────────────────────
   {
     id: 'vag_ppd1',
-    name: 'Bosch PPD1.x (VW/Audi TDI Pumpe Düse)',
-    manufacturer: 'Bosch',
+    name: 'Siemens PPD1.x (VW/Audi TDI Pumpe Düse)',
+    manufacturer: 'Siemens',
     family: 'PPD1',
-    // PPD1.1, PPD1.2, PPD1.3, PPD1.5 are Bosch ECUs for VW/Audi Pumpe Düse (unit injector)
-    // 1.9 TDI and 2.0 TDI engines — NOT common-rail (no EDC16/EDC17). Used in Golf IV/V,
-    // Passat B5/B6, Octavia Mk1/Mk2, A3 8P, A4 B5/B6, Seat Leon/Toledo 1.9 TDI (BKD/BXE/BKP/BMR).
-    // PPD1.x calibration variant codes ARE embedded as ASCII in the ROM identification header.
-    identStrings: ['PPD1.1', 'PPD1.2', 'PPD1.3', 'PPD1.5', 'PPD1'],
-    fileSizeRange: [524288, 1048576],
+    // PPD1.1, PPD1.2, PPD1.3, PPD1.5 are SIEMENS/Continental ECUs (NOT Bosch — the
+    // manufacturer string was wrong in earlier revs) for VW/Audi Pumpe Düse
+    // (unit injector) 1.9 TDI and 2.0 TDI engines — NOT common-rail. Used in Golf
+    // IV/V, Passat B5/B6, Octavia Mk1/Mk2, A3 8P, A4 B5/B6, Seat Leon/Toledo 1.9 TDI
+    // (BKD/BXE/BKP/BMR/BMM).
+    //
+    // Byte order: BIG-ENDIAN (uint16 BE for all calibration data).
+    // Valid calibration data range in file: 0x41100–0x7D87F.
+    // ECU address → file offset: subtract 0x800000.
+    // Reference: jazdw/ppd-maps (GPLv3, https://github.com/jazdw/ppd-maps).
+    //
+    // Scaling constants per jazdw presets (verified from my 03G906018DH analysis):
+    //   LADSOLL / boost:   raw/12.06 = hPa      (bias 0)
+    //   MENZK / fuel qty:  raw/250   = mg/stk   (bias 0)
+    //   MXMOM / MDFAW:     (raw-32768)/32 = Nm  (+32768 bias, stored offset)
+    //   SDATF / SOI:       (raw-32768)*(3/128) = °CRK BTDC  (+32768 bias)
+    //   EGRKL / N75 duty:  raw/655.36 = %       (bias 0)
+    //
+    // CRITICAL — the fixedOffset values below are VARIANT-SPECIFIC. They are
+    // verified for 03G906018DH SN100L8000000 only. Other variants (03G906018AQ
+    // tested, 03G906016*, 03G906021*, etc.) have DIFFERENT offsets — loading
+    // them will point to wrong data. A multi-variant override system is a TODO.
+    identStrings: [
+      'PPD1.1', 'PPD1.2', 'PPD1.3', 'PPD1.5', 'PPD1',
+      '03G906018DH',    // the specific calibration variant these offsets target
+      'SN100L8000000',  // the SW version of that variant
+    ],
+    fileSizeRange: [524288, 2097152],   // up to 2MB — real PPD1.2 binaries are 2MB
     vehicles: [
       'VW Golf IV/V 1.9 TDI 100/105/130ps (BKD/BXE/AXR)',
       'VW Golf V 2.0 TDI 140ps (BMM/BKD)',
@@ -7463,65 +7485,135 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     maps: [
       {
         id: 'ppd1_fuel_quantity',
-        name: 'Injection Quantity Map',
+        name: 'Injection Quantity (MENZK)',
         category: 'fuel',
-        desc: 'Base fuel injection quantity. Pumpe Düse TDI is highly fuel quantity sensitive — this is the primary Stage 1 map. PD engines respond exceptionally well to injection increases with the right EGR strategy.',
-        signatures: [[0x4B,0x4D,0x45,0x4E,0x47,0x00], [0x4D,0x41,0x50,0x4B,0x4D]],
-        sigOffset: 2,
-        rows: 8, cols: 12, dtype: 'uint16', le: false,
-        factor: 0.001, offsetVal: 0, unit: 'mg/st',
-        stage1: { multiplier: 1.15 },
-        stage2: { multiplier: 1.25 },
-        stage3: { multiplier: 1.35, clampMax: 65000 },
+        desc: 'MENZK — base fuel injection quantity (mg/stk). Primary Stage 1 map for PD TDI. Stock BKD 140ps peak ~75 mg/st, Stage 1 target ~90-100 mg/st. Offset verified for 03G906018DH by ORI/Stage1 diff: raw 23069 μ → 27244 μ = 92→109 mg/st (+18%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x07BBB3,   // 03G906018DH SN100L8000000
+        rows: 14, cols: 8, dtype: 'uint16', le: false,
+        factor: 0.004, offsetVal: 0, unit: 'mg/st',   // factor = 1/250 per jazdw MG_STK_PRESET
+        stage1: { multiplier: 1.15, clampMax: 30000 },   // ~120 mg/st ceiling
+        stage2: { multiplier: 1.22, clampMax: 32000 },   // ~128 mg/st
+        stage3: { multiplier: 1.32, clampMax: 34000 },   // ~136 mg/st
         critical: true, showPreview: true,
       },
       {
         id: 'ppd1_boost_target',
-        name: 'Boost Pressure Target',
+        name: 'Boost Pressure Target (LADSOLL)',
         category: 'boost',
-        desc: 'Turbo setpoint pressure map. PPD TDI uses VNT (variable nozzle turbo) — boost control is critical. The 1.9 TDI BKD/BXE has conservative factory boost allowing significant safe gains.',
-        signatures: [[0x4C,0x4C,0x44,0x52,0x55,0x43,0x4B], [0x42,0x4F,0x4F,0x53,0x54,0x53,0x4F]],
-        sigOffset: 2,
-        rows: 8, cols: 10, dtype: 'uint16', le: false,
-        factor: 0.001, offsetVal: 0, unit: 'bar',
-        stage1: { multiplier: 1.10 },
-        stage2: { multiplier: 1.18 },
-        stage3: { multiplier: 1.28, clampMax: 50000 },
+        desc: 'LADSOLL — charge pressure setpoint in hPa. VNT turbo — conservative stock (~1500 mbar peak on BKD 140), Stage 1 target ~2000-2100 mbar. Offset verified for 03G906018DH by ORI/Stage1 diff: the 0x06126E table is one of 7 boost-target variants (primary + 6 per-mode), raw 5000-24110 = 414-2000 hPa. Stock peak μ ~8785, tuned ~9063 (+3%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06126E,   // 03G906018DH — primary LADSOLL (one of 7 variants)
+        rows: 3, cols: 16, dtype: 'uint16', le: false,
+        factor: 0.0829, offsetVal: 0, unit: 'hPa',   // factor = 1/12.06 per jazdw HPA preset
+        stage1: { multiplier: 1.10, clampMax: 26000 },   // ~2150 hPa ceiling
+        stage2: { multiplier: 1.18, clampMax: 28000 },   // ~2320 hPa
+        stage3: { multiplier: 1.25, clampMax: 30000 },   // ~2490 hPa
         critical: true, showPreview: true,
       },
       {
         id: 'ppd1_torque_limit',
-        name: 'Max Torque Limit',
+        name: 'Torque Ceiling (MDFAW)',
         category: 'torque',
-        desc: 'Software torque ceiling. PPD1 torque limits protect the mechatronic DSG or 02Q gearbox — must be raised for full Stage 1 power delivery without drivetrain hesitation.',
-        signatures: [[0x4D,0x58,0x54,0x52,0x51,0x00], [0x4D,0x4F,0x4D,0x45,0x4E,0x54]],
-        sigOffset: 2,
-        rows: 1, cols: 8, dtype: 'uint16', le: false,
-        factor: 0.1, offsetVal: 0, unit: 'Nm',
-        stage1: { multiplier: 1.18 },
-        stage2: { multiplier: 1.28 },
-        stage3: { multiplier: 1.40, clampMax: 65000 },
+        desc: 'MDFAW — driver-demand / max-torque table. Stored as uint16 BE with +32768 bias, factor 1/32 Nm. Stock BKD 140: peak ceiling ~320 Nm. Stage 1 target: ~500 Nm (02Q gearbox safe limit ~550 Nm). Offset verified for 03G906018DH: raw μ 38888→50631 = 191→559 Nm (+30%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x07B954,   // 03G906018DH
+        rows: 5, cols: 8, dtype: 'uint16', le: false,
+        // factor 1/32, bias -32768: phys = (raw + offsetVal) * factor
+        factor: 0.03125, offsetVal: -32768, unit: 'Nm',
+        // Values are stored as (raw - 32768) then scaled — multiplier on physical Nm
+        stage1: { multiplier: 1.30 },   // 191 → 248 Nm at low-end, 559 at peak
+        stage2: { multiplier: 1.55 },
+        stage3: { multiplier: 1.80, clampMax: 65000 },
         critical: true, showPreview: true,
       },
       {
-        id: 'ppd1_egr',
-        name: 'EGR Duty Cycle Map',
-        category: 'emission',
-        desc: 'EGR valve duty cycle. Pumpe Düse TDI heavily benefits from EGR reduction — lower EGR improves combustion efficiency, reduces oil dilution, and raises EGT for regen. Key for EGR delete.',
-        signatures: [[0x45,0x47,0x52,0x44,0x55,0x54], [0x41,0x47,0x52,0x52,0x41,0x54]],
-        sigOffset: 2,
-        rows: 8, cols: 10, dtype: 'uint8', le: false,
-        factor: 0.4, offsetVal: 0, unit: '%',
-        stage1: { multiplier: 0.75 },
-        stage2: { multiplier: 0.4 },
-        stage3: { multiplier: 0, clampMax: 100 },
-        addonOverrides: { egr: { multiplier: 0, clampMax: 0 } },
+        id: 'ppd1_torque_monitor',
+        name: 'Torque Monitor Ceiling',
+        category: 'limiter',
+        desc: 'Large torque-monitor ceiling table — ECU compares actual vs expected torque against this threshold; exceeding it triggers a DTC and derate. Factory stock varies with conditions; Stage 1 tuners pin the entire table to a high constant (~55415 raw = 707 Nm) to effectively disable the check. Offset verified for 03G906018DH.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x05C7FA,   // 03G906018DH
+        rows: 1, cols: 2688, dtype: 'uint16', le: false,
+        factor: 0.03125, offsetVal: -32768, unit: 'Nm',
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 55415 },   // pin to ~707 Nm
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 55415 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 55415 },
         critical: false, showPreview: false,
       },
-      { id: 'ppd1_smoke_limiter', name: 'Smoke Limiter', category: 'smoke', desc: 'Airflow-based smoke limit for PPD1 TDI.', signatures: [], sigOffset: 0, rows: 12, cols: 16, dtype: 'uint16', le: false, factor: 0.01, offsetVal: 0, unit: 'mg/st', stage1: { multiplier: 1.10 }, stage2: { multiplier: 1.18 }, stage3: { multiplier: 1.28 }, critical: true, showPreview: true },
-      { id: 'ppd1_soi', name: 'Start of Injection (SOI)', category: 'ignition', desc: 'Injection timing advance for PPD1 Pumpe Düse TDI.', signatures: [], sigOffset: 0, rows: 10, cols: 10, dtype: 'int16', le: false, factor: 0.02, offsetVal: 0, unit: '°BTDC', stage1: { multiplier: 1.0 }, stage2: { addend: 30 }, stage3: { addend: 50 }, critical: false, showPreview: true },
-      { id: 'ppd1_rail_pressure', name: 'Rail Pressure Target', category: 'fuel', desc: 'Rail pressure setpoint for PPD1 TDI.', signatures: [], sigOffset: 0, rows: 10, cols: 16, dtype: 'uint16', le: false, factor: 1, offsetVal: 0, unit: 'bar', stage1: { multiplier: 1.05 }, stage2: { multiplier: 1.08 }, stage3: { multiplier: 1.12 }, critical: false, showPreview: true },
-      { id: 'ppd1_speed_limit', name: 'Vehicle Speed Limiter', category: 'limiter', desc: 'Factory speed limiter for PPD1 TDI.', signatures: [], sigOffset: 0, rows: 1, cols: 1, dtype: 'uint16', le: false, factor: 1, offsetVal: 0, unit: 'km/h', stage1: { multiplier: 1.0 }, stage2: { multiplier: 1.0 }, stage3: { multiplier: 1.0 }, addonOverrides: { speedlimiter: { multiplier: 0, addend: 65535 } }, critical: false, showPreview: false },
+      {
+        id: 'ppd1_egr',
+        name: 'EGR / Monitoring Switches',
+        category: 'emission',
+        desc: 'EGRKL-style monitoring table + adjacent switch block. On this variant (03G906018DH) the Stage 1 tuner zeroed the entire 0x056D40 block to disable EGR flow monitoring (and related DTC checks). Factor 1/655.36 per jazdw PERCENT_PRESET — stock values 0-100%, zeroed = 0%. This is the EGR delete trigger point; keep multiplier 1.0 to preserve factory EGR, or use the egr addon to zero.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x056D40,   // 03G906018DH — 192 cells zeroed by Stage 1
+        rows: 12, cols: 16, dtype: 'uint16', le: false,
+        factor: 0.001526, offsetVal: 0, unit: '%',   // 1/655.36 per jazdw
+        stage1: { multiplier: 1.0 },        // leave stock by default
+        stage2: { multiplier: 0.75 },       // reduce EGR (deposits)
+        stage3: { multiplier: 0.4 },        // heavy reduction
+        addonOverrides: { egr: { multiplier: 0, clampMax: 0 } },   // full delete
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'ppd1_smoke_limiter',
+        name: 'Smoke Limiter (LSMK)',
+        category: 'smoke',
+        desc: 'Airflow-based smoke limit for PD TDI. Offset not yet verified for 03G906018DH — 6 candidate 16×12 tables exist at 0x053B8B → 0x05458B (per-gear variants) but fuel-quantity interpretation gives unrealistic values. Leaving without fixedOffset until confirmed on a second variant or via A2L reference.',
+        signatures: [],
+        sigOffset: 0,
+        rows: 12, cols: 16, dtype: 'uint16', le: false,
+        factor: 0.004, offsetVal: 0, unit: 'mg/st',   // MG_STK scaling per jazdw
+        stage1: { multiplier: 1.10 },
+        stage2: { multiplier: 1.18 },
+        stage3: { multiplier: 1.28 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'ppd1_soi',
+        name: 'Start of Injection (SDATF)',
+        category: 'ignition',
+        desc: 'Injection timing for PD TDI. Offset not yet verified for 03G906018DH — SDATF uses +32768 bias with factor 3/128 °CRK (per jazdw DEG_CRK_3 preset). A2L required until we verify on additional variants.',
+        signatures: [],
+        sigOffset: 0,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 0.0234, offsetVal: -32768, unit: '°BTDC',   // 3/128 with +32768 bias
+        stage1: { multiplier: 1.0 },
+        stage2: { addend: 85, clampMax: 65535 },   // ~+2° (85 * 3/128 ≈ 2°)
+        stage3: { addend: 128, clampMax: 65535 },  // ~+3°
+        critical: false, showPreview: true,
+      },
+      {
+        id: 'ppd1_rail_pressure',
+        name: 'Rail Pressure (N/A — PD TDI)',
+        category: 'fuel',
+        desc: 'VESTIGIAL — Pumpe Düse TDI uses per-injector mechanical pumps, NOT common-rail. This map does not apply to PPD1.x. Kept as a no-op placeholder; Stage multipliers are 1.0 so nothing is modified. Will remove in a future cleanup.',
+        signatures: [],
+        sigOffset: 0,
+        rows: 1, cols: 1, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'n/a',
+        stage1: { multiplier: 1.0 }, stage2: { multiplier: 1.0 }, stage3: { multiplier: 1.0 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'ppd1_speed_limit',
+        name: 'Vehicle Speed Limiter',
+        category: 'limiter',
+        desc: 'Factory speed limiter. Not modified by typical Stage 1 tunes — offset not yet verified for 03G906018DH. Use the speedlimiter addon to override.',
+        signatures: [],
+        sigOffset: 0,
+        rows: 1, cols: 1, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'km/h',
+        stage1: { multiplier: 1.0 }, stage2: { multiplier: 1.0 }, stage3: { multiplier: 1.0 },
+        addonOverrides: { speedlimiter: { multiplier: 0, addend: 65535 } },
+        critical: false, showPreview: false,
+      },
     ],
   },
 
