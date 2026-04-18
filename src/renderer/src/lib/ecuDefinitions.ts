@@ -2089,7 +2089,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // The 03L906022FG variant (sw 399349/399350/500141/503995/etc.) hits
     // offsets shifted to 0x1EE306/0x1EED4A — handled by sister def
     // edc17_c46_03l906022fg below.
-    identStrings: ['398757', '03L906022BQ', '397892', '398784', '398791', '398819', '398820', '398822', '398823', '399326', '399393', '399395', '501921', '501922', '501956', '505975', '507632'],
+    identStrings: ['398757', '03L906022BQ', '397892', '398784', '398791', '398817', '398819', '398820', '398822', '398823', '399326', '399393', '399395', '501921', '501922', '501956', '505975', '507632'],
     fileSizeRange: [2097152, 2097152],   // exactly 2 MB
     vehicles: ['Audi A3 2.0 TDI CR 140ps (03L906022BQ sw 398757)', 'VW Golf 2.0 TDI CR 80-103kW (03L906022G sw 397xxx-399xxx, 2008-2010)'],
     checksumAlgo: 'bosch-crc32',
@@ -2671,6 +2671,71 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 0,
         fixedOffset: 0x066760,
         rows: 11, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.20 },
+        stage2: { multiplier: 1.30 },
+        stage3: { multiplier: 1.40, clampMax: 50000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 C46 VW Passat 03L906022MS/SC — 0x1CA18A cluster (2MB) ───────────
+  //
+  // VW Passat 2.0 TDI CR 80.9 kW EDC17 C46. 3 SW versions across 2 part
+  // suffixes (MS/SC) all share the SAME SGO at 0x1CA18A. Verified in
+  // pair_analysis_log.md VW pairs #820 sw513692 (MS), #821 sw500160 (SC),
+  // #822 sw513692 (MS) — all hit IDENTICAL 7+ region cluster:
+  //
+  //   0x1CA18A   6 cells u16 BE — IQ release point (raw 2130→61525, +2788%)
+  //   0x1C8BEC  13 cells u16 BE — IQ stage A (165%)
+  //   0x1C8AFC  14 cells u16 BE — IQ stage B (93%)
+  //   0x1DA33A 279 B = 139 cells u16 BE — main IQ map A (+74%)
+  //   0x1DA492 279 B = 139 cells u16 BE — main IQ map B (+74%, sister)
+  //   0x1DA286 128 B = 64 cells u16 BE — limiter region (-74%)
+  //   0x1CA052  14 cells u16 BE — IQ stage C (+71%)
+  //
+  // Shared by 0281015131 hardware code across MS/SC suffixes. Stage 1
+  // value treatment matches my iqrelease 0x06625E def's "raw 2130 → max"
+  // pattern but at high-region 2MB anchor.
+  {
+    id: 'edc17_c46_passat_20tdi_03l906022ms_sc',
+    name: 'Bosch EDC17 C46 (VW Passat 2.0 TDI CR 80.9kW — 03L906022MS/SC 0x1CA18A)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['500159', '500160', '513692', '03L906022MS', '03L906022SC', '0281015131'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Passat 2.0 TDI CR 80.9kW (0281015131 03L906022MS/SC sw 500159/500160/513692, 2009-2010)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_passat_ms_iq_release',
+        name: 'IQ Release (Passat 03L906022MS/SC 0x1CA18A)',
+        category: 'fuel',
+        desc: 'Primary IQ release at 0x1CA18A (3 uint16 BE cells = 6 B). Verified across 3 SWs / 2 part suffixes. μ 2130 → 61525 raw (+2788%). Same value treatment as 0x06625E iqrelease cluster but at high-region 2MB anchor.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1CA18A,
+        rows: 1, cols: 3, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 58000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_c46_passat_ms_iq_map_a',
+        name: 'Main IQ Map A 279B (Passat 03L906022MS/SC 0x1DA33A)',
+        category: 'fuel',
+        desc: 'Main IQ map at 0x1DA33A (139 uint16 BE cells = 279 B, possibly 16x9 with header). Verified across same 3 SWs. μ 25914 → 45304 raw (+74%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1DA33A,
+        rows: 9, cols: 16, dtype: 'uint16', le: false,
         factor: 1, offsetVal: 0, unit: 'raw',
         skipCalSearch: true,
         stage1: { multiplier: 1.20 },

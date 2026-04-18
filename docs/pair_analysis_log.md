@@ -70,6 +70,53 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #817–832 — Wire Passat 03L906022MS/SC + 03L906019AC sister cluster
+
+**STRONG WIRE: Passat 0281015131 03L906022MS/SC 2MB cluster**:
+- 03L906022MS sw500159 (#820) — 2604B/46
+- 03L906022SC sw500160 (#821) — 2604B/46 IDENTICAL
+- 03L906022MS sw513692 (#822) — 2604B/46 IDENTICAL
+- All 3 hit IDENTICAL `0x1CA18A 6B + 0x1C8BEC 13B + 0x1C8AFC 14B +
+  0x1DA33A 279B + 0x1DA492 279B + 0x1DA286 128B + 0x1CA052 14B`
+  cluster.
+
+Wired as `edc17_c46_passat_20tdi_03l906022ms_sc`. **18th wired ECU
+def.** Same value treatment as iqrelease 0x06625E (raw 2130→max)
+but at high-region 2MB anchor.
+
+**03L906018BD sw513640** (#817) — NEW BD suffix.
+**03L906018BE sw510958** (#818, **393KB partial**) — NEW BE suffix.
+**03L906022KP sw504853** (#819) — 11580B/150 sister cluster.
+
+**03L906018AR sw505437** (#823) → `0x069EB2 2KB + 0x06A6D4 + 0x06A8F6
+512B` — sister of Caddy 0x06ADCA cluster (Δ=0xF18 anchor shift).
+NOT matching my Golf 0x06AD86 def. Could wire as separate cluster
+covering 03L906018AR/AG/AQ at 0x069EB2 — pair #273/#274 (sw508210/
+sw525562) also hit 0x069EB2.
+
+**03L906022QA sw398817** (#824) → `0x1EF502 + 0x1EFF46` IDENTICAL —
+already covered by 398757 def! sw398817 NOT in identStrings yet —
+should add. Adding now.
+
+**03L906022QB sw??? 1037505917** (#825) — odd part-no format. 10237B
+/107 regions = 0x1EF502 sister.
+
+**03L906018BG sw513641** (#826, #832 — 2 sister files) → 8977B/69
+each. Sister of #851 from prior batch. Different SGO from Caddy/Golf
+0x06AD86.
+
+**03L906019AC sw513694** (#827) → `0x1D3646 2KB + 0x1D408A 512B +
+0x1D3E68 512B + 0x1D4D78 + 0x1D4B56` — sister of 8K1907401A sw514659
+A5 cluster (`0x1D33xx`). Could add to that cluster's wire if wired.
+
+**03L906019DH sw518154** (#828, 14 KB heavy) — sister of Audi A5
+#263 same hardware/SW.
+
+**03L906022QC sw504854 + sw505921** (#829, #830) — both IDENTICAL
+11555B/156 → 2 SWs same SGO (sister of #780 sw504855).
+
+**03L906022RP sw504796** (#831) — small 1858B/99 light tune.
+
 ## VW Pairs #801–816 — Passat 2.0 TDI CR sister files + iqrelease +sw507630
 
 **iqrelease def +sw507630** (Passat 03L906022EM 524KB) → IDENTICAL
