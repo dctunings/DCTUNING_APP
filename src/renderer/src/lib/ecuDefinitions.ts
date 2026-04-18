@@ -686,6 +686,8 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     //   • EDC15V pre-PD 0281001xxx (256 KB ROM) → mirror at +0x38000
     //     Pairs #664 (0281001609 110hp) and #668 (0281001808 90hp 1998):
     //     regions at 0x005850 AND 0x03D850 (Δ = 0x38000) get the SAME mod.
+    //     SUB-PATTERN: 0281001781 / 0281001931 (V6 TDI 2.5L) use +0x8000
+    //     mirror INSTEAD of +0x38000. Pairs #744/#745/#748 confirm.
     //
     //   • EDC15P PD basic 0281010xxx (524 KB ROM) → mirror at +0x18000
     //     Pairs #666 (0281010204) and #669 (0281010203 sw352258):

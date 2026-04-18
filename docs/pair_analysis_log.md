@@ -64,6 +64,64 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #743–758 — A6 2.5 V6 TDI EDC15V + NEW +0x8000 mirror pattern
+
+This batch is **mostly A6 2.5 V6 TDI EDC15V** (Allroad / A6 wagon
+1998-2003) — Bosch hardware codes 0281001781, 0281001836, 0281001837,
+0281001931 (256 KB pre-PD) and 0281010xxx (524 KB PD).
+
+**NEW EDC15V MIRROR PATTERN — +0x8000 (32 KB)**:
+- Pair #744 0281001781 4B0907401F sw358057 → regions at `0x0042AC`
+  AND `0x00C2AC` (Δ = `0x8000`) get the SAME 8-byte +147% mod
+- Pair #745 0281001781 4B0907401H sw351095 → SAME offsets, same mod
+- Pair #748 0281001931 4B0907401K sw356789 → regions at `0x00449A`
+  AND `0x00C49A` (Δ = `0x8000`) — confirmed pattern across hw 1781
+  and 1931
+
+So the EDC15V family now has TWO sub-mirror offsets:
+- **+0x8000** for V6 TDI 2.5L hardware codes 0281001781 / 0281001931
+- **+0x38000** for I4 1.9 TDI hardware codes 0281001609 / 0281001808 /
+  0281001836 (pair #743 here at hw 0281001836 has Δ region but not
+  the +0x8000 mirror)
+
+Mirror offset is determined by **hardware code (Bosch part number)**,
+NOT by displacement or vehicle. Will need a per-hardware-code lookup
+table in the writeMap path.
+
+Other findings:
+- Pair #743 0281001836 4B0907401C sw359971 (256 KB EDC15V V6) — has
+  `0x03C68C + 0x03C462` — NOT mirrored (Δ = 0x22A), so same family
+  hw 0281001836 as #746 (V6 TDI 2.5L) but NO +0x8000 mirror — this
+  one uses the +0x38000 layout.
+- Pairs #746 0281001836 4B0907401C sw359971 (DUPLICATE filename
+  same SW as #743) → `0x03C7FC + 0x03C824` (different cluster) —
+  conflicting modifications by different tuners on same SW
+- Pair #747 0281001837 4B0907401D sw359394 → SAME offsets as #746
+  (`0x03C7FC + 0x03C824`) — so 0281001836 and 0281001837 share SGO
+  layout (sister hardware codes)
+- Pair #749 0281010148 4B0907401S sw352644 (524 KB PD) → `0x005328 +
+  0x03D328` (Δ = `0x38000`) — confirms +0x38000 mirror also exists
+  in 524 KB EDC15P PD when hardware is 0281010148. This breaks my
+  earlier rule "524KB EDC15P → +0x18000" — apparently the 0281010148
+  variant uses +0x38000. **Mirror selection rule needs more nuance.**
+
+A6 2.4 V6 30V Bosch ME7.x petrol (#736-741):
+- Bosch 0261204767 sw354782/357978/358180 (3 SWs same SGO) → all
+  share `0x009001 + 0x009012` — wire candidate for 4B0907552C
+  early-ME7 V6 petrol cluster
+- Bosch 0261207506 sw362351 (#740) and 0261207500 sw362353 (#741)
+  → both 1 MB ME7 dumps, both modify `0x086F8C` (16B) and small
+  +5-9% maps — same hardware family
+
+Pair #734 8K2907115L MED17 sw517860 (A6 2.0 TFSI 132 kW) →
+`0x06B184 + 0x06B168` 8B at +247%/+125% — yet another MED17 SGO
+not previously seen. NOT the universal unlock pattern.
+
+Pair #735 4F0907552F Siemens S6300FT000000 (A6 2.4 V6 FSI 130kW) →
+SIEMENS family (not Bosch) — `0x053B52 + 0x053B9A` 56B regions both
++90% (looks like a stage1 dual-axis tweak). NEW Siemens family for
+A6 2.4 FSI not in our defs.
+
 ## Pairs #727–742 — EDC16 PD 2MB-vs-524KB dump format + A6 TFSI MED17 cluster
 
 **MAJOR finding — EDC16 PD 2MB vs 524KB dump format**:
