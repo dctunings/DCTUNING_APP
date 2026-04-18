@@ -64,6 +64,59 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pair #67 — EDC17 C46 · 03L906022BQ sw 398750 (Audi A3 2.0 TDI CR, 2009)
+- 2 MB. 10,376 B / 93 regions. Typical sw 398xxx heavy tune profile.
+- **Code: deferred**.
+
+## Pair #66 — EDC17 C46 · 03L906018AB sw 508208 (Audi A3 2.0 TDI CR, 2009)
+- 384 KB stripped cal (unusual size — even smaller than 512KB).
+- 2,180 B / 51 regions.
+- `03L906018AB` is a different VW part number than the 03L906022xx
+  family — possibly an intermediate engine code.
+- **Code: deferred**.
+
+## Pair #65 — EDC17 C46 · 03L906022B sw 396470 (Audi A3 2.0 TDI CR 143ps, 2008)
+- 2 MB. 6,146 B / 120 regions. Moderate Stage 1.
+- **Code: deferred**.
+
+## Pair #64 — EDC17 C46 · 03L906022BQ sw 514277 (Audi A3 2.0 TDI CR, 2008)
+- 2 MB. 10,413 B / 101 regions.
+- sw 514277 = newer SW version of 03L906022BQ vs 396xxx generation.
+- **Code: deferred**.
+
+## Pair #63 — EDC17 C46 · 03L906022BQ sw 398757 (Audi A3 2.0 TDI CR, 2008)
+- 2 MB. 10,651 B / 95 regions — third independent pair of sw 398757
+  (pairs 48 and 55 in earlier batch data also hit this SW). Pattern
+  and depth match. Very consistent Stage 1 across tuners for this SW.
+- **Code: promising** — sw 398757 is a repeatable target.
+
+## Pair #62 — EDC17 C46 · 03L906022BQ sw 396413 (Audi A3 2.0 TDI CR, 2008)
+- 2 MB. 10,402 B / 87 regions.
+- 396413 = increment of 396412 (pair 54) — same part number, newer
+  sub-build.
+- **Code: deferred**.
+
+## Pair #61 — EDC17 C46 · 03L906022BQ sw 396412 (Audi A3 2.0 TDI CR, alt tuner #3)
+- 2 MB. 10,949 B / 90 regions. **Third** tune of same 03L906022BQ
+  sw 396412 base. Different tuner, different depth.
+- **Code: deferred**.
+
+## Pair #60 — EDC17 C46 · 03L906022B sw 396483 (Audi A3 2.0 TDI CR 100kW, 2008)
+- 2 MB. 10,414 B / 109 regions. Short part number (03L906022B no
+  suffix). 100 kW / 136hp variant (vs 140ps standard).
+- **Code: deferred**.
+
+## Pair #59 — EDC17 C46 · 03L906022BQ + 4L0907401A sw 508343 (Audi A3 2.0 TDI CR)
+- 2 MB. 4,448 B / 190 regions. Filename includes **two part numbers**
+  — 03L906022BQ + 4L0907401A — the engine code + Audi-specific
+  hardware code. Different naming convention. Probably one of the
+  newer 140ps CR variants.
+- **Code: deferred**.
+
+## Pair #58 — EDC17 C46 · 03L906022BQ + 03L906022EL sw 397819 (Audi A3 2.0 TDI CR, 2008)
+- 2 MB. 11,327 B / 112 regions. Same dual-part-number filename style.
+- **Code: deferred**.
+
 ## Pair #57 — EDC17 C46 · 03L906022BQ sw 394169 (Audi A3 2.0 TDI CR 140ps, 2008)
 - 2 MB. 8,026 B / 107 regions. Heavy Stage 1.
 - 0x1EDCDE / 0x1EE988 large 511B regions BE +168-232 % / LE +2 % =
