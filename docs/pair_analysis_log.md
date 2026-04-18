@@ -70,6 +70,45 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #465–480 — Golf 3 VR6 ME7.x + Golf 3 GTI Siemens + Golf 4 Marelli
+
+**Golf 3 2.0L GTI Siemens 5WP4158 (#465, 32KB)** — Siemens-Simtec
+ME7-derived, 903B / 6 regions.
+
+**Golf 3 2.8 VR6 Bosch ME7.x** (#466-#469):
+- 0261203057 021906258D sw357364 (#466, 65KB) — 730B/16
+- 0261203109 021906258AG sw357531 (#467, 65KB) — 4695B / 16 regions
+  (heavier 7% changed)
+- 0261203559 021906258CL sw358929 (#468, 65KB) — 691B/13
+- 0261203969 021906256 sw355938 (#469, 131KB) — 2229B/15
+- 0261203117 021906258AF sw357529 (#476, 65KB) — 5451B / 26 regions
+  (heavy 8% changed)
+- 0261200496 021906258A sw357205 (#475, 65KB) — only 2 bytes
+  changed = no real tune
+
+VR6 ME7.x 174 hp — Bosch hardware codes 0261200xxx (older) and
+0261203xxx (newer ME7) era. Various 021906258x part suffixes.
+
+**Golf 3 Cabrio 2.0 0261206760 037906018D sw362294** (#470, 256KB)
+— newer Cabrio ME7.x.
+
+**Golf 3 GTI 1.8T Siemens 5WP4256 037906025R** (#471) — 131KB
+Siemens-Simtec, 224B/3 regions.
+
+**Golf 3 GTI 1.8T Siemens 5WP4204 037906025H** (#472) — 131KB,
+114B/5 regions.
+
+**Golf 3 TDI 1.6L 0281001171 028906021C sw358696/358697** (#473, #474)
+— Bosch EDC0 1.6 TDI 1996 ECO, 65KB. Tiny tunes.
+
+**Golf 4 1.4 16V** variants:
+- 0261206140 036906032 sw352147 (#477) — 524KB ME7.5
+- 0261207189 036906032L sw360898 (#478) — sister of #321 + #592
+  (already noted)
+- Marelli IAW4AV 036906014 (#479, #480) — 256KB Magneti Marelli
+
+**No new wires** — all small old ECUs, low tuning volume.
+
 ## VW Pairs #449–464 — Golf 3 1.9 TDI EDC0/1 cont + Golf 3 2.0 GTI Motronic
 
 **Golf 3 1.9 TDI EDC0/1 continued** (#449-#458):
