@@ -2889,6 +2889,87 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC16U31 VW T5 1.9 TDI PD 038906016T/AJ — 0x06A8ED IQ cluster ──────────
+  //
+  // VW T5 Transporter 1.9 TDI PD 77kW EDC16U31 (earlier than U34 used on
+  // cars). 3 SWs across 2 part suffixes (T/AJ) share the SAME 11-byte IQ
+  // edit at 0x06A8ED in 524KB format. Verified in pair_analysis_log.md
+  // VW pairs: #1066 sw384631 T (524KB), #1070 sw384633 AJ (524KB),
+  // #1072 sw381381 AJ (524KB).
+  // SAME map also present at 0x1EA8D9 in 2MB dump format (Δ=+0x184000)
+  // per pair #1068 sw380415 AJ. That's an unusual +0x184000 shift
+  // (vs typical +0x180000) — T5 EDC16U31 has its own dump convention.
+  //
+  // Tight raw signature: stock 16801 → tuner consensus 37845 (+125%).
+  //
+  // Note: sw379728 T hits a slightly shifted anchor 0x06A8D9 (Δ=-0x14) —
+  // added as identString but the primary fixedOffset is 0x06A8ED.
+  {
+    id: 'edc16u31_t5_19tdi_038906016_06a8ed',
+    name: 'Bosch EDC16U31 (VW T5 1.9 TDI PD 77kW — 038906016T/AJ 0x06A8ED)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['038906016T', '038906016AJ', '379728', '381381', '384631', '384633'],
+    fileSizeRange: [524288, 524288],
+    vehicles: ['VW T5 Transporter 1.9 TDI PD 77kW (038906016T/AJ sw 379728/381381/384631/384633, 2005-2008)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16u31_t5_19tdi_iq_unlock',
+        name: 'IQ Unlock 11B (T5 1.9 TDI 038906016T/AJ)',
+        category: 'fuel',
+        desc: 'IQ unlock at 0x06A8ED (5-6 cells u16 BE = 11 B). Verified across 3 SWs (sw384631 T, sw384633 AJ, sw381381 AJ) sharing EXACT anchor + raw signature: stock 16801 → tuner consensus 37845 (+125%). sw379728 T uses Δ=-0x14 anchor (0x06A8D9) — same map, SW-rev shift.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06A8ED,
+        rows: 1, cols: 6, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 35000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC16U31 VW T5 1.9 TDI PD 038906016AJ 2MB dump — 0x1EA8D9 IQ cluster ──
+  //
+  // 2MB-format twin of the 524KB 0x06A8ED def. Dump shift Δ=+0x184000.
+  // Verified in pair #1068 sw380415 AJ.
+  {
+    id: 'edc16u31_t5_19tdi_038906016aj_2mb',
+    name: 'Bosch EDC16U31 (VW T5 1.9 TDI PD 77kW — 038906016AJ 2MB dump 0x1EA8D9)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['380415'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW T5 Transporter 1.9 TDI PD 77kW 2MB dump (038906016AJ sw 380415, 2005)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16u31_t5_2mb_iq_unlock',
+        name: 'IQ Unlock 11B (T5 1.9 TDI 038906016AJ 2MB)',
+        category: 'fuel',
+        desc: 'IQ unlock at 0x1EA8D9 (5-6 cells u16 BE = 11 B). 2MB-format twin of 0x06A8ED (Δ=+0x184000 dump shift). Verified in pair #1068 sw380415 AJ — raw signature matches 524KB cluster.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1EA8D9,
+        rows: 1, cols: 6, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 35000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 C46 03L906022B Q5 cluster (Audi Q5 2.0 TDI CR 125kW 2009-2010) ──
   //
   // Audi Q5 2.0 TDI CR EDC17 C46. Bosch hardware code, VAG part number

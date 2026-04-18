@@ -70,6 +70,58 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1057–1072 — T5 1.9 TDI EDC16U31 — 2 NEW defs (524KB + 2MB twins)
+
+**MAJOR NEW CLUSTER — T5 1.9 TDI EDC16U31 038906016T/AJ at 0x06A8ED**:
+
+5 pairs across 2 SGOs + 2 dump formats confirm the SAME 11B IQ unlock:
+- `0x06A8ED 11B` BE 16801 → 37845 +125% (signature raw match)
+
+524KB format:
+- #1066 sw384631 `038906016T` @ 0x06A8ED ✓
+- #1070 sw384633 `038906016AJ` @ 0x06A8ED ✓
+- #1072 sw381381 `038906016AJ` @ 0x06A8ED ✓
+- #1065 sw379728 `038906016T` @ 0x06A8D9 (Δ=-0x14 sub-variant)
+
+2MB format:
+- #1068 sw380415 `038906016AJ` @ **0x1EA8D9** (Δ=+0x184000 from 0x06A8D9)
+  — NEW dump shift convention for T5 EDC16U31 (not typical +0x180000!).
+
+**2 NEW defs wired**:
+- `edc16u31_t5_19tdi_038906016_06a8ed` — 524KB primary def (4 SWs)
+- `edc16u31_t5_19tdi_038906016aj_2mb` — 2MB dump-format twin (sw380415)
+
+**Observations (no wire)**:
+
+- #1069 sw393511 `038906016AH` 524KB — `0x06C969 11B` BE 16801 → 28731
+  +71%. Same raw stock but DIFFERENT anchor (Δ=0x207C from 0x06A8ED)
+  — AH sub-family with its own anchor. Single SW — log only.
+- #1067 sw379832 `070906016CB` T5 1.9 TDI 2MB — different SGO (070906016
+  vs 038906016) targeting `0x1D9024 30B` +363% and `0x1D5940 128B` +362%.
+  2MB EDC16U34 variant.
+- #1071 sw394150 T5 1.9 TDI 2MB (no part number) — `0x1ECCF3 15B` +51%,
+  `0x1D5F7C 124B` +40% — different anchor cluster, no part-ID to
+  cross-reference.
+- #1057 sw362448 `074906018AH` T4 EDC15 PD — `0x06D30C 24×3` +45.5%.
+- #1058 sw357865 `074906021A` T4 EDC15 262KB — small edits `0x03Cxxx`.
+- #1059 sw356867-868 `074906021M` T4 EDC15 262KB 110.3kW — `0x03D580/6FC
+  14B` mirror pair +66% (+0x17C stride = EDC15 +0x8000 mirror of half-
+  KB offsets — subtle mirror variant).
+- #1060 sw360079 `074906018AJ` T4 EDC15 PD 524KB — `0x0566CA/0766CA 180B`
+  (+0x20000 mirror) +93%, `0x04FF80/06FF80 28B` (+0x20000 mirror) -58%.
+- #1061 sw? `074906018C` T4 EDC15 PD — `0x05CCC6/068CC6/074CC6 40B`
+  TRIPLE mirror at stride +0xC000 (= 3×0x4000) — unusual EDC15 stride.
+  BE 7205 → 30503 +323%.
+- #1062 sw360475 `074906018BG` — SAME 0x06D224/075C62 10B pattern as
+  pair #1053 (sw360078 AM) and #1055 (sw351975 BG). Confirms BG
+  family at stride +0x10000 / +0x20000 mirrors.
+- #1063 sw? `074906021A` 262KB — `0x003E76/9E/C6 + 0x00BE76` 34B mirror
+  (+0x8000 stride) — T4 traditional injection mirror.
+- #1064 `021906256AC` sw358176 T4 VR6 ME7 — `0x008C70 31B` -28%,
+  `0x00BB77 16B` +17%.
+
+---
+
 ## VW Pairs #1041–1056 — Sharan QA/sw513673 + T4 2.5 TDI EDC15 PD catalog sweep
 
 **Pair #1041** sw513673 HH Sharan (sister of #1030) — same ORI, different
