@@ -64,6 +64,26 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #428–442 — A4 2.0 TFSI 2005-2008 MED17 200/220ps SW catalog
+
+15 more A4 2.0 TFSI 2MB MED17 pairs (147-162kW / 200-220ps).
+
+New SW bases: 372543, 374394, 377605, 377617, 381979, 383978, 386454,
+386835, 386863, 387400, 387401, 387403 (×2), 389075, 390728.
+
+New Bosch prefixes: 0261S02144, 0261S02145 (×4), 0261S02223, 0261S02224,
+0261S02458, 0261S02463, 0261S02521.
+
+All use 8E0907115C/D VW part numbers (Audi A4 B7 2.0 TFSI).
+
+Tunes are uniformly small (500-2200 B) — typical light MED17 1.6
+Stage 1 (boost + fuel only). Pair #433 is 61 B near-no-op.
+
+Pair #442 has an odd "73890758E19" embedded — looks like concatenated
+filename; tuner probably inserted part# wrong.
+
+**Code: no change** — covered by generic med17 def.
+
 ## Pairs #413–427 — A4 2.0 TDI ppd (PPD1.2) mixed SN serials + A4 2.0 TFSI
 
 - Pair #413 · 03G906018AQ SN1S0M8000000 2MB heavy tune 5,419 B.
