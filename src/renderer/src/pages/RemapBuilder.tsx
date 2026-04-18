@@ -2037,34 +2037,27 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         ))}
       </select>
 
-      {selectedEcu && (() => {
-        // Filter to only maps whose sigs actually hit in THIS binary (or that
-        // don't rely on a signature — fixedOffset / a2lNames / no-sig maps are
-        // always shown). If no file loaded yet, fall back to the full list.
-        const shown = fileBuffer && applicableMapIds.size > 0
-          ? selectedEcu.maps.filter(m => applicableMapIds.has(m.id))
-          : selectedEcu.maps
-        const hiddenCount = selectedEcu.maps.length - shown.length
-        return (
-          <div style={{ padding: '12px 14px', borderRadius: 8, background: 'var(--bg-card)', border: '1px solid var(--border)', marginBottom: 16 }}>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span>Maps applicable to this binary {fileBuffer ? `(${shown.length} of ${selectedEcu.maps.length})` : ''}</span>
-              {hiddenCount > 0 && (
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }} title="Hidden maps have signatures that don't match this binary — e.g. PSA / BMW / Hyundai variants that only apply to those manufacturers.">
-                  {hiddenCount} hidden (other-variant)
-                </span>
-              )}
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {shown.map(m => (
-                <span key={m.id} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: 'var(--bg-primary)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+      {selectedEcu && (
+        <div style={{ padding: '12px 14px', borderRadius: 8, background: 'var(--bg-card)', border: '1px solid var(--border)', marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>Maps for this ECU ({selectedEcu.maps.length})</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {selectedEcu.maps.map(m => {
+              const applicable = !fileBuffer || applicableMapIds.size === 0 || applicableMapIds.has(m.id)
+              return (
+                <span key={m.id} style={{
+                  fontSize: 11, padding: '2px 8px', borderRadius: 4,
+                  background: applicable ? 'var(--bg-primary)' : 'transparent',
+                  color: applicable ? 'var(--text-secondary)' : 'rgba(255,255,255,0.28)',
+                  border: `1px solid ${applicable ? 'var(--border)' : 'rgba(255,255,255,0.08)'}`,
+                  textDecoration: applicable ? 'none' : 'line-through',
+                }} title={applicable ? '' : 'Signature not present in this binary — map will not be extracted.'}>
                   {m.name}
                 </span>
-              ))}
-            </div>
+              )
+            })}
           </div>
-        )
-      })()}
+        </div>
+      )}
 
       {/* Library search panel — always visible at step 1 */}
       <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 8, background: 'rgba(0,174,200,0.04)', border: '1px solid rgba(0,174,200,0.2)' }}>
@@ -2516,10 +2509,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           </span>
         )}
         {(() => {
-          // Only count maps that will actually render (applicable + showPreview).
-          const applicable = (m: ExtractedMap) => applicableMapIds.size === 0 || applicableMapIds.has(m.mapDef.id)
-          const visibleFound = extractedMaps.filter(m => m.found && m.mapDef.showPreview && applicable(m)).length
-          const visibleTotal = extractedMaps.filter(m => m.mapDef.showPreview && applicable(m)).length
+          const visibleFound = extractedMaps.filter(m => m.found && m.mapDef.showPreview).length
+          const visibleTotal = extractedMaps.filter(m => m.mapDef.showPreview).length
           const totalFound = extractedMaps.filter(m => m.found).length
           const totalAll = extractedMaps.length
           const hiddenFound = totalFound - visibleFound
@@ -2642,10 +2633,6 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           // Hide any map where showPreview is false (N75, DPF/EGR emission maps, misc internal maps).
           // These are located and modified by the engine but don't need a heatmap card shown to the tuner.
           if (!m.mapDef.showPreview) return null
-          // Hide maps that aren't applicable to THIS binary (e.g. PSA FAP sig doesn't hit
-          // in a VW Golf binary). Without this filter, every variant-specific map renders
-          // as a "not found" card, cluttering the Preview page.
-          if (applicableMapIds.size > 0 && !applicableMapIds.has(m.mapDef.id)) return null
           // Effective params: addon override takes precedence over stage params —
           // matches remapEngine.ts getParams() exactly so badge and preview are accurate.
           let effectiveParams = m.mapDef[`stage${stage}` as 'stage1' | 'stage2' | 'stage3']

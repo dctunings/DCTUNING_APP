@@ -2385,48 +2385,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         critical: false, showPreview: false,
       },
 
-      // ── EDC17 CP44 V6 TDI — 9 pairs in study, strong signal ──
-      // 21×6 smoke-limiter-like map — ALL 9 CP44 files (100%) modify, avg +23%.
-      // Y=1600-11000 RPM, X=500-950 = smoke-limit duty/pressure axis.
-      {
-        id: 'edc17_cp44_21x6',
-        name: 'EDC17 CP44 Smoke/Limit 21×6',
-        category: 'smoke',
-        desc: 'EDC17 CP44 (Audi A6/Q7 V6 TDI) 21×6 smoke or limit map — found in 100% of CP44 tunes with avg +23% change. Required for Stage 1 on V6 TDI.',
-        signatures: [
-          [0x06,0x00,0x15,0x00,0xf4,0x01,0x58,0x02,0xbc,0x02,0x20,0x03],
-        ],
-        sigOffset: 0,
-        rows: 21, cols: 6, dtype: 'uint16', le: true,
-        factor: 0.01, offsetVal: 0, unit: 'mg/st',
-        skipCalSearch: true,
-        stage1: { multiplier: 1.12 },
-        stage2: { multiplier: 1.22 },
-        stage3: { multiplier: 1.35, clampMax: 10000 },
-        critical: false, showPreview: false,
-      },
-
-      // EDC17 CP44 4×6 boost-ceiling — 8/9 CP44 files (89%), avg +218% change!
-      // Tuners roughly triple these values. Small map = hard-limit ceiling.
-      // X=4000-10000, Y=0-17000 — large raw range suggests a pressure/ceiling table.
-      {
-        id: 'edc17_cp44_ceiling_4x6',
-        name: 'EDC17 CP44 Boost Ceiling 4×6',
-        category: 'limiter',
-        desc: 'EDC17 CP44 V6 TDI boost ceiling / protection limit — 89% of CP44 tunes modify with avg +218% change. Stock limit is extremely conservative; tuners triple it to allow modified boost targets. Critical for Stage 1+ on V6 TDI.',
-        signatures: [
-          [0x06,0x00,0x04,0x00,0xa0,0x0f,0x30,0x11,0x88,0x13,0x50,0x14],
-        ],
-        sigOffset: 0,
-        rows: 4, cols: 6, dtype: 'uint16', le: true,
-        factor: 1, offsetVal: 0, unit: 'raw',
-        skipCalSearch: true,
-        stage1: { multiplier: 1.50 },
-        stage2: { multiplier: 2.20 },
-        stage3: { multiplier: 3.00, clampMax: 65000 },
-        critical: false, showPreview: false,
-      },
-
+      // NOTE: CP44 V6 TDI maps moved to dedicated edc17_cp44 ECU def below.
       // ── EDC17 Cx (miscellaneous CP variants) — 147 pairs ──
       // 8×8 ceiling with Y=3921-4051 (very narrow band) — 92 files (63%!), avg +49%.
       // Likely a critical torque-ceiling by RPM table that tuners aggressively raise.
@@ -2505,175 +2464,8 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage3: { multiplier: 1.20, clampMax: 60000 },
         critical: false, showPreview: false,
       },
-      // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 BMW (53 pairs, 320d/520d/330d) ──
-      // 14×12 LE Y=1700,2000,2500,3000 — 35 BMW files (66%!) +6.5% avg.
-      // BMW Nx engine base cal — M47/N47/N57 TDI family.
-      {
-        id: 'edc17_bmw_14x12',
-        name: 'EDC17 BMW Nx Base 14×12 (Kf_)',
-        category: 'fuel',
-        desc: 'EDC17 BMW N47/N57 base fuel/IQ map — verified in 35 real BMW diesel tunes (66% of BMW EDC17 pairs) with avg +6.5%. 14×12 Kf_ LE. Typical on 320d/520d/330d/530d N47/N57 engines.',
-        signatures: [
-          [0x0c,0x00,0x0e,0x00,0xa4,0x06,0xd0,0x07,0xc4,0x09,0xb8,0x0b],
-        ],
-        sigOffset: 0,
-        rows: 14, cols: 12, dtype: 'uint16', le: true,
-        factor: 0.01, offsetVal: 0, unit: 'mg/st',
-        skipCalSearch: true,
-        stage1: { multiplier: 1.10 },
-        stage2: { multiplier: 1.20 },
-        stage3: { multiplier: 1.32, clampMax: 65000 },
-        critical: false, showPreview: true,
-      },
-      // EDC17 BMW 9×12 LE — 22 files +28.1% avg. Also appears in C41 (+139%!). BMW torque ceiling.
-      {
-        id: 'edc17_bmw_c41_9x12',
-        name: 'EDC17 BMW/C41 Torque Ceiling 9×12 (Kf_)',
-        category: 'torque',
-        desc: 'EDC17 BMW/C41 torque ceiling — verified 22 BMW (+28%) + 7 C41 (+139%) files, 29 total. Appears across BMW M47/N47 and Bosch C41 generic. 9×12 Kf_ LE. Stock value is conservative — raised in nearly all BMW Stage 1 tunes.',
-        signatures: [
-          [0x0c,0x00,0x09,0x00,0xd0,0x07,0xc4,0x09,0xb8,0x0b,0xac,0x0d],
-        ],
-        sigOffset: 0,
-        rows: 9, cols: 12, dtype: 'uint16', le: true,
-        factor: 0.1, offsetVal: 0, unit: 'Nm',
-        skipCalSearch: true,
-        stage1: { multiplier: 1.20 },
-        stage2: { multiplier: 1.40 },
-        stage3: { multiplier: 1.60, clampMax: 65000 },
-        critical: false, showPreview: true,
-      },
-      // EDC17 BMW 8×13 LE — 20 BMW files + 7 C41 files = 27 files total, +19-53% avg.
-      // Y=1100,1350,1500,1600 = smoke limit or pressure-related.
-      {
-        id: 'edc17_bmw_c41_8x13',
-        name: 'EDC17 BMW/C41 Smoke 8×13 (Kf_)',
-        category: 'smoke',
-        desc: 'EDC17 BMW/C41 smoke or pressure-limit map — verified 20 BMW (+19%) + 7 C41 (+53%) files, 27 total. 8×13 Kf_ LE with Y axis 1100-1600.',
-        signatures: [
-          [0x0d,0x00,0x08,0x00,0x4c,0x04,0x46,0x05,0xdc,0x05,0x40,0x06],
-        ],
-        sigOffset: 0,
-        rows: 8, cols: 13, dtype: 'uint16', le: true,
-        factor: 0.01, offsetVal: 0, unit: 'mg/st',
-        skipCalSearch: true,
-        stage1: { multiplier: 1.15 },
-        stage2: { multiplier: 1.28 },
-        stage3: { multiplier: 1.40, clampMax: 65000 },
-        critical: false, showPreview: false,
-      },
-      // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 PSA (178 pairs, Peugeot/Citroen HDi) ──
-      // 16×24 LE — 150 files (84%!) +138.8% avg. MASSIVE PSA FAP/smoke ceiling.
-      // Tuners DOUBLE to TRIPLE these stock values. Primary Stage 1 target on PSA DV6/DW10/DW12.
-      {
-        id: 'edc17_psa_fap_16x24',
-        name: 'EDC17 PSA FAP Ceiling 16×24 (Kf_)',
-        category: 'smoke',
-        desc: 'EDC17 PSA (Peugeot/Citroen HDi) FAP / DPF protection ceiling — verified in 150 real PSA tunes (84% of PSA EDC17 pairs) with avg +138.8% change. 16×24 LE Kf_. Stock is extremely conservative to protect DPF; raising unlocks real Stage 1 gains on 1.6/2.0 HDi. PRIMARY Stage 1 map for 207/307/308/3008/508/C4/C5/Berlingo HDi.',
-        signatures: [
-          [0x18,0x00,0x10,0x00,0xfa,0x00,0xf4,0x01,0xee,0x02,0x34,0x03],
-        ],
-        sigOffset: 0,
-        rows: 16, cols: 24, dtype: 'uint16', le: true,
-        factor: 0.01, offsetVal: 0, unit: 'mg/st',
-        skipCalSearch: true,
-        stage1: { multiplier: 1.30 },
-        stage2: { multiplier: 1.70 },
-        stage3: { multiplier: 2.20, clampMax: 65000 },
-        critical: false, showPreview: true,
-      },
-      // EDC17 PSA 16×24 secondary — 15 files +112.8%. Different axis start.
-      {
-        id: 'edc17_psa_fap_16x24_b',
-        name: 'EDC17 PSA FAP Variant 16×24 (Kf_)',
-        category: 'smoke',
-        desc: 'EDC17 PSA FAP ceiling variant B — 15 files, avg +112.8%. Alternate axis breakpoints (600,2048).',
-        signatures: [
-          [0x18,0x00,0x10,0x00,0x00,0x00,0x58,0x02,0x20,0x03,0xe8,0x03],
-        ],
-        sigOffset: 0,
-        rows: 16, cols: 24, dtype: 'uint16', le: true,
-        factor: 0.01, offsetVal: 0, unit: 'mg/st',
-        skipCalSearch: true,
-        stage1: { multiplier: 1.25 },
-        stage2: { multiplier: 1.60 },
-        stage3: { multiplier: 2.00, clampMax: 65000 },
-        critical: false, showPreview: false,
-      },
-      // EDC17 PSA 8×18 LE — 31 files +3.8%. Base cal.
-      {
-        id: 'edc17_psa_8x18',
-        name: 'EDC17 PSA 8×18 (Kf_)',
-        category: 'fuel',
-        desc: 'EDC17 PSA base 8×18 map — 31 files +3.8%.',
-        signatures: [
-          [0x12,0x00,0x08,0x00,0xc8,0x00,0xe8,0x03,0xd0,0x07,0xc4,0x09],
-        ],
-        sigOffset: 0,
-        rows: 8, cols: 18, dtype: 'uint16', le: true,
-        factor: 0.01, offsetVal: 0, unit: 'mg/st',
-        skipCalSearch: true,
-        stage1: { multiplier: 1.06 },
-        stage2: { multiplier: 1.12 },
-        stage3: { multiplier: 1.20, clampMax: 65000 },
-        critical: false, showPreview: false,
-      },
-      // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 Hyundai/Kia (51 pairs, CRDi) ──
-      // 16×16 LE Y=0,400,1200,2000 — 17 files (33%!) +62.8% avg. Major Stage 1 target.
-      // Hyundai i30/ix35/Santa Fe, Kia Sportage/Sorento CRDi family.
-      {
-        id: 'edc17_hyundai_16x16',
-        name: 'EDC17 Hyundai/Kia Ceiling 16×16 (Kf_)',
-        category: 'boost',
-        desc: 'EDC17 Hyundai/Kia CRDi 16×16 boost/pressure ceiling — verified in 17 real Hyundai/Kia diesel tunes (33% of HK pairs) with avg +62.8%. Primary Stage 1 target on i30/ix35/Santa Fe/Sportage/Sorento/Venga 1.6/1.7/2.0/2.2 CRDi.',
-        signatures: [
-          [0x10,0x00,0x10,0x00,0x00,0x00,0x90,0x01,0xb0,0x04,0x40,0x06],
-        ],
-        sigOffset: 0,
-        rows: 16, cols: 16, dtype: 'uint16', le: true,
-        factor: 1, offsetVal: 0, unit: 'mbar',
-        skipCalSearch: true,
-        stage1: { multiplier: 1.20, clampMax: 3000 },
-        stage2: { multiplier: 1.40, clampMax: 3300 },
-        stage3: { multiplier: 1.60, clampMax: 3500 },
-        critical: false, showPreview: true,
-      },
-      // Hyundai/Kia extreme ceiling — 11 files +161%! Huge raw multiplier.
-      {
-        id: 'edc17_hyundai_16x16_extreme',
-        name: 'EDC17 Hyundai/Kia Extreme Ceiling 16×16 (Kf_)',
-        category: 'limiter',
-        desc: 'EDC17 Hyundai/Kia protection ceiling — 11 files +161% avg (tuners roughly 2.6× stock). 16×16 LE. Very conservative stock — primary unlock target for Hyundai/Kia CRDi Stage 2/3.',
-        signatures: [
-          [0x10,0x00,0x10,0x00,0x50,0x00,0x20,0x03,0x40,0x06,0x60,0x09],
-        ],
-        sigOffset: 0,
-        rows: 16, cols: 16, dtype: 'uint16', le: true,
-        factor: 1, offsetVal: 0, unit: 'raw',
-        skipCalSearch: true,
-        stage1: { multiplier: 1.40 },
-        stage2: { multiplier: 1.80 },
-        stage3: { multiplier: 2.40, clampMax: 65000 },
-        critical: false, showPreview: false,
-      },
-      // Hyundai/Kia 8×8 base cal — 24 files +3% across 47% of HK pairs.
-      {
-        id: 'edc17_hyundai_8x8',
-        name: 'EDC17 Hyundai/Kia Base 8×8 (Kf_)',
-        category: 'fuel',
-        desc: 'EDC17 Hyundai/Kia base 8×8 cal — 24 files (47% of HK pairs) +3% avg. Base IQ/load table.',
-        signatures: [
-          [0x08,0x00,0x08,0x00,0x40,0x06,0xd0,0x07,0xb8,0x0b,0xa0,0x0f],
-        ],
-        sigOffset: 0,
-        rows: 8, cols: 8, dtype: 'uint16', le: true,
-        factor: 0.01, offsetVal: 0, unit: 'mg/st',
-        skipCalSearch: true,
-        stage1: { multiplier: 1.05 },
-        stage2: { multiplier: 1.12 },
-        stage3: { multiplier: 1.22, clampMax: 65000 },
-        critical: false, showPreview: false,
-      },
+      // NOTE: BMW / PSA / Hyundai-Kia-specific maps removed from generic EDC17 —
+      // moved to dedicated edc17_bmw / edc17_psa / edc17_hyundai ECU defs below.
       // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 CP14 (1,208 pairs!) ──
       // 10×14 LE — 1312 occurrences across CP14 files (base calibration reference).
       // Y axis 144,344,536,800 — boost or pressure target. +2.2% avg (small tweaks on the base).
@@ -2822,101 +2614,8 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         critical: false, showPreview: false,
       },
       // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 CP44 MAJOR additions ──
-      // 12×16 LE Y=5000-7100 — 116 real CP44 files (51.6%!) +9.9%. V6 TDI rail/pressure primary.
-      // Sample: Audi A6 3.0 TDI CR 2017 0281019739 4G0907589. Most-modified CP44 map overall.
-      {
-        id: 'edc17_cp44_12x16_rail',
-        name: 'EDC17 CP44 Rail Primary 12×16 (Kf_)',
-        category: 'fuel',
-        desc: 'EDC17 CP44 V6 TDI primary rail pressure / IQ duration — 116 files (51.6% of all CP44 pairs) +9.9% avg. Y 5000-7100 = rail pressure in bar × 10. The most commonly-modified CP44 map across ALL Audi 3.0 V6 TDI CR tunes (A6/A7/A8/Q5/Q7/SQ5 2009-2019).',
-        signatures: [
-          [0x10,0x00,0x0c,0x00,0x7c,0x15,0x70,0x17,0x58,0x1b,0x40,0x1f],
-        ],
-        sigOffset: 0,
-        rows: 12, cols: 16, dtype: 'uint16', le: true,
-        factor: 0.1, offsetVal: 0, unit: 'bar',
-        skipCalSearch: true,
-        minQuality: 0,
-        stage1: { multiplier: 1.08, clampMax: 18000 },
-        stage2: { multiplier: 1.15, clampMax: 19000 },
-        stage3: { multiplier: 1.25, clampMax: 22000 },
-        critical: false, showPreview: true,
-      },
-      // CP44 12×16 secondary — 29 files +9.9%, Y=0-5500 mg/st injection duration variant.
-      {
-        id: 'edc17_cp44_12x16_iq',
-        name: 'EDC17 CP44 IQ 12×16 (Kf_)',
-        category: 'fuel',
-        desc: 'EDC17 CP44 IQ/duration 12×16 — 29 files +9.9% avg. Complement to the rail primary, covers injection quantity by RPM/load for V6 TDI.',
-        signatures: [
-          [0x10,0x00,0x0c,0x00,0xb0,0x04,0x08,0x07,0xd0,0x07,0xc4,0x09],
-        ],
-        sigOffset: 0,
-        rows: 12, cols: 16, dtype: 'uint16', le: true,
-        factor: 0.01, offsetVal: 0, unit: 'mg/st',
-        skipCalSearch: true,
-        stage1: { multiplier: 1.08 },
-        stage2: { multiplier: 1.18 },
-        stage3: { multiplier: 1.28, clampMax: 65000 },
-        critical: false, showPreview: false,
-      },
-      // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 CP24 (Audi V8 4.2 TDI, 24 pairs) ──
-      // 8×16 LE Y=2000-8800 — 20 V8 files (83%!) +3%. PRIMARY V8 TDI base cal.
-      {
-        id: 'edc17_cp24_8x16_base',
-        name: 'EDC17 CP24 V8 TDI Base 8×16 (Kf_)',
-        category: 'fuel',
-        desc: 'EDC17 CP24 V8 TDI base calibration — 20 files (83% of CP24 pairs) +3% avg. Primary Audi A8/Q7 4.2 V8 TDI base map. Stock is very conservative — universally modified in V8 TDI Stage 1 tunes.',
-        signatures: [
-          [0x10,0x00,0x08,0x00,0xc8,0x00,0xf4,0x01,0xe8,0x03,0xdc,0x05],
-        ],
-        sigOffset: 0,
-        rows: 8, cols: 16, dtype: 'uint16', le: true,
-        factor: 0.01, offsetVal: 0, unit: 'mg/st',
-        skipCalSearch: true,
-        stage1: { multiplier: 1.08 },
-        stage2: { multiplier: 1.15 },
-        stage3: { multiplier: 1.25, clampMax: 65000 },
-        critical: false, showPreview: true,
-      },
-      // CP24 14×13 LE — 10 files +94.7%! Massive smoke ceiling on A4 3.0 TDI CR 2011.
-      // Also the 14×12 variant (4 files +89.8%) — group both into one entry with 2 sigs.
-      {
-        id: 'edc17_cp24_14x13_smoke',
-        name: 'EDC17 CP24 Smoke Ceiling 14×13/14×12 (Kf_)',
-        category: 'smoke',
-        desc: 'EDC17 CP24 smoke/torque ceiling — 10 files (41.7%) +94.7% avg on 14×13, plus 14×12 variant (+89.8%, 4 files). Tuners nearly DOUBLE stock. Primary V8 TDI Stage 1 unlock target.',
-        signatures: [
-          [0x0d,0x00,0x0e,0x00,0x4c,0x04,0xb0,0x04,0xb8,0x06,0xd0,0x07],
-          [0x0c,0x00,0x0e,0x00,0x4c,0x04,0xb0,0x04,0xb8,0x06,0xd0,0x07],
-        ],
-        sigOffset: 0,
-        rows: 14, cols: 13, dtype: 'uint16', le: true,
-        factor: 0.01, offsetVal: 0, unit: 'mg/st',
-        skipCalSearch: true,
-        stage1: { multiplier: 1.30 },
-        stage2: { multiplier: 1.60 },
-        stage3: { multiplier: 1.90, clampMax: 65000 },
-        critical: false, showPreview: true,
-      },
-      // CP24 8×8 LE Y=0,700,1500,2200 — 8 files +60.7%! Narrow X (4440-7000) boost ceiling.
-      {
-        id: 'edc17_cp24_8x8_ceiling',
-        name: 'EDC17 CP24 V8 Boost Ceiling 8×8 (Kf_)',
-        category: 'limiter',
-        desc: 'EDC17 CP24 V8 TDI boost ceiling — 8 files (33%) +60.7% avg. Narrow X axis 4440-7000 = boost pressure/torque-demand range. Tuners raise ~1.6× stock for V8 TDI Stage 1.',
-        signatures: [
-          [0x08,0x00,0x08,0x00,0x58,0x11,0x6c,0x11,0x80,0x11,0x94,0x11],
-        ],
-        sigOffset: 0,
-        rows: 8, cols: 8, dtype: 'uint16', le: true,
-        factor: 1, offsetVal: 0, unit: 'raw',
-        skipCalSearch: true,
-        stage1: { multiplier: 1.25 },
-        stage2: { multiplier: 1.50 },
-        stage3: { multiplier: 1.70, clampMax: 65000 },
-        critical: false, showPreview: true,
-      },
+      // NOTE: CP44 rail/IQ + CP24 V8 TDI maps moved to dedicated edc17_cp44 /
+      // edc17_cp24 ECU defs below.
       // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 C41 (8 pairs, high-density) ──
       // 8×8 LE Y=0,1000,2000,3500 — 16 occurrences across 8 files (2× per file on avg) +9.1%.
       // PRIMARY C41 base cal. C41 binaries always carry this map.
@@ -3105,13 +2804,260 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage3: { multiplier: 1.45, clampMax: 65000 },
         critical: false, showPreview: false,
       },
+      // NOTE: Ford Transit / Mondeo TDCi maps moved to dedicated edc17_ford
+      // ECU def below.
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // EDC17 sub-family ECU definitions
+  // These were split out of the generic `edc17` def so each binary is mapped to
+  // the right manufacturer-specific ECU and the map list only shows maps that
+  // actually belong to that variant. Detection is driven by ident strings +
+  // part-number patterns specific to each manufacturer.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── Bosch EDC17 — BMW diesel (M47 / N47 / N57) ───────────────────────────
+  {
+    id: 'edc17_bmw',
+    name: 'Bosch EDC17 (BMW diesel)',
+    manufacturer: 'Bosch',
+    family: 'EDC17_BMW',
+    // BMW DDE7/DDE8 = Digital Diesel Electronics, based on Bosch EDC17C41/C50/CP45.
+    // Part numbers: 7809xxx, 8506xxx, 8507xxx. Binary contains "DDE" strings.
+    identStrings: ['DDE7', 'DDE8', 'EDC17C41', 'EDC17C50', 'EDC17CP45', 'BMW_DDE', '7809', '8506', '8507'],
+    fileSizeRange: [524288, 4194304],
+    vehicles: ['BMW 320d/325d (E90/F30)', 'BMW 520d/525d/530d (F10/F11)', 'BMW 120d/123d (E87)', 'BMW X1/X3 xDrive20d', 'BMW 730d (F01)', 'BMW 118d/120d (F20)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 BMW (53 pairs, 320d/520d/330d) ──
+      // 14×12 LE Y=1700,2000,2500,3000 — 35 BMW files (66%!) +6.5% avg.
+      // BMW Nx engine base cal — M47/N47/N57 TDI family.
+      {
+        id: 'edc17_bmw_14x12',
+        name: 'EDC17 BMW Nx Base 14×12 (Kf_)',
+        category: 'fuel',
+        desc: 'EDC17 BMW N47/N57 base fuel/IQ map — verified in 35 real BMW diesel tunes (66% of BMW EDC17 pairs) with avg +6.5%. 14×12 Kf_ LE. Typical on 320d/520d/330d/530d N47/N57 engines.',
+        signatures: [
+          [0x0c,0x00,0x0e,0x00,0xa4,0x06,0xd0,0x07,0xc4,0x09,0xb8,0x0b],
+        ],
+        sigOffset: 0,
+        rows: 14, cols: 12, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.10 },
+        stage2: { multiplier: 1.20 },
+        stage3: { multiplier: 1.32, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      // EDC17 BMW 9×12 LE — 22 files +28.1% avg. Also appears in C41 (+139%!). BMW torque ceiling.
+      {
+        id: 'edc17_bmw_9x12',
+        name: 'EDC17 BMW Torque Ceiling 9×12 (Kf_)',
+        category: 'torque',
+        desc: 'EDC17 BMW torque ceiling — 22 BMW files +28% avg. 9×12 Kf_ LE. Stock value is conservative — raised in nearly all BMW Stage 1 tunes.',
+        signatures: [
+          [0x0c,0x00,0x09,0x00,0xd0,0x07,0xc4,0x09,0xb8,0x0b,0xac,0x0d],
+        ],
+        sigOffset: 0,
+        rows: 9, cols: 12, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.20 },
+        stage2: { multiplier: 1.40 },
+        stage3: { multiplier: 1.60, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      // EDC17 BMW 8×13 LE — 20 BMW files +19% avg. Smoke / pressure limit.
+      {
+        id: 'edc17_bmw_8x13',
+        name: 'EDC17 BMW Smoke 8×13 (Kf_)',
+        category: 'smoke',
+        desc: 'EDC17 BMW smoke / pressure-limit map — 20 BMW files +19% avg. 8×13 Kf_ LE with Y axis 1100-1600.',
+        signatures: [
+          [0x0d,0x00,0x08,0x00,0x4c,0x04,0x46,0x05,0xdc,0x05,0x40,0x06],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 13, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.28 },
+        stage3: { multiplier: 1.40, clampMax: 65000 },
+        critical: false, showPreview: true,
+      },
+    ],
+  },
+
+  // ── Bosch EDC17 — Peugeot/Citroen HDi (PSA) ──────────────────────────────
+  {
+    id: 'edc17_psa',
+    name: 'Bosch EDC17 (Peugeot/Citroen HDi)',
+    manufacturer: 'Bosch',
+    family: 'EDC17_PSA',
+    // PSA EDC17 used on 1.6/2.0 HDi engines. Ident strings include PSA-specific
+    // module labels, DW10 / DW12 / DV6 engine codes, and HDI marker.
+    identStrings: ['EDC17C10', 'EDC17C60', 'EDC17CP42', 'HDI', 'HDi', 'DV6C', 'DV6D', 'DW10', 'DW12', '9671930', '9660701', '9670951', 'PSA_'],
+    fileSizeRange: [524288, 4194304],
+    vehicles: ['Peugeot 207/208 1.6 HDi', 'Peugeot 307/308 1.6/2.0 HDi', 'Peugeot 508 2.0 HDi', 'Peugeot 3008/5008 HDi', 'Citroen C3/C4 HDi', 'Citroen C4 Picasso HDi', 'Citroen C5/C6 2.0/2.2 HDi', 'Citroen Berlingo HDi'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 PSA (178 pairs) ──
+      // 16×24 LE — 150 files (84%!) +138.8% avg. MASSIVE PSA FAP/smoke ceiling.
+      {
+        id: 'edc17_psa_fap_16x24',
+        name: 'PSA FAP Ceiling 16×24 (Kf_)',
+        category: 'smoke',
+        desc: 'PSA HDi FAP / DPF protection ceiling — verified in 150 real PSA tunes (84% of PSA EDC17 pairs) with avg +138.8% change. 16×24 LE Kf_. Stock is extremely conservative to protect DPF; raising unlocks real Stage 1 gains. PRIMARY Stage 1 map for 207/307/308/3008/508/C4/C5/Berlingo HDi.',
+        signatures: [
+          [0x18,0x00,0x10,0x00,0xfa,0x00,0xf4,0x01,0xee,0x02,0x34,0x03],
+        ],
+        sigOffset: 0,
+        rows: 16, cols: 24, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.30 },
+        stage2: { multiplier: 1.70 },
+        stage3: { multiplier: 2.20, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      // PSA 16×24 variant B — 15 files +112.8%. Alternate axis breakpoints.
+      {
+        id: 'edc17_psa_fap_16x24_b',
+        name: 'PSA FAP Variant 16×24 (Kf_)',
+        category: 'smoke',
+        desc: 'PSA FAP ceiling variant B — 15 files, avg +112.8%. Alternate axis breakpoints (600,2048).',
+        signatures: [
+          [0x18,0x00,0x10,0x00,0x00,0x00,0x58,0x02,0x20,0x03,0xe8,0x03],
+        ],
+        sigOffset: 0,
+        rows: 16, cols: 24, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.25 },
+        stage2: { multiplier: 1.60 },
+        stage3: { multiplier: 2.00, clampMax: 65000 },
+        critical: false, showPreview: true,
+      },
+      // PSA 8×18 base cal — 31 files +3.8%.
+      {
+        id: 'edc17_psa_8x18',
+        name: 'PSA Base 8×18 (Kf_)',
+        category: 'fuel',
+        desc: 'PSA HDi base 8×18 map — 31 files +3.8%.',
+        signatures: [
+          [0x12,0x00,0x08,0x00,0xc8,0x00,0xe8,0x03,0xd0,0x07,0xc4,0x09],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 18, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.06 },
+        stage2: { multiplier: 1.12 },
+        stage3: { multiplier: 1.20, clampMax: 65000 },
+        critical: false, showPreview: true,
+      },
+    ],
+  },
+
+  // ── Bosch EDC17 — Hyundai/Kia CRDi ───────────────────────────────────────
+  {
+    id: 'edc17_hyundai',
+    name: 'Bosch EDC17 (Hyundai/Kia CRDi)',
+    manufacturer: 'Bosch',
+    family: 'EDC17_HK',
+    // Hyundai/Kia CRDi use Bosch EDC17C57/C08/CP14 variants. Binary contains
+    // KIA/HYUNDAI/CRDI strings and Hyundai-specific part number prefixes.
+    identStrings: ['EDC17C57', 'EDC17C08', 'HYUNDAI', 'HYUNDAI_', 'KIA_', 'CRDi', 'CRDI', 'D4FB', 'D4EA', 'D4HA'],
+    fileSizeRange: [524288, 4194304],
+    vehicles: ['Hyundai i30/i40 1.6/1.7 CRDi', 'Hyundai ix35/Tucson CRDi', 'Hyundai Santa Fe 2.0/2.2 CRDi', 'Kia Sportage 1.7/2.0 CRDi', 'Kia Sorento 2.2 CRDi', 'Kia cee\'d 1.6 CRDi', 'Hyundai Accent 1.6 CRDi'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 Hyundai/Kia (51 pairs, CRDi) ──
+      // 16×16 LE Y=0,400,1200,2000 — 17 files (33%!) +62.8% avg. Major Stage 1 target.
+      {
+        id: 'edc17_hyundai_16x16',
+        name: 'Hyundai/Kia Ceiling 16×16 (Kf_)',
+        category: 'boost',
+        desc: 'Hyundai/Kia CRDi 16×16 boost/pressure ceiling — verified in 17 real tunes (33% of HK pairs) +62.8% avg. Primary Stage 1 target on i30/ix35/Santa Fe/Sportage/Sorento/Venga 1.6/1.7/2.0/2.2 CRDi.',
+        signatures: [
+          [0x10,0x00,0x10,0x00,0x00,0x00,0x90,0x01,0xb0,0x04,0x40,0x06],
+        ],
+        sigOffset: 0,
+        rows: 16, cols: 16, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'mbar',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.20, clampMax: 3000 },
+        stage2: { multiplier: 1.40, clampMax: 3300 },
+        stage3: { multiplier: 1.60, clampMax: 3500 },
+        critical: true, showPreview: true,
+      },
+      // Hyundai/Kia extreme ceiling — 11 files +161%!
+      {
+        id: 'edc17_hyundai_16x16_extreme',
+        name: 'Hyundai/Kia Extreme Ceiling 16×16 (Kf_)',
+        category: 'limiter',
+        desc: 'Hyundai/Kia protection ceiling — 11 files +161% avg (tuners roughly 2.6× stock). 16×16 LE. Very conservative stock — primary unlock target for Stage 2/3.',
+        signatures: [
+          [0x10,0x00,0x10,0x00,0x50,0x00,0x20,0x03,0x40,0x06,0x60,0x09],
+        ],
+        sigOffset: 0,
+        rows: 16, cols: 16, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.40 },
+        stage2: { multiplier: 1.80 },
+        stage3: { multiplier: 2.40, clampMax: 65000 },
+        critical: false, showPreview: true,
+      },
+      // Hyundai/Kia 8×8 base cal — 24 files +3% across 47% of HK pairs.
+      {
+        id: 'edc17_hyundai_8x8',
+        name: 'Hyundai/Kia Base 8×8 (Kf_)',
+        category: 'fuel',
+        desc: 'Hyundai/Kia base 8×8 cal — 24 files (47%) +3% avg. Base IQ/load table.',
+        signatures: [
+          [0x08,0x00,0x08,0x00,0x40,0x06,0xd0,0x07,0xb8,0x0b,0xa0,0x0f],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 8, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.05 },
+        stage2: { multiplier: 1.12 },
+        stage3: { multiplier: 1.22, clampMax: 65000 },
+        critical: false, showPreview: true,
+      },
+    ],
+  },
+
+  // ── Bosch EDC17 — Ford TDCi (Transit / Mondeo / Focus) ───────────────────
+  {
+    id: 'edc17_ford',
+    name: 'Bosch EDC17 (Ford TDCi)',
+    manufacturer: 'Bosch',
+    family: 'EDC17_Ford',
+    // Ford EDC17 binaries contain FoMoCo / Ford module strings and Ford part
+    // number patterns (6C11-12A650 for Transit, BG9A-12A650 for Mondeo).
+    identStrings: ['FoMoCo', 'FOMOCO', 'FORD_', 'EDC17C70', '6C11-', 'BG9A-', 'AG91-', 'CG1Q-', 'Transit', 'Mondeo'],
+    fileSizeRange: [524288, 4194304],
+    vehicles: ['Ford Transit 2.2 TDCi (2006-2018)', 'Ford Mondeo 2.0/2.2 TDCi (2007-2014)', 'Ford S-Max 2.0/2.2 TDCi', 'Ford Galaxy 2.0 TDCi', 'Ford Focus 2.0 TDCi (Mk2/3)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
       // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 Ford (80 pairs) ──
-      // 16×16 LE Y=0-5000 — 5 files +10% Ford Transit 2.2 TDCi (Visteon hardware). Base cal.
       {
         id: 'edc17_ford_transit_16x16',
-        name: 'EDC17 Ford Transit TDCi 16×16 (Kf_)',
+        name: 'Ford Transit TDCi Base 16×16 (Kf_)',
         category: 'fuel',
-        desc: 'EDC17 Ford Transit 2.2 TDCi base cal 16×16 — 5 real Transit tunes +10% avg. Visteon-supplied hardware (6C11 / AG91 part numbers).',
+        desc: 'Ford Transit 2.2 TDCi base cal 16×16 — 5 real Transit tunes +10% avg. Visteon-supplied hardware (6C11 / AG91 part numbers).',
         signatures: [
           [0x10,0x00,0x10,0x00,0x00,0x00,0x80,0x02,0xc0,0x03,0xa0,0x05],
         ],
@@ -3122,14 +3068,13 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { multiplier: 1.10 },
         stage2: { multiplier: 1.20 },
         stage3: { multiplier: 1.30, clampMax: 65000 },
-        critical: false, showPreview: false,
+        critical: true, showPreview: true,
       },
-      // Ford Mondeo 2.2 TDCi 16×16 LE Y=0-26500 — 4 files +100% (tuners DOUBLE).
       {
         id: 'edc17_ford_mondeo_16x16',
-        name: 'EDC17 Ford Mondeo 2.2 TDCi Ceiling 16×16 (Kf_)',
+        name: 'Ford Mondeo 2.2 TDCi Ceiling 16×16 (Kf_)',
         category: 'limiter',
-        desc: 'EDC17 Ford Mondeo 2.2 TDCi ceiling map — 4 files +100% avg (tuners double stock). Y axis 0-26500 raw range suggests protection/ceiling table. Bosch 513174/513490 part numbers.',
+        desc: 'Ford Mondeo 2.2 TDCi ceiling map — 4 files +100% avg (tuners double stock). Y axis 0-26500 raw range suggests protection/ceiling. Bosch 513174/513490 part numbers.',
         signatures: [
           [0x10,0x00,0x10,0x00,0x00,0x00,0xec,0x01,0xd7,0x03,0xc3,0x05],
         ],
@@ -3140,7 +3085,171 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { multiplier: 1.30 },
         stage2: { multiplier: 1.60 },
         stage3: { multiplier: 1.90, clampMax: 65000 },
-        critical: false, showPreview: false,
+        critical: false, showPreview: true,
+      },
+    ],
+  },
+
+  // ── Bosch EDC17 CP44 — Audi 3.0 V6 TDI CR ────────────────────────────────
+  {
+    id: 'edc17_cp44',
+    name: 'Bosch EDC17 CP44 (Audi 3.0 V6 TDI)',
+    manufacturer: 'Bosch',
+    family: 'EDC17_CP44',
+    // Audi 3.0 V6 TDI CR specifically uses EDC17CP44. Part numbers start 4G09074xx
+    // (A6/A7), 4H09074xx (A8), 8K09074xx (A4), 0281019xxx Bosch.
+    identStrings: ['EDC17CP44', 'CP44', '4G0907589', '4G0907401', '4H0907401', '8K0907401', '0281019', '0281020068'],
+    fileSizeRange: [2097152, 4194304],   // CP44 = TC1797 = 4 MB
+    vehicles: ['Audi A4 3.0 TDI CR (B8)', 'Audi A5 3.0 TDI CR', 'Audi A6 3.0 TDI CR (C7)', 'Audi A7 3.0 TDI CR', 'Audi A8 3.0 TDI CR (D4)', 'Audi Q5 3.0 TDI', 'Audi Q7 3.0 TDI CR', 'Audi SQ5 3.0 TDI BiT', 'VW Touareg 3.0 V6 TDI'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      // 12×16 LE Y=5000-7100 — 116 real CP44 files (51.6%!) +9.9%. V6 TDI rail/pressure primary.
+      {
+        id: 'edc17_cp44_12x16_rail',
+        name: 'CP44 Rail Primary 12×16 (Kf_)',
+        category: 'fuel',
+        desc: 'CP44 V6 TDI primary rail pressure / IQ duration — 116 files (51.6% of all CP44 pairs) +9.9% avg. Most-modified CP44 map across ALL Audi 3.0 V6 TDI CR tunes (A6/A7/A8/Q5/Q7/SQ5 2009-2019).',
+        signatures: [
+          [0x10,0x00,0x0c,0x00,0x7c,0x15,0x70,0x17,0x58,0x1b,0x40,0x1f],
+        ],
+        sigOffset: 0,
+        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'bar',
+        skipCalSearch: true,
+        minQuality: 0,
+        stage1: { multiplier: 1.08, clampMax: 18000 },
+        stage2: { multiplier: 1.15, clampMax: 19000 },
+        stage3: { multiplier: 1.25, clampMax: 22000 },
+        critical: true, showPreview: true,
+      },
+      // CP44 12×16 IQ variant — 29 files +9.9%.
+      {
+        id: 'edc17_cp44_12x16_iq',
+        name: 'CP44 IQ 12×16 (Kf_)',
+        category: 'fuel',
+        desc: 'CP44 IQ/duration 12×16 — 29 files +9.9% avg. Complement to the rail primary, covers injection quantity by RPM/load for V6 TDI.',
+        signatures: [
+          [0x10,0x00,0x0c,0x00,0xb0,0x04,0x08,0x07,0xd0,0x07,0xc4,0x09],
+        ],
+        sigOffset: 0,
+        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.08 },
+        stage2: { multiplier: 1.18 },
+        stage3: { multiplier: 1.28, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      // CP44 21×6 smoke/limit — 100% of CP44 tunes modify, avg +23% change.
+      {
+        id: 'edc17_cp44_21x6',
+        name: 'CP44 Smoke/Limit 21×6 (Kf_)',
+        category: 'smoke',
+        desc: 'CP44 V6 TDI 21×6 smoke/limit map — found in 100% of CP44 tunes with avg +23%. Required for Stage 1 on V6 TDI.',
+        signatures: [
+          [0x06,0x00,0x15,0x00,0xf4,0x01,0x58,0x02,0xbc,0x02,0x20,0x03],
+        ],
+        sigOffset: 0,
+        rows: 21, cols: 6, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.12 },
+        stage2: { multiplier: 1.22 },
+        stage3: { multiplier: 1.35, clampMax: 10000 },
+        critical: true, showPreview: true,
+      },
+      // CP44 4×6 boost-ceiling — 89% of tunes, avg +218%!
+      {
+        id: 'edc17_cp44_ceiling_4x6',
+        name: 'CP44 Boost Ceiling 4×6 (Kf_)',
+        category: 'limiter',
+        desc: 'CP44 V6 TDI boost ceiling / protection limit — 89% of CP44 tunes modify, avg +218%. Stock is extremely conservative; tuners triple it. Critical for Stage 1+ on V6 TDI.',
+        signatures: [
+          [0x06,0x00,0x04,0x00,0xa0,0x0f,0x30,0x11,0x88,0x13,0x50,0x14],
+        ],
+        sigOffset: 0,
+        rows: 4, cols: 6, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.50 },
+        stage2: { multiplier: 2.20 },
+        stage3: { multiplier: 3.00, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── Bosch EDC17 CP24 — Audi 4.2 V8 TDI ───────────────────────────────────
+  {
+    id: 'edc17_cp24',
+    name: 'Bosch EDC17 CP24 (Audi 4.2 V8 TDI)',
+    manufacturer: 'Bosch',
+    family: 'EDC17_CP24',
+    // Audi A8/Q7 4.2 V8 TDI use EDC17CP24. Part numbers: 4H09074xx (A8),
+    // 4L09074xx (Q7), 8K09074xx (A4 3.0), 0281017xxx Bosch early.
+    identStrings: ['EDC17CP24', 'CP24', '4H0907409', '4L0907409', '8K0907401E'],
+    fileSizeRange: [2097152, 4194304],   // CP24 = TC1797 = 4 MB
+    vehicles: ['Audi A4 3.0 TDI CR (B8, early CP24)', 'Audi A8 4.2 V8 TDI CR (D3/D4)', 'Audi Q7 4.2 V8 TDI CR', 'VW Touareg 4.2 V8 TDI'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      // 8×16 LE Y=2000-8800 — 20 V8 files (83%!) +3%. PRIMARY V8 TDI base cal.
+      {
+        id: 'edc17_cp24_8x16_base',
+        name: 'CP24 V8 TDI Base 8×16 (Kf_)',
+        category: 'fuel',
+        desc: 'CP24 V8 TDI base calibration — 20 files (83% of CP24 pairs) +3% avg. Primary Audi A8/Q7 4.2 V8 TDI base map. Universally modified in V8 TDI Stage 1 tunes.',
+        signatures: [
+          [0x10,0x00,0x08,0x00,0xc8,0x00,0xf4,0x01,0xe8,0x03,0xdc,0x05],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.08 },
+        stage2: { multiplier: 1.15 },
+        stage3: { multiplier: 1.25, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      // CP24 14×13 LE — 10 files +94.7%! Massive smoke ceiling.
+      {
+        id: 'edc17_cp24_14x13_smoke',
+        name: 'CP24 V8 Smoke Ceiling 14×13/14×12 (Kf_)',
+        category: 'smoke',
+        desc: 'CP24 V8 smoke/torque ceiling — 10 files +94.7% avg on 14×13, plus 14×12 variant (+89.8%). Tuners nearly DOUBLE stock. Primary V8 TDI Stage 1 unlock target.',
+        signatures: [
+          [0x0d,0x00,0x0e,0x00,0x4c,0x04,0xb0,0x04,0xb8,0x06,0xd0,0x07],
+          [0x0c,0x00,0x0e,0x00,0x4c,0x04,0xb0,0x04,0xb8,0x06,0xd0,0x07],
+        ],
+        sigOffset: 0,
+        rows: 14, cols: 13, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.30 },
+        stage2: { multiplier: 1.60 },
+        stage3: { multiplier: 1.90, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+      // CP24 8×8 boost ceiling — 8 files +60.7%!
+      {
+        id: 'edc17_cp24_8x8_ceiling',
+        name: 'CP24 V8 Boost Ceiling 8×8 (Kf_)',
+        category: 'limiter',
+        desc: 'CP24 V8 TDI boost ceiling — 8 files (33%) +60.7% avg. Narrow X axis 4440-7000. Tuners raise ~1.6× stock for V8 TDI Stage 1.',
+        signatures: [
+          [0x08,0x00,0x08,0x00,0x58,0x11,0x6c,0x11,0x80,0x11,0x94,0x11],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 8, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.25 },
+        stage2: { multiplier: 1.50 },
+        stage3: { multiplier: 1.70, clampMax: 65000 },
+        critical: true, showPreview: true,
       },
     ],
   },
