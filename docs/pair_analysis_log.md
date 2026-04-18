@@ -64,6 +64,40 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #967–982 — A8 V8 TDI 3.3/4.0 + A8 4.2 V8 petrol catalog
+
+**A8 D2 3.3 V8 TDI (rare engine, EDC15)** — wire candidate:
+- Pair #962 4D0907409A 0281001867 sw351347 — 996 bytes / 35 regions
+- Pair #963 4D0907409A 0281001867 sw351497 — 996 bytes / 35 regions
+- **2 SWs IDENTICAL signature** (same byte count, same region count).
+  Strong moderate-confidence cluster.
+
+**A8 D3 4.0 V8 TDI (4E0907409B/C)** — wire candidate:
+- Pair #964 4E0907409B sw368451 — 5045 bytes / 92 regions
+- Pair #965 4E0907409B sw369539 — 2004 bytes / 171 regions
+- Pair #966 4E0907409C sw374102 — 2004 bytes / 171 regions
+- sw369539 + sw374102 share IDENTICAL byte/region count → 2 SWs
+  same SGO across 4E0907409B and 4E0907409C suffixes. Strong cluster.
+
+**A8 D3 3.0 V6 TDI 4E0907401x** continued (sister to A6/A7 batches):
+- 4E0907401B sw372121 (#959) — 2 MB CP44
+- 4E0907401S sw374414 (#960) — 524 KB chiptool
+- 4E0907401D sw384618 (#961) — 524 KB chiptool
+
+**A8 D3 4.2 V8 petrol** ME7.x:
+- 0261207253 4D0907560BE sw369340 (#968 + #971 same SW two files
+  identical 27 regions / 2103B) — 246 kW 4.2 V8 ME7.1.1
+- 0261208147 4E0907560 sw368095 (#969 + #972 same SW two files
+  16 vs 13 regions) — 246.4 kW newer
+- 0261208147 4E0907560 sw393273 (#967) — same hw, different SW
+
+**A8 D2 4.2 V8 1998 (early ME7.0)** — 131 KB ROMs:
+- 4D0907557E sw355809 (#970) — 220 kW
+- 4D0907558D sw357486 (#971) — 250 kW (S8 V8)
+
+**A8 D4 3.0 V6 TDI 4G0907401E sw528341** (#958) — newer 528341 SW
+not previously seen. 8.3 KB / 324 regions tune.
+
 ## Pairs #951–966 — A7 BiTDI tail + A8 D3 2.5 TDI + A8 D4 3.0 TDI
 
 A7 BiTDI 4G0907589 cluster continues:
