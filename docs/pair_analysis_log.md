@@ -70,6 +70,42 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #17–32 — Amarok 03L906019FA cluster wired + Bora variants
+
+**STRONG WIRE: Amarok 2.0 BiTDI 03L906019FA cluster** confirmed
+across 3 SW versions all sharing IDENTICAL offsets:
+- sw515253 (#18) — 8317B / 56 regions
+- sw518108 (#19, #21, #25) — 8453B / 57 regions × 3 files
+- sw526355 (#22, #28, #12 prior) — 8311B / 56 regions × 3 files
+
+ALL hit `0x0623F0` 12×15 IQ ceiling A (raw 15 → 27232) + `0x064308`
+12×15 IQ ceiling B (raw 649 → 24771) + `0x055DB2` 60B IQ stage B
+(+76%) + `0x067376/0x06739E` boost target pair.
+
+**Wired** as `edc17_c64_amarok_03l906019fa` with 3 maps (IQ
+ceilings A/B + IQ stage B). Stage 1/2/3 presets pinned to tuner
+consensus.
+
+**9th wired ECU def in the project.**
+
+Other Amarok variants (single-pair, no cluster):
+- 03L906019FC sw518109 (#23) — 4030B / 97 regions, sister hardware
+- 03L906019FE sw518171 (#14) — 5869B / 83 regions (85 kW variant)
+- 03L906019FB sw526356 (#27) — 2925B / 77 regions (89.7 kW variant)
+- 03L906022CD sw518131 (#17) — 4047B / 46 regions (88.3 kW)
+- 03L906012BG sw526328 (#26) — 6002B / 118 regions (132.4 kW BiTDI)
+- 03L906012AG sw536665 (#29) — 7700B / 114 regions (89.7 kW newer)
+- 03L906022SP sw510909 (#13/#15) — already in 03L906022 SGO family
+- 03L906022SM sw510908 (#15/#24) — sister
+
+**VW Bora petrol variants** (#30-31):
+- Bora Bosch 0281010651 038906012FB sw360774 — 524 KB EDC15-style
+  (Bora is the US-name for Jetta — 1.9 TDI 90hp PD)
+- Bora 1.6 16V Marelli 61600.666.09 036906034DR — Magneti Marelli
+  IAW7G ECU. **NEW ECU FAMILY** (Marelli for VW 1.6 16V) not in defs.
+- Bora 1.6 8V Siemens 5WP40193 06A906033BN — sister of A2/Golf/Polo
+  Simos VR4 family
+
 ## VW Pairs #1–16 — Caddy/Golf 1.9 TDI + Amarok 2.0 TDI CR + Touareg
 
 **VW Caddy / Golf 5 1.9 TDI 77.2 kW (105 hp) PD EDC16** (#1-3):

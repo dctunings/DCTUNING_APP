@@ -2365,6 +2365,90 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 C64 VW Amarok 2.0 BiTDI 03L906019FA (sw 515253/518108/526355) ──
+  //
+  // VW Amarok 2.0 BiTDI CR 119.9 kW (163 hp) EDC17 C64. Bosch hardware code,
+  // VAG part number 03L906019FA. Verified across 3 SW versions in
+  // pair_analysis_log.md VW pairs #18, #19, #21, #28 (and #12 sister) —
+  // ALL share IDENTICAL offsets:
+  //
+  //   0x0623F0  12×15 = 180 cells u16 BE — primary IQ ceiling
+  //                                        (raw 15 → 27232 = pinned to ceiling)
+  //   0x064308  12×15 = 180 cells u16 BE — companion IQ ceiling
+  //                                        (raw 649 → 24771)
+  //   0x055DB2  60 B = 30 cells u16 BE  — IQ stage B (+76%)
+  //   0x067376 / 0x06739E  20 B = 10 cells u16 BE — boost target pair (+52-69%)
+  //
+  // Both 0x0623F0 and 0x064308 maps are pinned from near-zero raw values
+  // up to ~25000 raw — very dramatic IQ release. Stage 1 = restore to
+  // useful operating values; Stage 2/3 push further.
+  //
+  // sw526355 has 2 confirmation pairs (#12 + #28); sw518108 has 3 (#19/21/25).
+  // Pair #19 stage1+++ adds 0x9xxxx noise on top but preserves the SAME SGO
+  // targets — confirms the cluster identification.
+  {
+    id: 'edc17_c64_amarok_03l906019fa',
+    name: 'Bosch EDC17 C64 (03L906019FA — VW Amarok 2.0 BiTDI 163hp 2011-2013)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['03L906019FA', '515253', '518108', '526355'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Amarok 2.0 BiTDI CR 119.9 kW (03L906019FA sw 515253/518108/526355, 2011-2013)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c64_019fa_iq_ceiling_a',
+        name: 'IQ Ceiling A (03L906019FA Amarok)',
+        category: 'fuel',
+        desc: 'Primary IQ ceiling at 0x0623F0 (12×15 = 180 uint16 BE cells). Verified across 3 SWs (sw 515253/518108/526355). Stock raw values ~15-50 (near zero) — tuners pin to ~27000 to release IQ. Stage 1 lifts to useful operating range.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0623F0,
+        rows: 15, cols: 12, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 27000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 30000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 33000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_c64_019fa_iq_ceiling_b',
+        name: 'IQ Ceiling B (03L906019FA Amarok)',
+        category: 'fuel',
+        desc: 'Companion IQ ceiling at 0x064308 (12×15 = 180 uint16 BE cells). Verified across same 3 SWs. Stock raw values ~600-1000 — tuners pin to ~25000.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x064308,
+        rows: 15, cols: 12, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 24700 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 28000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 31000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_c64_019fa_iq_stage_b',
+        name: 'IQ Stage B (03L906019FA Amarok)',
+        category: 'fuel',
+        desc: 'IQ stage B at 0x055DB2 (60 B = 30 uint16 BE cells). Verified +76% across cluster. μ 19811 → 34835.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x055DB2,
+        rows: 1, cols: 30, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 34500 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 38000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 41000 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
   // ── EDC17 CP44 Audi A8 D4 4.2 V8 TDI 4H0907409 (sw 511925/514636/522804) ─
   //
   // Audi A8 D4 4.2 V8 TDI 350ps EDC17 CP44. Bosch hardware code, VAG part
