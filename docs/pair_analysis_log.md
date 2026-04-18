@@ -64,6 +64,34 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #113–127 — EDC16 PD A3 2.0 TDI + MED17 A3 2.0 TFSI 200ps
+
+15 more pairs:
+
+- Pair #113 · 03G906021JH sw 389852 (PD 2006) 512KB, 4,780 B / **509
+  regions** — unusually high region count (many small edits).
+- Pair #114 · 03G906021LG sw 382725 (PD 2006) 512KB, 3,062 B / 129.
+- Pair #115 · 03G906021JH sw 382415 (PD 2006) 512KB, 1,155 B / 43.
+- Pair #116 · 03G906021AB sw 386324 (PD 2006) 512KB, 2,634 B / 68.
+- Pair #117 · 03G906021JH sw 392913 (PD 2007) 512KB, 3,651 B / 99.
+- Pair #118 · 03G906018DH SN100K5400000 (256KB ppd cal-only) —
+  2,202 B / 44. ANOTHER DH SW serial variant (SN100K vs SN100L).
+- Pair #119 · 03G906018DH SN100L4000000 alt — 15,773 B / 75 (heavy tune
+  of the same cal-dump as pair #51; different tuner, much more modified).
+- Pairs #120–127 · MED17 A3 2.0 TFSI 200ps (0261S02xxx / 0261B00xxx
+  with 8P0907115* part number). Multiple SW versions — 387579 / 381186
+  / 387577 / 381206 / 376224 / 391088 / 387458. All 2MB MED17.
+  Light-to-medium tunes (269-2707 B changed). Pair #124 (sw = empty,
+  0261B00486) is the lightest at 269 B / 4 regions — tuner barely
+  touched it (maybe speed-limiter only). All of these are variants
+  of our existing `med17` ECU def's territory.
+
+**Code: deferred**. Notable: 03G906018DH now confirmed on **3 SW
+serial families** — SN100L8 (pair 1), SN100L4 (pair 51), SN100K5
+(pair 118) — all share the DH torque-monitor map. Our identStrings
+for vag_ppd1 already caught SN100L8 and SN100L4; should add
+'SN100K5400000' too.
+
 ## Pairs #98–112 — 2013-2015 EDC17 CR newer parts + EDC16 PD 2.0 TDI catalogue
 
 15 more pairs covering newer EDC17 C46/C64 variants and the older

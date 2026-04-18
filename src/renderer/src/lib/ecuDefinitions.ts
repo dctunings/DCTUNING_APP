@@ -7571,6 +7571,8 @@ export const ECU_DEFINITIONS: EcuDef[] = [
                         // in Pair #51 that the torque-monitor offset aligns when
                         // converted to cal-relative (0x05C7FA → 0x01C7FA).
       'SN100L6000000',  // AQ variant base SW — shares LADSOLL offset with DH (see AQ doc block)
+      'SN100K5400000',  // Pair #118 — third SW serial family of 03G906018DH (2006 binaries)
+      'SN100K5300000',  // Pair #7 (earlier batch) — 256KB Bosch-labelled DH cal dump
     ],
     fileSizeRange: [524288, 2097152],   // up to 2MB — real PPD1.2 binaries are 2MB
     vehicles: [
