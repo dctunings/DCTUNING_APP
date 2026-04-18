@@ -64,6 +64,40 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #935–950 — A7 3.0 V6 TDI 4G0907401 (sister of A6 C7)
+
+A7 (Sportback fastback) shares the C7 platform with A6 facelift, so
+the ECU is the same: **4G0907401** with SW versions **511968, 513666,
+514662, 515579, 515581, 518146, 518151, 518172, 521649, 522832** —
+ALL **same SWs** as A6 batch from prior pages.
+
+So **A6 C7 and A7 share the SAME EDC17 ECU** with 4G0907401 part
+number across the entire SW catalog. No separate wire needed for A7
+— same def covers both.
+
+Cross-reference confirmations from prior A6 batch:
+- sw513666 (#928, #936) — also seen in earlier A6 batch
+- sw515579 (#929, #934, #937) — 3 A7 pairs same SW + A6 #891 sw515579
+- sw511968 (#930, #940) — same SW two model years
+- sw515581 (#932) — "CLAB" engine code (CLA = 245hp 3.0 TDI)
+- sw518146 4G0907401F (#935) — F suffix, **786 KB ROM** (768 KB
+  chiptool partial dump format)
+- sw518172 (#932 — wait that's 515581) — actually sw518172 in #932...
+  let me re-check. #932 is sw515581. #931 is sw518172. OK.
+- sw521649 (#941) — sister to A6 #892 sw521649
+- sw522832 (#938 wait, that's sw518151) — pair #939 is sw522832
+
+Pair #925-#926 still A6 V6 3.0 TDI 4F0907401A:
+- sw372736 (#926) — 372736 NEW SW for 4F0907401A — `0x` (top regions
+  trimmed in output)
+- sw372123 (#927) — sister to pair #832 sw372123 (already noted as
+  candidate cluster with sw372124)
+
+**Code: no new wire** — the A7 4G cluster duplicates the A6 4G
+documented pattern (two 16×16 maps Δ 0x244). Same recommendation:
+needs signature-based detection, not fixedOffset, due to per-SW
+cal-base shift.
+
 ## Pairs #919–934 — A6 tail: 4G0907589 BiTDI + 3.2 FSI + 4.2 V8 + early V6 TDI
 
 End of A6 alphabetical batch. Mixed engine families:
