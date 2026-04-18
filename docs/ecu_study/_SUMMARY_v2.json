@@ -1,0 +1,2033 @@
+[
+  {
+    "family": "EDC15_PD",
+    "pairCount": 2317,
+    "verifiedSigs": 14,
+    "topSigs": [
+      {
+        "rows": 10,
+        "cols": 10,
+        "le": false,
+        "occurrences": 91,
+        "occurrencePct": "3.9",
+        "avgPctChange": "9.0",
+        "sigHex": "000a000a05d206cf077708c7"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": false,
+        "occurrences": 82,
+        "occurrencePct": "3.5",
+        "avgPctChange": "13.6",
+        "sigHex": "0010001000000190032004b0"
+      },
+      {
+        "rows": 3,
+        "cols": 3,
+        "le": false,
+        "occurrences": 36,
+        "occurrencePct": "1.6",
+        "avgPctChange": "-56.9",
+        "sigHex": "0003000357038403f9033804"
+      },
+      {
+        "rows": 10,
+        "cols": 10,
+        "le": false,
+        "occurrences": 20,
+        "occurrencePct": "0.9",
+        "avgPctChange": "7.1",
+        "sigHex": "000a000a05dc06d607d008ca"
+      },
+      {
+        "rows": 10,
+        "cols": 11,
+        "le": false,
+        "occurrences": 20,
+        "occurrencePct": "0.9",
+        "avgPctChange": "7.4",
+        "sigHex": "000b000a05d206cf077708c7"
+      },
+      {
+        "rows": 10,
+        "cols": 10,
+        "le": false,
+        "occurrences": 16,
+        "occurrencePct": "0.7",
+        "avgPctChange": "7.3",
+        "sigHex": "000a000a02bc03e807d00bb8"
+      },
+      {
+        "rows": 11,
+        "cols": 12,
+        "le": false,
+        "occurrences": 12,
+        "occurrencePct": "0.5",
+        "avgPctChange": "3.4",
+        "sigHex": "000c000b03e804e2055f05dc"
+      },
+      {
+        "rows": 12,
+        "cols": 12,
+        "le": false,
+        "occurrences": 8,
+        "occurrencePct": "0.3",
+        "avgPctChange": "8.4",
+        "sigHex": "000c000c032004b0064007d0"
+      }
+    ]
+  },
+  {
+    "family": "EDC17_GEN",
+    "pairCount": 1991,
+    "verifiedSigs": 169,
+    "topSigs": [
+      {
+        "rows": 21,
+        "cols": 6,
+        "le": true,
+        "occurrences": 207,
+        "occurrencePct": "10.4",
+        "avgPctChange": "21.2",
+        "sigHex": "06001500f4015802bc022003"
+      },
+      {
+        "rows": 7,
+        "cols": 15,
+        "le": true,
+        "occurrences": 168,
+        "occurrencePct": "8.4",
+        "avgPctChange": "9.5",
+        "sigHex": "0f0007007805d007c409b80b"
+      },
+      {
+        "rows": 8,
+        "cols": 16,
+        "le": true,
+        "occurrences": 122,
+        "occurrencePct": "6.1",
+        "avgPctChange": "8.8",
+        "sigHex": "100008007805d007c409b80b"
+      },
+      {
+        "rows": 4,
+        "cols": 12,
+        "le": true,
+        "occurrences": 96,
+        "occurrencePct": "4.8",
+        "avgPctChange": "3.0",
+        "sigHex": "0c0004000a0190012003b004"
+      },
+      {
+        "rows": 8,
+        "cols": 21,
+        "le": true,
+        "occurrences": 69,
+        "occurrencePct": "3.5",
+        "avgPctChange": "30.7",
+        "sigHex": "1500080078054006d007c409"
+      },
+      {
+        "rows": 14,
+        "cols": 16,
+        "le": true,
+        "occurrences": 66,
+        "occurrencePct": "3.3",
+        "avgPctChange": "5.0",
+        "sigHex": "10000e00d007c409b80bac0d"
+      },
+      {
+        "rows": 22,
+        "cols": 4,
+        "le": true,
+        "occurrences": 64,
+        "occurrencePct": "3.2",
+        "avgPctChange": "22.1",
+        "sigHex": "04001600bc0220038403b603"
+      },
+      {
+        "rows": 4,
+        "cols": 6,
+        "le": true,
+        "occurrences": 62,
+        "occurrencePct": "3.1",
+        "avgPctChange": "223.6",
+        "sigHex": "06000400a00f301188135014"
+      }
+    ]
+  },
+  {
+    "family": "UNKNOWN",
+    "pairCount": 1259,
+    "verifiedSigs": 19,
+    "topSigs": [
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 9,
+        "occurrencePct": "0.7",
+        "avgPctChange": "9.9",
+        "sigHex": "08000800e8034006ac0d9411"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": true,
+        "occurrences": 8,
+        "occurrencePct": "0.6",
+        "avgPctChange": "6.9",
+        "sigHex": "100010007805e807b80ba00f"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": true,
+        "occurrences": 7,
+        "occurrencePct": "0.6",
+        "avgPctChange": "100.0",
+        "sigHex": "100010000000ec01d703c305"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 7,
+        "occurrencePct": "0.6",
+        "avgPctChange": "2.9",
+        "sigHex": "080008000000200340066009"
+      },
+      {
+        "rows": 8,
+        "cols": 16,
+        "le": true,
+        "occurrences": 7,
+        "occurrencePct": "0.6",
+        "avgPctChange": "3.0",
+        "sigHex": "100008004006d007c409a00f"
+      },
+      {
+        "rows": 10,
+        "cols": 10,
+        "le": true,
+        "occurrences": 5,
+        "occurrencePct": "0.4",
+        "avgPctChange": "213.7",
+        "sigHex": "0a000a00f40158028a02bc02"
+      },
+      {
+        "rows": 9,
+        "cols": 12,
+        "le": true,
+        "occurrences": 5,
+        "occurrencePct": "0.4",
+        "avgPctChange": "102.7",
+        "sigHex": "0c000900d007c409b80bac0d"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": false,
+        "occurrences": 4,
+        "occurrencePct": "0.3",
+        "avgPctChange": "116.3",
+        "sigHex": "0008000803e805dc07d009c4"
+      }
+    ]
+  },
+  {
+    "family": "EDC17_CP14",
+    "pairCount": 1208,
+    "verifiedSigs": 43,
+    "topSigs": [
+      {
+        "rows": 10,
+        "cols": 14,
+        "le": true,
+        "occurrences": 1312,
+        "occurrencePct": "108.6",
+        "avgPctChange": "2.2",
+        "sigHex": "0e000a00c800900158022003"
+      },
+      {
+        "rows": 10,
+        "cols": 16,
+        "le": true,
+        "occurrences": 515,
+        "occurrencePct": "42.6",
+        "avgPctChange": "7.7",
+        "sigHex": "10000a0040066009b80bac0d"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 181,
+        "occurrencePct": "15.0",
+        "avgPctChange": "8.1",
+        "sigHex": "080008000000e803d007b80b"
+      },
+      {
+        "rows": 21,
+        "cols": 4,
+        "le": true,
+        "occurrences": 164,
+        "occurrencePct": "13.6",
+        "avgPctChange": "15.6",
+        "sigHex": "04001500bc0220038403b603"
+      },
+      {
+        "rows": 10,
+        "cols": 4,
+        "le": true,
+        "occurrences": 160,
+        "occurrencePct": "13.2",
+        "avgPctChange": "49.0",
+        "sigHex": "04000a00f401bc02bd02be02"
+      },
+      {
+        "rows": 8,
+        "cols": 16,
+        "le": true,
+        "occurrences": 96,
+        "occurrencePct": "7.9",
+        "avgPctChange": "2.1",
+        "sigHex": "100008000a0190012003b004"
+      },
+      {
+        "rows": 8,
+        "cols": 16,
+        "le": true,
+        "occurrences": 90,
+        "occurrencePct": "7.5",
+        "avgPctChange": "15.8",
+        "sigHex": "1000080000002003b0047805"
+      },
+      {
+        "rows": 9,
+        "cols": 15,
+        "le": true,
+        "occurrences": 77,
+        "occurrencePct": "6.4",
+        "avgPctChange": "7.4",
+        "sigHex": "0f0009007805d007c409b80b"
+      }
+    ]
+  },
+  {
+    "family": "ME7",
+    "pairCount": 1191,
+    "verifiedSigs": 15,
+    "topSigs": [
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": false,
+        "occurrences": 81,
+        "occurrencePct": "6.8",
+        "avgPctChange": "16.5",
+        "sigHex": "000800080fa017c01f402ee0"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 45,
+        "occurrencePct": "3.8",
+        "avgPctChange": "181.6",
+        "sigHex": "080008000000a40048013e02"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 29,
+        "occurrencePct": "2.4",
+        "avgPctChange": "121.6",
+        "sigHex": "080008000000a00040014002"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": false,
+        "occurrences": 19,
+        "occurrencePct": "1.6",
+        "avgPctChange": "19.8",
+        "sigHex": "000800080fa017701f402710"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": false,
+        "occurrences": 12,
+        "occurrencePct": "1.0",
+        "avgPctChange": "-29.7",
+        "sigHex": "000800080af012c01c202580"
+      },
+      {
+        "rows": 8,
+        "cols": 6,
+        "le": true,
+        "occurrences": 6,
+        "occurrencePct": "0.5",
+        "avgPctChange": "106.1",
+        "sigHex": "060008003d0a7b14b81ef628"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 4,
+        "occurrencePct": "0.3",
+        "avgPctChange": "5.6",
+        "sigHex": "08000800c00d8011a0140019"
+      },
+      {
+        "rows": 6,
+        "cols": 8,
+        "le": false,
+        "occurrences": 4,
+        "occurrencePct": "0.3",
+        "avgPctChange": "65.7",
+        "sigHex": "000800060fa01b5822602ee0"
+      }
+    ]
+  },
+  {
+    "family": "EDC17_C46",
+    "pairCount": 1127,
+    "verifiedSigs": 30,
+    "topSigs": [
+      {
+        "rows": 8,
+        "cols": 14,
+        "le": true,
+        "occurrences": 176,
+        "occurrencePct": "15.6",
+        "avgPctChange": "16.1",
+        "sigHex": "0e00080000002003b0044006"
+      },
+      {
+        "rows": 10,
+        "cols": 16,
+        "le": true,
+        "occurrences": 132,
+        "occurrencePct": "11.7",
+        "avgPctChange": "9.2",
+        "sigHex": "10000a00b004d007c409b80b"
+      },
+      {
+        "rows": 10,
+        "cols": 16,
+        "le": true,
+        "occurrences": 116,
+        "occurrencePct": "10.3",
+        "avgPctChange": "6.7",
+        "sigHex": "10000a000000a406d007c409"
+      },
+      {
+        "rows": 10,
+        "cols": 16,
+        "le": true,
+        "occurrences": 68,
+        "occurrencePct": "6.0",
+        "avgPctChange": "8.5",
+        "sigHex": "10000a0040066009b80bac0d"
+      },
+      {
+        "rows": 8,
+        "cols": 16,
+        "le": true,
+        "occurrences": 50,
+        "occurrencePct": "4.4",
+        "avgPctChange": "15.6",
+        "sigHex": "1000080000002003b0047805"
+      },
+      {
+        "rows": 8,
+        "cols": 16,
+        "le": true,
+        "occurrences": 36,
+        "occurrencePct": "3.2",
+        "avgPctChange": "16.6",
+        "sigHex": "100008000000ca0294055e08"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": true,
+        "occurrences": 22,
+        "occurrencePct": "2.0",
+        "avgPctChange": "8.1",
+        "sigHex": "100010000000a406d007c409"
+      },
+      {
+        "rows": 8,
+        "cols": 14,
+        "le": true,
+        "occurrences": 20,
+        "occurrencePct": "1.8",
+        "avgPctChange": "14.0",
+        "sigHex": "0e00080000000a000f001400"
+      }
+    ]
+  },
+  {
+    "family": "EDC16_GEN",
+    "pairCount": 948,
+    "verifiedSigs": 51,
+    "topSigs": [
+      {
+        "rows": 6,
+        "cols": 5,
+        "le": false,
+        "occurrences": 76,
+        "occurrencePct": "8.0",
+        "avgPctChange": "1.9",
+        "sigHex": "00050006006400c8012c0190"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": false,
+        "occurrences": 69,
+        "occurrencePct": "7.3",
+        "avgPctChange": "2.6",
+        "sigHex": "0008000801f403e805dc07d0"
+      },
+      {
+        "rows": 10,
+        "cols": 10,
+        "le": false,
+        "occurrences": 27,
+        "occurrencePct": "2.8",
+        "avgPctChange": "11.7",
+        "sigHex": "000a000a03e805e207d009c4"
+      },
+      {
+        "rows": 9,
+        "cols": 9,
+        "le": false,
+        "occurrences": 22,
+        "occurrencePct": "2.3",
+        "avgPctChange": "12.3",
+        "sigHex": "000900090258028a02bc02ee"
+      },
+      {
+        "rows": 7,
+        "cols": 13,
+        "le": false,
+        "occurrences": 18,
+        "occurrencePct": "1.9",
+        "avgPctChange": "8.0",
+        "sigHex": "000d000702bc03e804e205dc"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": false,
+        "occurrences": 18,
+        "occurrencePct": "1.9",
+        "avgPctChange": "4.9",
+        "sigHex": "0010001002ee032003e804b0"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": false,
+        "occurrences": 16,
+        "occurrencePct": "1.7",
+        "avgPctChange": "18.0",
+        "sigHex": "0010001000000190032004b0"
+      },
+      {
+        "rows": 12,
+        "cols": 13,
+        "le": false,
+        "occurrences": 16,
+        "occurrencePct": "1.7",
+        "avgPctChange": "24.6",
+        "sigHex": "000d000c032003e804b0055f"
+      }
+    ]
+  },
+  {
+    "family": "EDC16_PD",
+    "pairCount": 681,
+    "verifiedSigs": 13,
+    "topSigs": [
+      {
+        "rows": 10,
+        "cols": 11,
+        "le": false,
+        "occurrences": 99,
+        "occurrencePct": "14.5",
+        "avgPctChange": "6.2",
+        "sigHex": "000b000a05d206cf077708c7"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": false,
+        "occurrences": 52,
+        "occurrencePct": "7.6",
+        "avgPctChange": "19.4",
+        "sigHex": "0010001000000190032004b0"
+      },
+      {
+        "rows": 8,
+        "cols": 16,
+        "le": false,
+        "occurrences": 28,
+        "occurrencePct": "4.1",
+        "avgPctChange": "19.9",
+        "sigHex": "0010000800000190025802bc"
+      },
+      {
+        "rows": 12,
+        "cols": 13,
+        "le": false,
+        "occurrences": 24,
+        "occurrencePct": "3.5",
+        "avgPctChange": "6.2",
+        "sigHex": "000d000c03e804e205dc06d6"
+      },
+      {
+        "rows": 12,
+        "cols": 12,
+        "le": false,
+        "occurrences": 24,
+        "occurrencePct": "3.5",
+        "avgPctChange": "5.7",
+        "sigHex": "000c000c03e804e205dc06d6"
+      },
+      {
+        "rows": 11,
+        "cols": 14,
+        "le": false,
+        "occurrences": 16,
+        "occurrencePct": "2.3",
+        "avgPctChange": "5.2",
+        "sigHex": "000e000b03e804e205dc06d6"
+      },
+      {
+        "rows": 10,
+        "cols": 10,
+        "le": false,
+        "occurrences": 14,
+        "occurrencePct": "2.1",
+        "avgPctChange": "7.2",
+        "sigHex": "000a000a05dc06d607d008ca"
+      },
+      {
+        "rows": 10,
+        "cols": 10,
+        "le": false,
+        "occurrences": 10,
+        "occurrencePct": "1.5",
+        "avgPctChange": "12.8",
+        "sigHex": "000a000a05dc06d6076c08ca"
+      }
+    ]
+  },
+  {
+    "family": "EDC17_CP20",
+    "pairCount": 620,
+    "verifiedSigs": 29,
+    "topSigs": [
+      {
+        "rows": 10,
+        "cols": 16,
+        "le": true,
+        "occurrences": 172,
+        "occurrencePct": "27.7",
+        "avgPctChange": "6.3",
+        "sigHex": "10000a0040066009b80bac0d"
+      },
+      {
+        "rows": 10,
+        "cols": 16,
+        "le": true,
+        "occurrences": 104,
+        "occurrencePct": "16.8",
+        "avgPctChange": "5.2",
+        "sigHex": "10000a004006d0076009280a"
+      },
+      {
+        "rows": 7,
+        "cols": 10,
+        "le": true,
+        "occurrences": 52,
+        "occurrencePct": "8.4",
+        "avgPctChange": "24.3",
+        "sigHex": "0a000700780540060807d007"
+      },
+      {
+        "rows": 8,
+        "cols": 14,
+        "le": true,
+        "occurrences": 52,
+        "occurrencePct": "8.4",
+        "avgPctChange": "3.9",
+        "sigHex": "0e0008000000b0044006d007"
+      },
+      {
+        "rows": 10,
+        "cols": 3,
+        "le": true,
+        "occurrences": 50,
+        "occurrencePct": "8.1",
+        "avgPctChange": "28.1",
+        "sigHex": "03000a0000002c0174070000"
+      },
+      {
+        "rows": 10,
+        "cols": 3,
+        "le": true,
+        "occurrences": 50,
+        "occurrencePct": "8.1",
+        "avgPctChange": "9.6",
+        "sigHex": "03000a000000e8034c040000"
+      },
+      {
+        "rows": 8,
+        "cols": 16,
+        "le": true,
+        "occurrences": 48,
+        "occurrencePct": "7.7",
+        "avgPctChange": "7.9",
+        "sigHex": "1000080040066009b80bac0d"
+      },
+      {
+        "rows": 8,
+        "cols": 16,
+        "le": true,
+        "occurrences": 48,
+        "occurrencePct": "7.7",
+        "avgPctChange": "11.7",
+        "sigHex": "1000080000002003b0047805"
+      }
+    ]
+  },
+  {
+    "family": "EDC15",
+    "pairCount": 498,
+    "verifiedSigs": 1,
+    "topSigs": [
+      {
+        "rows": 13,
+        "cols": 16,
+        "le": false,
+        "occurrences": 4,
+        "occurrencePct": "0.8",
+        "avgPctChange": "136.8",
+        "sigHex": "0010000d0064025802bc0320"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 2,
+        "occurrencePct": "0.4",
+        "avgPctChange": "5.0",
+        "sigHex": "080008000000e007b80ba00f"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": true,
+        "occurrences": 2,
+        "occurrencePct": "0.4",
+        "avgPctChange": "2.0",
+        "sigHex": "100010004006d007c409b80b"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": false,
+        "occurrences": 1,
+        "occurrencePct": "0.2",
+        "avgPctChange": "3.9",
+        "sigHex": "0008000801f403e805dc07d0"
+      },
+      {
+        "rows": 5,
+        "cols": 6,
+        "le": false,
+        "occurrences": 1,
+        "occurrencePct": "0.2",
+        "avgPctChange": "4.0",
+        "sigHex": "0006000503e805dc07d00bb8"
+      },
+      {
+        "rows": 12,
+        "cols": 5,
+        "le": true,
+        "occurrences": 1,
+        "occurrencePct": "0.2",
+        "avgPctChange": "2.4",
+        "sigHex": "05000c0013001c0026003300"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": true,
+        "occurrences": 1,
+        "occurrencePct": "0.2",
+        "avgPctChange": "3.0",
+        "sigHex": "10001000d007c409b80bac0d"
+      }
+    ]
+  },
+  {
+    "family": "EDC16_Cx",
+    "pairCount": 441,
+    "verifiedSigs": 28,
+    "topSigs": [
+      {
+        "rows": 6,
+        "cols": 5,
+        "le": false,
+        "occurrences": 64,
+        "occurrencePct": "14.5",
+        "avgPctChange": "1.6",
+        "sigHex": "00050006006400c8012c0190"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": false,
+        "occurrences": 61,
+        "occurrencePct": "13.8",
+        "avgPctChange": "2.1",
+        "sigHex": "0008000801f403e805dc07d0"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": false,
+        "occurrences": 34,
+        "occurrencePct": "7.7",
+        "avgPctChange": "6.2",
+        "sigHex": "0010001000fa01f402ee03e8"
+      },
+      {
+        "rows": 10,
+        "cols": 10,
+        "le": false,
+        "occurrences": 33,
+        "occurrencePct": "7.5",
+        "avgPctChange": "8.4",
+        "sigHex": "000a000a02bc05dc07d00bb8"
+      },
+      {
+        "rows": 12,
+        "cols": 12,
+        "le": false,
+        "occurrences": 21,
+        "occurrencePct": "4.8",
+        "avgPctChange": "8.8",
+        "sigHex": "000c000c000001f403e805dc"
+      },
+      {
+        "rows": 10,
+        "cols": 12,
+        "le": false,
+        "occurrences": 16,
+        "occurrencePct": "3.6",
+        "avgPctChange": "6.1",
+        "sigHex": "000c000a032004b0064007d0"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": false,
+        "occurrences": 16,
+        "occurrencePct": "3.6",
+        "avgPctChange": "2.1",
+        "sigHex": "00080008006401f403e805dc"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": false,
+        "occurrences": 11,
+        "occurrencePct": "2.5",
+        "avgPctChange": "17.7",
+        "sigHex": "0008000803e805dc06d609c4"
+      }
+    ]
+  },
+  {
+    "family": "MED17_5",
+    "pairCount": 281,
+    "verifiedSigs": 12,
+    "topSigs": [
+      {
+        "rows": 6,
+        "cols": 5,
+        "le": true,
+        "occurrences": 37,
+        "occurrencePct": "13.2",
+        "avgPctChange": "96.4",
+        "sigHex": "0500060064002c01f4015802"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 32,
+        "occurrencePct": "11.4",
+        "avgPctChange": "11.3",
+        "sigHex": "080008005014401fe02e803e"
+      },
+      {
+        "rows": 10,
+        "cols": 10,
+        "le": true,
+        "occurrences": 30,
+        "occurrencePct": "10.7",
+        "avgPctChange": "170.1",
+        "sigHex": "0a000a000000200340066009"
+      },
+      {
+        "rows": 6,
+        "cols": 8,
+        "le": true,
+        "occurrences": 26,
+        "occurrencePct": "9.3",
+        "avgPctChange": "33.3",
+        "sigHex": "080006007017401f1027e02e"
+      },
+      {
+        "rows": 8,
+        "cols": 6,
+        "le": true,
+        "occurrences": 24,
+        "occurrencePct": "8.5",
+        "avgPctChange": "4.0",
+        "sigHex": "060008007800f000e001c003"
+      },
+      {
+        "rows": 8,
+        "cols": 6,
+        "le": true,
+        "occurrences": 24,
+        "occurrencePct": "8.5",
+        "avgPctChange": "4.0",
+        "sigHex": "06000800b4002c01e001c003"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 16,
+        "occurrencePct": "5.7",
+        "avgPctChange": "-7.9",
+        "sigHex": "08000800f00ac012201c8025"
+      },
+      {
+        "rows": 6,
+        "cols": 7,
+        "le": true,
+        "occurrences": 7,
+        "occurrencePct": "2.5",
+        "avgPctChange": "7.5",
+        "sigHex": "070006001027e02eb036803e"
+      }
+    ]
+  },
+  {
+    "family": "MED17",
+    "pairCount": 265,
+    "verifiedSigs": 13,
+    "topSigs": [
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": false,
+        "occurrences": 98,
+        "occurrencePct": "37.0",
+        "avgPctChange": "14.6",
+        "sigHex": "000800080fa017c01f402ee0"
+      },
+      {
+        "rows": 6,
+        "cols": 8,
+        "le": false,
+        "occurrences": 16,
+        "occurrencePct": "6.0",
+        "avgPctChange": "45.0",
+        "sigHex": "000800060fa01b5822602ee0"
+      },
+      {
+        "rows": 8,
+        "cols": 12,
+        "le": false,
+        "occurrences": 8,
+        "occurrencePct": "3.0",
+        "avgPctChange": "10.0",
+        "sigHex": "000c00080fa0138819001f40"
+      },
+      {
+        "rows": 6,
+        "cols": 10,
+        "le": false,
+        "occurrences": 8,
+        "occurrencePct": "3.0",
+        "avgPctChange": "9.8",
+        "sigHex": "000a00060a660b330c000ccd"
+      },
+      {
+        "rows": 5,
+        "cols": 5,
+        "le": false,
+        "occurrences": 8,
+        "occurrencePct": "3.0",
+        "avgPctChange": "11.3",
+        "sigHex": "0005000500ab00b800c500d3"
+      },
+      {
+        "rows": 5,
+        "cols": 5,
+        "le": false,
+        "occurrences": 8,
+        "occurrencePct": "3.0",
+        "avgPctChange": "11.3",
+        "sigHex": "000500053adc3c863e313fdc"
+      },
+      {
+        "rows": 4,
+        "cols": 4,
+        "le": true,
+        "occurrences": 8,
+        "occurrencePct": "3.0",
+        "avgPctChange": "95.9",
+        "sigHex": "040004001027e02e204e9065"
+      },
+      {
+        "rows": 9,
+        "cols": 8,
+        "le": false,
+        "occurrences": 6,
+        "occurrencePct": "2.3",
+        "avgPctChange": "55.7",
+        "sigHex": "00080009011f023d03ae051f"
+      }
+    ]
+  },
+  {
+    "family": "EDC17_CP44",
+    "pairCount": 225,
+    "verifiedSigs": 18,
+    "topSigs": [
+      {
+        "rows": 12,
+        "cols": 16,
+        "le": true,
+        "occurrences": 116,
+        "occurrencePct": "51.6",
+        "avgPctChange": "9.9",
+        "sigHex": "10000c007c157017581b401f"
+      },
+      {
+        "rows": 4,
+        "cols": 6,
+        "le": true,
+        "occurrences": 39,
+        "occurrencePct": "17.3",
+        "avgPctChange": "88.6",
+        "sigHex": "06000400a00f301188135014"
+      },
+      {
+        "rows": 7,
+        "cols": 13,
+        "le": false,
+        "occurrences": 38,
+        "occurrencePct": "16.9",
+        "avgPctChange": "8.0",
+        "sigHex": "000d000702bc03e804e205dc"
+      },
+      {
+        "rows": 4,
+        "cols": 12,
+        "le": true,
+        "occurrences": 35,
+        "occurrencePct": "15.6",
+        "avgPctChange": "2.1",
+        "sigHex": "0c0004000a0190012003b004"
+      },
+      {
+        "rows": 12,
+        "cols": 16,
+        "le": true,
+        "occurrences": 29,
+        "occurrencePct": "12.9",
+        "avgPctChange": "9.9",
+        "sigHex": "10000c00b0040807d007c409"
+      },
+      {
+        "rows": 10,
+        "cols": 14,
+        "le": true,
+        "occurrences": 29,
+        "occurrencePct": "12.9",
+        "avgPctChange": "3.4",
+        "sigHex": "0e000a007805d007c409b80b"
+      },
+      {
+        "rows": 21,
+        "cols": 6,
+        "le": true,
+        "occurrences": 17,
+        "occurrencePct": "7.6",
+        "avgPctChange": "23.0",
+        "sigHex": "06001500f4015802bc022003"
+      },
+      {
+        "rows": 7,
+        "cols": 15,
+        "le": true,
+        "occurrences": 12,
+        "occurrencePct": "5.3",
+        "avgPctChange": "12.1",
+        "sigHex": "0f0007007805d007c409b80b"
+      }
+    ]
+  },
+  {
+    "family": "EDC17_PSA",
+    "pairCount": 178,
+    "verifiedSigs": 13,
+    "topSigs": [
+      {
+        "rows": 16,
+        "cols": 24,
+        "le": true,
+        "occurrences": 150,
+        "occurrencePct": "84.3",
+        "avgPctChange": "138.8",
+        "sigHex": "18001000fa00f401ee023403"
+      },
+      {
+        "rows": 8,
+        "cols": 18,
+        "le": true,
+        "occurrences": 31,
+        "occurrencePct": "17.4",
+        "avgPctChange": "3.8",
+        "sigHex": "12000800c800e803d007c409"
+      },
+      {
+        "rows": 8,
+        "cols": 12,
+        "le": true,
+        "occurrences": 31,
+        "occurrencePct": "17.4",
+        "avgPctChange": "3.8",
+        "sigHex": "0c000800c800e803d007a00f"
+      },
+      {
+        "rows": 8,
+        "cols": 16,
+        "le": true,
+        "occurrences": 25,
+        "occurrencePct": "14.0",
+        "avgPctChange": "3.0",
+        "sigHex": "100008002003e8034c04dc05"
+      },
+      {
+        "rows": 16,
+        "cols": 24,
+        "le": true,
+        "occurrences": 15,
+        "occurrencePct": "8.4",
+        "avgPctChange": "112.8",
+        "sigHex": "18001000000058022003e803"
+      },
+      {
+        "rows": 7,
+        "cols": 16,
+        "le": true,
+        "occurrences": 14,
+        "occurrencePct": "7.9",
+        "avgPctChange": "7.7",
+        "sigHex": "100007009001d007b80b3011"
+      },
+      {
+        "rows": 6,
+        "cols": 3,
+        "le": true,
+        "occurrences": 13,
+        "occurrencePct": "7.3",
+        "avgPctChange": "3.0",
+        "sigHex": "03000600cb0ddf0dfd0db80b"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 13,
+        "occurrencePct": "7.3",
+        "avgPctChange": "2.9",
+        "sigHex": "080008002003dc05d0076009"
+      }
+    ]
+  },
+  {
+    "family": "MED9_1",
+    "pairCount": 178,
+    "verifiedSigs": 9,
+    "topSigs": [
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": false,
+        "occurrences": 56,
+        "occurrencePct": "31.5",
+        "avgPctChange": "15.7",
+        "sigHex": "000800080fa017c01f402ee0"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": false,
+        "occurrences": 11,
+        "occurrencePct": "6.2",
+        "avgPctChange": "19.0",
+        "sigHex": "000800080fa017701f402710"
+      },
+      {
+        "rows": 6,
+        "cols": 8,
+        "le": false,
+        "occurrences": 8,
+        "occurrencePct": "4.5",
+        "avgPctChange": "13.0",
+        "sigHex": "0008000617701f4027102ee0"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": false,
+        "occurrences": 8,
+        "occurrencePct": "4.5",
+        "avgPctChange": "16.8",
+        "sigHex": "0008000814501f402ee03e80"
+      },
+      {
+        "rows": 6,
+        "cols": 5,
+        "le": true,
+        "occurrences": 6,
+        "occurrencePct": "3.4",
+        "avgPctChange": "102.1",
+        "sigHex": "0500060064002c01f4015802"
+      },
+      {
+        "rows": 9,
+        "cols": 8,
+        "le": false,
+        "occurrences": 6,
+        "occurrencePct": "3.4",
+        "avgPctChange": "58.8",
+        "sigHex": "00080009011f023d03ae051f"
+      },
+      {
+        "rows": 6,
+        "cols": 8,
+        "le": false,
+        "occurrences": 4,
+        "occurrencePct": "2.2",
+        "avgPctChange": "21.0",
+        "sigHex": "000800060fa017701f402710"
+      },
+      {
+        "rows": 6,
+        "cols": 16,
+        "le": true,
+        "occurrences": 4,
+        "occurrencePct": "2.2",
+        "avgPctChange": "18.9",
+        "sigHex": "10000600581b401f28231027"
+      }
+    ]
+  },
+  {
+    "family": "EDC17_Cx",
+    "pairCount": 147,
+    "verifiedSigs": 29,
+    "topSigs": [
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 92,
+        "occurrencePct": "62.6",
+        "avgPctChange": "49.1",
+        "sigHex": "08000800b80bac0da00f8813"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 51,
+        "occurrencePct": "34.7",
+        "avgPctChange": "106.6",
+        "sigHex": "08000800701738186419581b"
+      },
+      {
+        "rows": 8,
+        "cols": 12,
+        "le": true,
+        "occurrences": 34,
+        "occurrencePct": "23.1",
+        "avgPctChange": "3.1",
+        "sigHex": "0c000800f401dc05d007c409"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 33,
+        "occurrencePct": "22.4",
+        "avgPctChange": "3.2",
+        "sigHex": "08000800ac0da00f94118813"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 21,
+        "occurrencePct": "14.3",
+        "avgPctChange": "33.8",
+        "sigHex": "080008000000e803d007c409"
+      },
+      {
+        "rows": 8,
+        "cols": 16,
+        "le": true,
+        "occurrences": 15,
+        "occurrencePct": "10.2",
+        "avgPctChange": "116.6",
+        "sigHex": "100008004006800cac0dd80e"
+      },
+      {
+        "rows": 16,
+        "cols": 20,
+        "le": true,
+        "occurrences": 15,
+        "occurrencePct": "10.2",
+        "avgPctChange": "2.6",
+        "sigHex": "14001000c80090012003b004"
+      },
+      {
+        "rows": 6,
+        "cols": 3,
+        "le": true,
+        "occurrences": 15,
+        "occurrencePct": "10.2",
+        "avgPctChange": "3.0",
+        "sigHex": "03000600cb0ddf0dfd0db80b"
+      }
+    ]
+  },
+  {
+    "family": "EDC16_C34",
+    "pairCount": 137,
+    "verifiedSigs": 2,
+    "topSigs": [
+      {
+        "rows": 8,
+        "cols": 12,
+        "le": false,
+        "occurrences": 58,
+        "occurrencePct": "42.3",
+        "avgPctChange": "3.0",
+        "sigHex": "000c0008006401f403e805dc"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": false,
+        "occurrences": 4,
+        "occurrencePct": "2.9",
+        "avgPctChange": "21.2",
+        "sigHex": "0010001002ee03e804e205dc"
+      },
+      {
+        "rows": 20,
+        "cols": 8,
+        "le": false,
+        "occurrences": 2,
+        "occurrencePct": "1.5",
+        "avgPctChange": "30.0",
+        "sigHex": "0008001402bc02ee03200352"
+      },
+      {
+        "rows": 8,
+        "cols": 16,
+        "le": false,
+        "occurrences": 2,
+        "occurrencePct": "1.5",
+        "avgPctChange": "2.9",
+        "sigHex": "00100008006401f403e805dc"
+      }
+    ]
+  },
+  {
+    "family": "EDC16_C39",
+    "pairCount": 132,
+    "verifiedSigs": 14,
+    "topSigs": [
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": false,
+        "occurrences": 28,
+        "occurrencePct": "21.2",
+        "avgPctChange": "7.6",
+        "sigHex": "0010001000fa01f402ee03e8"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": false,
+        "occurrences": 14,
+        "occurrencePct": "10.6",
+        "avgPctChange": "5.2",
+        "sigHex": "0008000806d607d008ca09c4"
+      },
+      {
+        "rows": 10,
+        "cols": 10,
+        "le": false,
+        "occurrences": 13,
+        "occurrencePct": "9.8",
+        "avgPctChange": "20.0",
+        "sigHex": "000a000a09e30a470aab0b0f"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": false,
+        "occurrences": 9,
+        "occurrencePct": "6.8",
+        "avgPctChange": "72.7",
+        "sigHex": "0008000803e805dc07d009c4"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": false,
+        "occurrences": 7,
+        "occurrencePct": "5.3",
+        "avgPctChange": "45.0",
+        "sigHex": "0008000805dc06d609c40bb8"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": false,
+        "occurrences": 6,
+        "occurrencePct": "4.5",
+        "avgPctChange": "92.4",
+        "sigHex": "0010001005dc06d607d008ca"
+      },
+      {
+        "rows": 10,
+        "cols": 16,
+        "le": false,
+        "occurrences": 6,
+        "occurrencePct": "4.5",
+        "avgPctChange": "2.7",
+        "sigHex": "0010000a01f4025803200384"
+      },
+      {
+        "rows": 8,
+        "cols": 16,
+        "le": false,
+        "occurrences": 5,
+        "occurrencePct": "3.8",
+        "avgPctChange": "5.0",
+        "sigHex": "00100008032003e804e207d0"
+      }
+    ]
+  },
+  {
+    "family": "EDC17_Ford",
+    "pairCount": 80,
+    "verifiedSigs": 6,
+    "topSigs": [
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": true,
+        "occurrences": 5,
+        "occurrencePct": "6.3",
+        "avgPctChange": "10.2",
+        "sigHex": "1000100000008002c003a005"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": true,
+        "occurrences": 4,
+        "occurrencePct": "5.0",
+        "avgPctChange": "100.0",
+        "sigHex": "100010000000ec01d703c305"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": true,
+        "occurrences": 4,
+        "occurrencePct": "5.0",
+        "avgPctChange": "3.4",
+        "sigHex": "100010007805e807b80ba00f"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 4,
+        "occurrencePct": "5.0",
+        "avgPctChange": "2.8",
+        "sigHex": "080008000000200340066009"
+      },
+      {
+        "rows": 8,
+        "cols": 16,
+        "le": true,
+        "occurrences": 4,
+        "occurrencePct": "5.0",
+        "avgPctChange": "3.4",
+        "sigHex": "100008004006d007c409a00f"
+      },
+      {
+        "rows": 4,
+        "cols": 3,
+        "le": false,
+        "occurrences": 3,
+        "occurrencePct": "3.8",
+        "avgPctChange": "15.8",
+        "sigHex": "000300040005000600070960"
+      },
+      {
+        "rows": 8,
+        "cols": 12,
+        "le": false,
+        "occurrences": 1,
+        "occurrencePct": "1.3",
+        "avgPctChange": "9.6",
+        "sigHex": "000c0008006401f403e805dc"
+      }
+    ]
+  },
+  {
+    "family": "EDC17_MB",
+    "pairCount": 69,
+    "verifiedSigs": 2,
+    "topSigs": [
+      {
+        "rows": 12,
+        "cols": 12,
+        "le": false,
+        "occurrences": 3,
+        "occurrencePct": "4.3",
+        "avgPctChange": "5.0",
+        "sigHex": "000c000c091b09e30aab0b73"
+      },
+      {
+        "rows": 12,
+        "cols": 12,
+        "le": false,
+        "occurrences": 3,
+        "occurrencePct": "4.3",
+        "avgPctChange": "10.0",
+        "sigHex": "000c000c032004b0064007d0"
+      },
+      {
+        "rows": 6,
+        "cols": 3,
+        "le": true,
+        "occurrences": 1,
+        "occurrencePct": "1.4",
+        "avgPctChange": "1.3",
+        "sigHex": "03000600b70dcb0de90db80b"
+      }
+    ]
+  },
+  {
+    "family": "DCM6_2",
+    "pairCount": 61,
+    "verifiedSigs": 0,
+    "topSigs": []
+  },
+  {
+    "family": "EDC17_BMW",
+    "pairCount": 53,
+    "verifiedSigs": 23,
+    "topSigs": [
+      {
+        "rows": 14,
+        "cols": 12,
+        "le": true,
+        "occurrences": 35,
+        "occurrencePct": "66.0",
+        "avgPctChange": "6.5",
+        "sigHex": "0c000e00a406d007c409b80b"
+      },
+      {
+        "rows": 9,
+        "cols": 12,
+        "le": true,
+        "occurrences": 22,
+        "occurrencePct": "41.5",
+        "avgPctChange": "28.1",
+        "sigHex": "0c000900d007c409b80bac0d"
+      },
+      {
+        "rows": 8,
+        "cols": 13,
+        "le": true,
+        "occurrences": 20,
+        "occurrencePct": "37.7",
+        "avgPctChange": "19.0",
+        "sigHex": "0d0008004c044605dc054006"
+      },
+      {
+        "rows": 4,
+        "cols": 21,
+        "le": true,
+        "occurrences": 11,
+        "occurrencePct": "20.8",
+        "avgPctChange": "73.1",
+        "sigHex": "150004001200140019001f00"
+      },
+      {
+        "rows": 4,
+        "cols": 21,
+        "le": true,
+        "occurrences": 11,
+        "occurrencePct": "20.8",
+        "avgPctChange": "65.7",
+        "sigHex": "1500040078054006d007c409"
+      },
+      {
+        "rows": 14,
+        "cols": 16,
+        "le": true,
+        "occurrences": 11,
+        "occurrencePct": "20.8",
+        "avgPctChange": "8.2",
+        "sigHex": "10000e004006d007c409b80b"
+      },
+      {
+        "rows": 4,
+        "cols": 23,
+        "le": true,
+        "occurrences": 10,
+        "occurrencePct": "18.9",
+        "avgPctChange": "29.7",
+        "sigHex": "1700040078054006d007c409"
+      },
+      {
+        "rows": 9,
+        "cols": 9,
+        "le": true,
+        "occurrences": 8,
+        "occurrencePct": "15.1",
+        "avgPctChange": "7.4",
+        "sigHex": "09000900bc02ee0207032003"
+      }
+    ]
+  },
+  {
+    "family": "EDC17_HyundaiKia",
+    "pairCount": 51,
+    "verifiedSigs": 11,
+    "topSigs": [
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 24,
+        "occurrencePct": "47.1",
+        "avgPctChange": "3.0",
+        "sigHex": "080008004006d007b80ba00f"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": true,
+        "occurrences": 17,
+        "occurrencePct": "33.3",
+        "avgPctChange": "62.8",
+        "sigHex": "1000100000009001b0044006"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": true,
+        "occurrences": 11,
+        "occurrencePct": "21.6",
+        "avgPctChange": "161.2",
+        "sigHex": "100010005000200340066009"
+      },
+      {
+        "rows": 6,
+        "cols": 5,
+        "le": true,
+        "occurrences": 7,
+        "occurrencePct": "13.7",
+        "avgPctChange": "3.0",
+        "sigHex": "05000600c800d00728231027"
+      },
+      {
+        "rows": 12,
+        "cols": 12,
+        "le": true,
+        "occurrences": 6,
+        "occurrencePct": "11.8",
+        "avgPctChange": "-0.5",
+        "sigHex": "0c000c00b80bac0da00f9411"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": true,
+        "occurrences": 5,
+        "occurrencePct": "9.8",
+        "avgPctChange": "858.6",
+        "sigHex": "10001000500020037c06d007"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 5,
+        "occurrencePct": "9.8",
+        "avgPctChange": "2.0",
+        "sigHex": "080008000000200340066009"
+      },
+      {
+        "rows": 12,
+        "cols": 12,
+        "le": true,
+        "occurrences": 4,
+        "occurrencePct": "7.8",
+        "avgPctChange": "60.1",
+        "sigHex": "0c000c000000a8025005f807"
+      }
+    ]
+  },
+  {
+    "family": "EDC16_C8",
+    "pairCount": 29,
+    "verifiedSigs": 0,
+    "topSigs": [
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": false,
+        "occurrences": 1,
+        "occurrencePct": "3.4",
+        "avgPctChange": "5.5",
+        "sigHex": "0008000803e805dc07d009c4"
+      }
+    ]
+  },
+  {
+    "family": "ME9",
+    "pairCount": 27,
+    "verifiedSigs": 0,
+    "topSigs": [
+      {
+        "rows": 8,
+        "cols": 12,
+        "le": false,
+        "occurrences": 2,
+        "occurrencePct": "7.4",
+        "avgPctChange": "47.0",
+        "sigHex": "000c000817701f4027102ee0"
+      },
+      {
+        "rows": 4,
+        "cols": 4,
+        "le": false,
+        "occurrences": 2,
+        "occurrencePct": "7.4",
+        "avgPctChange": "14.9",
+        "sigHex": "000400040e100fa019001f40"
+      }
+    ]
+  },
+  {
+    "family": "EDC17_Volvo",
+    "pairCount": 27,
+    "verifiedSigs": 0,
+    "topSigs": [
+      {
+        "rows": 4,
+        "cols": 4,
+        "le": true,
+        "occurrences": 2,
+        "occurrencePct": "7.4",
+        "avgPctChange": "58.7",
+        "sigHex": "040004000400140032000701"
+      },
+      {
+        "rows": 6,
+        "cols": 16,
+        "le": true,
+        "occurrences": 1,
+        "occurrencePct": "3.7",
+        "avgPctChange": "19.4",
+        "sigHex": "10000600a00fc017801b401f"
+      }
+    ]
+  },
+  {
+    "family": "Marelli",
+    "pairCount": 25,
+    "verifiedSigs": 0,
+    "topSigs": []
+  },
+  {
+    "family": "EDC17_CP24",
+    "pairCount": 24,
+    "verifiedSigs": 7,
+    "topSigs": [
+      {
+        "rows": 8,
+        "cols": 16,
+        "le": true,
+        "occurrences": 20,
+        "occurrencePct": "83.3",
+        "avgPctChange": "3.0",
+        "sigHex": "10000800c800f401e803dc05"
+      },
+      {
+        "rows": 14,
+        "cols": 13,
+        "le": true,
+        "occurrences": 10,
+        "occurrencePct": "41.7",
+        "avgPctChange": "94.7",
+        "sigHex": "0d000e004c04b004b806d007"
+      },
+      {
+        "rows": 9,
+        "cols": 16,
+        "le": true,
+        "occurrences": 8,
+        "occurrencePct": "33.3",
+        "avgPctChange": "4.0",
+        "sigHex": "100009007805d007c409b80b"
+      },
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 8,
+        "occurrencePct": "33.3",
+        "avgPctChange": "60.7",
+        "sigHex": "0800080058116c1180119411"
+      },
+      {
+        "rows": 11,
+        "cols": 16,
+        "le": true,
+        "occurrences": 4,
+        "occurrencePct": "16.7",
+        "avgPctChange": "43.0",
+        "sigHex": "10000b00b00414054006d007"
+      },
+      {
+        "rows": 14,
+        "cols": 12,
+        "le": true,
+        "occurrences": 4,
+        "occurrencePct": "16.7",
+        "avgPctChange": "89.8",
+        "sigHex": "0c000e004c04b004b806d007"
+      },
+      {
+        "rows": 23,
+        "cols": 4,
+        "le": true,
+        "occurrences": 4,
+        "occurrencePct": "16.7",
+        "avgPctChange": "24.8",
+        "sigHex": "04001700bc0220038403b603"
+      },
+      {
+        "rows": 16,
+        "cols": 13,
+        "le": true,
+        "occurrences": 2,
+        "occurrencePct": "8.3",
+        "avgPctChange": "80.7",
+        "sigHex": "0d0010004c04b004b806d007"
+      }
+    ]
+  },
+  {
+    "family": "EDC16_U34",
+    "pairCount": 20,
+    "verifiedSigs": 1,
+    "topSigs": [
+      {
+        "rows": 10,
+        "cols": 10,
+        "le": false,
+        "occurrences": 8,
+        "occurrencePct": "40.0",
+        "avgPctChange": "12.0",
+        "sigHex": "000a000a04e205dc06d607d0"
+      },
+      {
+        "rows": 10,
+        "cols": 10,
+        "le": false,
+        "occurrences": 1,
+        "occurrencePct": "5.0",
+        "avgPctChange": "8.0",
+        "sigHex": "000a000a05d206cf077708c7"
+      }
+    ]
+  },
+  {
+    "family": "EDC17_C64",
+    "pairCount": 9,
+    "verifiedSigs": 0,
+    "topSigs": []
+  },
+  {
+    "family": "EDC17_C41",
+    "pairCount": 8,
+    "verifiedSigs": 9,
+    "topSigs": [
+      {
+        "rows": 8,
+        "cols": 8,
+        "le": true,
+        "occurrences": 16,
+        "occurrencePct": "200.0",
+        "avgPctChange": "9.1",
+        "sigHex": "08000800e8034006ac0d9411"
+      },
+      {
+        "rows": 8,
+        "cols": 13,
+        "le": true,
+        "occurrences": 7,
+        "occurrencePct": "87.5",
+        "avgPctChange": "52.6",
+        "sigHex": "0d0008004c044605dc054006"
+      },
+      {
+        "rows": 9,
+        "cols": 12,
+        "le": true,
+        "occurrences": 7,
+        "occurrencePct": "87.5",
+        "avgPctChange": "139.1",
+        "sigHex": "0c000900d007c409b80bac0d"
+      },
+      {
+        "rows": 6,
+        "cols": 5,
+        "le": true,
+        "occurrences": 5,
+        "occurrencePct": "62.5",
+        "avgPctChange": "3.9",
+        "sigHex": "05000600c800d0072823f023"
+      },
+      {
+        "rows": 9,
+        "cols": 9,
+        "le": true,
+        "occurrences": 4,
+        "occurrencePct": "50.0",
+        "avgPctChange": "3.2",
+        "sigHex": "09000900bc02ee0207032003"
+      },
+      {
+        "rows": 9,
+        "cols": 9,
+        "le": true,
+        "occurrences": 3,
+        "occurrencePct": "37.5",
+        "avgPctChange": "3.9",
+        "sigHex": "0900090058028a02bc02ee02"
+      },
+      {
+        "rows": 14,
+        "cols": 16,
+        "le": true,
+        "occurrences": 3,
+        "occurrencePct": "37.5",
+        "avgPctChange": "3.2",
+        "sigHex": "10000e00a406d0076009f00a"
+      },
+      {
+        "rows": 14,
+        "cols": 12,
+        "le": true,
+        "occurrences": 3,
+        "occurrencePct": "37.5",
+        "avgPctChange": "2.0",
+        "sigHex": "0c000e00a406d007c409b80b"
+      }
+    ]
+  },
+  {
+    "family": "EDC7",
+    "pairCount": 5,
+    "verifiedSigs": 0,
+    "topSigs": [
+      {
+        "rows": 4,
+        "cols": 4,
+        "le": false,
+        "occurrences": 2,
+        "occurrencePct": "40.0",
+        "avgPctChange": "5.0",
+        "sigHex": "000400040514079e0a8c0af0"
+      },
+      {
+        "rows": 16,
+        "cols": 20,
+        "le": false,
+        "occurrences": 1,
+        "occurrencePct": "20.0",
+        "avgPctChange": "10.0",
+        "sigHex": "00140010025802bc03200384"
+      },
+      {
+        "rows": 16,
+        "cols": 16,
+        "le": false,
+        "occurrences": 1,
+        "occurrencePct": "20.0",
+        "avgPctChange": "10.2",
+        "sigHex": "0010001002ee038403e8044c"
+      }
+    ]
+  },
+  {
+    "family": "SID_Ford",
+    "pairCount": 1,
+    "verifiedSigs": 0,
+    "topSigs": []
+  },
+  {
+    "family": "MEVD17",
+    "pairCount": 1,
+    "verifiedSigs": 0,
+    "topSigs": []
+  }
+]
