@@ -70,6 +70,37 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #513–528 — Golf 4 1.9 SDI/TDI EDC15 PD catalog
+
+**Golf 4 1.8T tail** (#513-#514):
+- 0261204185 8D0907557T sw358761 (#513, 131 KB) — Audi TT-style A4
+  1.8T 150 hp ECU on Golf 4 chassis
+- 0261204673 06A906018R sw358109 (#514, alt file from #499) —
+  same ROM, different stage1 file
+
+**Golf 4 1.9 PD-pre and PD EDC15** (#515-#528) — many Bosch hardware
+codes / part suffixes:
+- 0281001060 038906012T sw352232 (#515, 524KB)
+- 0281010133 038906012Q (#516, 524KB) — pre-PD
+- 0281010976 038906019HH sw363171 (#517, 524KB Golf 4 GTi 110.3 kW
+  150 hp PD) — sister of A6/Audi #181 same hardware/SW
+- 0281001759 038906013 (#518, #519 — 2 SWs sw359253/sw359425) —
+  early SDI 50 hp pre-OBD format 256KB
+- 0281010104 038906012J (#520, 524KB SDI 50 hp)
+- 0281010174 038906012BF sw350927 (#521)
+- 0281010126 038906012AP sw352577 (#522)
+- 0281001611 038906018D (#523, 256KB EDC15V — pre-PD 90 hp)
+- 0281010650 038906012FA sw360773 (#524, sister of #325 same hardware)
+- 0281001851 038906018AE (#525, 256KB EDC15V — sister of #135 Golf
+  same hardware)
+- 0281010111 038906012K (#526)
+- 0281010124 038906012BD (#527)
+- 0281010385 038906012CP sw354327 (#528)
+
+All small EDC15 PD/SDI/V tunes (500-3900B / 16-122 regions). No
+new wires — covered by generic edc15 def via signatures and the
++0x18000 / +0x20000 mirror documentation.
+
 ## VW Pairs #497–512 — Golf 4 1.8T ME7.x catalog (large)
 
 16 pairs of Golf 4 1.8T 110.3 kW (150 hp) Bosch ME7.x — standard
