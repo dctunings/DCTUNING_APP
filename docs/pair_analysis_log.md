@@ -70,6 +70,41 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #721–736 — Passat 1.9 TDI EDC15P PD massive variant set
+
+16 more Passat 1.9 TDI EDC15P PD pairs across 12+ distinct hardware
+codes / part suffixes (BN/CD/DT/EA/EH/EN/EP/ER/FS/GS/GQ/N + 028906021GK):
+
+**524 KB EDC15P PD (95.6 kW = 130 hp PD)**:
+- 0281010404 038906019BN sw360707 (#728) — 3212B/95
+- 0281010545 038906019DT (#721) — 1726B/61
+- 0281010558 038906019EH sw360496 (#722) — 2390B/58 — sister of
+  #675
+- 0281010701 038906019EP sw362631 (#729) — 3100B/41
+- 0281010704 038906019ER sw362173 (#730) and sw362704 (#731) —
+  2 SWs sister hardware
+- 0281010705 038906019EN sw362633 (#723, #732 — 2 sister files
+  same SW) — 3100B/41 + 1951B/54
+- 0281010941 038906019GQ sw366929 (#724) — 4297B/35
+- 0281010940 038906019GS sw363212 (#733) — 1251B/42 — sister of #687
+
+**524 KB EDC15P PD (74.3 kW PD)**:
+- 0281011203 038906019KB sw366299 (#727) — 2808B/48 (sister of
+  #677 same hardware/SW)
+
+**256 KB EDC15V (66.2 kW pre-PD)**:
+- 0281001654 028906021GK (#725 + #726 — 2 sister files different
+  stage1) — 2646B/62 + 1884B/120
+
+**Various 256 KB EDC15V** (#717-#719, #726):
+- 0281010171 038906018FS (#727) — 2411B/76 — sister of #718
+
+**Passat 1.9 TDI 03G906021AN sw374452 0281012085** (#735, #736):
+- #735: **88.6% changed (464 KB) stage1+++** full recal
+- #736: SIZE MISMATCH skipped
+
+No new wires — same pattern, generic edc15p covers via signatures.
+
 ## VW Pairs #705–720 — Passat 1.8 TFSI MED17 + 1.9 TDI variants
 
 **Passat 1.8 TFSI MED17 0261201537 06J906026/6J_906_026B** (#706-#715):
