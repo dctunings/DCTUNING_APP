@@ -64,6 +64,41 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #823–838 — A6 2.7 V6 TDI EDC17 CP44 4F0907401C cluster wired
+
+This batch confirms the **4F0907401C 7-SW cluster** wired in this
+commit. Pairs in batch:
+- #815 sw374421 4F0907401B — `0x07206F + 0x0721E7` (different cluster)
+- #816 sw383851 0281013324 — `0x070B5D + 0x070955` (sister to wired)
+- #817 sw390127 — `0x06FC2D + 0x06FC05` (anchor for wired def)
+- #818 sw390142 — `0x070E27 + 0x070D2B` (close to wired but offset)
+- #819 sw389214 — `0x069AD1 + 0x069B49` (separate sub-cluster)
+- #820 8E0907401AL sw382699 — `0x0708FD + 0x070BBF` (different part num
+  but similar region — confirms 8E and 4F prefixes share base)
+
+**4F0907401E (newer 2009-2011, 2 MB)** sub-clusters seen:
+- sw505987 (#821) — `0x1E1048 + 0x1D7352`
+- sw508355 (#822) — `0x1D7906 + 0x1E5172 16×16`
+- sw508391 (#824) — `0x1D7050 + 0x1D703C` (close pair)
+- sw516638 4F7910401L (#826) — `0x1E1C56 + 0x1E1D8A` (close pair)
+- sw516640 (#823, #827 — same SW twice) — `0x191866 + 0x19175C`
+  emission-disable only, no major maps in top hits
+- sw516642 (#825) — `0x1DD04C + 0x02BCB2`
+- sw516642 (#828) — `0x19B96A + 0x19BE5C` (same SW different SGO!)
+
+So **4F0907401E** is too fragmented (5+ sub-clusters across 4-7 SWs)
+— NOT wired this round. Need more pairs to anchor each sub-cluster.
+
+8K1907401A sw516617 (#829) appears here in A6 2.7 TDI context — but
+sw516617 was previously catalogued for A5 3.0 TDI (#641). So 8K1907401A
+sw516617 is a **dual-displacement SW** (A5 3.0 AND A6 2.7) — same SGO
+likely covers both since they share Bosch hardware. Cluster at
+`0x1B8F02 / 0x1B9436`.
+
+**Wired** `edc17_cp44_a6_27tdi_4f0907401c` — covers 7 SW versions
+(380752/380756/380785/382074/383851/390127/391860) with 3 maps:
+IQ ceiling, main IQ map, limiter drop.
+
 ## Pairs #807–822 — A6 2.7 V6 TDI EDC17 CP44 + EDC17 +0x180000 dump format
 
 **EDC17 CP44 524KB-vs-2MB dump format CONFIRMED at +0x180000** (same

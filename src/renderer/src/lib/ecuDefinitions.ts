@@ -2287,6 +2287,91 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 CP44 Audi A6 2.7 V6 TDI 4F0907401C (sw 380xxx-391xxx cluster) ─
+  //
+  // Audi A6 C6 2.7 V6 TDI 132 kW (180 hp). Bosch hardware codes 0281012xxx
+  // / 0281013xxx, VAG part number 4F0907401C. Verified across 7+ paired
+  // ORI/Stage1 files in pair_analysis_log.md pairs #804, #805, #810, #812,
+  // #813, #814 (sw383851), #815, #816, #817 (sw390127), pair #797 (sw391860).
+  //
+  // SW versions confirmed in cluster: 380752, 380756, 380785, 382074, 383851,
+  // 390127, 391860 — all 4F0907401C, all 524 KB chiptool dumps (some pairs
+  // also seen in 2 MB form at +0x180000 shifted offsets).
+  //
+  // Modifications shared across the cluster (524 KB form):
+  //   0x06FCxx  9-11 cells u16 BE  — primary IQ ceiling (~+46% / +135%)
+  //                                   (offsets vary slightly by SW: 0x06FBFD,
+  //                                    0x06FC05, 0x06FC2D, 0x06FC5D, 0x06FC85)
+  //   0x078F47  ~95 bytes u16 BE   — main IQ map (+90%)
+  //   0x05A7AB  9 cells u16 BE     — limiter ceiling drop (-71%)
+  //   0x070xxx  9-15 cells u16 BE  — boost target / limit table (+165%)
+  //
+  // Note: offsets vary by ~0x40 between SW revisions; we wire the most-common
+  // values and accept that some SW variants need slight offset auto-detection.
+  // For a strict match, consider per-SW sub-defs.
+  {
+    id: 'edc17_cp44_a6_27tdi_4f0907401c',
+    name: 'Bosch EDC17 CP44 (4F0907401C — Audi A6 C6 2.7 V6 TDI 180hp 2006-2008)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['4F0907401C', '380752', '380756', '380785', '382074', '383851', '390127', '391860'],
+    fileSizeRange: [524288, 524288],   // 524 KB chiptool extraction format
+    vehicles: ['Audi A6 C6 2.7 V6 TDI 180hp (4F0907401C sw 380xxx-391xxx, 2006-2008)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_cp44_4f0907401c_iq_ceiling',
+        name: 'IQ Ceiling (4F0907401C)',
+        category: 'fuel',
+        desc: 'Primary IQ ceiling at ~0x06FCxx (9-11 uint16 BE cells). Offset varies by SW within ±0x40. Verified across 7+ pairs — μ 20680 → 30280 raw (+46%) for early SW or higher for newer. Pin near tuner consensus (~30000) for Stage 1.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06FC2D,   // sw390127 anchor — most common
+        rows: 1, cols: 11, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 30000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 33000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 36000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_cp44_4f0907401c_main_iq',
+        name: 'Main IQ Map (4F0907401C)',
+        category: 'fuel',
+        desc: 'Main IQ map at 0x078F47 (~95 bytes ≈ 47 uint16 BE cells, possibly 16×3 with header). Verified at μ 23890 → 45553 raw (+90%) on sw380752/380756 pairs.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x078F47,
+        rows: 3, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.20 },
+        stage2: { multiplier: 1.30 },
+        stage3: { multiplier: 1.40, clampMax: 50000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_cp44_4f0907401c_limiter_drop',
+        name: 'Limiter Ceiling Drop (4F0907401C)',
+        category: 'limiter',
+        desc: 'Limiter ceiling at 0x05A7AB (9 uint16 BE cells). Tuners drop from 50306 → 14339 raw (-71%) — counterintuitive: lowering the ceiling raises the trigger point in the derate logic.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x05A7AB,
+        rows: 1, cols: 9, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 0.30 },
+        stage2: { multiplier: 0.25 },
+        stage3: { multiplier: 0.20 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
   // ── EDC17 Audi A5 2.7 V6 TDI 8K1907401A (sw 516xxx cluster) ──────────────
   //
   // Audi A5 2.7 V6 TDI 2009+ ECU. Bosch part number 8K1907401A. Verified by
