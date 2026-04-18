@@ -64,6 +64,42 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #1111–1126 — Q7 4.2 V8 TDI + V12 TDI + R8 4.2 V8 FSI
+
+**Q7 4.2 V8 TDI 4E1907409B** (524 KB / 2 MB EDC17 CP44):
+- sw387808 (#1109 524KB) — 6212B / 159 regions
+- sw387808 (#1112 2MB) — 3855B / 88 regions (same SW two formats)
+- sw391528 (#1107) — 3946B / 84 regions
+- sw391821 (#1105 + #1108 — 2 files same SW) — 2540B/123 +
+  2265B/121 (different tuner runs)
+
+**Q7 4.2 V8 TDI 4L0907409** newer (250-257 kW):
+- sw501980 (#1111) — 3247B / 125 regions
+- sw504754 (#1110) — 4014B / 126 regions
+- sw521087 4L0907409A (#1106) — 4282B / 76 regions
+
+**Q7 6.0 V12 TDI 4L0907051** sw508901 (#1113) — exotic 367.7 kW
+(500 hp) V12 TDI. NEW PART NUMBER for V12 TDI not in our defs. 6.8KB
+tune across 102 regions.
+
+**R8 4.2 V8 FSI MED17** — wire candidate:
+- 0261S02234 37390705420 sw390705 (#1114 + #1116, 2 files) — 3979B/46
+  + 4259B/50 regions
+- 0261S02234 420907560 sw**394873** (#1117) — **3978B / 46 regions
+  IDENTICAL to sw390705 (#1114)** → 2 SWs same SGO. Wire candidate.
+- 0261S02754 420907560 sw504405 (#1115) — 2852B / 52 regions
+  (different SGO, 2.6 MB Siemens dump format)
+
+Pair #1102 510906C815Q sw510906 — sister of #1091/#1092 same hardware
+code, 7474B / 176 regions.
+
+Pair #1103 4L0907401 sw383723 — sister of #1066 same SW (different
+tuner files).
+
+Pair #1104 4L0907401A sw393538 (#1098 sister) — 4469B / 117 regions
+matches #1098's 4461B / 116 regions → 2 files same SW basically same
+treatment. Both wire toward same cluster.
+
 ## Pairs #1095–1110 — Q7 4L0907401C/D variant catalog + DPF variants
 
 Q7 4L0907401C 2 MB EDC17 CP44 SW versions:
