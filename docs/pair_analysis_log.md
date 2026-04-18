@@ -64,6 +64,110 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #550–566 — A5 2.0 TDI CR EDC17 C64 SGO catalog
+
+15 pairs, **all** A5 2.0 TDI CR generation. All 2MB EDC17 except #542
+(03L906022MK 524KB — odd half-dump from a chiptool). Bosch part numbers
+seen: **03L906022MK, 03L906022B, 03L906019AL, 03L906022TN, 03L906022NP**.
+
+Discovery: **03L906019AL sw 505482 has TWO distinct cal layouts**:
+- Pair #543 (file from older tuner): cal block at `0x034A16` (LOW)
+- Pair #556 (file from newer tuner): cal block at `0x1D1726` (HIGH,
+  same as `edc17_c46_398757` we wired earlier — `0x1D1726` 2KB +
+  `0x1D216A` 512B + `0x1D1F48` 512B + `0x1D2E58` 512B + `0x1D2C36` 512B)
+
+This means same Bosch SW number can have two different SGO bases
+shipped on different model years/markets. **Code implication**: don't
+trust SW number as a single key — need to combine SW + ASCII fingerprint
+(e.g. internal version string + checksum location).
+
+03L906019AL sub-families catalogued:
+- 502340 / 502357 → cal `0x1E0E54` (510B) + `0x1E0D04` (16×9)
+- 504770 → cal `0x1C0E90` (12×15) + `0x1C2D1C` (12×16) + `0x1C5DAC` etc
+  (note: different LOWER region — earlier sub-family)
+- 505482 (SGO-low variant) → cal `0x034A16` (144B) + `0x058B5E` (34B)
+- 505482 (SGO-high variant) → cal `0x1D1726` 2KB + 4× 512B (matches 398757)
+- 515516 → cal `0x1E14A0` (510B) + `0x1E1350` (16×9)
+- 516648 → cal `0x1A6616/0x18BCA0/0x1D3414/0x1D20E2` (different layout
+  again — 4 distinct big regions)
+- 517561 → cal `0x1E12EE` (16×12)
+
+03L906022B sub-families:
+- 392984 → cal `0x1F9D56` (16×28) + `0x1CD360` series (5× +120%)
+- 396468 → cal `0x1F627C` (510B) + `0x1F6100` (16×10) + huge
+  `0x1ECxx` cluster
+- 396472 / 400951 / 500118 → cal `0x1CAFC4` + `0x1CBA38` (~9×85%)
+  + `0x1F23C4` (10B) + `0x1C3xxx` peripheral block — same SGO family
+- 396482 → cal `0x1EB880` (16×14) + `0x1CB210-260` 5× 12B blocks
+
+03L906022TN sw504910 (pair #544) → cal `0x1E0EE4` (510B) + `0x1E0D36`
+(16×12) — almost identical to 03L906019AL sw502340 layout. Likely
+shared base.
+
+03L906022MK sw516684 (pair #542 524KB chiptool dump) → cal `0x044022`
++ `0x0748E2`/`0x074A3A` (2× 239B mirrored). Half-dump means full file
+offsets are 0x044022 + 0x180000 in real ROM = 0x1C4022. Doesn't change
+the underlying map structure — same C46 family.
+
+**Code: same conclusion as before** — variants table needed; do not
+spawn a EcuDef per SW. Consider using cal-region offset detection at
+load time (find the 510-byte high-pct region, classify by its file
+position) as a fallback identification.
+
+## Pairs #533–549 — A4 V8/V6 TDI 8D + Allroad 2.0 TDI CR + A5 1.8 TFSI
+
+- Pair #533 · A4 4.2 V8 RS4 0261S02165 8E1907560 sw379578 — **2MB
+  MED17 RS4 308kW (420hp)**, sister of pair #530 (RS4 0261S02205).
+  Only 13 regions, 6.2KB tune. Big ones at 0x1E33E0 / 0x1C2190
+  (limiter ceilings) and 0x1CA7D0 = **5760-byte loose region** which
+  is the main fuel/torque axis recal. Same ECU def family as 0261S02205.
+- Pairs #534-535 · **A4 V6 TDI 0281001838 8D0907401C** — 256KB EDC15
+  V6 TDI 110.3kW (150hp). RARE V6 EDC15 (most A4 V6 went straight to
+  EDC16). Two pairs same exact ROM, different SW serial decode (one
+  blank, one 359337-338). **Identical offsets**: 0x03C4F0/0x03C7FC/
+  0x03C824 +60-110% (LSMK-style boost), 0x03EE2C +55% (LDRXN). Cal
+  region at top-quarter of 256KB ROM. **NEW ECU family candidate** —
+  C167 16-bit V6 EDC15 not in ecuDefinitions.ts.
+- Pair #536 · A5 8K1907401A sw516682 — same SW as pair #522 (3.0 V6
+  TDI DPF). Filename strips engine but offsets at 0x1E3C8C / 0x1E3D5A
+  are classic V6 TDI EDC17 C46. Likely identical ROM to pair #522.
+- Pair #537 · A5 MED17 2.0 TFSI 8K2907115P sw398607 — 256KB MED17.
+  Real maps at 0x021042 12×11 (+4.6% — boost target?), 0x011988 144B
+  +28.5%, 0x01601D 120B +118% (cyl-fill / charger). **Wire as variant
+  of MED17 2.0 TFSI** under existing `med17_2_0_tfsi` if dims match.
+- Pairs #538-540 · A5 1.8 TFSI 8T0907115A sw394367 — 3 pairs ALL same
+  SW. #538 256KB / #539 2MB / #540 256KB. Same offsets across the two
+  256KB pairs at 0x01C6F4 + 0x019xxx. #539 (2MB) is a different dump
+  format entirely (full SGO with multiple banks). **Wire 8T0907115A
+  sw394367** as a variant: 0x01C68C 80B +216% (turbo air-mass), 0x01C6F4
+  8B +223% (LDRXN ceiling), bunch of 0x019x 6-8B regions = limiter table.
+- Pair #541 · A5 1.8 TFSI 8K1907115 sw509715 — different part number,
+  different cal layout. 1.5MB intermediate dump. Maps at 0x053043
+  +137% (likely IQ ceiling), 0x05B364 +27% (limiter).
+- Pair #542 · (next batch — A5 2.0 TDI CR coming up)
+
+**Cross-pair confirmation**: pair #528 (Allroad 03L906022BQ sw397899)
+shows the same big-change offsets `0x1EF502` and `0x1EFF46` as our
+already-wired `edc17_c46_398757` ECU def. So 03L906022BQ sw397899
+shares the same map layout — likely the same SGO base. Could add
+identString for `'03L906022BQ'` to that ECU def.
+
+**Cross-pair confirmation 2**: pairs #527 + #529 (Allroad 03L906022FG
+sw506125 and sw506148) **both** hit `0x1EE4F2` (2KB) + `0x1EEF36` (512B)
++ `0x1EED14` (512B) — same layout, different SW. NEW variant candidate
+`edc17_c46_506xxx_FG` for the 03L906022FG family.
+
+**Cross-pair confirmation 3**: pairs #530 + #531 (Allroad 03L906018ES
+sw522905 + 03L906018DN sw513687) hit completely DIFFERENT offsets in
+the LOWER cal region (0x06CC76 / 0x06AD6A). These are the NEWER 2012-13
+C46 variants where Bosch moved cal blocks lower in the ROM. Separate
+variant candidate.
+
+**Code: no immediate change** — too many variant candidates piling up.
+Plan an `edc17_c46_variants` table with `[sw, partno, mainBoostOffset,
+mainIQOffset, ...]` rows that the loader matches against, instead of
+spawning dozens of EcuDefs.
+
 ## Pairs #518–532 — A4 3.0 TDI DPF + 3.2 FSI Siemens + 4.2 V8
 
 - Pairs #518-520 · A4 3.0 V6 TDI CR 2013 more 03L906018JL SW 522910 /
