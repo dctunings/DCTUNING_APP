@@ -64,6 +64,23 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #278–292 — A4 2.0 TDI CR EDC17 C64 03L906019AL catalogue
+
+15 more pairs, mostly Audi A4 2.0 TDI CR EDC17 C64 variants with
+03L906019AL VW part number (the 2010-2012 generation). SW versions:
+
+502350, 505477, 505952, 515516, 516641, 517565, 517566 (×2),
+518751, 518752, 522896 + 03L906018AG sw 508208, 03L906018LD sw 522896,
+03L906022DL sw 396483, and two more 03L906022B sw 396484 variants.
+
+Tunes 2,000-10,000 B / 60-200 regions. Stable C64 behavior across SW.
+
+**Code: no change** — covered by existing edc17 detection logic.
+Notable: 03L906019AL SW 502350 / 505952 / 515516 / 516641 / 517565
+/ 517566 could be a good set for a future EDC17 C64 per-variant
+code entry (similar to v3.5.35's edc17_c46_398757) once we decide
+on consensus Stage 1 offsets for this SW family.
+
 ## Pairs #263–277 — A4 2.0 TDI PD/CR + EDC17 C46/C64 continued
 
 - Pair #263 · A4 2.0 TDI 2006 2MB EDC16 PD 03G906016LR sw386343, 3,576 B.
