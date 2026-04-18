@@ -70,6 +70,74 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #177–192 — Golf 1.9 TDI EDC15 PD mirrors + 04L EU6 4MB dump format
+
+**EDC15P PD mirror direct confirmations** (Golf 1.9 TDI):
+- 0281010048 038906019AQ sw360004 (#179) → `0x061ED8 AND 0x079ED8`
+  Δ = `0x18000` — same 17B +120% mod at both = **+0x18000 mirror**
+- 0281010976 038906019HH sw363171 (#181) → `0x0569B8 AND 0x0769B8`
+  Δ = `0x20000` — same 13B +101% mod at both = **+0x20000 mirror**
+  for EDC15P+ 0281010976 hardware
+- 0281010974 038906019AT sw363166 (#180) → `0x074AC4 + 0x076A08`
+  Δ = 0x1F44 — NOT a mirror, two adjacent cal entries
+
+**Golf 1.9 TDI EDC16 PD 03G906021AN sw382096** (#177, 524KB) →
+`0x01146F + 0x064963` (Δ = 0x534F4 — separate cal blocks).
+
+**Golf 1.9 TDI 0281010123 038906012BB sw350851** (#178) — small
+675B / 20 region tune at `0x0730B6 + 0x073052` (close pair).
+
+**Golf 1.9 TDI 0281011478 03G906016B sw368926** (#182, 1MB) → cal
+at `0x0E2D51 + 0x0E34BB` (Δ = 0x76A close pair) — different SGO
+location higher in 1MB ROM.
+
+**Golf 1.9 TDI 37390602P44 sw390602** (#183, 524KB) — Bosch tool
+filename pattern. Cal at `0x07DF20 + 0x06B3B9` 263B at -30%.
+
+**Golf 1.9 TDI PD 03G906021AB sw383708** (#184, 2MB) → `0x18F27F +
+0x1E5697` cluster (2MB EDC16 PD high-region cal).
+
+**Golf 1.9 TDI 0281010302 038906019CJ sw354461** (#185) — only 13
+bytes / 1 region changed = no real tune (just one tweak).
+
+**Golf 2.0 TDI EU6 04L906021DT sw527875** (#186, **4 MB ROM**) →
+cal at `0x32A344 + 0x32A238` — these are **the same offsets as 04L906021M
+sw531313/533833 (2 MB) shifted by +0x200000**.
+
+**NEW DUMP FORMAT FINDING**: Bosch EDC17 04L906021xx 2 MB ↔ 4 MB
+dump format = +0x200000 shift (vs the +0x180000 documented for
+EDC16 PD / EDC17 CP44). The 04L EU6 ECU has a different memory
+layout — full TC1797 ROM puts the cal block at a different absolute
+offset than the 2MB extracted form.
+
+So now 3 distinct dump-format shifts catalogued:
+- EDC16 PD / EDC17 CP44: 524KB → 2MB = +0x180000
+- EDC17 04L906021xx EU6: 2MB → 4MB = +0x200000
+- BMW EDC17 270KB → 2MB (not yet measured)
+
+**Golf 2.0 TDI 03G906021AB sw382428** (#187, #188 — 2 different
+files same SW) → BOTH hit IDENTICAL `0x19729B + 0x1D9FD7` (13B
++92% raw 9090→17452). **2 files same SW same SGO confirmed**.
+
+**Golf 2.0 TDI 37390603P44 sw390603** (#189) — different cluster
+`0x1D471E 30B + 0x1EB043 11B`.
+
+**Golf 2.0 TDI CR 03L906022AG sw507639 (#190) + 03L906022G sw514600
+(#191)** — 524KB chiptool dumps both hit IDENTICAL `0x06625E 6B`
+(raw 2130 → 58455-61525, +2644-2788%). 2 SWs across 2 part suffixes
+(AG/G) sharing exact IQ-release point. Wire candidate.
+
+**Golf 2.0 TDI CR 03L906018BC sw524625** (#192) → `0x056AB2 144B
++725%` — newer 03L906018BC variant, different cluster from 03L906018xx
+Caddy cluster.
+
+**Wire candidates from this batch**:
+- 03L906022AG/G sw 507639/514600 → `0x06625E` IQ release
+- 03G906021AB sw382428 → `0x19729B/0x1D9FD7` cluster (2 files
+  confirmation)
+- 04L906021M/DT sw 531313/533833/527875 → `0x12A238/0x12A344`
+  cluster + +0x200000 4MB dump format
+
 ## VW Pairs #161–176 — Golf 1.6 TDI Siemens PCR21 + 04L EU6 + 1.9 SDI/TDI mirrors
 
 **Golf 1.6 TDI Siemens PCR21 cluster — 3-SW IDENTICAL match**:
