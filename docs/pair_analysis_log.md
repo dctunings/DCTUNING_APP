@@ -64,6 +64,24 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #218–232 — A4 1.9 TDI EDC15 + EDC16 PD continued
+
+15 more Audi A4 1.9 TDI pairs, mostly 512KB EDC15 and 2MB EDC16 PD:
+
+- Pairs #218-225 · 512KB EDC15 2001-2002 1.9 TDI 85/100/130hp —
+  0281010302/304/729/669/669 variants. 700-3500 B light-moderate Stage 1.
+- Pairs #226-228 · 512KB EDC15 2003 1.9 TDI 130hp — 0281011036/142/222.
+- Pair #229 · 2004 1.9 TDI 100hp EDC15 0281010813 2590 B / 36.
+- Pair #230 · **2MB EDC16 PD** 2004 A4 1.9 TDI 103hp 0281012127
+  / 03G906016FE 1,075 B / 27.
+- Pair #231 · 2MB EDC16 PD 2005 A4 1.9 TDI 115hp 03G906016HA 2,026 B.
+- Pair #232 · 2MB EDC16 PD A4 1.9 TDI PD 03G906016GD 6,428 B / **303
+  regions** — heavy tune (unusual for 1.9 TDI PD).
+- Pair #232 alt · 512KB 2002 A4 1.9 TDI PD 131hp 0281010729.
+
+**Code: no change** — EDC15 + EDC16 PD signature detection handles
+these via existing `edc15` / `edc16` defs.
+
 ## Pairs #203–217 — Audi A4 1.9 TDI EDC15 / EDC15P+ catalogue
 
 Classic Audi A4 1.9 TDI 90/110/130hp + pre-PD non-turbo variants:
