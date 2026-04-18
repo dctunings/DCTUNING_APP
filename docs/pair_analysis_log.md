@@ -64,6 +64,38 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #473–487 — A4 2.6 V6 petrol + 2.7 V6 TDI EDC17 CP44
+
+- Pair #473 · A4 2.5 TDI VP 2004 1MB Bosch 0281011386 / 8E0907401N —
+  9,619 B moderate tune, EDC15P+.
+- Pairs #474-475 · **Audi A4 2.6 V6 petrol 1995-1996** — 65KB / 32KB
+  Bosch+Hella "5DA007193" numbers. These are Audi's OLDEST ECUs
+  (ABC/AAH engine codes, Motronic M2.4 / M2.8, pre-ME7). Out of
+  scope for our current ECU defs — too old to meaningfully tune.
+- Pairs #476-478 · **A4 2.7 V6 TDI 2006-2007** (pre-CR, VP?) —
+  8E0907401AL 512KB EDC15P+/EDC16 PD. SW 380781, 391560, 383855.
+- Pair #479 · A4 2.7 V6 TDI CR 2009 2MB EDC17 CP44 139.7kW (190ps).
+  `8K1907401K` sw516657 — 2,735 B / 0.13%. **EDC17 CP44 V6 TDI CR**
+  — same family as 3.0 TDI CR we already have in log.
+- Pair #480 · A4 2.7 V6 TDI (mislabeled TFSI in name) 2MB 384614 sw
+  — **639,213 B changed (30.5%)** — full recal outlier.
+- Pair #481 · A4 2.7 V6 TDI CR 2007 pre-CP44 512KB 8E0907401AL sw379733.
+- Pair #482 · A4 2.7 V6 TDI CR 2008 8K1907401A sw516665 — CP44, 5.7KB.
+- Pair #483 · A4 2.7 V6 TDI CR 2008 CP44 sw516657 **134,263 B (6.4%)**
+  — heavy tune or partial recal.
+- Pair #484 · A4 2.7 V6 TDI CR 2008 CP44 sw516664 5.7KB.
+- Pair #485 · A4 2.7 V6 TDI CR 2008 CP44 sw399319 3.5KB.
+- Pair #486 · A4 2.7 V6 TDI CR 2009 8K1907401F CP44 sw392964 512KB 2.5KB.
+- Pair #487 · A4 2.7 V6 TDI CR 2011 CP44 sw514634 5.7KB.
+
+**Family observation**: The EDC17 CP44 2.7 V6 TDI CR variants
+(`8K1907401*`) have **SW versions 516657 / 516664 / 516665** all
+showing 5.7KB tunes with similar pattern. Same engine family as
+3.0 TDI CR. Candidates for a shared EDC17 CP44 V6 TDI variant def
+once we wire more code.
+
+**Code: no change**.
+
 ## Pairs #458–472 — A4 2.5 V6 TDI EDC15P+ catalog
 
 15 pairs of Audi A4 2.5 V6 TDI (AFB/AKE/BAU/BCZ engines, 150-180ps).
