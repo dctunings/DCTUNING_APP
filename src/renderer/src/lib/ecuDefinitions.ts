@@ -7566,6 +7566,36 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         critical: false, showPreview: false,
       },
       {
+        id: 'ppd1_iq_extended',
+        name: 'Extended IQ Master (Stage 2+)',
+        category: 'fuel',
+        desc: 'Large 16×96 injection-quantity master table. Stage 1 tuners leave this alone; Stage 2+ tunes modify it for the additional fuel required above ~190 bhp. Found by diffing DH Stage 2 against ORI — μ 94 → 105 mg/st (+12%). Keep Stage 1 multiplier at 1.0 so light tunes do not touch it. Offset verified for 03G906018DH.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x070575,   // 03G906018DH — Stage 2+ territory
+        rows: 96, cols: 16, dtype: 'uint16', le: false,
+        factor: 0.004, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.0 },    // untouched by Stage 1
+        stage2: { multiplier: 1.12 },   // ~+12%, matches the real DH Stage 2 pattern
+        stage3: { multiplier: 1.20, clampMax: 34000 },
+        critical: false, showPreview: true,
+      },
+      {
+        id: 'ppd1_overboost_ceiling',
+        name: 'Overboost / Secondary Torque Ceiling (Stage 2+)',
+        category: 'limiter',
+        desc: 'Secondary torque protection / overboost ceiling, 256-cell u16 BE. Stage 1 tuners leave it stock; Stage 2+ raises from ~300 Nm → ~515 Nm to allow the higher peak torque of Stage 2 tunes. Found by diffing DH Stage 2 against ORI — μ 42296 raw → 49224 raw = 298 → 514 Nm (+72%). Offset verified for 03G906018DH.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x07C27C,   // 03G906018DH — Stage 2+ territory
+        rows: 1, cols: 256, dtype: 'uint16', le: false,
+        factor: 0.03125, offsetVal: -32768, unit: 'Nm',
+        stage1: { multiplier: 1.0 },    // untouched by Stage 1
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 50000 },   // ~540 Nm ceiling
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 55000 },   // ~700 Nm ceiling
+        critical: false, showPreview: false,
+      },
+      {
         id: 'ppd1_egr',
         name: 'EGR / Monitoring Switches',
         category: 'emission',
