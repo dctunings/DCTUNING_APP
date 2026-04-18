@@ -2089,7 +2089,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // The 03L906022FG variant (sw 399349/399350/500141/503995/etc.) hits
     // offsets shifted to 0x1EE306/0x1EED4A — handled by sister def
     // edc17_c46_03l906022fg below.
-    identStrings: ['398757', '03L906022BQ', '397892', '398784', '398791', '398817', '398818', '398819', '398820', '398822', '398823', '399326', '399393', '399395', '501921', '501922', '501956', '505922', '505975', '507632'],
+    identStrings: ['398757', '03L906022BQ', '397892', '398784', '398791', '398817', '398818', '398819', '398820', '398822', '398823', '399326', '399393', '399395', '501921', '501922', '501956', '505922', '505975', '507632', '397822', '399398', '399800'],
     fileSizeRange: [2097152, 2097152],   // exactly 2 MB
     vehicles: ['Audi A3 2.0 TDI CR 140ps (03L906022BQ sw 398757)', 'VW Golf 2.0 TDI CR 80-103kW (03L906022G sw 397xxx-399xxx, 2008-2010)'],
     checksumAlgo: 'bosch-crc32',
@@ -2530,9 +2530,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17 C46 (VW Golf 2.0 TDI CR 80-125kW — 03L906022G/RP 12×15 IQ ceiling)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['505426', '505993', '507615', '507643', '516655'],
+    identStrings: ['505426', '505993', '507615', '507643', '516655', '504872'],
     fileSizeRange: [2097152, 2097152],
-    vehicles: ['VW Golf 2.0 TDI CR 80-125kW (03L906022G/RP sw 505426/505993/507615/507643/516655, 2010-2013)'],
+    vehicles: ['VW Golf/Scirocco 2.0 TDI CR 80-125kW (03L906022G/RP sw 505426/505993/507615/507643/516655/504872, 2010-2013)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFFC,
     checksumLength: 4,
@@ -2567,6 +2567,84 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { multiplier: 1.0, addend: 0, clampMin: 9000 },
         stage2: { multiplier: 1.0, addend: 0, clampMin: 10500 },
         stage3: { multiplier: 1.0, addend: 0, clampMin: 12000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 C46 VW Scirocco 2.0 TDI CR 03L906022G — 0x1F007A cluster (2MB) ──
+  //
+  // VW Scirocco (and Golf) 2.0 TDI CR 103-125 kW EDC17 C46 mid-gen. Same
+  // protection-ceiling pattern as wired 398757 def but anchor SHIFTED
+  // Δ=0xB78 higher (0x1EF502 → 0x1F007A). Identical raw values at both
+  // anchors (14259 → 57390 +302%) confirms same code but relocated region.
+  // Verified in pair_analysis_log.md VW pairs #988 (sw505989), #992 (sw504872).
+  //
+  // Map structure:
+  //   0x1F007A  2 KB (1024 cells u16 BE) — primary protection ceiling
+  //                                        raw 14259 → 57390 (+302%)
+  //   0x1F0ABE  512 B (256 cells u16 BE) — companion ceiling
+  //                                        raw 14413 → 57390 (+298%)
+  //   0x1F089C  512 B (256 cells u16 BE) — secondary torque lift
+  //                                        raw 23107 → 57390 (+148%)
+  {
+    id: 'edc17_c46_scirocco_20tdi_03l906022g_1f007a',
+    name: 'Bosch EDC17 C46 (VW Scirocco/Golf 2.0 TDI CR 103-125kW — 03L906022G 0x1F007A)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['505989', '504872', '03L906022R'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Scirocco 2.0 TDI CR 103-125kW (03L906022G/R sw 505989/504872, 2009-2010)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_scirocco_1f007a_ceiling_a',
+        name: 'Protection Ceiling A 2KB (03L906022G sw505989/sw504872)',
+        category: 'limiter',
+        desc: 'Primary protection ceiling at 0x1F007A (1024 u16 BE = 2 KB). Raw 14259 → 57390 (+302%). Δ=0xB78 anchor-shifted variant of 398757 cluster — same code structure at a later SW revision anchor.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1F007A,
+        rows: 32, cols: 32, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_c46_scirocco_1f007a_ceiling_b',
+        name: 'Protection Ceiling B 512B (03L906022G sw505989/sw504872)',
+        category: 'limiter',
+        desc: 'Companion ceiling at 0x1F0ABE (256 u16 BE = 512 B). Raw 14413 → 57390 (+298%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1F0ABE,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_c46_scirocco_1f007a_torque_c',
+        name: 'Torque Lift 512B (03L906022G sw505989/sw504872)',
+        category: 'limiter',
+        desc: 'Secondary torque lift at 0x1F089C (256 u16 BE = 512 B). Raw 23107 → 57390 (+148%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1F089C,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 60000 },
         critical: true, showPreview: true,
       },
     ],
@@ -3069,9 +3147,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17 C46 (Golf 2.0 TDI CR 80-103kW — 03L906022G/AG/HR/LB/LF/MC IQ release)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['396418', '396420', '399396', '504854', '504863', '504865', '505933', '505978', '507630', '507639', '507643', '514600'],
+    identStrings: ['396418', '396420', '399396', '504854', '504863', '504865', '505933', '505978', '507630', '507639', '507643', '514600', '397832', '505989'],
     fileSizeRange: [524288, 524288],   // 524 KB chiptool dump format
-    vehicles: ['VW Golf 2.0 TDI CR 80-103kW (03L906022G/AG/HR/LB/LF/MC sw 396418-514600, 2008-2010)'],
+    vehicles: ['VW Golf/Scirocco 2.0 TDI CR 80-103kW (03L906022G/AG/HR/LB/LF/MC/R/S sw 396418-514600, 2008-2010)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFFC,
     checksumLength: 4,

@@ -70,6 +70,66 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #978–993 — Scirocco 2.0 TDI CR EDC17 C46 — HUGE expansion + 1 NEW anchor-shifted def
+
+**MAJOR cross-verification — Scirocco fits existing Golf defs:**
+
+398757 protection-ceiling def **+3 NEW SWs**:
+- sw397822 (#980 · 03L906022G) — hits 0x1EF502 2KB region at 0x1EF8A6
+  (within span, 932B from anchor)
+- sw399398 (#983, #991 · 03L906022BQ/G) — **pair #991 hits 0x1EF502 2KB
+  AND 0x1EFF46 512B EXACTLY** (14259 → 57390 +302.5% — signature-match
+  raw values). Pair #983 same SW but different tuner style.
+- sw399800 (#987 · 03L906022G) — **hits 0x1EF502 2KB AND 0x1EFF46 512B
+  EXACTLY** — same raw signature as 398757 SWs.
+
+398757 def now covers **23 SWs** — definitively the dominant Golf/
+Scirocco/Audi 2.0 TDI CR 80-103kW EDC17 C46 protection-ceiling cluster.
+
+03L906022xx IQ release (524KB) def **+2 NEW SWs**:
+- sw397832 (#982 · 03L906022S/G 524KB) — hits 0x06513A AND 0x079DB6 200B
+  EXACTLY (raw 2130 → 61525 +2788%, 4135 → 12405 +200%)
+- sw505989 (#993 · 03L906022R/G 524KB) — hits 0x06625E 6B IQ release
+  EXACTLY (raw 2130 → 61525 +2788% — signature-match)
+
+12×15 IQ ceiling def **+1 NEW SW**:
+- sw504872 (#992 · 03L906022G 2MB) — hits 0x1DBC2C 12×15 AND 0x1DE5B2
+  12×16 EXACTLY (15 → 27424 +180849%, 607 → 9473 +1459%)
+
+**NEW DEF WIRED — 0x1F007A anchor-shifted protection ceiling**:
+
+`edc17_c46_scirocco_20tdi_03l906022g_1f007a` — Δ=0xB78 anchor-shifted
+variant of the 398757 cluster. Verified in pairs #988 + #992:
+- sw505989 (#988, 03L906022G 2MB): 0x1F007A 2048B (14259→57390 +302.5%)
+  + 0x1F0ABE 512B (14413→57390 +298%) + 0x1F089C 512B torque-lift
+- sw504872 (#992, 03L906022G 2MB): SAME 3 anchors, SAME raw values —
+  identical code at relocated SGO offset.
+
+**CRITICAL INSIGHT**: sw504872 hits BOTH:
+1. The 0x1F007A cluster (2MB-level protection ceiling — same code as
+   398757, just later-SW anchor)
+2. The 0x1DBC2C 12×15 IQ ceiling cluster (IQ release map)
+
+Same file shares maps from TWO different defs — protection + IQ
+release treated independently by tuners. Confirms map-region
+separation approach is correct.
+
+**Other observations (no wire — different anchors):**
+
+- Pair #984 sw501957 LD 524KB: `0x0657D6 6B` (Δ=0xA88 from 0x06625E)
+  + `0x07A456 200B` (Δ=0x6A0 from 0x079DB6) — SHIFTED version of the
+  iqrelease def. Near-family but not fit.
+- Pair #985/#986 sw501956/501957 LC/LD 524KB: different anchor at
+  `0x0643D0 13B` — 125kW sub-family with its own map layout.
+- Pair #989 sw511962 03L906018GF 2MB: `0x07CA90 16×12` +122% main IQ.
+- Pair #990 sw505903 03L906019AL 2MB: EDC17 C64 family (019xx suffix) —
+  different family entirely. `0x19B246/B31A` torque limits cut.
+- Pair #979 sw515355 03C906027BA 1.4 TSI: 4 regions only — light tune.
+- Pair #978 sw518327 03C906027BS 1.47MB (sister of #964) — same 10
+  regions pattern — NEW dump format 1540096B repeats at #964/#978.
+
+---
+
 ## VW Pairs #961–977 — Scirocco 1.4 TSI MED17 EA111 (1 NEW def) + Passat5 1.6/2.0 FSI + TFSI variants
 
 **NEW DEF WIRED — MED17 Scirocco 1.4 TSI EA111 03C906016L sw505084**:
