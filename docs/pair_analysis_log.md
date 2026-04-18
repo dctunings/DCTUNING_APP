@@ -70,6 +70,46 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #689–704 — Passat 1.6/1.8 + 1.6 TDI Siemens + 1.8T ME7.x
+
+**Passat 1.6 1995 0261204502 8D0907558 sw357462** (#689) — 131KB
+ME7.x older Passat B5 1.6 8V.
+
+**Passat 1.6 8V Siemens 5WP43311 / 5WP40035** (#690, #691):
+- 5WP43311 3B0906018 S347032 (#690) — 524KB Siemens-Simtec
+- 5WP40035 3B0906018F S348038 (#691) — 524KB Siemens-Simtec sister
+Both very small tunes.
+
+**Passat 1.6 FSI MED17 0261S02286 03C906056DC sw377814** (#692,
+2MB) — 961B / 30 regions.
+
+**Passat 1.6 TDI CR Siemens PCR21 03L906023FS** (#693, #694):
+- SM2G0LK000000 (#693) — 20331B / 233 regions
+- SM2G0M0000000 (#694) — 20330B / 233 regions IDENTICAL
+- **2 SN serials sharing exact byte/region count**. Same SGO base
+  across SN serial variants. Sister of Caddy/Golf 1.6 TDI cluster.
+
+**Passat 1.6i Marelli 036906034DR IAW4MV.DR** (#695, 524KB) —
+Marelli sister.
+
+**Passat 1.8 ME7.x 131KB** (#696, #697, #698):
+- 0261204614 8D0907558F sw358795 — 91.9 kW
+- 0261204956 8D0907558S sw356669 — 91.9 kW sister hardware
+- 0261204185 8D0907557T sw357482 (1.8T) — sister of #513
+
+**Passat 1.8T 4B0906018x ME7.x 524KB-1MB** (#699-#704):
+- 0261206452 4B0906018AC sw352160 (#699) — 1471B/36 regions
+- 0261206453 4B0906018AG sw352321 (#700) — 519B/11
+- 0261207636 4B0906018DC sw362358 (#701, sister of #700 from prior
+  batch, 1MB)
+- 0261206884 4B0906018BQ sw354802 (#702, 1MB)
+- 0261208291 4B0906018DP sw369320 (#703, 1MB)
+- 0261208527 4B0906018DQ sw394791 (#704, **125 kW = 170 hp**) —
+  newer 1.8T B5.5
+
+NEW VAG 1.6 TDI CR Siemens 03L906023FS variant identified — already
+covered by SIMOS PCR21 generic family pattern.
+
 ## VW Pairs #673–688 — Passat 1.9 TDI PD + 2.0 TDI CR + PPD1.2 variants
 
 **Passat (no model year — generic)** (#673-#679):
