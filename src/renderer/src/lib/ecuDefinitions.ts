@@ -2970,6 +2970,143 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC16 VW T5 2.5 TDI 070906016AP/BH/BD — 0x0E088B 1MB IQ cluster ──────
+  //
+  // VW T5 Transporter 2.5 TDI 128 kW (Multivan era) EDC16 1MB dump format.
+  // 3 SWs across 3 part suffixes (AP/BH/BD) share EXACT anchors + raw
+  // signature. Verified in pair_analysis_log.md VW pairs:
+  //   #1076 sw372364 AP · #1077 sw372943 BH · #1078 sw372944 BD
+  //
+  // Map structure (EXACT match across all 3 pairs):
+  //   0x0E088B  9B  u16 BE — IQ upper (raw 30933 → 48982, +58%)
+  //   0x0E2A6D  7B  u16 BE — IQ limit A (raw 46424 → 19887, -57%)
+  //   0x0E2C2D  7B  u16 BE — IQ limit B (mirror at Δ=+0x1C0) -57%
+  //
+  // Note: 0x0EC529-0x0EC52B 11B area drifts per SW (Δ=2 between BH/BD and
+  // AP) — each SW has its own slightly-shifted upper-11B anchor. Only
+  // the 0x0E088B + 0x0E2A6D pair is absolute-common across SWs.
+  {
+    id: 'edc16_t5_25tdi_070906016_0e088b',
+    name: 'Bosch EDC16 (VW T5 2.5 TDI 128kW — 070906016AP/BH/BD 1MB 0x0E088B)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['070906016AP', '070906016BH', '070906016BD', '372364', '372943', '372944'],
+    fileSizeRange: [1048576, 1048576],
+    vehicles: ['VW T5 Transporter 2.5 TDI 128kW (070906016AP/BH/BD sw 372364/372943/372944, 2002-2005)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0xFFFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_t5_25tdi_iq_upper',
+        name: 'IQ Upper 9B (T5 2.5 TDI 070906016AP/BH/BD)',
+        category: 'fuel',
+        desc: 'IQ upper at 0x0E088B (4-5 cells u16 BE = 9 B). Verified across 3 SWs + 3 part suffixes sharing EXACT anchor + raw signature: stock 30933 → tuner consensus 48982 (+58%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0E088B,
+        rows: 1, cols: 5, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 47000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 52000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 57000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_t5_25tdi_iq_limit_a',
+        name: 'IQ Limit A 7B (T5 2.5 TDI 070906016AP/BH/BD)',
+        category: 'limiter',
+        desc: 'IQ limit A at 0x0E2A6D (3-4 cells u16 BE = 7 B). Stock 46424 → tuner consensus 19887 (-57%). Consistent across all 3 SWs.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0E2A6D,
+        rows: 1, cols: 4, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 22000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 18000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 15000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_t5_25tdi_iq_limit_b',
+        name: 'IQ Limit B 7B (T5 2.5 TDI 070906016AP/BH/BD mirror)',
+        category: 'limiter',
+        desc: 'IQ limit B at 0x0E2C2D (3-4 cells u16 BE = 7 B). Mirror of 0x0E2A6D at Δ=+0x1C0 — EDC16 storage mirror (internal fault-tolerance copy). Same raw signature.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0E2C2D,
+        rows: 1, cols: 4, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 22000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 18000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 15000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC16 VW T5 2.5 TDI 070906016EB / 070997016L — 0x06CF8D 524KB IQ ─────
+  //
+  // VW T5 Transporter 2.5 TDI 96-128 kW EDC16 524KB cal-strip dump format.
+  // 2 SWs across 2 part-code conventions (906 vs 997) hit SAME anchors +
+  // SAME stock raw 16604. Verified in pair_analysis_log.md VW pairs:
+  //   #1074 sw394150 070997016L (96 kW) · #1075 sw394113 070906016EB (128 kW)
+  //
+  // Map structure:
+  //   0x06CF8D  13B u16 BE — IQ upper-A (stock 16604)
+  //   0x06D1D5  13B u16 BE — IQ upper-B mirror at Δ=+0x248
+  // Target varies per power-rating: 96 kW → 42076 (+153%), 128 kW → 36999
+  // (+123%) — same code, different tuner-SW-power combos.
+  {
+    id: 'edc16_t5_25tdi_070906016eb_06cf8d',
+    name: 'Bosch EDC16 (VW T5 2.5 TDI 96-128kW — 070906016EB / 070997016L 524KB 0x06CF8D)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['070906016EB', '070997016L', '394150', '394113'],
+    fileSizeRange: [524288, 524288],
+    vehicles: ['VW T5 Transporter 2.5 TDI 96-128kW (070906016EB / 070997016L sw 394113/394150, 2005-2009)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_t5_24tdi_eb_iq_upper_a',
+        name: 'IQ Upper A 13B (T5 2.5 TDI 070906016EB)',
+        category: 'fuel',
+        desc: 'IQ upper A at 0x06CF8D (6-7 cells u16 BE = 13 B). Stock 16604 signature confirmed across 2 SWs on 2 part-code conventions. Tuner target 36999-42076 (+123-153% depending on power rating).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06CF8D,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 35000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_t5_24tdi_eb_iq_upper_b',
+        name: 'IQ Upper B 13B (T5 2.5 TDI 070906016EB mirror)',
+        category: 'fuel',
+        desc: 'IQ upper B at 0x06D1D5 (7 cells u16 BE = 13 B). Storage mirror of 0x06CF8D at Δ=+0x248 — SAME stock raw 16604.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06D1D5,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 35000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 C46 03L906022B Q5 cluster (Audi Q5 2.0 TDI CR 125kW 2009-2010) ──
   //
   // Audi Q5 2.0 TDI CR EDC17 C46. Bosch hardware code, VAG part number

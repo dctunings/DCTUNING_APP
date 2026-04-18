@@ -70,6 +70,56 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1073–1088 — T5 2.5 TDI EDC16 (2 NEW defs, 5 pairs combined)
+
+**NEW DEF 1 — T5 2.5 TDI 1MB EDC16 cluster @ 0x0E088B** (3 pairs, 3 SWs):
+`edc16_t5_25tdi_070906016_0e088b` covers AP/BH/BD suffixes.
+
+- #1076 sw372364 `070906016AP` — 0x0E088B 9B BE 30933 → 48982 +58%
+- #1077 sw372943 `070906016BH` — SAME exact signature
+- #1078 sw372944 `070906016BD` — SAME exact signature
+
+Companion mirror pair:
+- 0x0E2A6D 7B / 0x0E2C2D 7B (Δ=+0x1C0 mirror) — BE 46424 → 19887 -57%
+
+Tight per-SW anchors in upper-cal region 0x0EC52x drift too much (AP=0x0EC52B,
+BH=BD=0x0EC529 Δ=2) — only 0x0E088B + 0x0E2A6D pair-anchors wired.
+
+**NEW DEF 2 — T5 2.5 TDI 524KB EDC16 cluster @ 0x06CF8D** (2 pairs, 2 SWs):
+`edc16_t5_25tdi_070906016eb_06cf8d` covers 070906016EB (128kW) + 070997016L
+(96kW) — both 524KB dump format.
+
+- #1074 sw394150 `070997016L` 96kW — 0x06CF8D 13B BE 16604 → 42076 +153%
+- #1075 sw394113 `070906016EB` 128kW — 0x06CF8D 13B BE 16604 → 36999 +123%
+
+Both hit EXACT 16604 stock signature at 0x06CF8D + mirror 0x06D1D5 (Δ=+0x248).
+Different tuner targets per power rating (96kW higher lift %).
+
+**Observations (no wire)**:
+
+- **1MB cluster variations** across other T5 2.5 TDI 1MB pairs:
+  - #1079 sw368186 A @ 0x0EBA4C 24×3 +41%
+  - #1080 sw372365 BA @ 0x0EC579/B9/CD 11B +777%/249%/122%
+  - #1081 sw368185 no-suffix @ 0x0F85xx boost region
+  - #1082 sw378321 no-part @ 0x0EC635/71/5D/85 — 4 adjacent 11B cells
+  - #1083 sw370230 A @ 0x0EBA48 24×3 +45.6% + 0x0F85DD 15B +44%
+  - #1084 sw372941 K @ 0x08AB18 24×3 + 0x0EBA4C 24×3 (mirror +0x60F34)
+
+- **524KB cluster variations** (other SGOs):
+  - #1085 sw380769 CG @ 0x06AD9F/0x06AFE7 15B
+  - #1086 sw379833 CC @ 0x06AF19/0x06AF05/0x06ADC9/0x06B011
+  - #1087 sw379831 CJ @ 0x06AAB7/0x06AD77/0x06AFBF
+  - All in 0x06A-0x06B region but different per-SW anchors.
+
+- **Pair #1073** T5 2.0 TDI CR `03L906022JE` sw515250 2MB — NEW JE suffix
+  EDC17 C46 with `0x06A6A6 16×12` +53% + `0x06A8EA 16×12` +34%. Logged.
+
+- **Pair #1088** T5 2.5 TDI `070997016L` sw384823 2MB — 2MB dump format
+  of the 524KB 070997016L cluster. `0x1ECCDB 15B` +51% + `0x1D5FDA 122B`
+  +40%. Single SW.
+
+---
+
 ## VW Pairs #1057–1072 — T5 1.9 TDI EDC16U31 — 2 NEW defs (524KB + 2MB twins)
 
 **MAJOR NEW CLUSTER — T5 1.9 TDI EDC16U31 038906016T/AJ at 0x06A8ED**:
