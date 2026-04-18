@@ -70,6 +70,41 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #369–384 — Golf 5 2.0 TFSI MED17 universal IQ release variants
+
+16 pairs of Golf 5 2.0 TFSI MED17 across 1K0907115/A/F/G + 1P0907115D
++ 8P0907115B part variants. ALL hit the universal IQ release pattern
+`raw 10604 → 65535 (+518%) at 120 bytes` but at SW-specific anchors:
+
+| SW | Hardware | Anchor offset |
+|---|---|---|
+| 374094 | 0261S02078 1K0907115 | (no top hit) — small tune |
+| 375753 | 0261S02079 1K0907115A | `0x1CD118` |
+| 377624 | 0261S02289 1P0907115D | (no big region) |
+| 377837 | 0261S02217 1K0907115F | (no big region) |
+| 378158 | 0261S02218 1K0907115G | `0x1CD67A` |
+| 381190 | 0261S02331 8P0907115B | `0x1CE0C8` ← already wired |
+| 387570 | 0261S02078 1K0907115 | `0x1CD18C` |
+| 391084 | 0261S02509 8P0907115B | `0x1CE7DA` (estimated) |
+
+**sw387570 1K0907115 appears in 6+ files** across multiple
+batches — anchor varies between 0x1CD18C / 0x1CD7BA / 0x1CD7FE /
+0x1CDAE1 within ~0x300 range across stage1 versions of same SW.
+
+**No new wires this batch** — anchor varies per SW and per stage1
+file even within same SW. Fixed-offset wiring covers only the
+0x1CE0C8 cluster (5 SWs). Full coverage would need signature-based
+detection with offset auto-discovery — out of scope for current
+schema.
+
+Pair #383 sw374096 1K0907115A → `0x1CD118 + 0x1CD78A` — IDENTICAL
+to sw375753 (#384 anchors 0x1CD118 + 0x1CD78A). 2 SWs same SGO at
+0x1CD118 — small wire candidate.
+
+Pair #381 sw381190 8P0907115B confirms wired 0x1CE0C8 cluster. Pair
+#374 sw377624 1P0907115D and #375 (same SW + same hardware different
+stage1) — both small tunes.
+
 ## VW Pairs #353–368 — Golf 5 2.0 TDI PD + PPD1.2 catalog
 
 **Golf 5 2.0 TDI PD EDC16** (#353-365) — many 03G906016xx and
