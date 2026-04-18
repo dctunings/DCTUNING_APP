@@ -70,6 +70,36 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #865–880 — Passat 2012 03L906018xx variant catalog
+
+16 more Passat 2.0 TDI CR 2012 EDC17 C46 pairs across many part
+suffixes:
+
+**03L906018xx family** (#865-#879):
+- 03L906018CP sw510961 (#865) — already in 0x06AD86 cluster (or
+  sister)
+- 03L906018GG sw511961 (#866) — sister of #276 already in Caddy def
+- 03L906018NA sw526336 (#867 stage1+++) — NEW NA suffix
+- 03L906018PA sw521065 (#868) and sw522984 (#869) — 2 SWs same hw
+- 03L906018PR sw521094 (#870), sw522965 (#871), sw526304 (#872) —
+  3 SWs of PR suffix
+- 03L906018PT sw522950 (#875) — NEW PT suffix
+- 03L906018QA sw521097 (#877) — NEW QA suffix
+- 03L906018AM sw525560 (#878) — sister of Scirocco #1001
+- 03L906018PD sw521068 (#879) — NEW PD suffix
+- 03L906018FQ sw524646 (#880) — NEW FQ suffix
+
+**03L906022CH sw518139** (#873) — 2779B/52 = light tune
+
+**03L906018 0281017946 sw524113** (#874, no part suffix?) — 8590B/79
+
+**03L906012AF sw527064** (#876) — NEW 03L906012 prefix (the older
+Passat 1.6 TDI 2.0L hardware?). 6126B/117 regions.
+
+All these 03L906018xx variants probably hit `0x06AD86` or sister
+anchors but each SW has its own offset. Wide coverage from existing
+def via SW identStrings.
+
 ## VW Pairs #849–864 — Passat 0x06AD86 +sw510959 + sister sub-clusters
 
 **Golf 0x06AD86 def +1 SW**:
