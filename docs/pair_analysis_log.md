@@ -70,6 +70,42 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #641–656 — Golf 5 2.0 TFSI MED17 + R32 + Golf 6 1.4 TSI
+
+**Golf 5 2.0 TFSI MED17** (#641-#646):
+- 0261S02078 1K0907115 sw387570 (#641, alt file from prior batches)
+- 0261S02078 1K0907115 sw374094 (#642) — sister of #291/#376
+- 0261S02470 8P0907115B sw391082 (#643) — sister of #392
+- 0261S02469 8P0907115B sw387445 (#644, **GTI Edition 30 230hp**)
+  — 5554B / 82 regions (heavier tune)
+- 0261S02782 1K8907115F sw505204 (#645) — already in wired Golf R def
+- 0261S02429 1K0907115L sw386855 (#646, GTI Edition 30 169.2 kW
+  230hp) — `1K0907115L` part suffix
+- 0261S02429 8P0907115B sw386855 (#649, same SW different part
+  suffix L vs B) → 1677B / 29 regions vs 1528B / 23 regions for #646
+  — 2 part suffixes (L/B) sharing same SW
+
+**Pair #647** 0261B00486 8P0907115 sw??? (147.1 kW labeled 2005)
+— only 33 bytes / 2 regions = essentially no real tune.
+
+**Golf 5 2.0 TDI Siemens PPD1.2 03G906018HB SN100L4000000** (#648,
+2 MB) — NEW part `03G906018HB` (HB suffix) for SN100L4 cluster. Add
+to PPD1.2 def.
+
+**Golf 5 R32** (#650-#654):
+- 022906032CD sw377452 (#650, 1MB) — sister of #329 same SW. Only
+  167B / 3 regions = light
+- 022906032CE sw377419 (#651, 1MB) — sister of #331 + #395 same SW
+- 022906032JR sw382160 (#652) and 022906032GP sw382160 (#653) — 2
+  part suffixes same SW. 1398B/19 + 624B/5
+- 022906032JQ sw382159 (#654, V6 R32 2007) — 393B/11
+
+**Golf 6 1.4 TSI MED17** (#655, #656):
+- 0261201788 03C906022J sw393741 (#655) — 1663B / 27 regions
+- 0261S04390 03C906016 sw400855 (#656) — sister of #657 same hardware
+
+Should add 03G906018HB to PPD1.2 def's identStrings.
+
 ## VW Pairs #625–640 — Golf 5 2.0 TDI EDC16 PD + PPD1.2 + 2.0 TFSI
 
 **Golf 5 2.0 TDI EDC16 PD 03G906021AB** (#625-#628):
