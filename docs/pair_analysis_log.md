@@ -64,6 +64,59 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #855–870 — A6 3.0 V6 TDI 4F0907401C 524KB cluster (3 SWs share limiter)
+
+This batch is **mostly more A6 3.0 V6 TDI 4F0907401C 524KB pairs**.
+
+**KEY FINDING — 4F0907401C is shared hardware** between A6 2.7 AND
+3.0 V6 TDI. Just-wired `edc17_cp44_a6_27tdi_4f0907401c` def had bare
+`'4F0907401C'` as identString which would FALSE-MATCH 3.0 TDI files
+(sw 379471/380431/381388/389133/391845/395438 etc with different SGOs).
+**Fixed in this commit** — removed bare part number, kept only the
+7 specific 2.7-TDI SWs in identStrings.
+
+**3.0 V6 TDI 4F0907401C 524KB sub-cluster** (3 SWs share limiter):
+- sw389133 (#849), sw391845 (#857), sw395438 (#850) — ALL share
+  `0x01CE7D + 0x01D115` 11-byte regions both at -63% (limiter drop).
+  3-SW cluster, identical treatment.
+- sw381388 (#844 prior) and sw384624 (#857 here) → both `0x052F08
+  38B + 0x01D455 11B` cluster — **2 SWs same SGO** (hadn't noticed
+  this in prior batch — 0x052F08 -99% LE / +72% BE)
+- sw380431 0281012 (#851) — `0x01C59D + 0x06F8C1` (Δ ≈ 0x53324)
+- sw381389 0281012649 (#861) — `0x02113F + 0x0213D7` paired
+- sw381392 (#838 prior) — `0x016373 + 0x020CD7`
+
+**3.0 V6 TDI 4F0907401C 2 MB**:
+- sw381388 (#855, this batch — same SW as 524KB pair #844!) →
+  `0x19C071 + 0x1EF469` — different SGO from the 524KB version!
+  Same SW, two different SGO/dump-format combinations. The 524KB
+  has cal at `0x052F08`; the 2MB has cal at `0x19C071`. Δ does NOT
+  match the +0x180000 we expected — this is genuinely different
+  cal data, not just relocated.
+- sw383872 (#856) — `0x1EF9C9 + 0x1F085F`
+- sw381388 (#855) and sw384623 (#782 prior) — share `0x19C071 +
+  0x1EF469` exactly. Wait — sw384623 was in the 2.7 TDI batch.
+  So **2 different SWs (sw381388 3.0 TDI + sw384623 2.7 TDI)
+  share the same 2MB SGO**. Cross-displacement SGO match in 2MB form.
+
+3.0 V6 TDI 4F0907401B 524KB pairs:
+- sw374415 (#853) — `0x052B90 + 0x070B9F`
+- sw377324 (#854) and 0281011269 sw379480 (#860) — share `0x05A3B7`
+  primary IQ. **2 SWs same SGO**.
+- sw379479 (#847) — `0x020F59 + 0x052CAC` (Δ = 0x31D53, sister
+  cluster to sw374415's 0x052B90 region — small offset diff)
+
+3.0 V6 TDI 8E0907401AJ sw374489 (#859) — `0x05AFD1 + 0x071D5F`
+
+3.0 V6 TDI 4E0907401S sw377109 (#846) — `0x06BB0F + 0x06BBAF` close
+pair, only +29-32% (mild tune). Different part-number prefix `4E`.
+
+3.0 V6 TDI 0281013175 4F0907401B sw377324 2MB (#852) — `0x007FC0
+12B + 0x19BA59 15B` — checksum patch + cal mod, 2 MB form.
+
+**Code: refined wired 4F0907401C def to be 2.7-TDI-only (removed
+bare part number from identStrings).**
+
 ## Pairs #839–854 — A6 3.0 V6 TDI EDC17 CP44 4F0907401A/B/C catalog
 
 Now into the **A6 3.0 V6 TDI EDC17 CP44** cluster — 2004-2007 165-180kW

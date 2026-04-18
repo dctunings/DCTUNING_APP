@@ -2314,7 +2314,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17 CP44 (4F0907401C — Audi A6 C6 2.7 V6 TDI 180hp 2006-2008)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['4F0907401C', '380752', '380756', '380785', '382074', '383851', '390127', '391860'],
+    // ⚠ 4F0907401C is shared hardware between A6 2.7 AND 3.0 V6 TDI. Match
+    // ONLY on 2.7-specific SW versions — bare '4F0907401C' would false-match
+    // 3.0 TDI files (sw 379471/380431/381388/381389/381392/383872/384624/
+    // 389133/389135/391845/395438) which have completely different SGO bases.
+    identStrings: ['380752', '380756', '380785', '382074', '383851', '390127', '391860'],
     fileSizeRange: [524288, 524288],   // 524 KB chiptool extraction format
     vehicles: ['Audi A6 C6 2.7 V6 TDI 180hp (4F0907401C sw 380xxx-391xxx, 2006-2008)'],
     checksumAlgo: 'bosch-crc32',
