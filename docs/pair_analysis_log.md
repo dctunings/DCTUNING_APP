@@ -64,6 +64,48 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #68–82 — EDC17 C46 Audi A3 2.0 TDI CR 140ps SW catalogue
+
+Fifteen consecutive pairs, all 140ps 2.0 TDI CR on 03L906018/022
+family with various SW versions. Going through each briefly so the
+SW catalogue is complete — full diff patterns are same as other
+EDC17 C46 entries in this log:
+
+- Pair #68 · 03L906022BQ sw 398757 (2009) 2MB, 10,376 B / 93 regs.
+- Pair #69 · 03L906022LS + 22BQ sw 506169 (2009) 512KB, 4,570 B / 83.
+- Pair #70 · 03L906022RA + 22BQ sw 398770 (2009) 512KB, 10,390 B / 93
+  — high change % for a 512KB cal dump.
+- Pair #71 · 03L906022BQ sw 398757 (2009 alt tuner) 2MB, 10,928 / 96.
+- Pair #72 · 03L906018AG sw 508208 (2010) 2MB, 5,484 B / 53 regs —
+  newer 03L906018 family (vs 03L906022).
+- Pair #73 · 03L906022BQ sw 396412 (2010 tune) 2MB, 5,006 B / 110 —
+  lighter than 2008 version of same SW.
+- Pair #74 · 03L906022BQ sw 396413 (2010) 2MB, 5,248 B / 95 regs.
+- Pair #75 · 03L906022BQ sw 398756 (2010) 2MB, 4,860 B / 117 regs —
+  new SW: 398756 (prior: 398757).
+- Pair #76 · 03L906022BQ sw 398757 (2010 another) 2MB, 5,292 B / 163.
+- Pair #77 · 03L906022BQ sw 398770 (2010) 2MB, 10,376 B / 93 —
+  duplicate of pair 63's tune.
+- Pair #78 · 03L906022G sw 396031 (2010) 2MB, 3,163 B / 49 — small
+  part number (03L906022G no suffix).
+- Pair #79 · 03L906022G sw 397892 (2010) 2MB, 5,247 B / 103 regs.
+- Pair #80 · 03L906022GA sw 501959 (2010) 2MB, 5,018 B / 90 regs —
+  new part 03L906022GA.
+- Pair #81 · 03L906018AG sw 507685 (2010) 2MB, 8,680 B / 116 regs.
+- Pair #82 · 03L906018AG sw 508208 (2010 alt) 2MB, 9,269 B / 129.
+
+Catalog of distinct 03L906018/022 SW versions seen in this A3 2.0 TDI
+CR subsection:
+  396031, 396412, 396413, 396470, 396483, 397819, 397892,
+  398750, 398756, 398757, 398770, 501959, 506169, 506186,
+  507685, 508208, 508343, 514277
+= 18 distinct SW bases. Writing per-SW offsets in ecuDefinitions.ts
+for even half of these is a serious code-volume commitment — easier
+as data (variantFingerprints.json style) once we commit.
+
+**Code: deferred** — logging only. These are ALL the same EDC17 C46
+family Kf_ signature-detected in the live code path.
+
 ## Pair #67 — EDC17 C46 · 03L906022BQ sw 398750 (Audi A3 2.0 TDI CR, 2009)
 - 2 MB. 10,376 B / 93 regions. Typical sw 398xxx heavy tune profile.
 - **Code: deferred**.
