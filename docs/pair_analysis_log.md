@@ -70,6 +70,59 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #241–256 — Wire Golf 0x06AD86 cluster + 398757 +2 more SWs
+
+**STRONG WIRE: Golf 03L906018AR/BB/BC/GC 0x06AD86 cluster**:
+- 03L906018BC sw510944 (#243) → `0x06AD86 2KB +170%`
+- 03L906018AR sw525558 (#244) → `0x06AD86 2KB +274%`
+- 03L906018GC sw508903 (#247) → `0x06AD86 2KB +274%`
+- 03L906018BB sw510943 (#252) → `0x06AD86 2KB +170%`
+- **4 SWs across 4 part suffixes share IDENTICAL `0x06AD86`**
+  protection ceiling. Same family-wide pattern as Caddy 0x06ADCA
+  (Δ=0x44 anchor shift).
+
+Wired as `edc17_c46_golf_20tdi_03l906018xx_06ad86`. **12th wired
+ECU def.**
+
+**More Golf 03L906022G hitting 398757 SGO** (added more SWs to def):
+- sw399326 (#249) → `0x1EF502/0x1EFF46` IDENTICAL
+- sw501956 (#253) → `0x1EF502/0x1EFF46` IDENTICAL
+- sw396031 (#248) → `0x1EF8A6/0x1F0550` (Δ=0xCC4 sister sub-cluster)
+- sw505938 (#250) → `0x1F007A` sister
+- sw507643 (#251 alt file) → `0x1DBC2C 12×15 + 0x1DE5B2 12×16` —
+  the 12×15 IQ ceiling SHAPE again (Amarok-family map shape)
+- sw507643 (#254 again, different file) → `0x1F007A/0x1F0ABE` sister
+
+**398757 def now covers 11 SW versions** spanning Audi A3 + VW Golf
+2.0 TDI CR.
+
+**03L906018JL sw522924** (#241, alt file from earlier #240) →
+`0x06D6CC 511B + 0x0615B6 14B` — sister cluster of my 03L906018JL
+def, slightly different anchors. Confirms 522924 SW has multiple
+SGO sub-families.
+
+**03L906018BB sw525556** (#242, alt file) → `0x07C8E4 16×12 + 0x0283D2
+6B` — different from earlier sw525556 patterns. Same SW THREE
+distinct SGO files now seen.
+
+**03L906018BA sw509930** (#245) → `0x06C27E + 0x06C488` paired 512B
+regions — DIFFERENT cluster from 0x06ADxx Caddy/Golf family. Sister
+SGO of 03L906018BA part.
+
+**Pair #246** sw509930 03L906018BA — 0 bytes changed = byte-identical
+ORI/Stage1 pair (likely a corrupted dump or test file).
+
+**Pair #255** sw510944 03L906018BC — 0 bytes changed (byte-identical
+ORI/Stage1).
+
+**Pair #256** sw510944 03L906018BC alt stage1 → `0x02706C + 0x0283D2`
+small region cluster. Different from #243's 0x06AD86 SGO. So sw510944
+has 2 SGO sub-families.
+
+**Wire actions taken**:
+- Wired NEW def `edc17_c46_golf_20tdi_03l906018xx_06ad86` (4 SWs)
+- Added sw 399326, 501956 to 398757 def (now 11 SWs)
+
 ## VW Pairs #225–240 — Golf 03L906022G expansion + 03L906018 sw505441/508342 cluster
 
 **More Golf 03L906022G hitting 398757 SGO** (now expanded def):

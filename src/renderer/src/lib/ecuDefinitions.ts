@@ -2089,7 +2089,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // The 03L906022FG variant (sw 399349/399350/500141/503995/etc.) hits
     // offsets shifted to 0x1EE306/0x1EED4A — handled by sister def
     // edc17_c46_03l906022fg below.
-    identStrings: ['398757', '03L906022BQ', '397892', '398784', '398791', '399393', '399395', '501921', '501922'],
+    identStrings: ['398757', '03L906022BQ', '397892', '398784', '398791', '399326', '399393', '399395', '501921', '501922', '501956'],
     fileSizeRange: [2097152, 2097152],   // exactly 2 MB
     vehicles: ['Audi A3 2.0 TDI CR 140ps (03L906022BQ sw 398757)', 'VW Golf 2.0 TDI CR 80-103kW (03L906022G sw 397xxx-399xxx, 2008-2010)'],
     checksumAlgo: 'bosch-crc32',
@@ -2214,6 +2214,51 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 0,
         fixedOffset: 0x06B5EC,
         rows: 1, cols: 256, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 55000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 57000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 58000 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ── EDC17 C46 VW Golf 2.0 TDI CR 03L906018xx — 0x06AD86 cluster (2MB) ─────
+  //
+  // VW Golf 2.0 TDI CR 100-125 kW EDC17 C46. 4 SW versions across 4 part
+  // suffixes (AR/BB/BC/GC) all share the SAME SGO base at offset 0x06AD86
+  // (Δ=0x44 from VW Caddy's 0x06ADCA cluster — sister sub-family). Verified
+  // in pair_analysis_log.md VW pairs #243 (BC sw510944), #244 (AR sw525558),
+  // #247 (GC sw508903), #252 (BB sw510943).
+  //
+  // Common modifications (all SWs):
+  //   0x06AD86  2 KB (1024 cells u16 LE) — main protection ceiling +169-274%
+  //   0x07E036  200 B (100 cells u16 BE) — secondary ceiling at very high %
+  //
+  // Same protection-ceiling family-wide pattern as wired Caddy / 398757 /
+  // 03L906022FG defs — just at a different per-SGO anchor (0x06AD86).
+  {
+    id: 'edc17_c46_golf_20tdi_03l906018xx_06ad86',
+    name: 'Bosch EDC17 C46 (VW Golf 2.0 TDI CR 100-125kW — 03L906018AR/BB/BC/GC 0x06AD86)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['508903', '510943', '510944', '525558'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Golf 2.0 TDI CR 100-125kW (03L906018AR/BB/BC/GC sw 508903/510943/510944/525558, 2010)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_golf_06ad86_protection',
+        name: 'Protection Ceiling (Golf 03L906018xx 0x06AD86)',
+        category: 'limiter',
+        desc: 'Main protection ceiling at 0x06AD86 (1024 uint16 LE cells = 2 KB). Verified across 4 SWs all sharing IDENTICAL offset and treatment. μ 15351-21260 → 57390 raw (+170-274%). Sister of Caddy 0x06ADCA cluster (Δ=0x44 anchor shift). Pin near tuner consensus (~55000) for Stage 1.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06AD86,
+        rows: 1, cols: 1024, dtype: 'uint16', le: true,
         factor: 1, offsetVal: 0, unit: 'raw',
         skipCalSearch: true,
         stage1: { multiplier: 1.0, addend: 0, clampMax: 55000 },
