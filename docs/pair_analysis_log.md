@@ -70,6 +70,38 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #609–624 — Golf 5 1.9 TDI EDC16 PD + 2.0 FSI MED17
+
+**Golf 5 1.9 TDI EDC16 PD continued** (#609-#619):
+- 03G906021AB sw394142 (#609) — sister of #608/#341
+- 0281011901 03G906016DF sw371099 (#610, 1MB) — newer EDC15P
+- 03G906021AB sw391847 (#611) — sister of #350 same hardware
+- 0281012076 371906379U8 sw371906 (#612, 1MB) — odd part-no format
+- 0281013226 03G906021KH sw380437 (#613) — sister of #340
+- 03G906021FJ sw380417 (#614)
+- 03G906021KK sw379800 (#615) — 5801B / 491 regions = heavier tune
+- 03G906021QK sw391843 (#616) — sister of #348
+- 0281013200 03G906021KG sw382099 (#617)
+- 03G906021AB sw393516 (#618)
+- 03G906021KQ sw382096 (#619) — sister of #177
+
+**Golf 5 2.0 FSI MED17** (#620-#622):
+- 0261S02183 03C906056CG sw376036 (#620, 110.3 kW) — sister of #604
+  same hardware/SW (Golf 5 1.6 FSI 84.6 kW labeled as 2.0 FSI 110.3 kW
+  here — could be filename mismatch or actual 2.0 FSI variant)
+- 0261S02029 015906F9060 sw370159 (#621) — odd part-no, 2 MB MED17
+- 0261B00486 8P0907115 (#622, 1970 misdate, 147.1 kW labeled 2.0
+  FSi Turbo) — only 314B / 5 regions = light or partial
+- 0261B00486 is Bosch hardware that handles MED17 EA113
+
+**Golf 5 2.0 SDI 0281011617 03G906016M sw370652** (#623, 1MB EDC15P
+SDI 75 hp).
+
+**Golf 5 2.0 TDI 0281011903 03G906016FM sw375892** (#624, 1MB EDC15P
+PD) — only 7 bytes / 0 regions = byte-identical (no real tune).
+
+No new wires.
+
 ## VW Pairs #593–608 — Golf 5 1.4 TSI MED17 + 1.6 FSI MED17 + 1.9 TDI
 
 **Golf 5 1.4 (atmospheric)** (#593) — 0261207189 036906032L sw360898
