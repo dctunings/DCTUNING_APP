@@ -2454,6 +2454,59 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 C46 VW Golf 2.0 TDI CR 03L906022x — IQ Release cluster (524KB) ──
+  //
+  // VW Golf 2.0 TDI CR 80-103 kW EDC17 C46. 6 SW versions across 5 part
+  // suffixes (G/AG/HR/LB/LF/MC) all share the SAME "raw 2130 → max" IQ
+  // release at offsets clustering around 0x06625E ±0x3000. Verified in
+  // pair_analysis_log.md VW pairs #190, #191, #201, #202, #207, #208:
+  //
+  //   sw396418 (HR), sw399396 (LB), sw507639 (AG), sw507643 (MC),
+  //   sw514600 (G), sw505933 (G/LF 2MB form at 0x1E625E)
+  //
+  // Common modification structure (524 KB form):
+  //   ~0x06625E  6 cells u16 BE — IQ release point (raw 2130 → 55000-61525,
+  //                                +2644-2788%)
+  //
+  // The 6-byte region is 3 paired u16 cells. Different SWs have the anchor
+  // shifted by ±0x3000 (e.g. sw396418 → 0x063826, sw399396 → 0x0657D6) but
+  // the raw 2130 → max treatment is consistent. Wire with sw514600 anchor
+  // (most common) and document the offset variation.
+  //
+  // 2 MB dump form: same content shifted by +0x180000 (sw505933 hits
+  // 0x1E625E = 0x06625E + 0x180000). Confirms 524KB↔2MB +0x180000 dump
+  // format also applies to this VW Golf cluster.
+  {
+    id: 'edc17_c46_golf_20tdi_03l906022xx_iqrelease',
+    name: 'Bosch EDC17 C46 (Golf 2.0 TDI CR 80-103kW — 03L906022G/AG/HR/LB/LF/MC IQ release)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['396418', '399396', '505933', '507639', '507643', '514600'],
+    fileSizeRange: [524288, 524288],   // 524 KB chiptool dump format
+    vehicles: ['VW Golf 2.0 TDI CR 80-103kW (03L906022G/AG/HR/LB/LF/MC sw 396418-514600, 2008-2010)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_golf_22xx_iq_release',
+        name: 'IQ Release Point (Golf 03L906022xx)',
+        category: 'fuel',
+        desc: 'IQ release point at 0x06625E (6 bytes = 3 uint16 BE cells). Verified across 6 SW versions and 5 part suffixes (G/AG/HR/LB/LF/MC) all sharing the same raw 2130 → ~58000 (+2700%) treatment. NOTE: anchor shifts by ±0x3000 between SW versions (sw396418 → 0x063826, sw399396 → 0x0657D6) — this def matches the most-common sw514600 layout.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06625E,
+        rows: 1, cols: 3, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 58000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 C64 VW Amarok 2.0 BiTDI 03L906019FA (sw 515253/518108/526355) ──
   //
   // VW Amarok 2.0 BiTDI CR 119.9 kW (163 hp) EDC17 C64. Bosch hardware code,

@@ -70,6 +70,72 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #193–208 — Golf 2.0 TDI CR 03L906022xx HUGE cluster + DSG files
+
+**STRONG cluster: 03L906022LF/LM/MC share IDENTICAL offsets (524KB)**:
+- 03L906022LM sw399354 (#199) → `0x0643CE 15B + 0x0642DE 16B`
+- 03L906022LF sw398784 (#204) → IDENTICAL
+- 03L906022LF sw501921 (#205) → IDENTICAL
+- 03L906022MC sw501922 (#206) → IDENTICAL
+- **4 SWs across 3 part suffixes (LF/LM/MC) sharing exact byte counts
+  AND offsets `0x0642DE/0x0643CE`**. μ 15402→40929 (+165%) and
+  18762→31338 (+67%). Wire candidate.
+
+**STRONGER cluster: `0x06625E` IQ release pattern (raw 2130 → ~58000)**:
+- 03L906022AG sw507639 (#190 prior) → `0x06625E 6B raw 2130→58455`
+- 03L906022G sw514600 (#191 prior) → `0x06625E 6B raw 2130→61525`
+- 03L906022LB sw399396 (#201) → `0x0657D6 6B raw 2130→61525` (Δ=0xFA0 sister)
+- 03L906022HR/G sw396418 (#202) → `0x063826 6B raw 2130→61525` (Δ=-0x2A38)
+- 03L906022MC sw507643 (#207) → `0x06625E 6B raw 6223→55385`
+- 03L906022G/LF sw505933 (#208, **2MB**) → `0x1E625E 6B raw 2130→61525`
+  (note `0x1E625E - 0x06625E = 0x180000` ✓ confirms 524KB↔2MB +0x180000
+  shift for the same SGO content)
+
+**6 SWs across 5 part suffixes (G/AG/HR/LB/LF/MC) all hit the same
+"raw 2130 → max" IQ release** at offsets clustering around 0x06625E
+±0x3000 in 524KB, equivalent to 0x1E625E in 2MB. **MAJOR
+cross-cluster wire candidate** for VW Golf 2.0 TDI CR 80-103 kW.
+
+**03L906022G sw396032** (#200, 2MB) → `0x1EF8A6 512B +298%` cluster
+— sister of my wired 398757 protection-ceiling family at high
+region. Different SGO from the 0x06625E cluster.
+
+**03L906022G sw507615** (#203, 2MB, 125kW Golf GTD) → `0x1DBC2C 12×15`
++180849% — same MAP SHAPE as Amarok 03L906019FA 0x0623F0 12×15 IQ
+ceiling structure! Different anchor but identical 12-col×15-row
+ceiling pattern. Cross-part EDC17 family-wide IQ ceiling map shape
+confirmed.
+
+**03L906018BB sw510943** (#193, 0281016046 hardware, 2MB) → `0x056AB2
+144B + 0x0608F8 12B` — DIFFERENT cluster from my wired Caddy
+03L906018xx 0x06ADCA. So 03L906018BB Golf has at least 2 distinct
+SGO sub-families (this 0x056AB2 one + the 0x06AD86 one I noted earlier
+in pair #136).
+
+**03L906018BB sw525556** (#195, **393 KB partial dump**) → `0x036AB2
+144B +725%` — note: 0x036AB2 = 0x056AB2 - 0x20000. So the **393 KB
+dump format relocates cal by -0x20000** vs 524 KB. Interesting:
+393 KB = 0x60000, while 524 KB = 0x80000 → 524 KB has 0x20000 more
+header padding at the start.
+
+**Wire candidates from this batch**:
+1. **03L906022LF/LM/MC sw 398784/399354/501921/501922** cluster
+   (4 SWs share `0x0642DE/0x0643CE`). 524 KB form.
+2. **03L906022G/AG/HR/LB/LF/MC sw 396418/399396/507639/507643/514600/
+   505933** "raw 2130 → max" IQ release cluster (6 SWs, ~0x06625E
+   anchor in 524 KB or 0x1E625E in 2 MB).
+
+Both new wire candidates — VW Golf 2.0 TDI CR EDC17 C46 strong patterns.
+
+**Pair #194 SIZE MISMATCH** — same ORI, different stage1 sizes — skipped.
+
+**Pairs #196 + #197** — DSG transmission control (Temic 02E/02E927770AL)
+— not engine ECU, just present in folder. Skip from engine analysis.
+
+**Pair #198** 03L906022BQ/G sw398791 (2MB, 103 kW) → `0x1E428E 15B
++247% + 0x1B4252 10B +131%` — different cluster, sister of my wired
+398757 / 03L906022FG defs (high-region 2MB cal).
+
 ## VW Pairs #177–192 — Golf 1.9 TDI EDC15 PD mirrors + 04L EU6 4MB dump format
 
 **EDC15P PD mirror direct confirmations** (Golf 1.9 TDI):
