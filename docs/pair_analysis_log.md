@@ -64,6 +64,28 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #413–427 — A4 2.0 TDI ppd (PPD1.2) mixed SN serials + A4 2.0 TFSI
+
+- Pair #413 · 03G906018AQ SN1S0M8000000 2MB heavy tune 5,419 B.
+- Pairs #414-416 · AQ 256KB cal-dumps various SN (SN100L8, SN100L6, SN100L4).
+- Pair #417 · **NEW part 03G997256C** with SN100L4000000 — this is a
+  service-replacement ECU part number (03G997 prefix = VAG replacement
+  label for PPD1.2). Same map layout as the DH/AQ part numbers it
+  replaces. Should add to vag_ppd1 identStrings.
+- Pair #418 · AQ SN1R0M8000000 2MB 13,980 B.
+- Pair #419 · AQ SN100L8000000 2MB 17,642 B (heavy).
+- Pair #420 · AQ SN100L8000000 2MB **247 B** light — the same pair
+  I analysed originally as Pair #2 (v3.5.30 docs).
+- Pairs #421-423 · Various PPD1.2 AQ + DH 256KB cal dumps.
+- Pair #424 · AQ SN100L6000000 2MB 2,744 B light.
+- Pairs #425-428 · **A4 2.0 TFSI 2002-2005 2MB MED17** — 0261S02096,
+  0261S02211, 0261S02210, 0261S02362 with 8E0907115C/D part numbers.
+  First 2.0 TFSI on MED17 in the Audi A4 series (147kW / 200ps).
+  Tunes 1,000-6,600 B.
+
+**CODE CHANGE**: Add `03G997256C` to vag_ppd1 identStrings — service
+replacement part number that shares PPD1.2 cal layout.
+
 ## Pairs #398–412 — A4 2.0 TDI PD 2005-2008 EDC16 PD SW catalog
 
 15 more A4 2.0 TDI PD 103hp EDC16 PD pairs (512KB + 2MB mix).

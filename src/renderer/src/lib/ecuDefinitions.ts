@@ -7577,6 +7577,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
       'SN100L3000000',  // ↳ accompanying SW serial for the FG variant
       'SN1R0M8000000',  // Pairs #257, #262 — AQ variant later SW family
       'SN1S0M8000000',  // Pair #256 — AQ variant S-series SW family
+      '03G997256C',     // Pair #417 — VAG service-replacement ECU part (shares PPD1.2 cal layout)
     ],
     fileSizeRange: [524288, 2097152],   // up to 2MB — real PPD1.2 binaries are 2MB
     vehicles: [
