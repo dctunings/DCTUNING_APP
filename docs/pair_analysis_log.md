@@ -70,6 +70,75 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1025–1040 — MASSIVE 0x1F007A cross-VW + 0x06AD86/0x06B4FE Sharan expansion
+
+**0x1F007A def HUGELY EXPANDED — 3 NEW SWs + 2 NEW maps**:
+
+Pairs #1025, #1026, #1027, #1028/#1029 Sharan 100-103kW share IDENTICAL
+signature across 6 maps:
+- sw505976 03L906022G (#1025)
+- sw505980 03L906022RP (#1026) — NEW RP suffix
+- sw505989 03L906022G (#1027, already in def)
+- sw505920 03L906022QD (#1028/#1029) — NEW QD suffix
+
+Each hits:
+- `0x1F007A 2048B` BE 14259 → 57390 +302%
+- `0x1F0ABE 512B` BE 14413 → 57390 +298%
+- `0x1F089C 512B` BE 23107 → 57390 +148%
+- **`0x1FB0EA 200B` BE 4135 → 12405 +200%** ← NEW MAP added to def
+- **`0x1E625E 6B` BE 2130 → 12405 +482%** ← NEW MAP added to def
+- `0x1F9180 6B` BE 14954 → 32790 +119%
+
+The `0x1FB0EA 200B` = `0x079DB6` + 0x181334 ~ Δ=+0x180000 (524KB↔2MB shift).
+The `0x1E625E 6B` = `0x06625E` + 0x180000 EXACTLY (524KB↔2MB mirror!).
+Confirms that this 2MB-format def is the direct twin of the 524KB
+`edc17_c46_golf_20tdi_03l906022xx_iqrelease` def at 0x06625E. SAME
+CODE, DIFFERENT DUMP FORMAT.
+
+0x1F007A def now covers 6 SWs, 4 part suffixes (G/R/RP/QD).
+
+**0x06AD86 def EXTENDED — 2 NEW part suffixes (DQ/BD)**:
+- Pair #1037 sw509915 `03L906018DQ` Sharan 103kW — hits 0x06AD86 2048B
+  BE 15351 → 57390 +274% EXACTLY + 0x06B5A8 512B + 0x06B7CA 512B +
+  0x07E036 200B (+1402% on 200B)
+- Pair #1040 sw513640 `03L906018BD` Sharan 125kW — hits 0x06AD86 2048B
+  BE 21260 → 57390 +170% (higher raw stock for 125kW variant, same
+  anchor structure)
+
+0x06AD86 def now covers 6 part suffixes (AR/BB/BC/GC/DQ/BD) and 13 SWs.
+
+**0x06B4FE def EXTENDED — +NEW KS suffix, 4 NEW SWs, 2 NEW maps**:
+
+- sw527002 03L906018HK (#1034, #1032 sister compact)
+- sw527003 03L906018KS (#1035) — NEW KS suffix
+- sw518179 03L906018KS (#1036) — same KS
+- sw518177 03L906018HK (#1033 compact 393KB) — confirms 393KB format
+- All hit:
+  - `0x056E22/E46 144B` BE 3970 → 32793 +726% (IQ release 144B)
+  - `0x07DEB8/E0BE 200B` BE 4135 → 12369 +200% (200B IQ)
+  - `0x066AD8/B30 13B` BE 18098 → 46556 +157% (IQ ceiling)
+  - `0x066B3C/B94 13B` BE 17118 → 40542 +137% (companion)
+  - `0x066B28/B80 13B` BE 18313 → 41822 +128%
+  - `0x066B50/BA8 13B` BE 23304 → 46430 +99%
+  - `0x0276C6 6B` BE 64085 → 1622 -97.5% (emission cut)
+
+Also added 2 NEW maps to the 0x06B4FE def:
+- `0x06BF42 512B` BE 23980 → 57390 +139%
+- `0x06BD20 512B` BE 24213 → 57390 +137%
+
+Both confirmed in pairs #1038 (HH sw518191 alt tune) + #1039 (HJ sw518192
+alt tune) — different tuner style from the main 0x06B4FE tune but same
+ORI map structure.
+
+**Cross-dump-format insight**:
+Pairs #1032, #1033 (393KB compact format sw517509/sw518177) hit these
+patterns at compact-format anchors:
+- 0x036A4E 144B · 0x046704 13B cluster · 0x05E84E 200B · 0x0076BA 6B
+Compact↔2MB shift matches: e.g. 0x056E22 - 0x036A4E = 0x203D4, close
+to the 0x20000 compact-format offset convention.
+
+---
+
 ## VW Pairs #1009–1024 — Sharan 03L906018xx cluster — 1 NEW def + massive same-chassis family
 
 **MAJOR cluster verification — VW Sharan Mk2 7N 2.0 TDI CR family**:
