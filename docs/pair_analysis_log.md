@@ -70,6 +70,35 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #529–544 — Golf 4 1.9 TDI EDC15V early/PD continued
+
+16 more Golf 4 1.9 TDI EDC15V (256 KB pre-PD) and EDC15P PD (524KB)
+pairs — 14 distinct hardware codes / VAG part suffixes:
+
+**EDC15V 256KB pre-PD** (#530, #531, #533-#541):
+- 0281001424 028906021CK sw355221 (#530, 80.9 kW = 110hp)
+- 0281001846 038906018BM sw356589 (#531) + sister #537 same hardware
+- 0281001652 028906021GH sw358905 (#533, 80.9 kW)
+- 0281001860 028906021JG sw356533 (#534)
+- 0281001733 038906018AN sw357579 (#535)
+- 0281001845 038906018BL sw359498 (#536)
+- 0281001611 038906018D sw358239 (#538) — sister of #523
+- 0281001851 038906018AE sw359688 (#539) — sister of #525
+- 0281001586 028906021FQ (#540, 80.9 kW)
+- 0281001613 038906018J sw358237 (#541, 80.9 kW)
+
+**EDC15P PD 524KB** (#529, #532, #542-#544):
+- 0281010864 038906012GK sw362681 (#529)
+- 0281010112 038906012L sw352566 (#532)
+- 0281010246 038906018GP sw352617 (#542) — 5354B / 84 regions
+- 0281010111 038906012K sw352222 (#543) — **88KB changed = stage1+++**
+- 0281010111 038906012K sw352549 (#544) — **56KB changed = stage1+++**
+
+Pairs #543 + #544 are stage1+++ full recals on 0281010111 hardware
+(2 different SW sister files). Same hardware as pair #526.
+
+No new wires — same family-wide pattern as documented.
+
 ## VW Pairs #513–528 — Golf 4 1.9 SDI/TDI EDC15 PD catalog
 
 **Golf 4 1.8T tail** (#513-#514):
