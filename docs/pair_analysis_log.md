@@ -64,6 +64,27 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #488–502 — A4 2.7 TDI CR DPF + 3.0 V6 TDI EDC17 CP44 early
+
+- Pairs #488-490 · A4 2.7 V6 TDI CR DPF 2010 2MB EDC17 CP44 139.7kW.
+  8K0907401 / 8K1907401A. SW 392966 / 394958 / 504886. 4.3-6.5KB.
+- Pair #491 · A4 2.7 V6 TDI 512KB stripped cal EDC17 8K0907401 sw394958.
+- Pairs #492-494 · **A4 3.0 V6 TDI 2004-2005 pre-CR** 512KB EDC15/EDC16P+.
+  8E0907401AJ (150kW / 204ps) — older 3.0 TDI before CP44. SW 374488,
+  374417, 383300.
+- Pairs #495-499 · A4 3.0 V6 TDI 2006 EDC16P+ cal variants.
+  8E0907401AJ/AL various SW (376566, 378837, 379709, 383300, 383301).
+  5.4-7.9KB tunes.
+- Pairs #500-501 · A4 3.0 V6 TDI 2008 **2MB EDC17 CP44** —
+  4E0907401C sw377109 / 8E0907401AJ sw377112. 1.2KB light tunes.
+  These are early EDC17 CP44 before the 2010+ SW families.
+- Pair #502 · A4 3.0 V6 TDI CR 2004 2MB 8E0907401AJ sw374488 —
+  **413,585 B changed (19.7%)** — outlier large recal.
+
+**Code: no change**. 3.0 V6 TDI now seen across CP44 SW families
+516613/516617/518178/516623 (earlier batch) + 377109/377112 (this
+batch) — these would be prime candidates for a variant def.
+
 ## Pairs #473–487 — A4 2.6 V6 petrol + 2.7 V6 TDI EDC17 CP44
 
 - Pair #473 · A4 2.5 TDI VP 2004 1MB Bosch 0281011386 / 8E0907401N —
