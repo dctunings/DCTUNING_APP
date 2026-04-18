@@ -64,7 +64,56 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
-# BMW catalog (D:\DATABASE\Tuning_DB_BIN\BMW)
+# VW catalog (D:\DATABASE\Tuning_DB_BIN\VW)
+
+**1374 ORI/Stage1 pairs** in VW folder. Numbering as `VW #N` separately.
+VW shares much of the same Bosch hardware as Audi (sister VAG group),
+so we expect to see big overlaps with the wired Audi defs.
+
+## VW Pairs #1–16 — Caddy/Golf 1.9 TDI + Amarok 2.0 TDI CR + Touareg
+
+**VW Caddy / Golf 5 1.9 TDI 77.2 kW (105 hp) PD EDC16** (#1-3):
+- 03G906021AB sw390983 (#1) — 2258B / 115 regions
+- 03G906021AB sw393554 (#2) — 2370B / 124 regions
+- 03G906021AN sw387840 (#3) — 2725B / 71 regions
+- All 2 MB EDC16 PD dumps. **03G906021AB / 03G906021AN** sister
+  hardware codes for VW 1.9 TDI 105 hp PD.
+
+**VW Passat 2.0 TDI 103 kW** (#4-5):
+- 03G906021AB sw393514 (#4, 2 MB)
+- 0281012119 03G906021AB sw374106 (#5, 2 MB) — same VAG part
+  number 03G906021AB but different Bosch hardware
+
+**VW Touareg 2.5 TDI 128 kW** (#6-7):
+- 0281011859 070906016BL sw371909 (#6, 961 KB) — NEW dump format size
+- 0281011258 070906016F sw368187 (#7, 1 MB)
+
+**VW 1.6 TDI CR Siemens PCR21** (#8) — `03L906023ML` SM2G0LD000000 —
+sister of Siemens PCR21 family from earlier. **+++ tune (19.9 KB
+changed)** — full recal. Sister of A3 1.6 TDI Siemens PCR21 work.
+
+**VW 1.9 TDI 03G906021AB sw389289** (#9) — sister of Caddy/Golf
+0281012119 cluster, +++ tune (heavy stage1+++).
+
+**VW 2.0 TDI 03L906019GG sw524687** (#10) — newer 03L906019GG
+variant of 03L906019xx EDC17 C64 family (sister of Audi 03L906019AL).
+
+**VW A6 V6 TDI 0281010145 3B0907401H** (#11) — A6 V6 TDI on VW
+chassis (badge confusion in filename — actually VW Passat W8?). 256 KB
+EDC15.
+
+**VW Amarok 2.0 TDI CR EDC17 C64** (#12-16) — UTE/pickup variants:
+- 03L906019FA sw526355 (#12, BiTDI 119.9 kW)
+- 03L906022SP sw510909 (#13 + #15 — 2 files same SW different
+  trim levels in filename)
+- 03L906019FE sw518171 (#14, 85 kW)
+- 03L906022SM sw510908 (#15)
+- All EDC17 C46/C64 family — sister of my wired Audi 03L906022FG def
+
+**Cross-chassis observation**: Amarok uses the same Bosch EDC17 C46
+ECUs as Audi A4/A5/A6 — `03L906019xx` and `03L906022xx`. My existing
+wired defs should already partially match these files via SW number
+identStrings. Will need to verify by loading a few in the app.
 
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
