@@ -64,6 +64,38 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #1079–1094 — Q7 3.0 V6 TDI 4L0907401 / 4L0907401A clusters
+
+**Q7 4L0907401 524 KB cluster** — 2 SWs share identical pattern:
+- sw387812 (#1070) — 3481B / 204 regions
+- sw390616 (#1074) — 3481B / 204 regions (IDENTICAL)
+- Sister SWs (close numbers, same SGO). Wire candidate.
+
+Other 4L0907401 524 KB SW versions (different SGOs):
+- sw382713 (#1069) — 5197B / 270 regions
+- sw387810 (#1071) — 3403B / 202 regions (close to sw387812 cluster)
+- sw390614 (#1072) — 3880B / 214 regions (close to sw387812 cluster)
+- sw382708 7L0907401B (#1073) — 5303B / 144 regions (different part)
+- sw383722 (#1077) — 3169B / 152 regions
+- sw396098 4L0907401A (#1078) — 4237B / 143 regions
+
+**Q7 4L0907401A 2 MB cluster** — 2 SWs share IDENTICAL pattern:
+- sw518087 (#1079) — 4998B / 44 regions
+- sw518178 (#1080) — 4998B / 44 regions (IDENTICAL byte/region count)
+- Wire candidate. **2 SWs same SGO**.
+- sw518087 also appears in 2009 file (#1082) — 4384B / 61 regions
+  (different file, different tuner approach)
+- sw393538 (#1081) — 4954B / 49 regions (close to 518087/518178
+  cluster, possibly 3rd SW member)
+
+Q7 4L0907401D sw508343 (#1083) — 3306B / 88 regions
+
+Q7 4L0907401A sw518178 0281014174 prefix (#1078, #1084) — sister
+of pair #1080 sw518178 same hardware code.
+
+Q7 8K1907401A sw398809 (#1075) — 4470B / 136 regions, sister of
+Q5 8K1907401A sw398809 cluster (cross-chassis Q5+Q7 confirmation).
+
 ## Pairs #1063–1078 — Q5 8K1907401A 3.0 V6 TDI cluster + Q7 4L0907401
 
 **Q5 8K1907401A 3.0 V6 TDI cluster** (continues across batches):
