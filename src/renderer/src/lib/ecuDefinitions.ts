@@ -2049,11 +2049,17 @@ export const ECU_DEFINITIONS: EcuDef[] = [
   // edc17 def (above) catches all other EDC17 files.
   {
     id: 'edc17_c46_398757',
-    name: 'Bosch EDC17 C46 (03L906022BQ sw 398757 — Audi A3/A4 2.0 TDI CR 140ps)',
+    name: 'Bosch EDC17 C46 (03L906022BQ/FG — Audi A3/A4/A6/Allroad 2.0 TDI CR 140ps cluster)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    // Very specific match — includes the SW version so we only hit 398757 files.
-    identStrings: ['398757', '03L906022BQ', 'EDC17C46'],
+    // Verified via pair analysis across 7+ pairs (398757 + 399349/399350/500141/
+    // 503995 03L906022FG variants — see pair_analysis_log.md pairs #692-696).
+    // ALL share identical big-region offsets at 0x1EF502/0x1EFF46 (398757) or
+    // 0x1EE306/0x1EED4A (FG cluster — slightly shifted). The fixedOffset values
+    // below match the 398757 layout; the FG variants need a separate def.
+    // For now this def matches 398757 only — FG variants documented for
+    // future split into edc17_c46_03l906022fg_399_503 cluster def.
+    identStrings: ['398757', '03L906022BQ'],
     fileSizeRange: [2097152, 2097152],   // exactly 2 MB
     vehicles: ['Audi A3 2.0 TDI CR 140ps (03L906022BQ sw 398757, 2008-2010)'],
     checksumAlgo: 'bosch-crc32',
@@ -2088,6 +2094,64 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         signatures: [],
         sigOffset: 0,
         fixedOffset: 0x1EFF46,
+        rows: 1, cols: 256, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 55000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 57000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 58000 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ── EDC17 C46 03L906022FG cluster (Audi A6/A4 Allroad 2.0 TDI CR 100kW) ──
+  //
+  // Sister def of edc17_c46_398757 — same 2KB+512B "protection ceiling" map
+  // structure, different offsets. Verified across 5 pairs (sw 399349 / 399350
+  // / 500141 / 503995 + 506125 sister) — see pair_analysis_log.md pairs
+  // #692-696. ALL share IDENTICAL offsets:
+  //
+  //   0x1EE306  2048 bytes (1024 cells) — main protection ceiling, μ 14259→57390 (+302%)
+  //   0x1EED4A  512  bytes (256  cells) — companion ceiling,        μ 14413→57390 (+298%)
+  //
+  // Same value treatment as 398757 (pin to ~55000 for Stage 1).
+  {
+    id: 'edc17_c46_03l906022fg',
+    name: 'Bosch EDC17 C46 (03L906022FG sw 399xxx-503xxx — Audi A4/A6 2.0 TDI CR 100kW)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['03L906022FG', '399349', '399350', '500141', '503995'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['Audi A4 Allroad / A6 2.0 TDI CR 100kW (03L906022FG sw 399349/399350/500141/503995, 2009-2010)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_fg_protection_a',
+        name: 'Protection Ceiling A (03L906022FG)',
+        category: 'limiter',
+        desc: 'Main protection ceiling at 0x1EE306 (1024 uint16 cells). Verified across 5 pairs (sw 399349/399350/500141 ×2/503995). Pin near tuner consensus (~55000 raw) to disable derate trigger.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1EE306,
+        rows: 1, cols: 1024, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 55000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 57000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 58000 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc17_c46_fg_protection_b',
+        name: 'Protection Ceiling B (03L906022FG)',
+        category: 'limiter',
+        desc: 'Companion protection ceiling at 0x1EED4A (256 uint16 cells). Verified across same 5 pairs. Same treatment as Ceiling A.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1EED4A,
         rows: 1, cols: 256, dtype: 'uint16', le: true,
         factor: 1, offsetVal: 0, unit: 'raw',
         skipCalSearch: true,

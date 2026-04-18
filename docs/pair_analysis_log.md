@@ -64,6 +64,54 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #695–710 — A6 2.0 TDI 03L906022FG cluster + EDC16 PD 03G906016GB
+
+**MAJOR cluster**: 5 paired files all at `03L906022FG` 100 kW with
+SW versions 399349, 399350, 500141 (×2), 503995 ALL share IDENTICAL
+big-region offsets at:
+- `0x1EE306` 2048B (1024 cells, +302%)
+- `0x1EED4A` 512B (256 cells, +298%)
+
+This is the **same protection-ceiling structure as 398757** but at
+different offsets. WIRED as new ECU def `edc17_c46_03l906022fg` —
+covers all 4 SW versions with shared maps.
+
+Pair #696 sw506148 03L906022FG falls into the LATER 506xxx cluster
+(`0x1DA624 + 0x1DCC8C`) — different SGO from the 399xxx-503xxx group.
+This is the same 506xxx cluster I documented for the Allroad #527
+and A6 #677.
+
+Pair #697 0281016147 03L906022FG sw500141 (same SW as #694 but with
+0281016147 hardware code prefix) hits DIFFERENT cal at `0x1F7B28 510B
++ 0x1C44A8 44B` — same SW + different hardware = different SGO. Yet
+another reminder that hardware code matters.
+
+Pair #698-699 03L906018JL sw518064 + sw519315 (130 kW) — both share
+`0x060DE2 22B + 0x066760 362B` = the pre-522xxx cluster I catalogued
+in batch #567-582 (519311/521020/521021). Cluster grows to **5 SWs**:
+518064, 519311, 519315, 521020, 521021. Strong cluster.
+
+Pair #700 0281016679 `03L90619AF` (typo: 03L906019AF) sw505406 — just
+the universal emission-disable pattern at 0x1C4xxx, no major cal mods
+visible in top regions.
+
+**A6 2.0 TDI EDC16 PD continued**:
+- 03G906016GB sw383724 (#686) and sw391835 (#688) BOTH 2 MB dump
+  format → both share `0x1C34C5 + 0x1C361B` (7-cell pairs +195%).
+  **2 SWs same SGO** — wire candidate `edc16_pd_03g906016gb_383_391`.
+  Note the offset 0x1C3xxx is at the high end of the 2MB dump = file
+  bottom-half; if the user opens the 524 KB extracted version it'd
+  be at 0x434C5 / 0x4361B (subtract 0x180000 = 1.5 MB).
+- 03G906016GC sw391846 (#687) — different cal at `0x1ECA23 + 0x1D8E0D`
+- 03G906016GC sw389285 (#680 prior batch) — `0x058E33` low region
+- 03G906016MG sw393553 (#691) — `0x1D8E35 + 0x1D9D24` cluster
+- 03G906016BF sw382716 (#689 524KB version) — `0x05F8DB + 0x05FAAB` —
+  small offset diff from my just-wired 0281011850 def offsets
+  (0x05F8FF / 0x051E5F). Different file format extraction.
+
+**Code: WIRED edc17_c46_03l906022fg ECU def with both maps —
+covers 5 SW versions in one shot.**
+
 ## Pairs #679–694 — A6 1.9 TDI EDC15P+ +0x20000 mirror RE-CONFIRMED + A6 2.0 TDI EDC16 PD 03G906016BF cluster
 
 **EDC15P+ +0x20000 mirror RE-CONFIRMED in A6 chassis** (previously
