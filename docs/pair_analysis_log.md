@@ -64,6 +64,31 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #203–217 — Audi A4 1.9 TDI EDC15 / EDC15P+ catalogue
+
+Classic Audi A4 1.9 TDI 90/110/130hp + pre-PD non-turbo variants:
+
+- Pair #203 · A4 1.8T 2003 1MB ME7.5 (dup of 194) — same tune.
+- Pairs #204-207 · A4 1.9 TDI **256KB EDC15V** (0281001xxx Bosch part
+  numbers) — pre-PD variants, 1.9 TDI 90hp (AFN/AHU/AHH/1Z engine
+  codes). 700-3200 B / 50-165 regs. Family hint missed these —
+  0281001xxx should map to `EDC15V` not "?" in my regex. TODO.
+- Pair #208 · 038906012AJ 524288 B EDC15 (66kW / 90hp 2000) 1,127 B.
+- Pair #209 · 038906019GG 524288 B 74kW / 100hp 1.9 TDI AKN 4,103 B.
+- Pair #210 · 03G906016JA 524288 B 85kW / 115hp (NEW: 03G906016JA
+  part) — EDC16 PD 512KB. 3,336 B / 154 regs.
+- Pair #211 · 038906019CG 524288 B 96kW / 130hp 1.9 TDI 1,306 B.
+- Pair #212 · 038906019LJ 524288 B 96kW / 131hp 2,313 B.
+- Pairs #213-214 · Two more 256KB EDC15V A4 1.9 TDI 90hp 1998.
+- Pairs #215-217 · A4 1.9 TDI 80kW / 110hp 2000-2001 512KB EDC15.
+
+**Code change opportunity**: EDC15V 256KB detection — filename
+regex `0281001xxx` should classify as EDC15V (pre-PD non-unit-injector
+variant used on 1998-2001 A4/A6 1.9 TDI 90/110hp). Our `edc15`
+identStrings already include `0281010`-`0281013` but not `0281001`.
+Adding it would improve detection for these older pairs. Logging
+for a follow-up commit.
+
 ## Pairs #188–202 — A4 1.8T/1.8 TFSI ME7.5 + MED17 catalogue continued
 
 More A4 1.8T ME7.5 1MB + A4 1.8 TFSI 256KB/2MB MED17.1.1 variants:

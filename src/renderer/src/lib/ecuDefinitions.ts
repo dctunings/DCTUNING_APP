@@ -689,7 +689,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     //   EDC15P+ (or equivalently: when the file size is 512KB and the write
     //   target offset is below 0x60000; the mirror lives at offset + 0x20000).
     //   TODO wire into remapEngine.ts / binaryParser writeMap.
-    identStrings: ['EDC15', 'EDC 15', 'EDC15C', 'EDC15P', 'EDC15VM', 'EDC15M+', 'EDC-15', 'CC55', 'CC556', 'CC558', 'TSW V2', '0281010', '0281011', '0281012', '0281013'],
+    identStrings: ['EDC15', 'EDC 15', 'EDC15C', 'EDC15P', 'EDC15V', 'EDC15VM', 'EDC15M+', 'EDC-15', 'CC55', 'CC556', 'CC558', 'TSW V2', '0281001', '0281010', '0281011', '0281012', '0281013'],
     fileSizeRange: [262144, 1048576],   // 256KB – 1MB (standard VAG PD = 512KB; EDC15VM+/Mercedes = 1MB)
     vehicles: ['Audi A4 1.9 TDI', 'VW Passat 1.9 TDI', 'VW Golf Mk4 1.9 TDI', 'Skoda Octavia 1.9 TDI', 'Seat Leon 1.9 TDI', 'Audi A3 1.9 TDI'],
     // CHECKSUM: EDC15 uses a proprietary Bosch seed-based additive algorithm (NOT CRC32).
