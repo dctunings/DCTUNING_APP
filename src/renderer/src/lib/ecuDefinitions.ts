@@ -2698,10 +2698,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
   // 03L906022FG defs — just at a different per-SGO anchor (0x06AD86).
   {
     id: 'edc17_c46_golf_20tdi_03l906018xx_06ad86',
-    name: 'Bosch EDC17 C46 (VW Golf/Sharan 2.0 TDI CR 100-125kW — 03L906018AR/BB/BC/GC/DQ/BD 0x06AD86)',
+    name: 'Bosch EDC17 C46 (VW Golf/Sharan/Tiguan 2.0 TDI CR 80-125kW — 03L906018AR/BB/BC/GC/DQ/BD/HQ 0x06AD86)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['508903', '509927', '509929', '510943', '510944', '510958', '510959', '513641', '524624', '525556', '525558', '509915', '513640', '03L906018DQ', '03L906018BD'],
+    identStrings: ['508903', '509927', '509929', '510943', '510944', '510958', '510959', '513641', '524624', '525556', '525558', '509915', '513640', '509900', '03L906018DQ', '03L906018BD', '03L906018HQ'],
     fileSizeRange: [2097152, 2097152],
     vehicles: ['VW Golf + Passat 2.0 TDI CR 100-125kW (03L906018/AR/AT/BB/BC/BE/BF/BG/GC sw 508903/509927/509929/510943/510944/510958/510959/513641/524624/525556/525558, 2010-2012)'],
     checksumAlgo: 'bosch-crc32',

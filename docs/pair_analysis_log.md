@@ -70,6 +70,65 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1105–1120 — Tiguan catalog opens + 0x06AD86 def +HQ suffix
+
+**Tiguan 2.0 TDI 80-103kW 0x06AD86 cluster EXTENSION**:
+
+- Pair #1115 sw509900 `03L906018HQ` Tiguan 2.0 TDI 80.9kW — hits
+  0x06AD86 2048B BE 15351 → 57390 +274% EXACTLY + 0x06B5A8 / 0x06B7CA
+  companions + 0x07E036 200B +1482%. NEW HQ suffix added.
+
+0x06AD86 def now covers 7 part suffixes (AR/BB/BC/GC/DQ/BD/HQ) and 14 SWs.
+
+**Tiguan 1.4 TSI MED17 EA111 observations**:
+
+- Pair #1107 sw514586 `03C906027DB` 1.47MB (Tiguan 1.4 TFSI 117kW) —
+  `0x050C7C 6B` BE 8781 → 24571 +180%
+- Pair #1108 sw517845 `03C906027DB` 2MB (same SGO, 1.4 TSI 117kW) —
+  SAME `0x050C7C 6B` BE 8781 → 35672 +306% (different target)
+
+Both SWs hit EXACT same anchor 0x050C7C with SAME stock raw 8781.
+Two dump formats (1.47MB/2MB) AND same anchor confirm STRUCTURAL
+alignment across formats. Logged — need 1 more SW at this anchor
+before wiring.
+
+- Pair #1112 sw513917 `03C906016BK` 262KB Tiguan 1.4 TSI 89.7kW —
+  hits `0x014AAE 6B` BE 4135 → 45110 +991% + `0x014950/0x014A50 8B`
+  BE 8270 → 52315 +533%.
+  
+  **MAJOR CROSS-REFERENCE**: Raw signatures 4135→45110 and 8270→52315
+  match EXACTLY the wired Scirocco 03C906016L 0x054B28 + 0x05484A def!
+  
+  BK variant @ 262KB compact has SAME code as L variant @ 2MB. Different
+  dump format, same IQ cluster. Confirms 03C906016 family-wide map
+  structure.
+
+**Tiguan 2.0 TDI CR observations (no wire — single SWs or anchor drift)**:
+
+- #1106 sw396752 `06J906026D` Tiguan 2.0 TSI 2MB — `0x04F617 120B` IQ
+  release. **Δ=+0x40000 from compact-format 0x00F617** (EA888 Gen2 MED17
+  dump shift). Different shift convention from EDC17 C46.
+- #1113 sw504856 `03L906022QE` Tiguan 2.0 CRDi — NEW QE suffix. Single.
+- #1114 sw399397 `03L906022G` Tiguan 2.0 CRDi — `0x1E43CE 15B` +175%
+  — different tuner style, doesn't hit 398757 signature.
+- #1118 sw391506 `03L906022F` 524KB — `0x03EAB4 / 0x03ED3C 12B` mirror
+  pair Δ=+0x288 BE 13721 → 29082 +112%. NEW F suffix, unique anchor.
+- #1119 sw501912 `03L906022G` 524KB — hits `0x06621A 6B` +2788%
+  (Δ=0x44 from wired 0x06625E IQ release def). Close to existing cluster
+  but not exact. Single observation.
+- #1120 sw395496 `03L906022HM` 125kW — economy-style tune with -50%
+  edits. NEW HM suffix. Single.
+- #1116 sw519354 LK + #1117 sw528324 LK — BOTH 69-79% file rewrites
+  (full cal replacement, not useful for pair-diff).
+- #1109/#1110 sw517159/sw528994 `03C906016CQ` 1.4 TSI 2010 — very
+  light tunes, 4-7 regions only.
+- #1111 sw506738 `03C906032AJ` 1.4 TFSI DPF 262KB — `0x0121F2 128B`
+  +157% distinct anchor. Single.
+- #1105 T5 3.2 V6 `022906032HB` sw372867 1MB — ME9 NA 184kW
+  `0x011880 120B` +244% IQ release. Single.
+
+---
+
 ## VW Pairs #1089–1104 — T5 2.5 TDI 2MB + 524KB clusters (2 MORE NEW defs) + 1.9 TDI extensions
 
 **NEW DEF 1 — T5 2.5 TDI 128kW 2MB @ 0x1ECCDB** (4 SWs):
