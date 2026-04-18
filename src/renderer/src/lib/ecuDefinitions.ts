@@ -8825,6 +8825,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
       'SN000F7500000',  // ↳ Passat 2002 SN serial family (older PPD1)
       '03G906018CD',    // VW Pair #749 — Passat 2.0 TDI PPD1.2 (CD variant)
       'SN0I0M8000000',  // ↳ Italian-market SN serial family for A/CD variants
+      '03G906018AC',    // VW Pair #902 — Passat 2.0 TDI PPD1.2 (AC variant)
+      '03G906018CR',    // VW Pair #905, #911 — Passat 2.0 TDI PPD1.2 (CR variant)
+      'SN000F7100000',  // ↳ Passat 2007 SN0 serial sub-family
+      'SN000F7200000',  // ↳ Passat 2007 SN0 serial sub-family
+      'SN000F7600000',  // ↳ Passat 2007 SN0 serial sub-family
     ],
     fileSizeRange: [524288, 2097152],   // up to 2MB — real PPD1.2 binaries are 2MB
     vehicles: [

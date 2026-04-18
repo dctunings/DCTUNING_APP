@@ -70,6 +70,38 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #897–912 — Passat 2.0 TDI PPD1.2 BIG family expansion
+
+**PPD1.2 def +5 NEW SN0 serial families and 2 new part suffixes**:
+- `03G906018AC` (Passat #902) — NEW AC suffix
+- `03G906018CR` (Passat #905, #911) — NEW CR suffix
+- `SN000F7100000` (#903) — Passat 2007 SN0 sub-family
+- `SN000F7200000` (#904) — sub-family
+- `SN000F7600000` (#906) — sub-family
+
+PPD1.2 def now covers **15+ part suffixes** spanning original PPD1
+(2002 SN000F era — A/AC/CD/CR + no suffix), standard PPD1.2 (2006-2010
+SN100x — DH/AQ/BL/CT/EM/FB/FG/HB), Italian-market (SN0I), VW service
+(03G997256C), and Passat 2007 SN0 expansion (SN000F71/72/75/76).
+
+**Passat 2.0 TDI PD EDC16 PD 03G906021xx** (#897-#901):
+- 03G906021AB sw399387 (#897, 2MB) — 2394B/84
+- 03G906021MT sw382427 (#898, 524KB) — 1468B/35 NEW MT suffix
+- 03G906021NK 3 SWs (sw394904 + sw399388 + sw393514) — same hardware
+  multi-SW cluster, sister of #754 same hardware
+
+**Passat 2.0 TDI PPD1.2 file size variants**:
+- Most are 256KB cal-only dumps (`SN000F` and `SN100K` partial format)
+- Pair #911 03G906018CR SN000F7200000 = **244KB (249856 B)** —
+  another partial-dump format
+
+**Pair #909/#910** 03G906018EM (no SN serial — uses Bosch tool ID
+`4369657628.90.02` instead) — 2 sister files with different stage1
+sizes (21672B + 14701B). Heavy tunes.
+
+**Pair #902** 03G906018AC SN000F7500000 — NEW AC suffix added.
+**Pair #903** 03G906018 SN000F7100000 (no suffix, "bare" 03G906018).
+
 ## VW Pairs #881–896 — Passat 2013 03L906018xx + 04L906021DT EU6
 
 **Strong pair confirmations**:
