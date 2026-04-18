@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { ECU_DEFINITIONS, ADDONS } from '../lib/ecuDefinitions'
 import type { EcuDef } from '../lib/ecuDefinitions'
-import { detectEcu, detectEcuFromFilename, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, syntheticMapDefFromDRT, extractPartNumberFromBinary } from '../lib/binaryParser'
+import { detectEcu, detectEcuFromFilename, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, syntheticMapDefFromDRT, extractPartNumberFromBinary, getApplicableMapIds } from '../lib/binaryParser'
 import type { DetectedEcu, ExtractedMap, A2LValidationResult } from '../lib/binaryParser'
 import { buildRemap, buildFilename } from '../lib/remapEngine'
 import type { Stage, AddonId, RemapResult } from '../lib/remapEngine'
@@ -742,6 +742,13 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [a2lFallbackCount, setA2lFallbackCount] = useState(0)
   const [scannerFallbackCount, setScannerFallbackCount] = useState(0)
 
+  // Set of map IDs from the selected ECU def whose signatures actually hit in the
+  // loaded binary (or that don't depend on a signature). Populated on file load.
+  // Used to filter the "Maps available for this ECU" list and short-circuit the
+  // extraction loop so e.g. Peugeot PSA maps don't get scanned into a VW Golf binary.
+  // Empty set while no file loaded — in that case the UI shows the full ECU map list.
+  const [applicableMapIds, setApplicableMapIds] = useState<Set<string>>(new Set())
+
   const selectedEcu: EcuDef | undefined = ECU_DEFINITIONS.find(e => e.id === selectedEcuId)
 
   // ─── File loading ─────────────────────────────────────────────────────────
@@ -770,8 +777,13 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     setDetected(det)
     if (det) {
       setSelectedEcuId(det.def.id)
+      // Pre-scan which map defs under this ECU actually apply to THIS binary.
+      // Filters out e.g. Peugeot PSA / BMW Nx / Hyundai CRDi maps when loaded
+      // binary is a VAG VW Golf — their sigs won't hit, so they get hidden.
+      setApplicableMapIds(getApplicableMapIds(buf, det.def))
     } else {
       setSelectedEcuId('')
+      setApplicableMapIds(new Set())
     }
     // Clear ALL previously loaded A2L/DRT state when a new binary is loaded.
     // Without this, a second binary load retains the first binary's A2L addresses
@@ -899,7 +911,15 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
 
   const doExtraction = () => {
     if (!fileBuffer || !selectedEcu) return
-    let maps = extractAllMaps(fileBuffer, selectedEcu)
+    // Compute (or reuse) the applicable-maps filter and pass it through so the
+    // extraction loop skips maps whose signatures can't match this binary.
+    // Without this, extraction on a 4MB EDC17 binary tries all ~75 EDC17 variant
+    // sigs — most miss, but each still scans the full 4MB buffer. With the filter,
+    // only the ~10-20 maps that actually apply get extracted.
+    const appIds = applicableMapIds.size > 0
+      ? applicableMapIds
+      : getApplicableMapIds(fileBuffer, selectedEcu)
+    let maps = extractAllMaps(fileBuffer, selectedEcu, appIds)
 
     // A2L fallback: for each map not found via binary signatures, try A2L-validated addresses.
     // Category bridge: A2L uses 'egr'/'dpf'; ecuDefinitions uses 'emission'.
@@ -1443,6 +1463,17 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
 
   // When ECU is detected, pre-fill library search; fall back to ECU family if part number finds nothing.
   // EDC15, ME7, ME9, MS43 embed DAMOS symbol tables so binary-only map extraction works.
+  // Recompute applicableMapIds when the user manually overrides the detected ECU via
+  // the dropdown — otherwise a wrong/override ECU still shows the auto-detected ECU's
+  // filtered map list. Runs on both buffer changes and ECU id changes.
+  useEffect(() => {
+    if (!fileBuffer || !selectedEcu) {
+      setApplicableMapIds(new Set())
+      return
+    }
+    setApplicableMapIds(getApplicableMapIds(fileBuffer, selectedEcu))
+  }, [fileBuffer, selectedEcuId])
+
   // All other ECUs (EDC16, EDC17, MED17, SIMOS, Delphi DCM/CRD, Marelli, SID, PPD1 etc.)
   // do NOT embed map addresses — an A2L or DRT definition file is required. Auto-open library.
   const SIG_SUPPORTED = ['edc15', 'me7', 'me9', 'me9_merc', 'bmw_ms43']
@@ -2006,18 +2037,34 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         ))}
       </select>
 
-      {selectedEcu && (
-        <div style={{ padding: '12px 14px', borderRadius: 8, background: 'var(--bg-card)', border: '1px solid var(--border)', marginBottom: 16 }}>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>Maps available for this ECU</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {selectedEcu.maps.map(m => (
-              <span key={m.id} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: 'var(--bg-primary)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
-                {m.name}
-              </span>
-            ))}
+      {selectedEcu && (() => {
+        // Filter to only maps whose sigs actually hit in THIS binary (or that
+        // don't rely on a signature — fixedOffset / a2lNames / no-sig maps are
+        // always shown). If no file loaded yet, fall back to the full list.
+        const shown = fileBuffer && applicableMapIds.size > 0
+          ? selectedEcu.maps.filter(m => applicableMapIds.has(m.id))
+          : selectedEcu.maps
+        const hiddenCount = selectedEcu.maps.length - shown.length
+        return (
+          <div style={{ padding: '12px 14px', borderRadius: 8, background: 'var(--bg-card)', border: '1px solid var(--border)', marginBottom: 16 }}>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>Maps applicable to this binary {fileBuffer ? `(${shown.length} of ${selectedEcu.maps.length})` : ''}</span>
+              {hiddenCount > 0 && (
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }} title="Hidden maps have signatures that don't match this binary — e.g. PSA / BMW / Hyundai variants that only apply to those manufacturers.">
+                  {hiddenCount} hidden (other-variant)
+                </span>
+              )}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {shown.map(m => (
+                <span key={m.id} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: 'var(--bg-primary)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+                  {m.name}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Library search panel — always visible at step 1 */}
       <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 8, background: 'rgba(0,174,200,0.04)', border: '1px solid rgba(0,174,200,0.2)' }}>
@@ -2469,8 +2516,10 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           </span>
         )}
         {(() => {
-          const visibleFound = extractedMaps.filter(m => m.found && m.mapDef.showPreview).length
-          const visibleTotal = extractedMaps.filter(m => m.mapDef.showPreview).length
+          // Only count maps that will actually render (applicable + showPreview).
+          const applicable = (m: ExtractedMap) => applicableMapIds.size === 0 || applicableMapIds.has(m.mapDef.id)
+          const visibleFound = extractedMaps.filter(m => m.found && m.mapDef.showPreview && applicable(m)).length
+          const visibleTotal = extractedMaps.filter(m => m.mapDef.showPreview && applicable(m)).length
           const totalFound = extractedMaps.filter(m => m.found).length
           const totalAll = extractedMaps.length
           const hiddenFound = totalFound - visibleFound
@@ -2593,6 +2642,10 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           // Hide any map where showPreview is false (N75, DPF/EGR emission maps, misc internal maps).
           // These are located and modified by the engine but don't need a heatmap card shown to the tuner.
           if (!m.mapDef.showPreview) return null
+          // Hide maps that aren't applicable to THIS binary (e.g. PSA FAP sig doesn't hit
+          // in a VW Golf binary). Without this filter, every variant-specific map renders
+          // as a "not found" card, cluttering the Preview page.
+          if (applicableMapIds.size > 0 && !applicableMapIds.has(m.mapDef.id)) return null
           // Effective params: addon override takes precedence over stage params —
           // matches remapEngine.ts getParams() exactly so badge and preview are accurate.
           let effectiveParams = m.mapDef[`stage${stage}` as 'stage1' | 'stage2' | 'stage3']

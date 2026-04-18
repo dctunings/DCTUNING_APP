@@ -1067,11 +1067,71 @@ export function extractMap(buffer: ArrayBuffer, mapDef: MapDef, ecuFamily?: stri
   return { mapDef, data: empty, rawData: empty, offset: -1, found: false, source: 'none' }
 }
 
+// ─── Pre-scan: which maps in an ECU def could apply to this binary? ──────────
+// Returns the set of mapDef IDs whose signatures actually hit in the binary.
+// Used by the UI to filter the "Maps available" list and by the extractor to
+// skip maps that have no chance of matching (avoids wasting time scanning for
+// e.g. Peugeot PSA FAP sigs inside a VW Golf binary).
+//
+// An id is INCLUDED (applicable) when:
+//   - the mapDef has no signatures (relies on fixedOffset / A2L / DRT / KP / scanner)
+//   - the mapDef has a fixedOffset (always extractable even if sigs don't hit)
+//   - the mapDef has a2lNames (extractable via A2L fallback if loaded)
+//   - at least one of the mapDef's signature byte patterns is found in the binary
+//
+// Fast: one indexOf per signature against a Uint8Array (native, bytewise), so a
+// typical ECU with 50 maps × 1-2 sigs each scans in <100ms on a 4MB binary.
+export function getApplicableMapIds(buffer: ArrayBuffer, ecuDef: EcuDef): Set<string> {
+  const bytes = new Uint8Array(buffer)
+  const applicable = new Set<string>()
+
+  for (const m of ecuDef.maps) {
+    // Maps without any sig rely on other location paths — always keep them visible.
+    if (!m.signatures || m.signatures.length === 0) {
+      applicable.add(m.id)
+      continue
+    }
+    // Maps with a fixed offset are always extractable.
+    if (m.fixedOffset !== undefined) {
+      applicable.add(m.id)
+      continue
+    }
+    // Maps with A2L names may resolve via A2L/DRT fallback — keep visible.
+    if (m.a2lNames && m.a2lNames.length > 0) {
+      applicable.add(m.id)
+      continue
+    }
+    // Otherwise: only keep if at least one signature actually hits in the binary.
+    for (const sig of m.signatures) {
+      if (findSignature(bytes, sig, 0) !== -1) {
+        applicable.add(m.id)
+        break
+      }
+    }
+  }
+
+  return applicable
+}
+
 // ─── Extract all maps for an ECU ─────────────────────────────────────────────
 // Tracks used offsets to prevent multiple mapDefs from claiming the same data block.
 // Without deduplication, 3+ maps writing to the same offset corrupt each other's data.
 // Critical maps get priority (processed first) so they claim the best offsets.
-export function extractAllMaps(buffer: ArrayBuffer, ecuDef: EcuDef): ExtractedMap[] {
+//
+// Optional `applicableIds` filter: when passed, maps whose ID is NOT in the set are
+// returned as not-found stubs without running the heavy signature scan. This is used
+// by the UI to skip maps whose sigs don't hit this binary (e.g. Peugeot PSA sigs on
+// a VW Golf binary) — drops extraction time from seconds to sub-second, prevents the
+// Preview page from filling up with dozens of irrelevant "not found" cards.
+//
+// Maps that still need A2L/DRT/scanner fallback (no sigs, fixedOffset, a2lNames) are
+// included in the applicable set by getApplicableMapIds, so their extraction paths
+// remain active.
+export function extractAllMaps(
+  buffer: ArrayBuffer,
+  ecuDef: EcuDef,
+  applicableIds?: Set<string>
+): ExtractedMap[] {
   // Sort: critical maps first, then by map index for stability
   const indexed = ecuDef.maps.map((m, i) => ({ m, i }))
   indexed.sort((a, b) => {
@@ -1084,6 +1144,15 @@ export function extractAllMaps(buffer: ArrayBuffer, ecuDef: EcuDef): ExtractedMa
   const results: ExtractedMap[] = new Array(ecuDef.maps.length)
 
   for (const { m, i } of indexed) {
+    // Skip extraction entirely for maps that aren't applicable to this binary.
+    // Return a not-found stub so downstream code (warnings, counters) still sees
+    // an entry per mapDef at the correct index.
+    if (applicableIds && !applicableIds.has(m.id)) {
+      const empty = Array.from({ length: m.rows }, () => Array(m.cols).fill(0))
+      results[i] = { mapDef: m, data: empty, rawData: empty, offset: -1, found: false, source: 'none' }
+      continue
+    }
+
     const result = extractMap(buffer, m, ecuDef.family)
     if (result.found && result.offset >= 0) {
       if (usedOffsets.has(result.offset)) {
