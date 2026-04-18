@@ -70,6 +70,71 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #161–176 — Golf 1.6 TDI Siemens PCR21 + 04L EU6 + 1.9 SDI/TDI mirrors
+
+**Golf 1.6 TDI Siemens PCR21 cluster — 3-SW IDENTICAL match**:
+- 03L906023MM SM2F0L9500000 (#162) → `0x18CE5A 14B` (382→45218
+  +11737%) + `0x18D27A 14B` (2651→47487 +1691%)
+- 03L906023MN SM2F0L9500000 (#163) → IDENTICAL offsets
+- 03L906023MK SM2F0L9500000 (#164 stage1+++) → IDENTICAL offsets
+- **3 SWs across 3 part suffixes (MK/MM/MN) share EXACT 0x18CE5A
+  cluster** with same +11737% / +1691% raw values. Wire candidate.
+
+Other Siemens PCR21 pairs same family but different anchors:
+- 03L906023MN SM2G0M0000000 (#161) → `0x18D4A6 + 0x18DEC6` (Δ=0x64C
+  from MM cluster — sister sub-cluster, same raw values 382→45218)
+- 03L906023MM SM2G0LG000000 (#165) → `0x18D412 + 0x18DE32` (Δ=0xFB8
+  from MM cluster — another sub-cluster, same raw values)
+
+So the **SAME IQ ceiling at raw 382→45218** appears across 5 SW
+versions / 3 SN serial families (SM2F/SM2G), just at slightly
+different anchor offsets per SW. **STRONG cross-cluster confirmation
+of the SIMOS PCR21 IQ ceiling map**. This is the universal "release
+fuel limit" target for VW 1.6 TDI 105 hp.
+
+**Golf 1.6 TDI EU6 04L906021M sub-cluster** (NEW EU6 generation):
+- 04L906021M sw531313 (#166) → `0x12A238 8B` + `0x12A344 8B`
+- 04L906021M sw533833 (#168) → IDENTICAL `0x12A238 + 0x12A344`
+  offsets, same +31247%/+29486% raw treatment (105→32915)
+- **2 SWs same 04L906021M part = same SGO**. Wire candidate.
+- 04L906021FD sw538358 (#167) → `0x12F9B4` (+31247% same value) +
+  `0x0DD7AC 8B` (+811%) — sister cluster, different anchor
+
+**Golf 1.9 SDI 0281010644 038906012ES sw360767** (#172, #173 same
+ROM 2 different tuner files but identical mods) → confirms
+**+0x20000 mirror in EDC15P+** for SDI hardware:
+- `0x0566CA AND 0x0766CA` Δ = 0x20000 (128 KB) — same 199B +519%
+  modification at both locations. Direct mirror confirmation in VW
+  Golf SDI 47.1 kW.
+
+**Golf 1.9 SDI 0281011316 sw367053** (#174) — single hit at
+`0x074686 + 0x0745FA` (Δ = 0x8C, NOT a mirror — two adjacent cal
+entries). 12B +104% / +96%.
+
+**Golf 1.9 TDI 0281001979 038906012M sw352564** (#175) — confirms
+**+0x18000 mirror in EDC15P PD**:
+- `0x05CCE6 AND 0x074CE6` Δ = 0x18000 (96 KB) — same 40B +323%
+  modification. Direct +0x18000 mirror confirmation per the EDC15
+  doc rule for 0281001/010xxx.
+
+**Other pairs in batch**:
+- Golf 1.6i Siemens 5WP4017 06A906019AK s211163 (#168) — older
+  Siemens VR4 small tune (#169 actually — 350% small region)
+- Golf 1.8 T 0261204673 06A906018R sw359551 (#170) — A4/Audi 1.8T
+  cluster sister, 145B +49.6% boost map
+- Golf 1.8 T 0261206890 06A906032DL sw354821 (#171) — 1 MB ME7.x,
+  55B at +488% LE+150619% (likely a stale/uninit region cleared)
+- Golf 1.8 TFSI MED17 0261S05897 1K0907115AA sw502936 (#172) —
+  14B paired regions at +310%
+
+**Wire candidates from this batch**:
+1. **SIMOS PCR21 03L906023MK/MM/MN sw SM2F0L9500000 cluster** —
+   3 SWs identical 0x18CE5A IQ ceiling. Could wire as
+   `simos_pcr21_golf_16tdi_03l906023mxx`.
+2. **EDC17 04L906021M sw531313/533833 cluster** — 2 SWs identical
+   0x12A238 small IQ region. Could wire after confirming with
+   more pairs.
+
 ## VW Pairs #129–160 — Eos + Golf 1.4 TSI MED17 + Golf 1.6 TDI Siemens PCR21
 
 **VW Eos 2.0 TDI CR + 2.0 TFSI catalog** (#129-134):
