@@ -70,6 +70,37 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #353–368 — Golf 5 2.0 TDI PD + PPD1.2 catalog
+
+**Golf 5 2.0 TDI PD EDC16** (#353-365) — many 03G906016xx and
+03G906021xx part suffixes, each with own SW. All small 1-4 KB tunes:
+- 03G906016AN sw368925 (#361, 1.5MB) — wider 1.5MB ROM format
+- 03G906016AP sw370516 — 191 regions, EDC16 PD
+- 03G906016AQ sw371912 — 40 regions
+- 03G906016CF sw368924 — 164 regions
+- 03G906016DN sw376971 — 38 regions
+- 03G906016ET sw375890
+- 03G906016HJ sw372673
+- 03G906016M sw370652 (SDI variant)
+- 03G906021AB sw392942 (524KB)
+- 03G906021AN sw389263
+- 03G906021FN sw378333
+- 03G906021JG sw394134
+- 03G906021PM sw387840 (#353)
+- 03G906021QE sw392939
+
+Many part suffixes — varied SGOs. No tight cluster.
+
+**Golf 5 2.0 TDI Siemens PPD1.2** (#365, #368):
+- 03G906018CT SN100K5400000 (#365) — 3212 B / 29 regions. Serial
+  SN100K5400000 already in my wired PPD1.2 def's identStrings.
+- 03G906018FB SN100L7000000 (#368) — 17750 B / 83 regions = heavy
+  tune. **NEW SN serial family SN100L7000000** not yet in PPD1.2
+  def. Could add.
+
+The PPD1.2 def already covers SN100K5xxx, SN100L4/6/8xxx — adding
+SN100L7000000 expands coverage.
+
 ## VW Pairs #337–352 — Golf 5 1.9 TDI 03G906021xx PD catalog
 
 16 pairs of Golf 5 1.9 TDI PD covering many 03G906016xx and

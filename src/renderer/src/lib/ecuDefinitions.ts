@@ -8625,6 +8625,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
       'SN1R0M8000000',  // Pairs #257, #262 — AQ variant later SW family
       'SN1S0M8000000',  // Pair #256 — AQ variant S-series SW family
       '03G997256C',     // Pair #417 — VAG service-replacement ECU part (shares PPD1.2 cal layout)
+      '03G906018FB',    // VW Pair #368 — VW Golf 5 2.0 TDI 125kW PPD1.2
+      'SN100L7000000',  // ↳ accompanying SW serial for the FB variant
+      '03G906018CT',    // VW Pair #365 — VW Golf 5 2.0 TDI 125kW PPD1.2 (CT variant)
     ],
     fileSizeRange: [524288, 2097152],   // up to 2MB — real PPD1.2 binaries are 2MB
     vehicles: [
