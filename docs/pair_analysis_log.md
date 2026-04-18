@@ -70,6 +70,37 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #833–848 — Passat 0x06AD86 cross-VW expansion + 398757 +2 more
+
+**Golf 0x06AD86 def +2 SWs**:
+- 03L906018BG sw513641 (#837/#838 — 2 sister files) → IDENTICAL
+  `0x06AD86 + 0x06B7CA + 0x06B5A8 + 0x07E036` cluster. ADDED.
+- 03L906018BE sw510958 (#848, alt file from #841) → IDENTICAL.
+  ADDED.
+- 03L906018H sw513674 (#846) → `0x06AE46/0x06B88A/0x06B668` (Δ=0xC0
+  sister anchor) — sister sub-cluster, doesn't fit fixedOffset.
+- Now Golf 0x06AD86 def covers **10 SWs** spanning Caddy/Golf/Passat.
+
+**398757 def +2 more SWs**:
+- 03L906022QB sw398818 (#847) → IDENTICAL `0x1EF502/0x1EFF46`. ADDED.
+- 03L906022QG sw505922 (#835) → IDENTICAL pattern. ADDED.
+- Now 398757 def covers **20 SWs** spanning A3/A4/A6/Allroad/Q5/
+  Passat/Golf/Jetta 2.0 TDI CR.
+
+**Other Passat 03L906018 variants**:
+- 03L906018BD sw513640 (#817) — different sub-cluster
+- 03L906018BC sw510944 (#834, alt file — already in Golf 0x06AD86 def)
+- 03L906018DQ sw509915 (#839) — only 1294B/21 = light tune
+- 03L906018CP sw510961 (#842, #843, #844 — 3 files: stage1+++ +
+  normal + stage1+++) — NEW CP suffix
+- 03L906018CQ sw513643 (#845) — NEW CQ suffix
+- 03L906019AC sw505412 (#840) — sister of #827 same hardware
+
+**03L906022 other**:
+- 03L906019FA sw526355 (#833) — 5492B/68 sister of Amarok cluster
+- 03L906022JF sw504908 (#836) — `0x07CBDA 16x16` cluster (different
+  sub-family)
+
 ## VW Pairs #817–832 — Wire Passat 03L906022MS/SC + 03L906019AC sister cluster
 
 **STRONG WIRE: Passat 0281015131 03L906022MS/SC 2MB cluster**:

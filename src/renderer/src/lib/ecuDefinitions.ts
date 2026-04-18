@@ -2089,7 +2089,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // The 03L906022FG variant (sw 399349/399350/500141/503995/etc.) hits
     // offsets shifted to 0x1EE306/0x1EED4A — handled by sister def
     // edc17_c46_03l906022fg below.
-    identStrings: ['398757', '03L906022BQ', '397892', '398784', '398791', '398817', '398819', '398820', '398822', '398823', '399326', '399393', '399395', '501921', '501922', '501956', '505975', '507632'],
+    identStrings: ['398757', '03L906022BQ', '397892', '398784', '398791', '398817', '398818', '398819', '398820', '398822', '398823', '399326', '399393', '399395', '501921', '501922', '501956', '505922', '505975', '507632'],
     fileSizeRange: [2097152, 2097152],   // exactly 2 MB
     vehicles: ['Audi A3 2.0 TDI CR 140ps (03L906022BQ sw 398757)', 'VW Golf 2.0 TDI CR 80-103kW (03L906022G sw 397xxx-399xxx, 2008-2010)'],
     checksumAlgo: 'bosch-crc32',
@@ -2421,9 +2421,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17 C46 (VW Golf 2.0 TDI CR 100-125kW — 03L906018AR/BB/BC/GC 0x06AD86)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['508903', '509927', '509929', '510943', '510944', '524624', '525556', '525558'],
+    identStrings: ['508903', '509927', '509929', '510943', '510944', '510958', '513641', '524624', '525556', '525558'],
     fileSizeRange: [2097152, 2097152],
-    vehicles: ['VW Golf 2.0 TDI CR 100-125kW (03L906018/AR/AT/BB/BC/GC sw 508903/509927/509929/510943/510944/524624/525556/525558, 2010-2012)'],
+    vehicles: ['VW Golf 2.0 TDI CR + Passat 100-125kW (03L906018/AR/AT/BB/BC/BE/BG/GC sw 508903/509927/509929/510943/510944/510958/513641/524624/525556/525558, 2010-2012)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFFC,
     checksumLength: 4,
