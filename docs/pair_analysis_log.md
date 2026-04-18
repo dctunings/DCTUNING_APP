@@ -70,6 +70,59 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #225–240 — Golf 03L906022G expansion + 03L906018 sw505441/508342 cluster
+
+**More Golf 03L906022G hitting 398757 SGO** (now expanded def):
+- sw501921 (#225) → `0x1EF502/0x1EFF46` — added to wired def
+- sw501922 (#226) → `0x1EF502/0x1EFF46` — added to wired def
+- sw505933 (#227, alt file) → `0x1F007A` (Δ=0xB78 sister sub-cluster)
+- sw507643 (#229, alt file) → `0x1F007A/0x1F0ABE` sister
+- sw505933 stage1++ (#228) — only 79 bytes / 2 regions (subset of
+  parent ORI's tune)
+
+**12×15 IQ ceiling SHAPE in Golf 03L906022G** (newer 505xxx+ SWs):
+- sw507643 alt file (#230) → `0x1DBC2C 12×15 + 0x1DE5B2 12×16`
+  (raw 15→27424 +180849%) — same SHAPE as Amarok 03L906019FA cluster
+- sw516655 (#231) → IDENTICAL `0x1DBC2C/0x1DE5B2` offsets as #230
+- 2 SWs (507643, 516655) share IQ ceiling cluster — wire candidate
+
+**03L906022AH sw399395** (#232) — `0x0643CE/0x0642DE` joins my
+03L906022LF/LM/MC cluster as 4th part suffix sharing IDENTICAL
+offsets. Wire candidate now spans 4 part suffixes.
+
+**03L906018JL sw524103** (#233) → `0x0615B6 + 0x031B42` — close to
+my wired 03L906018JL_060de2 cluster (`0x060DE2` Δ=0x7D4) but not
+exact. Sister sub-cluster, doesn't fit fixedOffset matching.
+
+**03L906018 (no suffix) sw505441 + sw508342** (#234, #235) — IDENTICAL
+`0x07C184 200B + 0x05F710 12B` patterns (1912B / 50 regions both).
+**2 SWs same SGO** — wire candidate. The bare `03L906018` part code
+suggests these are unbadged or reset-back-to-stock files.
+
+**03L906018AR sw509928** (#236) → `0x07E036 200B +1481% + 0x06AD86
+2KB +274%`. The `0x06AD86` is **Δ=0x44 from my wired Caddy 0x06ADCA**
+— close enough to be the same SGO sub-family. Could add sw509928 to
+Caddy 03L906018xx def, but offset shift means fixedOffset won't match
+exactly. Document for now.
+
+**03L906022BL sw394168** (#237) → `0x1E2318 10B +116% + 0x1CB2DC 7B`
+— different sub-cluster.
+
+**03L906022BQ sw396446** (#238) — emission disable + IQ region —
+sister of wired 398757 cluster (BQ part). No major wire change needed.
+
+**03L906022G sw397825** (#239) — emission disable cluster, no big
+IQ map.
+
+**03L906022KF sw396420** (#240, 524KB) → `0x063826 6B raw 2130→61525`
+joins my just-wired `0x06625E IQ release` cluster (sister offset
+Δ=0x2A38, same value treatment). Added sw396420 to that def's
+identStrings.
+
+**Wire actions taken**:
+- Added sw 501921/501922 to 398757 def → now 8 SWs total
+- Added sw 396420 to 03L906022xx_iqrelease def → now 7 SWs total
+
 ## VW Pairs #209–224 — Golf 03L906022G shares 398757 SGO (5 SWs added to wired def)
 
 **MAJOR cross-chassis confirmation: VW Golf 03L906022G shares
