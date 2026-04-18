@@ -64,6 +64,44 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #791–806 — A6 2.7 Bi-Turbo ME7.x catalog + more EDC15 mirrors
+
+A6 2.7 Bi-Turbo (V6 petrol biturbo Allroad 2.7T 250-280hp) ME7.x —
+9 pairs, very wide variant catalog with hardware codes spanning
+0261206106/206380/206562/206636/206637/206641/207137/207456/207766
+and VW part numbers 4B0907551 [D/G/L/M/N] / 4Z7907551 [C/D/L/N].
+
+Universal pattern across almost all 2.7T pairs: a `64-byte region at
+~0x019xxx with raw 23902 → 65535 (+174% / +312% LE)`. This appears
+verbatim in pairs #789, #790, #791, #792, #794, #796 at slightly
+shifted addresses (`0x019907`, `0x019793`, `0x0196B3`, `0x01999B` ×2,
+`0x01A0CB`). It's the same map across SW versions — likely the IS
+boost-target / VTG ceiling raised to max for 2.7T tuning. **Wire
+candidate** for a generic ME7 2.7T signature once we have signatures
+to anchor it (offsets vary by SW so signatures rather than fixedOffset).
+
+Two more mirror confirmations:
+- Pair #786 0281010822 4B2907401J sw366611 (524 KB) → `0x05DED2
+  + 0x06DED2` (Δ = 0x10000 = 64 KB) — **+0x10000 mirror in 0281010822**
+- Pair #787 0281010153 4B0907401T sw352631 (256 KB) → `0x0053B8 +
+  0x00D3B8` (Δ = 0x8000) — +0x8000 mirror confirmed in 0281010153
+
+A6 2.5 V6 TDI EDC17 CP44 (newer):
+- Pair #782 4F0907401C sw384623 (2 MB CP44) → `0x19C071 + 0x1EF469`
+  (Δ = 0x533F8 — non-mirror, two related cal regions)
+- Pair #783 4F0907401C sw391833 (2 MB CP44) → `0x1FDF20 + 0x1E9A23`
+- Pair #784 0281011136 8E0907401P sw367102 (1 MB EDC15P+) — `0x0FF050
+  + 0x0FF020` checksum region near end of ROM (NOT a mirror, Δ=0x30)
+- Pair #797 4F0907401C sw391860 (524 KB CP44 chiptool) — `0x06FC85 +
+  0x06FC5D` paired 9-byte cal blocks (same map twice in close
+  proximity — Bosch CRC pre-padding)
+
+Pair #785 0281010897 4Z7907401B sw366613 → `0x07FF5A + 0x05749C` —
+different cluster, no obvious mirror.
+
+**Code: no new wires this batch — all clusters too small or already
+documented.**
+
 ## Pairs #775–790 — A6 2.5 V6 TDI 256KB +0x8000 mirror generalized + EDC17 CP44 4F/4E
 
 **+0x8000 mirror generalizes** to all 256 KB EDC15 V6 TDI 2.5L ROMs
