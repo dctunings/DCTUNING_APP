@@ -64,6 +64,37 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #1127–1142 — RS3/RS4/RS5/RS6 high-power petrol catalog
+
+**RS3 2.5 TFSI 5-cyl Bosch MED17** — 2.6 MB Siemens-style dumps:
+- 8J0907404M sw517006 (#1118) — 2994B / 66 regions
+- 8P0907404 sw51.91 (#1119) — 3680B / 74 regions (SW format with
+  decimal — odd, likely a sub-revision identifier)
+
+**RS4 4.2 V8 FSI MED17 8E1907560**:
+- 0261S02554 sw391606 (#1121) — newer RS4 V8 (2009)
+- 0261S02165 sw387944 (#1122 / #1123 / #1128 — 3 files same SW) —
+  hugely varied tune sizes: 542B/12 regions, 4646B/97 regions,
+  **80 bytes / 1 region (#1128) = NO REAL TUNE** (just header/checksum)
+- 0261S02165 sw394852 (#1124) — only 338B / 8 regions ≈ no tune
+- 0261S02357 sw381967 (#1125, 2.6 MB) — 4380B / 93 regions
+
+**RS4 4.2 V8 newer 8T1907560 / 8T2907560** sw531220 (#1126 / #1127):
+2 files same SW, different vehicle filename ("RS4 V8 2012" vs "RS4
+V8 2013 331kW"). Newer 4.2 V8 RS4 (B8.5 generation, ~450 hp).
+
+**RS5 4.2 FSI V8 8T2907560** sw523849 (#1129) — 1894B / 45 regions.
+
+**RS6 4.2 V8 BiTurbo 4D1907558** (C5 RS6 ME7.x):
+- 0261207857 sw366304 (#1130 / #1131 — 2 files same SW) — 897B/22
+  + 1367B/29
+- 0261208623 4D1907558E sw369763 (#1133) — 932B / 19 regions
+- Pair #1132 — empty filename "Bosch____F512" — bare-bones identifier,
+  325B / 9 regions
+
+RS4 RS4 (#1128) — same as RS4 V8 sw387944 with only 80 bytes / 1
+region = essentially no tune. Should be filtered as no-op.
+
 ## Pairs #1111–1126 — Q7 4.2 V8 TDI + V12 TDI + R8 4.2 V8 FSI
 
 **Q7 4.2 V8 TDI 4E1907409B** (524 KB / 2 MB EDC17 CP44):
