@@ -64,53 +64,7 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
-## Batch #1 — all 1,264 Audi pairs (after manual pair #7)
-
-Instead of one-at-a-time from here on, ran every `*.Original` + `*.Stage1`
-pair in `D:\DATABASE\Tuning_DB_BIN\Audi\` through the same diff + cluster
-pipeline in a single pass. Outputs in this `docs/` folder:
-
-- `enumerate_audi_pairs.js` — scans folder, pairs files by prefix+size
-- `batch_analyze_pairs.js` — diff + cluster + per-variant aggregation
-- `audi_findings.md` — human-readable report (885 variants, top 5 per family)
-- `audi_variant_fingerprints.json` — structured data for app consumption
-  (62 variants with ≥3 pairs and ≥2 consistent offsets)
-
-Results (37 s runtime):
-- 1,264 pairs analysed, 6 skipped (size mismatch), 0 failed.
-- 885 unique variants identified by (family, partNumber, swVersion).
-- 76 variants with ≥3 pairs — cross-verified offset data.
-- 16 variants with ≥5 pairs — high-confidence fingerprints.
-
-Highest-pair-count variants (and how many STRONG consistent offsets each has):
-- 15× PPD1.2 03G906018AQ (offsets didn't align — variants span 4 SW serials;
-  need per-serial keying)
-- 13× SIMOS_PCR21 (1.6 TDI CR) — same problem, mixed SW gens
-- 10× EDC15 — same
--  7× EDC17 C46 sw398757 (03L906022BQ) — 12 strong offsets
--  7× Audi A5 3.0 TDI CR EDC17 sw516613 — 10 strong offsets (16×16 boost +116%)
--  6× EDC17 C46 sw396484 — 10 strong offsets
--  6× Audi 3.0 TDI CR sw516617 — 10 strong offsets (16×16 boost +117%)
--  6× Audi 3.0 TDI CR sw518178 — 10 strong offsets
--  6× Audi 3.0 TDI CR sw516623 — 10 strong offsets
--  5× EDC17 CP44 03L906018DN sw515568 (Audi Q5) — 10 strong offsets
--  5× MED17 TT2 2.0 TFSI sw387549 — 10 strong offsets
-
-Clear cross-variant patterns visible:
-- **Audi 3.0 TDI CR (EDC17 CP44)** — sw 516613/516617/518178/516623 all
-  share: a 16×16 boost map that tuners DOUBLE (+115-117%), and a
-  "0x19xxxx / 0x1B9xxx / 0x1C7xxx" monitoring-disable block (-99% = zeroed).
-  These offsets shift slightly between SW versions but the MAP IDENTITIES
-  are the same.
-- **VAG 2.0 TDI CR (EDC17 C46) sw398757** — "0x1EF5xx / 0x1EFF4x / 0x1FA4xx"
-  big-change region + "0x1C3xxx / 0x1CExxx" monitor disable.
-
-Lesson for variant keying: the SW version (6-digit) is THE discriminator on
-Bosch binaries, but my current variant key also needs the part number since
-some SW version numbers repeat across engine codes. For Siemens/Continental
-PPD binaries the SN*/SM* serial is the discriminator, not VAG part number.
-
-## Summary after 7 manual pairs + 1,264 batch pairs
+## Summary after 7 pairs
 
 | Family | Pairs | Verified mapDefs code-changed |
 |---|---|---|
