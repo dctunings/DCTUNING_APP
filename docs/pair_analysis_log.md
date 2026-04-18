@@ -70,6 +70,68 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1121–1136 — Tiguan 2.0 TDI CR EDC17 C46 MASSIVE expansion
+
+**398757 def EXTENDED — 3 NEW SWs** (all 103kW `03L906022G` 2MB):
+- sw397825 (#1123/#1124, sister pairs)
+- sw397846 (#1125)
+- sw396096 (#1136)
+
+All hit EXACT same companion pattern INSIDE the 398757 def's 2KB span:
+- 0x1EF8A6 512B BE 14413 → 57390 +298% (inside 0x1EF502 2KB span)
+- 0x1EF684 512B BE 23107 → 57390 +148%
+- 0x1EF262 1024B BE 23107 → 57390 +148% (just before 0x1EF502 span)
+- 0x1F0550 512B BE 22014 → 57390 +161%
+
+398757 def now covers **26 SWs**.
+
+**0x06625E iqrelease def EXTENDED — 4 NEW SWs + 03L997016H part**:
+Pairs hitting 524KB 0x06625E 6B +2788% EXACT signature:
+- sw505912 (#1133 `03L906022G / 03L997016H`) — adds 03L997016H part code
+- sw505913 (#1128) — also hits 2MB 0x1F007A def
+- sw505914 (#1129)
+- sw505993 (#1132 `03L906022RP`) — already in 398757 (2MB) now in 524KB
+
+Pair #1133 also hits companion `0x07B0EA 200B` + `0x079A24 16×9` +112%
+— same cluster pattern as pair #1129.
+
+**0x1F007A def cross-pair sw501911 observation** (pair #1126 125kW):
+- Hits 0x1DBBE8 12×15 + 0x1DE56E 12×16 at Δ=-0x44 from 12×15 def anchor
+- Hits 0x1F0036 2048B + 0x1F0A7A 512B at Δ=-0x44 from 0x1F007A def
+- Consistent Δ=-0x44 cal-block shift for sw501911 — can't fixedOffset
+  wire but noted as sister cluster.
+
+**NEW cluster candidates (no wire yet — need 3rd pair)**:
+
+0x1F276A 512B cluster (#1121 sw391548, #1122 sw394106):
+- 0x1F273E/0x1F276A 512B (Δ=0x2C anchor drift) BE 18989 → 57390 +202%
+- 0x1F29C6/0x1F29F2 512B BE 22036 → 57390 +160%
+- 0x1F70F4/0x1F7120 12B BE 20550 → 47175 +130%
+- 0x1F757A 14B BE 22304 → 46261 +107%
+- 2 SWs (100kW + 103kW) — 1 more pair needed to wire.
+
+0x1ED29A 2048B cluster (#1135 sw395477):
+- Δ=-0x2DE from wired 0x1F007A. Same raw signature 14259 → 57390.
+- Single SW.
+
+**Pair #1124 sw397825 alt tune** — different tuner hit `0x1E513A 6B`
++482% + `0x1F9DB6 200B` +200% + `0x1F7E4C 6B` +125% + `0x1F8A96 16×16`
++115%. Different pattern from #1123 same SW — confirms sister-tune
+independence on same ORI.
+
+**Observations (no wire)**:
+- #1127 sw395430 `03L906022HB` 524KB — -50% tune at 0x0624xx cluster.
+  NEW HB suffix. Logged.
+- #1130 sw396096 `03L906022GT` 524KB — 0x063C1A/0x063D82 16B — NEW GT
+  suffix. Same 396096 as #1136 but different part suffix (GT vs G) and
+  different tune target. Logged.
+- #1131 sw398823 `03L906022QG` 524KB — `0x0643CE/0x0642DE 15-16B` +142%.
+  NEW QG suffix. Single.
+- #1134 sw507628 `03L906022G` 125kW 524KB — `0x064CC2 11B` +141% +
+  `0x043C98 60B` -99% (emission cut). Logged.
+
+---
+
 ## VW Pairs #1105–1120 — Tiguan catalog opens + 0x06AD86 def +HQ suffix
 
 **Tiguan 2.0 TDI 80-103kW 0x06AD86 cluster EXTENSION**:
