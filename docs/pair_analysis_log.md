@@ -64,6 +64,51 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #999–1014 — Q3 / Q5 2.0 TDI CR EDC17 C46 catalog
+
+End of A8 batch (#990 V6 TDI 4D2907401A sw354602 — 524KB EDC15P).
+
+**Audi Q3 2.0 TDI CR EDC17 C46** — NEW chassis catalog. Multiple
+part numbers and a NEW dump format size:
+- 03L906018CN — sw521078 (#995 2MB), sw522905 (#991 393KB)
+- 03L906018CM — sw521662 (#992/#998), sw527083 (#993)
+- 03L906018ES — sw521086 (#997), sw521662 (#994), sw521078 (#1000),
+  sw521079 (#999), sw532853 (#1001)
+- 03L906018PH — sw521086 (#996)
+
+**NEW dump format size: 393 KB (393216 bytes)** seen in pairs
+#991/#992/#993 — this is **3/8 MB**, smaller than the typical 524KB
+chiptool dump and the 2MB standard. May be a cal-only extraction
+that excludes some banks. Format detection needs:
+- 393 KB → 3/8 MB Q3 partial dump
+- 524 KB → 1/4 MB chiptool extraction
+- 2 MB → standard cal+ASW
+- 4 MB → full TC1797 ROM
+
+**Q3 SW reuse**: same SW number 521662 appears for both 03L906018CM
+(#992) AND 03L906018ES (#994) — but with different changed-byte
+counts (4921B in 393KB vs 9949B in 2MB). So the same SW number
+ships on multiple part-number suffixes — VAG cross-suffix sharing
+within the Q3 family.
+
+Same applies to sw521086 (PH and ES), sw521078 (CN and ES).
+
+**Audi Q5 2.0 TDI CR EDC17 C46** — sister chassis to Q3:
+- 03L906022Q sw500144 (#1003, 524 KB) — 3981B / 56 regions
+- 03L906022GE sw501964 (#1004, 2 MB) — 10140B / 148 regions
+- sw515518 (#1005, 2 MB) — **89.6% changed = full recal stage1+++**
+  (1.88 MB modified)
+
+**Q3 2.0 TFSI MED17** (#1002): 8U0907115C sw519058 — 155.2 kW,
+752B / 25 regions tune.
+
+A8 V6 TDI 0281010495 4D2907401A sw354602 (#990) — 8.3 KB tune,
+524 KB EDC15P V6 TDI.
+
+**Code: no new wires** — Q3 cluster has too many SGOs across
+part-number suffixes; needs more pairs to identify a stable
+fixedOffset cluster.
+
 ## Pairs #983–998 — A8 D4 4.2 V8 TDI 4H0907409 cluster wired
 
 **Strong wire candidate confirmed and wired**: A8 D4 4.2 V8 TDI
