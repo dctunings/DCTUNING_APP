@@ -64,6 +64,30 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #1223–1238 — TT mk1 1.8T variants (Bosch ME7.x catalog)
+
+16 more TT mk1 1.8T 132.4 kW (180 hp) and 165.5 kW (225 hp) ME7.x
+pairs. Bosch part numbers all in the `8L0906018x` and `8N0906018x`
+family with 16+ distinct VAG suffixes (A/AB/AE/AH/AK/AQ/B/BR/CB/CT/J/M/Q
+…). Same family as A3/Golf/S3 1.8T from prior batches.
+
+All tunes are small (400-2200 B / 11-39 regions) — typical Bosch
+ME7.x petrol Stage 1 footprint. ROM sizes: 524 KB (older) and 1 MB
+(newer).
+
+Notable pairs:
+- 8N0906018AQ sw360843 (#1214) and sw363478 (#1215) — same hardware
+  0261207416, 2 SWs, similar SGO
+- 8L0906018M sw352821 (#1221) and sw354094 (#1226) — same hardware
+  0261206797, 2 SWs in `0x0xxx` range
+- 8N0906018A sw350293 (#1222) and sw359559 (#1210 prior) — same
+  hardware 0261204898, 2 SWs
+
+No new wires this batch — all clusters are tiny tunes scattered
+across many SW versions, would need dozens of identStrings per def.
+The TT/A3/Golf 1.8T family would benefit from a generic ME7.x def
+with content-fingerprinting, not per-SW pinning.
+
 ## Pairs #1207–1222 — S6 V10 + S8 D2 4.2 V8 + TT 1.8T catalog
 
 **S6 C6 V10 5.2 FSI 4F1907552** continued:
