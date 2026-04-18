@@ -70,6 +70,44 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #417–432 — Golf 6 03L906022 cluster expansion + Golf GTD 0x06AD86
+
+**iqrelease def (0x06625E) +2 SWs**:
+- 03L906022LM sw505978 (#418, #419 — 2 files) → IDENTICAL `0x06625E
+  + 0x064B80 + 0x064CC0 + 0x064BD0 + 0x064CE8 + 0x064C48 + 0x07653A
+  + 0x076692` cluster. ADDED to identStrings.
+- 03L906022MC sw504865 (#421) → IDENTICAL exact same offsets. ADDED.
+- 03L906022MC sw507643 (#422) → already in def. Confirmed.
+- 03L906022LK sw507642 (#417) — `0x06625E ...` cluster (sw507642
+  not yet in identStrings — could add)
+- 03L906022BJ sw399397 (#423) — `0x0657D6` sister offset (Δ=0x1578)
+- 03L906022DC sw505975 (#424) — `0x06513A 6B raw 2130→61525 +2788%`
+  — joins my Golf 6 0x06513A def cluster (sw505975 not yet in
+  identStrings — could add)
+- 03L906022AG sw507639 (#425) → already in iqrelease def
+
+**Golf 0x06AD86 def +1 SW**:
+- 03L906018BB sw525556 Golf GTD 2011 (#431) → `0x06AD86 + 0x06B7CA
+  + 0x06B5A8 + 0x07E036` IDENTICAL to wired Golf 0x06AD86 cluster.
+  ADDED sw525556 to identStrings.
+
+**Golf 6 GTI variants** (#427-#430):
+- 5K0907115A sw501818 (#427, 256KB) — Golf 6 GTI MED17, 1661B / 66
+  regions. NEW part `5K0907115A`.
+- 1K0907115AA sw510467 (#428) SIZE MISMATCH skipped.
+- 8P0907115B sw516494 (#429, GTI Edition 35 235hp) — 5727B / 166
+  regions, heavier tune.
+- 8P0907115B sw510589 (#430, Golf 6 R 270hp) — same SW as Golf R
+  Mk6 1K8907115F sw510589 (cross-part-number same SW). 3058B / 131
+  regions.
+
+**Pair #432 Golf 3 1.8 0261200784 1H0907311H sw357420** (32 KB
+Motronic, pre-OBD) — small 1227B / 5 regions tune.
+
+**Wire actions taken**:
+- iqrelease def +sw504865 + sw505978 (now 10 SWs)
+- Golf 0x06AD86 def +sw525556 (now 8 SWs)
+
 ## VW Pairs #401–416 — Golf 6 1.6 TDI Siemens + 2.0 TDI CR 524KB clusters
 
 **Golf 6 1.6 TDI Siemens PCR21** (#401-#406) — 5 more SM-serial
