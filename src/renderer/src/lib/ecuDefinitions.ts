@@ -679,6 +679,16 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     //   - 'TSW V2' — Bosch EDC15 software version header format
     //   - '0281010' etc — Bosch hardware part number prefixes (may or may not be in ROM)
     // Also matches 'EDC15' for tuner-annotated files and filenames.
+    //
+    // ⚠ EDC15P+ 0x20000 ROM/RAM MIRROR — CONFIRMED in Audi A2 1.4 TDI pairs
+    //   (pairs 28/29/30 in docs/pair_analysis_log.md). Every Stage-1 cell
+    //   modified at offset X is ALSO modified at offset X + 0x20000 by real
+    //   tuners. The ECU boots with inconsistent cal and derates if only one
+    //   copy is written. Our writeMap() currently writes only to mapDef's
+    //   fixedOffset — we MUST add a mirror-write when the ECU family is
+    //   EDC15P+ (or equivalently: when the file size is 512KB and the write
+    //   target offset is below 0x60000; the mirror lives at offset + 0x20000).
+    //   TODO wire into remapEngine.ts / binaryParser writeMap.
     identStrings: ['EDC15', 'EDC 15', 'EDC15C', 'EDC15P', 'EDC15VM', 'EDC15M+', 'EDC-15', 'CC55', 'CC556', 'CC558', 'TSW V2', '0281010', '0281011', '0281012', '0281013'],
     fileSizeRange: [262144, 1048576],   // 256KB – 1MB (standard VAG PD = 512KB; EDC15VM+/Mercedes = 1MB)
     vehicles: ['Audi A4 1.9 TDI', 'VW Passat 1.9 TDI', 'VW Golf Mk4 1.9 TDI', 'Skoda Octavia 1.9 TDI', 'Seat Leon 1.9 TDI', 'Audi A3 1.9 TDI'],
@@ -1944,6 +1954,69 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { multiplier: 1.05 },
         stage2: { multiplier: 1.12 },
         stage3: { multiplier: 1.20, clampMax: 60000 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ── Bosch EDC17 C46 — 03L906022BQ SW 398757 variant ────────────────────────
+  //
+  // SEPARATE ECU DEF because this specific SW version (398757) has well-known
+  // variant-specific offsets verified by byte-diffing >=4 independent Stage 1
+  // tune pairs of Audi A3/A4 2.0 TDI CR 140ps binaries in the pair analysis
+  // log (pairs 48, 55, 56, 61, 63, 68 — all show the SAME 0x1EF502 / 0x1EFF46
+  // "protection ceiling raise" pattern with values going 14259 → 57390 raw,
+  // +300% change).
+  //
+  // Auto-detects when identStrings catch "398757" AND file is 2 MB. Generic
+  // edc17 def (above) catches all other EDC17 files.
+  {
+    id: 'edc17_c46_398757',
+    name: 'Bosch EDC17 C46 (03L906022BQ sw 398757 — Audi A3/A4 2.0 TDI CR 140ps)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    // Very specific match — includes the SW version so we only hit 398757 files.
+    identStrings: ['398757', '03L906022BQ', 'EDC17C46'],
+    fileSizeRange: [2097152, 2097152],   // exactly 2 MB
+    vehicles: ['Audi A3 2.0 TDI CR 140ps (03L906022BQ sw 398757, 2008-2010)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        // Offset 0x1EF502, 2048 bytes = 1024 cells. Tuners consistently raise
+        // from raw μ ~14259 to raw μ ~57390 (+302% avg). This is the main
+        // torque-monitor / protection-ceiling block. Pinning to max allowed
+        // effectively disables the monitor.
+        id: 'edc17_c46_398757_protection_a',
+        name: 'Protection Ceiling A (sw 398757)',
+        category: 'limiter',
+        desc: 'Large torque-monitor / protection ceiling table at 0x1EF502 (1024 uint16 cells). Verified across 6+ independent Stage 1 pairs of 03L906022BQ sw 398757 — all raise μ ~14259 raw → ~57390 raw (+302%). Stage 1 pins the entire table near the tuner consensus value (~55000 raw) to disable the derate trigger. Do NOT touch this on anything other than 03L906022BQ sw 398757.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1EF502,
+        rows: 1, cols: 1024, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 55000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 57000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 58000 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc17_c46_398757_protection_b',
+        name: 'Protection Ceiling B (sw 398757)',
+        category: 'limiter',
+        desc: 'Companion protection table at 0x1EFF46 (256 uint16 cells). Verified across same 6+ pairs, μ 14413 → 57390 raw (+298%). Same treatment as Ceiling A: pin near tuner consensus.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1EFF46,
+        rows: 1, cols: 256, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 55000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 57000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 58000 },
         critical: false, showPreview: false,
       },
     ],
@@ -7493,7 +7566,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     identStrings: [
       'PPD1.1', 'PPD1.2', 'PPD1.3', 'PPD1.5', 'PPD1',
       '03G906018DH',    // the specific calibration variant the active fixedOffsets target
-      'SN100L8000000',  // the SW version of that variant
+      'SN100L8000000',  // the SW version of that variant (full 2MB file)
+      'SN100L4000000',  // 256KB cal-only dump of the same DH variant — verified
+                        // in Pair #51 that the torque-monitor offset aligns when
+                        // converted to cal-relative (0x05C7FA → 0x01C7FA).
+      'SN100L6000000',  // AQ variant base SW — shares LADSOLL offset with DH (see AQ doc block)
     ],
     fileSizeRange: [524288, 2097152],   // up to 2MB — real PPD1.2 binaries are 2MB
     vehicles: [
