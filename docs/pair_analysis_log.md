@@ -64,6 +64,107 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pair #22 — MED17.1.6 · 03C906016BG sw 522238 (Audi A1 1.4 TFSI)
+- 2 MB MED17. Very light tune — 212 bytes / 4 regions.
+- Top LE changes: 0x057DC0 24B +15.7 %, 0x057B54 12×15 +4.5 %.
+- SW 522238 is a third version of the 03C906016BG MED17.1.6 engine
+  (see pairs 19/20/21). Filename says "Turbo-Diesel" but it's petrol
+  1.4 TFSI — a tuner mis-label.
+- **Code: deferred**.
+
+## Pair #21 — MED17.1.6 · 03C906016BG sw 512164 (alt Audi A1 1.4 TFSI tuner)
+- Same variant as pair 19 but a DIFFERENT/lighter Stage 1 — 147 B / 4.
+- Top LE changes: 0x0574DC 24B +10 %, 12×16 at 0x05725C +2.4 %,
+  12×4 at 0x055A88 ~0 %, 12×5 at 0x055A7C ~0 %.
+- Useful calibration note: same SW version, **different tuner = very
+  different amount of change**. Supports the idea that per-variant
+  fixedOffsets should describe WHERE maps are, not assume a specific
+  tune style.
+- **Code: deferred**.
+
+## Pair #20 — MED17.1.6 · 03C906016BG sw 515491 (Audi A1 1.4 TFSI)
+- 2 MB. Light tune — 120 B / 2 regions.
+- 0x057D2C 24B LE +11.8 %, 12×16 at 0x057AAC LE +2.4 %.
+- Tuner left almost everything stock — only touched 2 map regions.
+- **Code: deferred**.
+
+## Pair #19 — MED17.1.6 · 03C906016BG sw 512164 (Audi A1 1.4 TFSI 122ps, 2010)
+- 2 MB MED17. 856 bytes / 18 regions.
+- Mixed pattern — LE +7.8 % on 0x054478, BE +96 % on same offset;
+  LE +75.6 % on 0x04FEF3 with BE +76.4 %. The cells where LE and BE
+  give SAME % are single-value bytes (ambiguous byte order). For
+  multi-cell tables the LE % is cleaner and consistent.
+- 64×4 boost-target-size table at 0x0541F8 LE +6.4 %.
+- 12×7 table at 0x05A4F9 LE −3.4 % (small reduction — possibly a
+  partial EGR-reduction or overrun adjustment).
+- **Code: deferred**.
+
+## Pair #18 — SIMOS PCR · 03F906070GN SA300O1000000 · Stage1+++ (Audi A1 1.2 TFSI)
+- Same file pair as #16 but labelled Stage1+++. Changes IDENTICAL to
+  pair 16 (1,028 B, 26 regions, same offsets). The +++ suffix was
+  marketing: no extra edits vs the Stage1 file of same SW serial.
+- **Code: deferred**.
+
+## Pair #17 — SIMOS PCR · 03F906070GN SA300O6000000 (Audi A1 1.2 TFSI)
+- 2 MB Siemens SIMOS. 6,973 bytes / 47 regions — heavier tune than
+  pairs 15/16 (probably a Stage2-grade edit labelled as Stage1).
+- Includes writes into 0x000000 (4,032 bytes +102 %) — this is the
+  **RSA/CRC header area** being rewritten. SIMOS signed-code bypass
+  edits look like this.
+- Also touches 0x020000 16B +356 % LE — another signature/flag block.
+- Same map pattern as pairs 15/16 in 0x1E0Cxx – 0x1CF2xx range.
+- **Code: deferred** — SIMOS PCR needs dedicated analysis (signed
+  binaries; cal-only edits vs code edits behave very differently).
+
+## Pair #16 — SIMOS PCR · 03F906070GN SA300O1000000 (Audi A1 1.2 TFSI)
+- 2 MB Siemens. 1,028 bytes / 26 regions.
+- Near-IDENTICAL change signature to Pair #15 but offsets shifted by
+  ~0x100 bytes between the two SW serials (SA300M2 → SA300O1). Map
+  locations move between SW versions; tuners' target list is stable.
+- Consistent LE +48–52 % across 0x1E0071 / 0x1E00CC / 0x1E00EC =
+  WGDC or load-target scaling up.
+- **Code: deferred**.
+
+## Pair #15 — SIMOS PCR · 03F906070CA SA300M2000000 (Audi A1 1.2 TFSI)
+- 2 MB Siemens SIMOS PCR petrol. 982 bytes / 26 regions.
+- LE shows cleaner % than BE → **LE storage confirmed** (SIMOS PCR
+  is TriCore LE, matches our simos18 def conventions).
+- Top LE changes: 0x1DFFCC +52 %, 0x1DFFEC +48 %, 0x1DFF71 +50 %,
+  0x1E0468 −18 %. Cluster pattern = WG duty / boost limit raise.
+- 0x1CCE26 / 0x1CCE3A / 0x1CEDF4 / 0x1CED54 show big −49 % to −60 %
+  changes — monitoring thresholds being zeroed (common SIMOS disable).
+- **Code: deferred** — SIMOS PCR 1.2 TFSI not yet in ecuDefinitions.ts
+  as a dedicated entry; would need at minimum 2-3 pairs of the same
+  SA300* serial to lock offsets. Pairs 16 and 17 provided exactly
+  that (SA300O1, SA300O6) for the GN part number.
+
+## Pair #14 — EDC17 CP44 · 4G0907401 sw 518146 (Audi 3.0 TDI CR 245ps)
+- 2 MB EDC17 CP44 V6 TDI. 6,346 bytes / **212 regions** — HEAVY
+  "Stage 1+++" tune. Far more modifications than a typical Stage 1.
+- Pattern: dozens of 10B loose regions all showing +132–149 % BE with
+  effectively 0 % LE → **BE storage** (expected for EDC17 CP44).
+- Top families:
+  - 0x16B3FE / 0x16B41A / 0x16B642 / 0x16B886 / 0x16BACA / 0x16BAE6
+    / 0x16BF6E / 0x16C196 — 8 cell-by-cell 10B entries at distinct
+    offsets, all scaling ~2.5× (16000→42000 raw range). Likely a
+    torque monitor table being pinned high.
+- **Code: deferred**. This variant (4G0907401 sw 518146) isn't yet
+  in our ecuDefinitions.ts; offsets differ from the 3.0 TDI CR
+  variants found in the earlier batch (516613/516617/518178). Need
+  more 518146 pairs to build a proper per-variant entry.
+
+## Pair #13 — MED17 2.0 TFSI · 0261S08699 / 8U0907115B sw 528730 (Audi 2.0 TFSI ~215ps)
+- 2 MB MED17 petrol. 1,273 bytes / 39 regions. Stage1+++ filename.
+- Consistent LE +3.4 % across 0x1E3424 / 0x1E3478 / 0x1E34B0 (18 B
+  each) → cluster scaling of one parameter (torque/boost target).
+- 0x1D66A0 120B shows +119 % BE / +107 % LE — a big protection
+  ceiling region DOUBLED. Both byte orders give similar %s for
+  constant-sized cells → could be either.
+- 0x1DE004 8B BE −99 % — a small flag/threshold zeroed (monitor
+  disable).
+- **Code: deferred**. `8U0907115B` is a newer MED17.1.6 variant;
+  our ecuDefinitions.ts has `med17` generic but no 0261S08 entry.
+
 ## Pair #12 — EDC15P+/EDC16 PD · 03G906016BQ sw 399895 (Audi A3 2.0 TDI, 2005)
 - 1 MB stripped. 1,567 bytes changed / 48 regions.
 - SAME pattern as Pairs #9–11: 0x0EDDxx cluster with consistent LE %
