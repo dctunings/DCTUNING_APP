@@ -70,6 +70,50 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #97–128 — Corrado + Crafter 2.0/2.5/2.7 TDI catalog
+
+**VW Crafter 2.0 TDI CR EDC17 03L906012A** cluster (#106-112):
+- sw517586 (#106) — 9297B / regions
+- sw519334 (#109 + #110 — 2 files same SW) — 10552B + 5566B (+++ stage)
+- sw521686 (#111) — 10578B
+- sw531680 (#112) — 5609B
+- sw536229 (#107) — 386 KB changed (stage1+++ recal)
+- sw531694 (#113, **4 MB ROM** — TC1797 full dump) — 5964B
+- 5+ SWs cluster, similar 9-10 KB pattern. Wire candidate.
+
+**VW Crafter 2.5 R5 TDI variants** (#114-126):
+- 074906032AP sw503940 (#114) — newer 100 kW
+- 074906032BB sw391557 (#115) — 119.9 kW
+- 074906032 sw383306/sw503925/sw503936 — older Crafter 80.2 kW
+- 0281013700/0281012544/0281013826/0281014132 hardware codes
+- Several 524 KB and 2 MB dump format variants
+
+**VW Crafter 076906022G CR cluster** (#108, #123-125):
+- sw510916 (#108) — 9091B
+- sw517520 (#123) — 9091B
+- sw510915 (#124) — 9085B
+- sw504903 076906022P (#122) — 9068B
+- 4 pairs all share **~9090 B** modification pattern → same SGO base.
+  Wire candidate.
+
+**VW Caravelle 2.0 TDI CR 03L906019DP sw510302** (#99) — sister of
+Amarok 03L906019Fx family.
+
+**VW California 2.0 TDI CR 03L906022GH sw518142** (#98) — newer
+California 2010+ camper variant. Sister of 03L906022 family.
+
+**VW Corrado** (#100-103) — pre-OBD classic 32-65 KB ROMs:
+- 0261200346 037906022DP sw356636 — Corrado 1.8
+- 0261200858 8A0907404CC — Corrado 2.0L 16V (rare)
+- 0261200552/553 — Corrado G60 117.7 kW (supercharged G-Lader)
+- 0261200494 021906258CC sw355671 — Corrado VR6 142.7 kW (65 KB)
+
+**VW Eos 1.4 TSI 0261S04039 03C906022H sw393745** (#127) — newer
+EA111 1.4 TSI MED17 256 KB.
+
+**VW Eos 2.0 TDI 03G906021AB sw383799** (#128) — sister of Caddy
+1.9 TDI cluster.
+
 ## VW Pairs #49–96 — Caddy 1.9 TDI PD + Caddy 2.0 TDI CR cluster wired
 
 **Caddy 1.9 TDI PD continued** (#49-78) — many 03G906021xx/03G906016xx
