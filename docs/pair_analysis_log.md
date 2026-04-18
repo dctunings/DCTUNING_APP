@@ -70,6 +70,63 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #273–288 — Wire 12×15 IQ ceiling cluster + Caddy/Golf cross-match
+
+**STRONG WIRE: 12×15 IQ ceiling cluster** (Amarok-shape map at
+0x1DBC2C anchor):
+- 03L906022G sw505426 (#279, #280) — IDENTICAL `0x1DBC2C/0x1DE5B2`
+- 03L906022G sw507615 (#203 prior) — same
+- 03L906022G sw507643 (#229, #230 alt files)
+- 03L906022G sw516655 (#231)
+- 03L906022RP sw505993 (#277)
+- **5 SWs across 2 part suffixes (G/RP) share IDENTICAL** 12×15 IQ
+  ceiling A + 12×16 IQ ceiling B at 0x1DBC2C/0x1DE5B2. Stock raw 15
+  → 27424 (+180849%) and 607 → 9473 (+1459%).
+
+Wired as `edc17_c46_golf_20tdi_03l906022g_iqceiling`. **13th wired
+ECU def.** SAME map structure as wired Amarok 03L906019FA (12×15 IQ
+ceiling A), confirms the shape is a Bosch EDC17 C46 family pattern.
+
+**Caddy 0x06ADCA cluster cross-Golf confirmation**:
+- 03L906018GG sw511961 (#276) → IDENTICAL `0x06ADCA + 0x06B80E + 0x06B5EC`
+  same as wired Caddy cluster. Added sw511961 to Caddy def.
+
+**Golf 0x06AD86 cluster +1 SW**:
+- 03L906018AT sw524624 (#275) → IDENTICAL `0x06AD86 + 0x07E036`.
+  Added sw524624 to Golf 0x06AD86 def. **Now 7 SWs**.
+
+**NEW 0x069EB2 sub-cluster** (potential future wire):
+- 03L906018AG sw508210 (#273) → `0x069EB2 2KB +274% + 0x06A6D4 512B
+  +134%`
+- 03L906018AQ sw525562 (#274) → IDENTICAL `0x069EB2/0x06A6D4`
+- 2 SWs same SGO at 0x069EB2 (Δ=0xED4 from Caddy 0x06ADCA)
+
+**Pair #272** sw510943 03L906018BB (alt file) → `0x07E036 200B +
+0x07CCDA 510B` — different from #252's 0x06AD86 hits. Same SW two
+SGO sub-clusters.
+
+**04L906021EQ EU6 cluster** (#283-285):
+- sw537362 (#283) → `0x16A6DE 22B + 0x15E96E 10B` cluster
+- sw541670 (#284 alt file) → `0x12F9B4 + 0x178F0C` (matches sw538358
+  04L906021FD #167!)
+- sw541670 (#285 alt file) → `0x16B04A + 0x16B026` — **SAME SW two
+  different SGO files** AGAIN
+
+So sw538358 (04L906021FD) and sw541670 (04L906021EQ alt file) share
+`0x12F9B4` cluster — 2 SW cluster across part-suffixes.
+
+**Golf 2.0 TFSI MED17 0261S02078 1K0907115 sw387570** (#286, #287)
+— 2 different stage1 files, both showing universal MED17 unlock
+clears + small mods. Same SW different tuner approaches.
+
+**Golf 2.0 TFSI 0261S02470 1K0907115Q sw391082** (#288) — universal
+MED17 unlock at 0x1CE6A8 + 0x1C3332 8B IQ.
+
+**Wire actions**:
+- Wired NEW 12×15 IQ ceiling def (5 SWs, Amarok-shape sister)
+- Added sw511961 to Caddy 0x06ADCA def
+- Added sw524624 to Golf 0x06AD86 def
+
 ## VW Pairs #257–272 — Golf 0x06AD86 +2 SWs + 03L906022JD/JF cluster
 
 **Golf 0x06AD86 cluster expanded to 6 SWs**:

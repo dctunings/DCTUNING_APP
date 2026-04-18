@@ -2160,12 +2160,14 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     manufacturer: 'Bosch',
     family: 'EDC17',
     identStrings: [
-      // 10+ Caddy-specific SWs — each maps to one of the part suffixes above.
+      // 12+ Caddy/Golf-specific SWs — each maps to one of the part suffixes above.
       // Avoid using bare '03L906018xx' because some Audi A4/A6 03L906018JL
       // SWs use the SAME part-number prefix but DIFFERENT SGO base (0x07D3FE
-      // not 0x06ADCA). Match strictly on these Caddy SWs.
+      // not 0x06ADCA). Match strictly on these Caddy/Golf SWs.
       '513616', '513617', '515278', '515282', '518057', '518077', '521057',
       '524632', '524633', '525549', '536609',
+      // Golf-confirmed sister SW (cross-chassis match)
+      '511961',
     ],
     fileSizeRange: [2097152, 2097152],
     vehicles: ['VW Caddy 2.0 TDI CR 80-103kW (03L906018BT/CA/DC/LH/LK/NF/NG/NH/NJ/NL, 2010-2014)'],
@@ -2224,6 +2226,71 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 C46 VW Golf 2.0 TDI CR 03L906022G/RP — 12×15 IQ ceiling (2MB) ──
+  //
+  // VW Golf 2.0 TDI CR 80-125 kW EDC17 C46 newer 505xxx+ generation.
+  // 4 SWs across part suffixes G/RP all share the SAME 12×15 IQ ceiling
+  // map at offset 0x1DBC2C. Verified in pair_analysis_log.md VW pairs:
+  // #203 sw507615 (G), #229 sw507643 (G alt file), #230 sw507643 (G),
+  // #231 sw516655 (G), #277 sw505993 (RP), #279/280 sw505426 (G).
+  //
+  // Map structure:
+  //   0x1DBC2C  12×15 = 180 cells u16 BE — primary IQ ceiling
+  //                                        (raw 15 → 27424, +180849%)
+  //   0x1DE5B2  12×16 = 192 cells u16 BE — companion IQ ceiling
+  //                                        (raw 607 → 9473, +1459%)
+  //
+  // SAME MAP STRUCTURE as wired Amarok 03L906019FA (12×15 IQ ceiling A
+  // at 0x0623F0) — different anchor (high-region vs Amarok's low-region
+  // for 03L906019FA). Confirms 12×15 IQ ceiling is a Bosch EDC17 C46
+  // family-wide map shape.
+  {
+    id: 'edc17_c46_golf_20tdi_03l906022g_iqceiling',
+    name: 'Bosch EDC17 C46 (VW Golf 2.0 TDI CR 80-125kW — 03L906022G/RP 12×15 IQ ceiling)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['505426', '505993', '507615', '507643', '516655'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Golf 2.0 TDI CR 80-125kW (03L906022G/RP sw 505426/505993/507615/507643/516655, 2010-2013)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_golf_022g_iq_ceiling_a',
+        name: 'IQ Ceiling A 12×15 (03L906022G/RP)',
+        category: 'fuel',
+        desc: 'Primary IQ ceiling at 0x1DBC2C (12 cols × 15 rows = 180 cells u16 BE). Verified across 5 SWs sharing IDENTICAL offset and treatment. Stock raw values ~15-50 (near zero) — tuners pin to ~27000 to release IQ. Same map structure as wired Amarok 03L906019FA def at different anchor.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1DBC2C,
+        rows: 15, cols: 12, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 27000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 30000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 33000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_c46_golf_022g_iq_ceiling_b',
+        name: 'IQ Ceiling B 12×16 (03L906022G/RP)',
+        category: 'fuel',
+        desc: 'Companion IQ ceiling at 0x1DE5B2 (12 cols × 16 rows = 192 cells u16 BE). Verified across same 5 SWs. Stock raw values ~600-1000 — tuners pin to ~9000.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1DE5B2,
+        rows: 16, cols: 12, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 9000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 10500 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 12000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 C46 VW Golf 2.0 TDI CR 03L906018xx — 0x06AD86 cluster (2MB) ─────
   //
   // VW Golf 2.0 TDI CR 100-125 kW EDC17 C46. 4 SW versions across 4 part
@@ -2243,9 +2310,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17 C46 (VW Golf 2.0 TDI CR 100-125kW — 03L906018AR/BB/BC/GC 0x06AD86)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['508903', '509927', '509929', '510943', '510944', '525558'],
+    identStrings: ['508903', '509927', '509929', '510943', '510944', '524624', '525558'],
     fileSizeRange: [2097152, 2097152],
-    vehicles: ['VW Golf 2.0 TDI CR 100-125kW (03L906018/AR/BB/BC/GC/AT sw 508903/509927/509929/510943/510944/525558, 2010-2011)'],
+    vehicles: ['VW Golf 2.0 TDI CR 100-125kW (03L906018/AR/AT/BB/BC/GC sw 508903/509927/509929/510943/510944/524624/525558, 2010-2012)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFFC,
     checksumLength: 4,
