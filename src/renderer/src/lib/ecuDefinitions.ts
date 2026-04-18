@@ -680,14 +680,31 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     //   - '0281010' etc — Bosch hardware part number prefixes (may or may not be in ROM)
     // Also matches 'EDC15' for tuner-annotated files and filenames.
     //
-    // ⚠ EDC15P+ 0x20000 ROM/RAM MIRROR — CONFIRMED in Audi A2 1.4 TDI pairs
-    //   (pairs 28/29/30 in docs/pair_analysis_log.md). Every Stage-1 cell
-    //   modified at offset X is ALSO modified at offset X + 0x20000 by real
-    //   tuners. The ECU boots with inconsistent cal and derates if only one
-    //   copy is written. Our writeMap() currently writes only to mapDef's
-    //   fixedOffset — we MUST add a mirror-write when the ECU family is
-    //   EDC15P+ (or equivalently: when the file size is 512KB and the write
-    //   target offset is below 0x60000; the mirror lives at offset + 0x20000).
+    // ⚠ EDC15 ROM/RAM MIRROR — CONFIRMED across Audi A2/A6 1.9 TDI pairs.
+    //   Three distinct mirror offset patterns identified by file-size + part-no:
+    //
+    //   • EDC15V pre-PD 0281001xxx (256 KB ROM) → mirror at +0x38000
+    //     Pairs #664 (0281001609 110hp) and #668 (0281001808 90hp 1998):
+    //     regions at 0x005850 AND 0x03D850 (Δ = 0x38000) get the SAME mod.
+    //
+    //   • EDC15P PD basic 0281010xxx (524 KB ROM) → mirror at +0x18000
+    //     Pairs #666 (0281010204) and #669 (0281010203 sw352258):
+    //     regions at 0x05B07x AND 0x07307x (Δ = 0x18000) get the SAME mod.
+    //
+    //   • EDC15P+ PD advanced (524 KB ROM, A2/A3/A4 1.4-1.9 TDI 0281011xxx)
+    //     → mirror at +0x20000. Pairs #28/29/30 from earlier batch.
+    //
+    //   Every Stage-1 cell modified at offset X is ALSO modified at offset
+    //   X + mirror by real tuners. The ECU boots with inconsistent cal and
+    //   derates if only one copy is written. Our writeMap() currently writes
+    //   only to mapDef's fixedOffset — we MUST add a mirror-write when the
+    //   ECU family is EDC15.
+    //
+    //   Selection rule (file-size based, no SW match needed):
+    //     fileSize === 262144 → mirror = +0x38000
+    //     fileSize === 524288 && partNo starts '0281011' → mirror = +0x20000
+    //     fileSize === 524288 && partNo starts '0281010' → mirror = +0x18000
+    //
     //   TODO wire into remapEngine.ts / binaryParser writeMap.
     identStrings: ['EDC15', 'EDC 15', 'EDC15C', 'EDC15P', 'EDC15V', 'EDC15VM', 'EDC15M+', 'EDC-15', 'CC55', 'CC556', 'CC558', 'TSW V2', '0281001', '0281010', '0281011', '0281012', '0281013'],
     fileSizeRange: [262144, 1048576],   // 256KB – 1MB (standard VAG PD = 512KB; EDC15VM+/Mercedes = 1MB)

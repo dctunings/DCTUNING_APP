@@ -64,6 +64,68 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #663–678 — A5 tail + A6 1.9 TDI EDC15 EDC15V/EDC15P MIRROR pattern
+
+A5 3.0 V6 TDI tail-end (#654-657) confirms 4G0907401 sw519312/522947
+share `0x1C2xxx/0x1BAxxx` SGO (sister offsets ~0xE0 apart) — 2 SWs
+in this cluster. Pair #655 8K0907401 sw510946 DPF shows clean DPF
+disable sig: `0x19FF00` 256B cleared to 0 + `0x1EC302` -80% repeating.
+Pair #656 8K1907401A sw397833 DPF → `0x1E2B8A 16×16` +116% — sister
+of pair #634 8K0907401P sw397833 (same SW across part-suffixes).
+
+A5 4.2 V8 FSI MED17 (#658-659): 0261S02329 sw393902 and 0261S02548
+sw394474 (8T0907560 / 8T0907560F) — both 264.8 kW (360 hp non-RS V8).
+Tiny 4.5-4.8 KB tunes (V8 FSI rarely tuned aggressively).
+
+**A6 1.9 TDI EDC15/EDC15V/EDC15P** — first batch of A6 C5 1997-2004
+1.9 TDI pairs. Bosch hardware codes: `0281001xxx` (pre-PD EDC15V) and
+`0281010xxx` (PD EDC15P, 90-110 hp).
+
+**MAJOR DISCOVERY — EDC15 ROM MIRROR offsets** (these are critical
+for the writeMap path; every modification MUST be duplicated):
+
+- **EDC15V pre-PD (0281001xxx, 256 KB ROM)** — mirror offset
+  `+0x38000` (224 KB). Pair #664 (0281001609 110 hp): regions at
+  `0x005850` AND `0x03D850` (Δ = 0x38000) get the SAME 199-byte +135%
+  modification. Pair #668 (0281001808 90 hp 1998): regions at
+  `0x00584E` AND `0x03D84E` get the same 201-byte +53% mod.
+- **EDC15P PD (0281010xxx, 524 KB ROM)** — mirror offset `+0x18000`
+  (96 KB). Pair #666 (0281010204 90 hp): regions at `0x05B078` AND
+  `0x073078` (Δ = 0x18000) get the same 12-byte -75% mod. Pair #669
+  (0281010203 sw352258): same +0x18000 mirror at `0x05B066/0x073066`.
+
+This is **DIFFERENT from the EDC15P+ 0x20000 mirror** I documented
+earlier for the A2 1.4 TDI 03G906016G. So there are at least THREE
+distinct mirror offsets in the EDC15 family:
+- `+0x38000` for early EDC15V pre-PD 256 KB ROMs
+- `+0x18000` for EDC15P PD 524 KB ROMs (basic)
+- `+0x20000` for EDC15P+ PD 524 KB ROMs (advanced — A2/A3/A4 1.4-1.9 TDI)
+
+**Code action — HIGH PRIORITY**: extend the EDC15 writeMap path to
+handle all three mirror types. The mirror offset should be encoded
+on the ECU def (e.g. `mirrorOffsetBytes: 0x38000`). Without this,
+EDC15 tuning writes to one location but the cal-checksum reads from
+the other → checksum fails or mod has no effect.
+
+Other A6 1.9 TDI pairs:
+- Pair #661 (0281010200 110 hp PD sw352636) — `0x05CCE6/0x05C8E4`
+  classic PD layout, no mirror visible (would be at +0x18000 too)
+- Pair #663 (0281001609 90 hp pre-PD) — only 13B at 0x005854,
+  light tune
+- Pair #665 (0281010066 90 hp older PD) — `0x03C450/0x03D874` — note
+  `0x03D874 - 0x03C450 = 0x1424` — NOT a simple mirror, two related
+  cal blocks
+- Pair #667 (0281010405 95.6 kW sw362175) — `0x074A8C/0x076952` —
+  Δ 0x1EC6 — same not-a-mirror two-block pattern
+- Pair #660 4F0907401B sw377320 (A6 C6 3.0 TDI CP44, NOT 1.9) —
+  intruder in this batch by alphabetical sort. Cal at `0x1A0F55/
+  0x1EBAA1` — CP44 baseline.
+
+Pair #662 0261206917 4B0906018CA (A6 1.8T 20V ME7.x) — **only 24
+bytes changed across whole 1 MB file**. This is a checksum-only
+"tune" (probably tool serial tag, not a real modification). Should
+be flagged as no-op when changedBytes < 32.
+
 ## Pairs #647–662 — A5 3.0 V6 TDI 8K1907401A 516613 cluster + 4G/4L/8R cross-platform
 
 **Strong wire candidate: 8K1907401A sw516613** appears 4 times across
