@@ -64,6 +64,22 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #323–337 — A4 2.0 TDI CR 2009-2010 EDC17 C46/C64 continued
+
+15 more A4 2.0 TDI CR pairs. SW bases in this chunk:
+500118 / 500119 / 500121 / 500141 / 500141 / 504744 / 396472 /
+396484 / 502340 / 515287 / 517566 / 521650 / 521651 / 517561.
+
+Mix of 512KB stripped cal and 2MB full binaries. New part number
+03L906022JN. Tunes 1,800-10,400 B typical. Consistent EDC17 C46
+Stage 1 depth.
+
+SIZE MISMATCH skip: pair #336 (03L906022NN sw505476).
+
+**Code: no change** — existing defs cover these. 03L906019AL
+C64 variant now seen across 10+ pairs (502340/515287/517566 etc.)
+reinforcing the candidacy for a dedicated per-variant def later.
+
 ## Pairs #308–322 — A4 2.0 TDI CR 2008-2009 EDC17 C46 more SW bases
 
 15 more A4 2.0 TDI CR EDC17 C46. New SW bases: 400967, 399350, 500141,
