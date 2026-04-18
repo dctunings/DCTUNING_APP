@@ -64,6 +64,37 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #1159–1174 — S3 1.8T tail + S3 2.0 TFSI MED17 + early S4 2.2 20V
+
+**S3 2.0 TFSI 8P0907115B/H/AB MED17** (8P S3 265hp):
+- 0261S02342 sw387473 — IDENTICAL pattern across **8P0907115H**
+  (#1158) AND **8P0907115B** (#1159) → 4327B / 106 regions both.
+  **Same SW two part suffixes share IDENTICAL SGO**. Wire candidate.
+- 0261S02342 sw384214 (#1160) — different SGO 1710B/26 regions
+- 0261S02342 sw387951 (#1161) — 4025B/51 regions
+- 0261S02575 sw395160 (#1162) — 1813B/83 regions
+- 0261S02721 sw501227 (#1163) — 1536B/37 regions
+
+S3 1.8T 8N0906018J cluster:
+- sw360284 (#1151) — 868B/16 regions
+- sw360314 (#1152) — 929B/16 regions
+- 2 SWs same hardware sharing similar pattern → same SGO
+
+S3 1.8T variants:
+- 0261204900 N0_906_018 sw350751 (#1150) — 682B/21 — older Bosch
+  ME7.0 with weird "N0_906_018" part code
+- 8L0906018N sw352820 (#1153, sister of #1142) — 629B/22 vs prior
+  734B/23 (different file same SW)
+- 8N0906018AG sw360229 (#1154) — 1899B/27
+- 8N0906018BH sw362999 (#1155) — 2356B/43
+- 8N0906018BP sw366474 (#1157) — 726B/13
+- 8N0906018CH sw367511 (#1156, sister of #1143) — 1482B/27 vs prior
+  1167B/14 (different file same SW)
+
+**S4 B4 1991 2.2 20V Turbo** (#1164/#1165) — Bosch hardware code 551A,
+**8 KB ROM!** (8192 bytes). Pre-OBD-II era. SW 356702 (87c64). Only
+2 regions changed in tiny 321 B — primitive cal layout.
+
 ## Pairs #1143–1158 — RS6 V10 TFSI + S3 1.8T MED17/ME7.x catalog
 
 **RS6 V10 5.0 TFSI 4F1907552A** (C6 RS6 580hp BiTurbo V10) cluster:
