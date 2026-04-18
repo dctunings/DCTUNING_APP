@@ -64,6 +64,63 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #727–742 — EDC16 PD 2MB-vs-524KB dump format + A6 TFSI MED17 cluster
+
+**MAJOR finding — EDC16 PD 2MB vs 524KB dump format**:
+Pair #719 03G906016BF sw382716 (2 MB dump) shows offsets `0x1D1E5F`
+and `0x1DF8FF`. Pair #685 03G906016BF sw382716 (524 KB dump, same
+SW) shows offsets `0x051E5F` and `0x05F8FF`. **Δ = exactly 0x180000
+(1.5 MB)**. So the 2 MB dump format relocates the cal block by 1.5 MB
+relative to the 524 KB extracted format — same data, different
+absolute offsets.
+
+**Code action**: writeMap path needs to detect dump format (file size)
+and apply the 0x180000 offset shift when reading 2 MB EDC16 PD dumps.
+Already added a comment on the wired def; full wiring needed.
+
+**0281011850 03G906016BF cluster expanded to 3 SWs**:
+- 380199 (#684) — 0x051E5F + 0x05F8FF
+- 382716 (#685, #719) — same offsets (524 KB) and `0x1D1E5F + 0x1DF8FF`
+  (2 MB) confirming the dump-format relationship
+- 399833 (#726) — `0x051E5F + 0x05FA05` — same primary, second offset
+  shifted by 0x106 (likely small SW version bump moved the boost map
+  16 cells over). **Added to identStrings**.
+
+**A6 2.0 TFSI 4F2907115 MED17 cluster (NEW, 4 SWs)**:
+- sw381604 (#729) → `0x1CE2D8 + 0x1CEEF4`
+- sw386852 (#731) → `0x1CE2D8 + 0x1CEEF4` — **EXACT same offsets as
+  sw381604**. 2 SWs same SGO confirmed.
+- sw377676 (#730) → `0x1CD86E + 0x1CDEE8` — close to sw381604's
+  region (Δ ≈ 0xA6A) but slightly shifted; pre-381604 SGO base
+- sw386852 (#732, different file same SW) → DIFFERENT cluster
+  `0x1E5D60 + 0x1CBB70`. So sw386852 has TWO SGO variants
+  (4th time same-SW-different-SGO pattern observed)
+
+Note: this MED17 cluster's high % values (`+517%/+427%`) and 120-byte
+region size match the **universal MED17 unlock signature** I noted in
+the A5 batches — these are NOT real tuning maps but consistent
+emission-monitor disable across MED17 family.
+
+**A6 2.0 TDI EDC16 PD older variants (524 KB) — 03G906016 [BF/MF/MG/GB/GC/HS/JD]**:
+- sw389285 03G906016GC + sw389286 03G906016MF + sw389203 03G906016MG
+  ALL share `0x058E33 + 0x06C95B` — **3 part-suffixes share SGO** —
+  another candidate cluster.
+- sw383797 03G906016GC (#723) and sw391830 03G906016MF (#727) share
+  `0x06C417 + 0x06C34F` (close offsets, 9B regions, +338%/+125%)
+- sw391835 03G906016GB (#722) → `0x0431E3 + 0x06C437` (sister to
+  sw381604 #688 prior batch — same offsets — 2 SW versions same SGO)
+- sw393547 03G906016HS (#724) → `0x055BF8 + 0x06C437` (large 72B at
+  +461%, joins the 0x06C437 family with #722)
+- sw378329 0281012557 03G906016HS (#728) → `0x05843D + 0x0684D6` —
+  unique cluster
+- sw378340 0281012654 03G906016JD (#729 wait — that's the TFSI;
+  let me re-check #729) — `0x05684F + 0x056D3B` — unique cluster
+
+Pair #717 03L906018JL sw521690 → `0x07D3FE 510B + 0x07D1CC 16×16` —
+joins the **522xxx cluster** (sw 522909/910/917/918/922/924/943).
+So the 522xxx-style cluster also covers sw521690 → cluster grows
+to 8 SWs in that cluster too.
+
 ## Pairs #711–726 — A6 2.0 TDI 03L906018JL cluster expansion (10+ SWs)
 
 This batch is **dominated by 03L906018JL pre-522xxx cluster**. Combined

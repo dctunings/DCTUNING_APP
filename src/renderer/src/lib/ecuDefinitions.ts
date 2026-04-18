@@ -1324,15 +1324,23 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
-  // ── EDC16 PD Audi A6 2.0 TDI 0281011850 03G906016BF (sw 380199 / 382716) ─
+  // ── EDC16 PD Audi A6 2.0 TDI 0281011850 03G906016BF (sw 380199/382716/399833) ─
   //
   // Audi A6 C5/C6 2.0 TDI PD 140ps. Bosch hardware code 0281011850, VAG part
-  // number 03G906016BF. Verified by 2 paired ORI/Stage1 files (pair_analysis
-  // _log.md pairs #684 sw380199 and #685 sw382716) sharing IDENTICAL
-  // modification offsets:
+  // number 03G906016BF. Verified by 3 paired ORI/Stage1 files (pair_analysis
+  // _log.md pairs #684 sw380199, #685 sw382716, #726 sw399833) sharing
+  // IDENTICAL modification offsets:
   //
   //   0x051E5F  7 cells u16 BE  — primary IQ ceiling (raw 19308 → 47812, +147%)
   //   0x05F8FF  13 cells u16 BE — boost target (raw 15921 → 36444, +128%)
+  //                                (sw399833 actually hits 0x05FA05; Δ=0x106
+  //                                — same map, slight version-rev shift)
+  //
+  // ⚠ 2MB vs 524KB DUMP FORMAT — same ECU, same cal data, different absolute
+  //   offsets. The 2MB extracted format (e.g. pair #719 sw382716) places the
+  //   cal block at 0x180000 + cal_offset. So 0x051E5F in the 524KB dump
+  //   becomes 0x1D1E5F in the 2MB dump. fileSizeRange below restricts THIS
+  //   def to 524KB — a sister def is needed for 2MB extracted cal dumps.
   //
   // The +0x18000 (96 KB) mirror discussed in the EDC15 doc above is NOT
   // applicable here — EDC16 PD ROMs use Motorola HiLo and a single cal copy
@@ -1342,7 +1350,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC16 PD (03G906016BF — Audi A6 2.0 TDI 140ps PD 2004-2006)',
     manufacturer: 'Bosch',
     family: 'EDC16',
-    identStrings: ['03G906016BF', '0281011850', '380199', '382716'],
+    identStrings: ['03G906016BF', '0281011850', '380199', '382716', '399833'],
     fileSizeRange: [524288, 524288],
     vehicles: ['Audi A6 C5/C6 2.0 TDI PD 140ps (03G906016BF sw 380199/382716, 2004-2006)'],
     checksumAlgo: 'bosch-crc32',
