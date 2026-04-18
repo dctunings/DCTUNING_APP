@@ -69,6 +69,51 @@ was code-changed, and what was left as a placeholder for future pairs.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #33–80 — E30/E34 6-cyl petrol + early Diesel catalog
+
+**Tons of E30/E34 32 KB Motronic ROMs** (1986-1995). These are pre-OBD
+Bosch Motronic 1.x ECUs with very small tunes (50-900 B / 2-15
+regions per pair). Each model gets its own Bosch hardware code.
+
+E30/E34 PETROL hardware codes catalogued:
+- 0261200081 — E30 325IX 1986
+- 0261200153 — E30 325i 4 SWs (355367/355408/355409 + dupes)
+- 0261200154 — E30 325 E
+- 0261200157 — E30 318i 3 SWs (355610/355693/356165)
+- 0261200172 — E30/E34 320i 4 SWs
+- 0261200173 — E30/E34 325i 6+ SWs (110084/355232/355288/355705/
+  355794/356203 — major cluster)
+- 0261200175 — E30 318IS 3 SWs
+- 0261200380 — E30 325i 4 SWs (355794/356204/356283/356425)
+- 0261200381 — E30 320i sw355741
+- 02612.091 — E30 M3 sw356029 (rare)
+- 0261200400/402/405 — E34 525i (3 hardware codes)
+- 0261203280 — E34 518i
+
+E34 EARLY DIESEL hardware codes (Bosch EDC0/EDC1.x for M21/M51 6-cyl):
+- 0281001077 — 524TD/525TD 84.6 kW (3 SWs: 356552/356786/356996)
+- 0281001080 — 524TD 84.6 kW (sw356997)
+- 0281001088 — 324TD sw356548 (E30)
+- 0281001089 — 324TD 2 SWs (356475/356549) (E30)
+- 0281001175 — 524TDS 4 SWs (358364/358412/358652)
+- 0281001176 — 525TD 2 SWs (358654 Motor + 358655 Turbo Map)
+- 0281001295 — E34 2.5 TDS sw355405
+- 0281001298 — 525TD sw355755
+
+Pair #57 has Siemens **5WK9003** for E34 320i 110 kW — odd, this is
+a Siemens VDO not Bosch. NEW family.
+
+Pair #59 0261204467 E34 4.0i 2000 V8 256 KB — sister of E39 540i V8
+ME7.x part code from earlier. Same V8 ECU shared E34 → E39.
+
+Pair #65 — `Bosch_40.1_5WK9002_40.1` E34 520i 1995 — appears to be a
+different Siemens 5WK9002 ECU (BMW M50 era VDO Siemens petrol mgmt).
+
+These BMW pre-OBD ROMs are too small/varied to wire individual defs.
+**Wire decision**: skip all 32 KB Motronic 1.x and 32 KB EDC0/1
+diesels for now — they're cul-de-sac legacy hardware with low
+tuning volume in 2024+.
+
 ## BMW Pairs #1–32 — E30 318i/318IS/320i + E46 320D/330D + DDE6.x intro
 
 **E30 (1986-1991, classic 32 KB Motronic 1.x)**:
