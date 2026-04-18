@@ -21,6 +21,8 @@ import {
   obdReadPID,
   obdReadAllLivePIDs,
 } from './obdManager'
+import { memoryStore } from './memoryStore'
+import type { FingerprintEntry } from './memoryStore'
 import {
   scanJ2534Devices,
   j2534Open,
@@ -341,6 +343,57 @@ app.whenReady().then(() => {
     } catch {
       return []
     }
+  })
+
+  // ─── Memory store (scanner fingerprint DB) ─────────────────────────────────
+  // Lazy-open at the default path on first call. User can relocate via
+  // 'memory-relocate' (points the DB at a OneDrive / Google Drive folder for
+  // free multi-device sync + backup without any cloud code on our side).
+  try { memoryStore.init() } catch (e) { console.error('memory-store init failed', e) }
+
+  ipcMain.handle('memory-status', async () => {
+    try { return { ok: true, ...memoryStore.status(), defaultPath: memoryStore.defaultPath() } }
+    catch (e: any) { return { ok: false, error: e.message } }
+  })
+  ipcMain.handle('memory-relocate', async (_, newPath: string) => {
+    try { return { ok: true, ...memoryStore.init(newPath) } }
+    catch (e: any) { return { ok: false, error: e.message } }
+  })
+  ipcMain.handle('memory-find', async (_, sigHex: string, rows?: number, cols?: number) => {
+    try { return { ok: true, entries: memoryStore.find(sigHex, rows, cols) } }
+    catch (e: any) { return { ok: false, error: e.message, entries: [] } }
+  })
+  ipcMain.handle('memory-save', async (_, entry: FingerprintEntry) => {
+    try { return { ok: true, entry: memoryStore.save(entry) } }
+    catch (e: any) { return { ok: false, error: e.message } }
+  })
+  ipcMain.handle('memory-mark-seen', async (_, id: string) => {
+    try { memoryStore.markSeen(id); return { ok: true } }
+    catch (e: any) { return { ok: false, error: e.message } }
+  })
+  ipcMain.handle('memory-delete', async (_, id: string) => {
+    try { return { ok: true, deleted: memoryStore.deleteById(id) } }
+    catch (e: any) { return { ok: false, error: e.message } }
+  })
+  ipcMain.handle('memory-list', async (_, opts) => {
+    try { return { ok: true, ...memoryStore.list(opts ?? {}) } }
+    catch (e: any) { return { ok: false, error: e.message, entries: [], total: 0 } }
+  })
+  ipcMain.handle('memory-export', async () => {
+    try { return { ok: true, entries: memoryStore.exportAll() } }
+    catch (e: any) { return { ok: false, error: e.message, entries: [] } }
+  })
+  ipcMain.handle('memory-import', async (_, entries: FingerprintEntry[]) => {
+    try { return { ok: true, ...memoryStore.importAll(entries) } }
+    catch (e: any) { return { ok: false, error: e.message } }
+  })
+  ipcMain.handle('memory-browse-path', async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Choose folder for memory.db (e.g. a OneDrive or Google Drive folder to enable sync)',
+      properties: ['openDirectory', 'createDirectory'],
+    })
+    if (result.canceled || !result.filePaths[0]) return { ok: false, canceled: true }
+    return { ok: true, path: join(result.filePaths[0], 'memory.db') }
   })
 
   createWindow()

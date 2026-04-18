@@ -55,6 +55,26 @@ const api = {
 
   // ─── File Utilities ───────────────────────────────────────────────────────
   readFileBytes: (filePath: string, maxBytes: number) => ipcRenderer.invoke('read-file-bytes', filePath, maxBytes),
+
+  // ─── Memory store (scanner fingerprint DB) ───────────────────────────────
+  // Local SQLite DB of confirmed map fingerprints. Scanner queries it on every
+  // load so confirmed maps auto-identify on future binaries. Default location
+  // is %APPDATA%/DCTuning/memory.db; user can relocate via `memoryRelocate`
+  // to point at a OneDrive / Google Drive folder for free sync.
+  memory: {
+    status: () => ipcRenderer.invoke('memory-status'),
+    relocate: (newPath: string) => ipcRenderer.invoke('memory-relocate', newPath),
+    find: (sigHex: string, rows?: number, cols?: number) =>
+      ipcRenderer.invoke('memory-find', sigHex, rows, cols),
+    save: (entry: unknown) => ipcRenderer.invoke('memory-save', entry),
+    markSeen: (id: string) => ipcRenderer.invoke('memory-mark-seen', id),
+    remove: (id: string) => ipcRenderer.invoke('memory-delete', id),
+    list: (opts?: { limit?: number; offset?: number; ecuFamily?: string; search?: string }) =>
+      ipcRenderer.invoke('memory-list', opts),
+    exportAll: () => ipcRenderer.invoke('memory-export'),
+    importAll: (entries: unknown[]) => ipcRenderer.invoke('memory-import', entries),
+    browsePath: () => ipcRenderer.invoke('memory-browse-path'),
+  },
 }
 
 if (process.contextIsolated) {

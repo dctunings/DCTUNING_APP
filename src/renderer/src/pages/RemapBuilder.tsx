@@ -16,7 +16,9 @@ import type { KPParseResult, KPConvertedMap } from '../lib/kpParser'
 import { suppressDTCs, getActiveDTCGroups } from '../lib/dtcRemoval'
 import type { DTCPatternResult } from '../lib/dtcRemoval'
 import { scanBinaryForMaps, classifyCandidates, matchUnknownsByDNA } from '../lib/mapClassifier'
-import type { ClassificationResult } from '../lib/mapClassifier'
+import type { ClassificationResult, ScannedCandidate } from '../lib/mapClassifier'
+import { applyMemoryToCandidates, buildEntryFromCandidate, candidateSigHex } from '../lib/memoryLookup'
+import type { MemoryMatch, FingerprintEntry } from '../lib/memoryLookup'
 
 // ─── Transpose helper (kept for any future use) ──────────────────────────────
 function transposeGrid(grid: number[][]): number[][] {
@@ -715,6 +717,12 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
 
   // Binary scanner state (new classifier-based scanner)
   const [scanResult, setScanResult] = useState<ClassificationResult | null>(null)
+  // Memory-identified candidates (matched against the local SQLite fingerprint
+  // DB at %APPDATA%/DCTuning/memory.db). These are 100%-confidence matches —
+  // user has previously confirmed "this exact Kf_ signature = this map".
+  const [memoryMatches, setMemoryMatches] = useState<MemoryMatch[]>([])
+  // UI state for the "Confirm as…" dialog that writes an entry to memory.
+  const [confirmingCand, setConfirmingCand] = useState<ScannedCandidate | null>(null)
   const [showScanner, setShowScanner] = useState(false)
   const [scannerBusy, setScannerBusy] = useState(false)
   const [scannerDebug, setScannerDebug] = useState('')
@@ -786,18 +794,28 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     setLibSearch(''); setLibResults([]); setLibTotal(0); setLibPage(0)
     setLibFallbackNote(''); setLibOriginalNum(''); setLibLoadError('')
     setScanResult(null); setShowScanner(false)
+    setMemoryMatches([])
 
     // Run binary map scanner in background
     const ecuForScan = det?.def ?? null
     setScannerDebug('Scanner starting... buf=' + buf.byteLength + ' ecu=' + (ecuForScan?.id ?? 'null'))
-    setTimeout(() => {
+    setTimeout(async () => {
       setScannerBusy(true)
       try {
         const candidates = scanBinaryForMaps(buf, ecuForScan)
         setScannerDebug('Found ' + candidates.length + ' candidates')
         if (candidates.length > 0 && ecuForScan) {
-          const result = classifyCandidates(candidates, ecuForScan)
-          setScannerDebug('OK: ' + result.candidates.length + ' identified, ' + result.unmatched.length + ' unknown')
+          // ── Memory lookup FIRST — any Kf_ header we've confirmed before
+          // gets auto-identified at 100% confidence, skipping the classifier.
+          const mem = await applyMemoryToCandidates(buf, candidates)
+          setMemoryMatches(mem.matched)
+          // Classify only the candidates that weren't memory-hit
+          const toClassify = mem.unmatched
+          const result = classifyCandidates(toClassify, ecuForScan)
+          setScannerDebug(
+            'OK: ' + mem.matched.length + ' from memory, ' +
+            result.candidates.length + ' identified, ' + result.unmatched.length + ' unknown'
+          )
           setScanResult(result)
           // Share scanner results with Performance page
           onEcuLoaded?.({ fileName: name, fileBuffer: buf, detected: det, a2lMaps: [], drtMaps: [], scanResult: result })
@@ -1325,7 +1343,11 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           try {
             const candidates = scanBinaryForMaps(fileBuffer, ecuForScan)
             if (candidates.length > 0) {
-              const result = classifyCandidates(candidates, ecuForScan, { a2lMaps: maps })
+              // Memory lookup first — confirmed fingerprints override both A2L
+              // and classifier because they're user-verified, 100% confidence.
+              const mem = await applyMemoryToCandidates(fileBuffer, candidates)
+              setMemoryMatches(mem.matched)
+              const result = classifyCandidates(mem.unmatched, ecuForScan, { a2lMaps: maps })
               setScanResult(result)
             }
           } catch (_) { /* scanner failure shouldn't block A2L load */ }
@@ -2117,7 +2139,12 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
               <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>Scanning...</span>
             ) : scanResult ? (
               <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
-                {scanResult.candidates.length + scanResult.unmatched.length} candidate maps found
+                {memoryMatches.length + scanResult.candidates.length + scanResult.unmatched.length} candidate maps found
+                {memoryMatches.length > 0 && (
+                  <span style={{ color: 'var(--accent)', fontWeight: 700, marginLeft: 6 }}>
+                    {memoryMatches.length} from memory
+                  </span>
+                )}
                 {scanResult.candidates.length > 0 && (
                   <span style={{ color: '#22c55e', fontWeight: 700, marginLeft: 6 }}>
                     {scanResult.candidates.length} identified
@@ -2130,6 +2157,49 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
 
           {showScanner && scanResult && (
             <div style={{ padding: '12px 16px', maxHeight: 420, overflowY: 'auto' }}>
+              {/* Memory-confirmed maps — 100% confidence because user previously
+                  confirmed these exact Kf_ fingerprints. Rendered first so
+                  they're visually the top of the pile. */}
+              {memoryMatches.length > 0 && (
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.5px' }}>
+                    ✓ Known Maps from Memory ({memoryMatches.length})
+                  </div>
+                  <div style={{ display: 'grid', gap: 4 }}>
+                    {memoryMatches.slice(0, 20).map((m, idx) => (
+                      <div key={idx} style={{
+                        padding: '6px 12px', borderRadius: 6,
+                        background: 'rgba(0,174,200,0.06)', border: '1px solid rgba(0,174,200,0.2)',
+                        display: 'flex', alignItems: 'center', gap: 10, fontSize: 11, color: 'var(--text-secondary)',
+                      }}>
+                        <span style={{ fontFamily: 'monospace', fontWeight: 700, minWidth: 72, color: 'var(--accent)' }}>
+                          0x{m.candidate.offset.toString(16).toUpperCase().padStart(6, '0')}
+                        </span>
+                        <span style={{ minWidth: 40 }}>{m.candidate.rows}×{m.candidate.cols}</span>
+                        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {m.entry.mapName}
+                          {m.entry.unit && <span style={{ color: 'var(--text-muted)', marginLeft: 6, fontSize: 10 }}>{m.entry.unit}</span>}
+                        </span>
+                        <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>
+                          seen {m.entry.seenCount}×
+                        </span>
+                        <span style={{
+                          fontSize: 9, padding: '1px 5px', borderRadius: 3,
+                          background: 'rgba(0,174,200,0.15)', color: 'var(--accent)', fontWeight: 700,
+                        }}>
+                          MEMORY
+                        </span>
+                      </div>
+                    ))}
+                    {memoryMatches.length > 20 && (
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', textAlign: 'center', padding: 4 }}>
+                        +{memoryMatches.length - 20} more
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Classified candidates — grouped by map type */}
               {scanResult.candidates.length > 0 && (() => {
                 // Group candidates by their best match mapDefId
@@ -2236,6 +2306,17 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                         }}>
                           UNKNOWN
                         </span>
+                        <button
+                          onClick={() => setConfirmingCand(cc.candidate)}
+                          style={{
+                            fontSize: 10, padding: '2px 8px', borderRadius: 4,
+                            background: 'rgba(0,174,200,0.1)', border: '1px solid rgba(0,174,200,0.3)',
+                            color: 'var(--accent)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700,
+                          }}
+                          title="Confirm what this map is — saved to memory for future binaries"
+                        >
+                          Confirm as…
+                        </button>
                       </div>
                     ))}
                     {scanResult.unmatched.length > 15 && (
@@ -2255,12 +2336,15 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                   onClick={() => {
                     if (!fileBuffer) return
                     setScannerBusy(true)
-                    setTimeout(() => {
+                    setTimeout(async () => {
                       try {
                         const ecuForScan = selectedEcu ?? detected?.def ?? null
                         const candidates = scanBinaryForMaps(fileBuffer, ecuForScan)
                         if (candidates.length > 0 && ecuForScan) {
-                          const result = classifyCandidates(candidates, ecuForScan, {
+                          // Memory lookup first — confirmed fingerprints win.
+                          const mem = await applyMemoryToCandidates(fileBuffer, candidates)
+                          setMemoryMatches(mem.matched)
+                          const result = classifyCandidates(mem.unmatched, ecuForScan, {
                             a2lMaps: a2lMaps.length > 0 ? a2lMaps : undefined,
                           })
                           setScanResult(result)
@@ -3141,6 +3225,208 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         {step === 2 && renderStep2()}
         {step === 3 && renderStep3()}
         {step === 4 && renderStep4()}
+      </div>
+
+      {/* ── "Confirm as…" modal for unknown scanner candidates ─────────────── */}
+      {/* Writes a new row to local memory.db so the scanner auto-identifies   */}
+      {/* this exact Kf_ signature on every future binary.                     */}
+      {confirmingCand && fileBuffer && (
+        <ConfirmCandidateDialog
+          candidate={confirmingCand}
+          buffer={fileBuffer}
+          ecuFamily={selectedEcu?.family ?? detected?.def.family ?? 'UNKNOWN'}
+          partNumber={null}
+          onCancel={() => setConfirmingCand(null)}
+          onSaved={(entry) => {
+            setConfirmingCand(null)
+            // Move the confirmed candidate from unmatched → memoryMatches locally.
+            const sig = candidateSigHex(fileBuffer, confirmingCand)
+            if (sig) {
+              setMemoryMatches(prev => [
+                ...prev,
+                { candidate: confirmingCand, entry, sigHex: sig },
+              ])
+              setScanResult(prev => prev ? {
+                ...prev,
+                unmatched: prev.unmatched.filter(cc => cc.candidate.offset !== confirmingCand.offset),
+              } : prev)
+            }
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+// ─── Confirm-as modal ────────────────────────────────────────────────────────
+// Lightweight overlay form. Lets the user give a scanner candidate a name,
+// factor, unit, category, and optional notes — then writes it to the local
+// memory.db via the preload bridge. Next time the same Kf_ header appears in a
+// binary (any binary), the scanner will auto-identify it at 100% confidence.
+function ConfirmCandidateDialog(props: {
+  candidate: ScannedCandidate
+  buffer: ArrayBuffer
+  ecuFamily: string
+  partNumber: string | null
+  onCancel: () => void
+  onSaved: (entry: FingerprintEntry) => void
+}) {
+  const { candidate, buffer, ecuFamily, partNumber, onCancel, onSaved } = props
+
+  const [mapName, setMapName] = useState('')
+  const [category, setCategory] = useState<'boost' | 'fuel' | 'torque' | 'ignition' | 'smoke' | 'limiter' | 'emission' | 'misc'>('boost')
+  const [factor, setFactor] = useState('1')
+  const [offsetVal, setOffsetVal] = useState('0')
+  const [unit, setUnit] = useState('')
+  const [notes, setNotes] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string>('')
+
+  const sigHex = candidateSigHex(buffer, candidate) ?? ''
+
+  const save = async () => {
+    setErr('')
+    if (!mapName.trim()) { setErr('Map name is required'); return }
+    const f = parseFloat(factor)
+    if (!Number.isFinite(f) || f === 0) { setErr('Factor must be a non-zero number'); return }
+    const o = parseFloat(offsetVal)
+    if (!Number.isFinite(o)) { setErr('Offset must be a number'); return }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const api = (window as any).api
+    if (!api?.memory?.save) { setErr('Memory API not available'); return }
+    setBusy(true)
+    try {
+      const entry = buildEntryFromCandidate(buffer, candidate, {
+        ecuFamily,
+        partNumber,
+        mapName: mapName.trim(),
+        category,
+        factor: f,
+        offsetVal: o,
+        unit: unit.trim() || null,
+        notes: notes.trim() || null,
+        confirmedBy: 'user',
+      })
+      const res = await api.memory.save(entry)
+      if (!res?.ok) throw new Error(res?.error ?? 'save failed')
+      onSaved(res.entry as FingerprintEntry)
+    } catch (e: any) {
+      setErr(String(e?.message ?? e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+    }} onClick={onCancel}>
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: 'var(--bg-secondary)', borderRadius: 14, border: '1px solid var(--border)',
+          maxWidth: 540, width: '100%', padding: 24, color: 'var(--text-primary)',
+        }}
+      >
+        <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>Confirm map identity</div>
+        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16 }}>
+          Saves a fingerprint to local memory so the scanner auto-identifies this Kf_
+          header on every future binary.
+        </div>
+        <div style={{ padding: '10px 12px', background: 'var(--bg-card)', borderRadius: 8, border: '1px solid var(--border)', marginBottom: 16, fontSize: 11, display: 'grid', gridTemplateColumns: '140px 1fr', gap: '4px 10px' }}>
+          <span style={{ color: 'var(--text-muted)' }}>Offset</span>
+          <span style={{ fontFamily: 'monospace' }}>0x{candidate.offset.toString(16).toUpperCase().padStart(6, '0')}</span>
+          <span style={{ color: 'var(--text-muted)' }}>Dimensions</span>
+          <span>{candidate.rows} × {candidate.cols} ({candidate.dtype}, {candidate.le ? 'LE' : 'BE'})</span>
+          <span style={{ color: 'var(--text-muted)' }}>Signature (hex)</span>
+          <span style={{ fontFamily: 'monospace', fontSize: 10, wordBreak: 'break-all' }}>{sigHex}</span>
+          <span style={{ color: 'var(--text-muted)' }}>Value range</span>
+          <span>{candidate.valueRange.min} – {candidate.valueRange.max} (mean {candidate.valueRange.mean.toFixed(1)})</span>
+          <span style={{ color: 'var(--text-muted)' }}>ECU family</span>
+          <span>{ecuFamily}</span>
+        </div>
+
+        <div style={{ display: 'grid', gap: 10 }}>
+          <label style={{ display: 'grid', gap: 4 }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Map name *</span>
+            <input
+              value={mapName}
+              onChange={e => setMapName(e.target.value)}
+              placeholder="e.g. Boost Pressure Target"
+              style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit' }}
+              autoFocus
+            />
+          </label>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+            <label style={{ display: 'grid', gap: 4 }}>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Category</span>
+              <select value={category} onChange={e => setCategory(e.target.value as typeof category)} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit' }}>
+                <option value="boost">boost</option>
+                <option value="fuel">fuel</option>
+                <option value="torque">torque</option>
+                <option value="ignition">ignition</option>
+                <option value="smoke">smoke</option>
+                <option value="limiter">limiter</option>
+                <option value="emission">emission</option>
+                <option value="misc">misc</option>
+              </select>
+            </label>
+            <label style={{ display: 'grid', gap: 4 }}>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Factor *</span>
+              <input
+                value={factor}
+                onChange={e => setFactor(e.target.value)}
+                placeholder="e.g. 0.1"
+                style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit' }}
+              />
+            </label>
+            <label style={{ display: 'grid', gap: 4 }}>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Unit</span>
+              <input
+                value={unit}
+                onChange={e => setUnit(e.target.value)}
+                placeholder="e.g. mbar"
+                style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit' }}
+              />
+            </label>
+          </div>
+
+          <label style={{ display: 'grid', gap: 4 }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Offset (raw)</span>
+            <input
+              value={offsetVal}
+              onChange={e => setOffsetVal(e.target.value)}
+              placeholder="0"
+              style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit' }}
+            />
+          </label>
+
+          <label style={{ display: 'grid', gap: 4 }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Notes</span>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Anything worth remembering about this map…"
+              rows={2}
+              style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 12, fontFamily: 'inherit', resize: 'vertical' }}
+            />
+          </label>
+        </div>
+
+        {err && (
+          <div style={{ marginTop: 12, padding: '8px 10px', borderRadius: 6, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', fontSize: 11 }}>
+            {err}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
+          <button className="btn-secondary" onClick={onCancel} disabled={busy}>Cancel</button>
+          <button className="btn-primary" onClick={save} disabled={busy}>
+            {busy ? 'Saving…' : 'Save to memory'}
+          </button>
+        </div>
       </div>
     </div>
   )

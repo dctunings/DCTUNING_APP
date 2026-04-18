@@ -1,6 +1,6 @@
 {
   "name": "dctuning-desktop",
-  "version": "3.5.25",
+  "version": "3.5.26",
   "description": "DCTuning Ireland — Professional ECU Tuning Suite",
   "main": "out/main/index.js",
   "scripts": {
@@ -12,6 +12,7 @@
     "dev:web": "vite --config vite.web.config.ts"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.0.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
@@ -27,6 +28,7 @@
     "@electron-toolkit/tsconfig": "^2.0.0",
     "@electron-toolkit/utils": "^4.0.0",
     "@supabase/supabase-js": "^2.0.0",
+    "better-sqlite3": "^12.9.0",
     "fflate": "^0.8.2",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
