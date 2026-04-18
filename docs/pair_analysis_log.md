@@ -64,6 +64,20 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #368–382 — A4 2.0 TDI CR 2012-2014 EDC17 C46/C64 continued
+
+15 more A4 2.0 TDI CR 2012-2014 pairs. Predominantly 03L906018JL
+(now the most common VW part# across this library). SW bases:
+515516, 516684, 518002, 518005, 519317, 521650, 522909, 522924 (×2),
+522942, 526365, 528366, 528367, 532876, + long Bosch IDs
+1037522944 / 1037524103.
+
+Tunes 3,800-11,900 B. 03L906018JL now seen across 20+ SW versions —
+strongest candidate for a per-variant family-code entry to catch
+multiple SW bases with one def.
+
+**Code: no change** — deferred. Continuing to catalogue.
+
 ## Pairs #353–367 — A4 2.0 TDI CR 2011-2012 EDC17 C46/C64
 
 15 more A4 2.0 TDI CR pairs. Part numbers: 03L906019AL, 03L906018DN,
