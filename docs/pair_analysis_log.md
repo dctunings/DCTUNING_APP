@@ -64,6 +64,38 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #1207–1222 — S6 V10 + S8 D2 4.2 V8 + TT 1.8T catalog
+
+**S6 C6 V10 5.2 FSI 4F1907552** continued:
+- 0261S02297 sw387488 (#1198, 2.6 MB) — 3498B/77 (mislabeled "V8")
+- 0261S02367 sw381921 (#1199) — 1230B/14
+- 0261S02367 sw387930 (#1200) — 5797B/20
+
+**S8 D2 4.2 V8 catalog** (1999-2002 ME7.x) — Bosch part numbers
+4D0907557/558/559 with many suffixes:
+- 4D0907557N sw358953 (#1202, 131 KB) — 1718B/13
+- 4D0907558F sw357488 (#1203, 131 KB) — 1773B/14
+- 4D0907558H sw350096 (#1204, 524 KB) — 649B/13
+- 4D0907558J sw352380 (#1205, 1 MB) — 411B/12
+- 4D0907559G sw352189 (#1201, 1 MB) — 321B/8 ≈ no tune
+- 4D0907559C sw360261 (#1206, 1 MB) — 767B/27
+- 4D0907559H sw360172 (#1207, 1 MB) — 644B/23
+- 4D0907559AA sw362908 (#1208, 1 MB) — 485B/20
+
+S8 ROM sizes vary widely by year (131 KB → 524 KB → 1 MB) — 4D0907557
+era is older 131 KB, 4D0907559 era is newer 1 MB.
+
+**S8 D3 4.4 V8 FSI MED9 4E0907552** sw387929 (#1209) — **40% changed
+= 841 KB recal stage1+++** — heavy full-recal tune.
+
+**TT mk1 1.8T variants** (8L/8N0906018):
+- 8L0906018J sw354509 (#1211) — 132.4 kW (180 hp)
+- 8L0906018Q sw360287 (#1212) — 132.4 kW
+- 8N0906018A sw359559 (#1210) — 132.4 kW
+- 8N0906018AB sw354503 (#1213) — 132.4 kW
+
+Same A3/Golf/TT 1.8T 180hp family. ME7.x small Bosch tunes.
+
 ## Pairs #1191–1206 — S4/S5/S6 V8 + S6 V10 catalog
 
 S4 4.2 V8 tail-end: more 0261201112/207990/208459/208462 part numbers
