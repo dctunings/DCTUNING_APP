@@ -64,6 +64,47 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #839–854 — A6 3.0 V6 TDI EDC17 CP44 4F0907401A/B/C catalog
+
+Now into the **A6 3.0 V6 TDI EDC17 CP44** cluster — 2004-2007 165-180kW
+(225-240ps). Bosch part numbers 4F0907401A/B/C with SW versions
+372123-389135 (524KB chiptool) plus a few 2MB pairs.
+
+**4F0907401A SGO clusters** (oldest, 224ps standard):
+- sw372123 (#832) and sw372124 (#841) — IDENTICAL offsets
+  `0x0527FA + 0x071BBD`. **2 SWs same SGO** — moderate-confidence
+  wire candidate.
+- sw372486 (#838, 2 MB form) — `0x1F886D + 0x1C2091 8×3` (the 2 MB
+  version of same 4F0907401A — verify if +0x180000 shift applies)
+
+**4F0907401B SGO clusters** (165ps standard):
+- sw374415 (#843, 2 MB) — `0x1BFF6A + 0x1FDF6A` (Δ = 0x3E000 — note
+  this is unique, NEW mirror offset 248 KB? or just two cal blocks)
+- sw374416 (#839, 524 KB) — `0x06C467 + 0x05471B 12×6`
+- sw376568 (#832 sister) — `0x015A9B + 0x02073D`
+- sw376995 (#834) — `0x020921 + 0x071381`
+- sw377101 (#840) and sw377103 (#835) — both share `0x0714E9` (the
+  primary IQ ceiling at +78%). Sister SWs.
+- 4F0907401B older versions are very fragmented across 5 SGO sub-
+  clusters.
+
+**4F0907401C SGO clusters** (180ps performance):
+- sw381388 (#844) — `0x052F08 + 0x01D455`
+- sw381392 (#838) — `0x016373 + 0x020CD7`
+- sw389135 (#833) — `0x01C88F + 0x01D3AD`
+
+**8E0907401x older variants** (pre-4F0907401):
+- 8E0907401AB sw375569 (#831) — `0x0712CF + 0x07189D` (close pair)
+- 8E0907401AJ sw376009 (#836) — `0x06C5B9 + 0x072619`
+- 8E0907401AL sw382683 (#843) — `0x011548 + 0x01155C` (paired)
+
+Pair #830 4F0907401E sw516640 — DUPE of #823 (identical content,
+just appears alphabetically again). Confirms emission-only fingerprint.
+
+**Code: no new wires** — 4F0907401A 2-SW cluster is wire-able but
+weaker than the 4F0907401C 7-SW cluster I just wired. Will revisit
+if more 4F0907401A pairs appear later in the alphabetical sort.
+
 ## Pairs #823–838 — A6 2.7 V6 TDI EDC17 CP44 4F0907401C cluster wired
 
 This batch confirms the **4F0907401C 7-SW cluster** wired in this
