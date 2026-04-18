@@ -2089,7 +2089,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // The 03L906022FG variant (sw 399349/399350/500141/503995/etc.) hits
     // offsets shifted to 0x1EE306/0x1EED4A — handled by sister def
     // edc17_c46_03l906022fg below.
-    identStrings: ['398757', '03L906022BQ', '397892', '398784', '398791', '399326', '399393', '399395', '501921', '501922', '501956', '505975'],
+    identStrings: ['398757', '03L906022BQ', '397892', '398784', '398791', '399326', '399393', '399395', '501921', '501922', '501956', '505975', '507632'],
     fileSizeRange: [2097152, 2097152],   // exactly 2 MB
     vehicles: ['Audi A3 2.0 TDI CR 140ps (03L906022BQ sw 398757)', 'VW Golf 2.0 TDI CR 80-103kW (03L906022G sw 397xxx-399xxx, 2008-2010)'],
     checksumAlgo: 'bosch-crc32',
@@ -2834,7 +2834,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17 C46 (Golf 2.0 TDI CR 80-103kW — 03L906022G/AG/HR/LB/LF/MC IQ release)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['396418', '396420', '399396', '504863', '504865', '505933', '505978', '507639', '507643', '514600'],
+    identStrings: ['396418', '396420', '399396', '504854', '504863', '504865', '505933', '505978', '507639', '507643', '514600'],
     fileSizeRange: [524288, 524288],   // 524 KB chiptool dump format
     vehicles: ['VW Golf 2.0 TDI CR 80-103kW (03L906022G/AG/HR/LB/LF/MC sw 396418-514600, 2008-2010)'],
     checksumAlgo: 'bosch-crc32',

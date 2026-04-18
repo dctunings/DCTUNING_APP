@@ -70,6 +70,36 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #769–784 — Passat 03L906022 cluster expansion + 398757/iqrelease
+
+**Wire actions taken**:
+- 398757 def +sw507632 (Passat 03L906022CL 2MB hits 0x1F007A sister
+  cluster — IDENTICAL to sw505975) — now 13 SWs
+- iqrelease def (0x06625E) +sw504854 (Passat 03L906022QC 524KB hits
+  exact 0x06625E IQ release) — now 11 SWs
+
+**Passat 03L906022 524KB EDC17 C46 cluster**:
+- 03L906022CL sw396433 (#769) — 10543B/103
+- 03L906022CL sw507632 (#770, **2MB form**) → IDENTICAL `0x1F007A
+  cluster as sw505975`. ADDED to 398757 def.
+- 03L906022BM sw396091 (#771) — 11000B/105
+- 03L906022BL sw394168 (#773) — 10558B/103 sister
+- 03L906022CN sw507631 (#774, 524KB) — 4644B/72
+- 03L906022QC sw398819 (#775, 2MB) — 10511B/127
+- 03L906022QC sw504854 (#776, 524KB) → IDENTICAL `0x06625E IQ release
+  cluster`. ADDED to iqrelease def.
+- 03L906022QD sw398820 (#777) — 10511B/127 IDENTICAL to QC sw398819
+- 03L906022QD sw504855 (#780) — 11555B/156
+- 03L906022QD 0281015028 sw504855 (#783, 524KB) — 2521B/45
+- 03L906022QC 0281015029 sw505921 (#784, 524KB) — 3175B/66
+- 03L906022QE sw398821 (#781, 524KB) — `0x0657D6 + 0x07A456 + 0x078D90`
+  sister of iqrelease cluster (sw398821 not yet in identStrings)
+- 03L906022QF sw398822 (#782, 524KB) — 2618B/35
+
+Many 03L906022 part suffixes (BL/BM/BN/BT/CL/CN/QC/QD/QE/QF) sharing
+similar SGO patterns. Some join 0x06625E (524KB) or 0x1F007A (2MB)
+clusters; others have unique anchors.
+
 ## VW Pairs #753–768 — Passat 2.0 TDI CR EDC17 C46 + more PPD1.2
 
 **Passat 2.0 TDI EDC16 PD 03G906021** (#753-#755):
