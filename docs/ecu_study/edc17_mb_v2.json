@@ -1,0 +1,160 @@
+{
+  "family": "EDC17_MB",
+  "totalPairs": 69,
+  "maps": [
+    {
+      "sigHex": "000c000c091b09e30aab0b73",
+      "sigBytes": [
+        0,
+        12,
+        0,
+        12,
+        9,
+        27,
+        9,
+        227,
+        10,
+        171,
+        11,
+        115
+      ],
+      "rows": 12,
+      "cols": 12,
+      "xAxis": [
+        2331,
+        2531,
+        2731,
+        2931,
+        3131,
+        3331,
+        3531,
+        3731,
+        3931,
+        4131,
+        4331,
+        4531
+      ],
+      "yAxis": [
+        2331,
+        2431,
+        2531,
+        2631,
+        2731,
+        2831,
+        2931,
+        3031,
+        3131,
+        3231,
+        3331,
+        3431
+      ],
+      "le": false,
+      "occurrences": 3,
+      "occurrencePct": 4.3478260869565215,
+      "avgPctChange": 5.00603038007692,
+      "medianPctChange": 5.00603038007692,
+      "sampleFiles": [
+        "MB_C_220CDI_2006_Turbodiesel___110.3KWKW_Bosch___362819_0044.Original",
+        "MB_C_220CDI_2006_Turbodiesel___110.3KWKW_Bosch___362819_0044.Original",
+        "MB_C_220CDI_2006_Turbodiesel___110.3KWKW_Bosch___362819_0044.Original"
+      ]
+    },
+    {
+      "sigHex": "000c000c032004b0064007d0",
+      "sigBytes": [
+        0,
+        12,
+        0,
+        12,
+        3,
+        32,
+        4,
+        176,
+        6,
+        64,
+        7,
+        208
+      ],
+      "rows": 12,
+      "cols": 12,
+      "xAxis": [
+        800,
+        1200,
+        1600,
+        2000,
+        2400,
+        2800,
+        3200,
+        3600,
+        4000,
+        4200,
+        4400,
+        4600
+      ],
+      "yAxis": [
+        1600,
+        1700,
+        1800,
+        1900,
+        2000,
+        2050,
+        2100,
+        2150,
+        2200,
+        2250,
+        2300,
+        2400
+      ],
+      "le": false,
+      "occurrences": 3,
+      "occurrencePct": 4.3478260869565215,
+      "avgPctChange": 9.997706530519078,
+      "medianPctChange": 9.639875204278713,
+      "sampleFiles": [
+        "MB_C_220_CDI_2003_Turbo-Diesel___75KWKW_Bosch__Bosch__366553_FC08.Original",
+        "MB_E_220_CDI_2003_Turbo-Diesel___100KWKW_Bosch__Bosch__366549_D932.Original",
+        "MB_E_320_CDI_2004_Turbodiesel___150KWKW_Bosch___366540_7B94.Original"
+      ]
+    },
+    {
+      "sigHex": "03000600b70dcb0de90db80b",
+      "sigBytes": [
+        3,
+        0,
+        6,
+        0,
+        183,
+        13,
+        203,
+        13,
+        233,
+        13,
+        184,
+        11
+      ],
+      "rows": 6,
+      "cols": 3,
+      "xAxis": [
+        3511,
+        3531,
+        3561
+      ],
+      "yAxis": [
+        3000,
+        6000,
+        8000,
+        14000,
+        16000,
+        18800
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 1.4492753623188406,
+      "avgPctChange": 1.2587677725118374,
+      "medianPctChange": 1.2587677725118374,
+      "sampleFiles": [
+        "MB_Sprinter_319CDI_2010_Turbodiesel__139.7KWKW_Bosch__Bosch_501644_C89B.Original"
+      ]
+    }
+  ]
+}

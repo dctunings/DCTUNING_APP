@@ -1,0 +1,1191 @@
+{
+  "family": "MED9_1",
+  "totalPairs": 178,
+  "maps": [
+    {
+      "sigHex": "000800080fa017c01f402ee0",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        8,
+        15,
+        160,
+        23,
+        192,
+        31,
+        64,
+        46,
+        224
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        4000,
+        6080,
+        8000,
+        12000,
+        16000,
+        19995,
+        24000,
+        26080
+      ],
+      "yAxis": [
+        8960,
+        12800,
+        16640,
+        20480,
+        24320,
+        28160,
+        32000,
+        35840
+      ],
+      "le": false,
+      "occurrences": 56,
+      "occurrencePct": 31.46067415730337,
+      "avgPctChange": 15.706752086783228,
+      "medianPctChange": 16.31060334722585,
+      "sampleFiles": [
+        "Audi_A4_2.0_TFSI_2005_Turbo-Benzin___147.1KWKW_Bosch_0261S02362_8E0907115D__387481_9D49.Original",
+        "Audi_A4_2.0_TFSI_2005_Turbo-Benzin___161.8KWKW_Bosch_0261S02211_8E0907115D__386863_EAFE.Original",
+        "Audi_A4_2.0_TFSI_2006_Turbo-Benzin___147.1KWKW_Bosch_0261S02144_8E0907115C__372543_A067.Original"
+      ]
+    },
+    {
+      "sigHex": "000800080fa017701f402710",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        8,
+        15,
+        160,
+        23,
+        112,
+        31,
+        64,
+        39,
+        16
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        4000,
+        6000,
+        8000,
+        10000,
+        14000,
+        18000,
+        22000,
+        26000
+      ],
+      "yAxis": [
+        8960,
+        12800,
+        16640,
+        20480,
+        24320,
+        28160,
+        32000,
+        35840
+      ],
+      "le": false,
+      "occurrences": 11,
+      "occurrencePct": 6.179775280898876,
+      "avgPctChange": 19.00184457130548,
+      "medianPctChange": 14.838010959715643,
+      "sampleFiles": [
+        "Audi_TT2_2.0_TFSI_2007_Turbo-Benzin___147.1KWKW_Bosch_0261S02581_8J0907115Q__393740_C347.Original",
+        "Audi_TT2_2.0_TFSI_2007_Turbo-Benzin___147.1KWKW_Bosch_0261S02581_8J0907115Q__393740_C347.Original",
+        "Seat_Leon_2.0_TFSI_2006_Turbo-Benzin___176.5KWKW_Bosch_0261S02724_1P0907115AC_502834_0565.Original"
+      ]
+    },
+    {
+      "sigHex": "0008000617701f4027102ee0",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        6,
+        23,
+        112,
+        31,
+        64,
+        39,
+        16,
+        46,
+        224
+      ],
+      "rows": 6,
+      "cols": 8,
+      "xAxis": [
+        6000,
+        8000,
+        10000,
+        12000,
+        16000,
+        20000,
+        24000,
+        26000
+      ],
+      "yAxis": [
+        6652,
+        11518,
+        13828,
+        15614,
+        16384,
+        24576
+      ],
+      "le": false,
+      "occurrences": 8,
+      "occurrencePct": 4.49438202247191,
+      "avgPctChange": 12.999167485900196,
+      "medianPctChange": 13.098647198484503,
+      "sampleFiles": [
+        "Audi_RS6_5.0TFSI_V10_2008_Turbo-Benzin__426.6KWKW_Bosch_0261S02573_4F1907552A__395110_49B7.Original",
+        "Audi_RS6_5.0_V10_TFSI_2009_Turbo-Benzin___426.6KWKW_Bosch_0261S02371_4F1907552A__398562_06D4.Original",
+        "Audi_RS6_5.0_V10_TFSI_2009_Turbo-Benzin___426.6KWKW_Bosch_0261S02573_4F1907552A__395110_203A.Original"
+      ]
+    },
+    {
+      "sigHex": "0008000814501f402ee03e80",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        8,
+        20,
+        80,
+        31,
+        64,
+        46,
+        224,
+        62,
+        128
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        5200,
+        8000,
+        12000,
+        16000,
+        20000,
+        22000,
+        24000,
+        28000
+      ],
+      "yAxis": [
+        10240,
+        12800,
+        17920,
+        23040,
+        28160,
+        33280,
+        35840,
+        38400
+      ],
+      "le": false,
+      "occurrences": 8,
+      "occurrencePct": 4.49438202247191,
+      "avgPctChange": 16.836515109687088,
+      "medianPctChange": 18.671640912518118,
+      "sampleFiles": [
+        "VW_Golf5_1.4_TSI_2007_Turbo-Benzin___125KWKW_Bosch_0261S02238_03C906056BG_380009_773C.Original",
+        "VW_Golf5_1.4_TSI_2007_Turbo-Benzin___125KWKW_Bosch_0261S02238_03C906056BG_380009_773C.Original",
+        "VW_Golf5_1.4_TSI_2007_Turbo-Benzin___125KWKW_Bosch_0261S02238_03C906056BG_380009_773C.Original"
+      ]
+    },
+    {
+      "sigHex": "0500060064002c01f4015802",
+      "sigBytes": [
+        5,
+        0,
+        6,
+        0,
+        100,
+        0,
+        44,
+        1,
+        244,
+        1,
+        88,
+        2
+      ],
+      "rows": 6,
+      "cols": 5,
+      "xAxis": [
+        100,
+        300,
+        500,
+        600,
+        700
+      ],
+      "yAxis": [
+        8000,
+        8800,
+        9200,
+        10000,
+        12000,
+        13000
+      ],
+      "le": true,
+      "occurrences": 6,
+      "occurrencePct": 3.3707865168539324,
+      "avgPctChange": 102.10866709334051,
+      "medianPctChange": 102.10866709334053,
+      "sampleFiles": [
+        "Audi_A3_1.8_TFSI__2009_Turbo-Benzin___117.7KWKW_Bosch_0261201915_8P1907115B__389794_9928.Original",
+        "Audi_A4_1.8_TFSI_2008_Turbo-Benzin___117.7KWKW_Bosch_0261201672_1P0907115A__389460_A4D3.Original",
+        "Audi_A3_1.8_TFSI__2009_Turbo-Benzin___117.7KWKW_Bosch_0261201915_8P1907115B__389794_9928.Original"
+      ]
+    },
+    {
+      "sigHex": "00080009011f023d03ae051f",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        9,
+        1,
+        31,
+        2,
+        61,
+        3,
+        174,
+        5,
+        31
+      ],
+      "rows": 9,
+      "cols": 8,
+      "xAxis": [
+        287,
+        573,
+        942,
+        1311,
+        1679,
+        2048,
+        3072,
+        4055
+      ],
+      "yAxis": [
+        0,
+        19,
+        31,
+        40,
+        50,
+        63,
+        83,
+        113,
+        150
+      ],
+      "le": false,
+      "occurrences": 6,
+      "occurrencePct": 3.3707865168539324,
+      "avgPctChange": 58.772395566017146,
+      "medianPctChange": 63.15770844025981,
+      "sampleFiles": [
+        "Audi_A4_2.0_TFSI_2006_Turbo-Benzin___147.1KWKW_Bosch_0261S02144_8E0907115C__372543_A067.Original",
+        "Audi_A4_2.0_TFSI_2007_Turbo-Benzin___147.1KWKW_Bosch_0261S02224_8E0907115D__381979_6DE0.Original",
+        "Audi_A4_2.0_TFSI_2007_Turbo-Benzin___147.1KWKW_Bosch_0261S02224_8E0907115D__386454_6C8A.Original"
+      ]
+    },
+    {
+      "sigHex": "000800060fa017701f402710",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        6,
+        15,
+        160,
+        23,
+        112,
+        31,
+        64,
+        39,
+        16
+      ],
+      "rows": 6,
+      "cols": 8,
+      "xAxis": [
+        4000,
+        6000,
+        8000,
+        10000,
+        12000,
+        16000,
+        20000,
+        24000
+      ],
+      "yAxis": [
+        6652,
+        11518,
+        13828,
+        15614,
+        16384,
+        24576
+      ],
+      "le": false,
+      "occurrences": 4,
+      "occurrencePct": 2.247191011235955,
+      "avgPctChange": 20.988539930905816,
+      "medianPctChange": 20.988539930905816,
+      "sampleFiles": [
+        "Audi_RS6_5.0TFSI_V10_2008_Turbo-Benzin__426.6KWKW_Bosch_0261S02573_4F1907552A__395110_49B7.Original",
+        "Audi_RS6_5.0_V10_TFSI_2009_Turbo-Benzin___426.6KWKW_Bosch_0261S02573_4F1907552A__395110_203A.Original",
+        "Audi_RS6_5.0TFSI_V10_2008_Turbo-Benzin__426.6KWKW_Bosch_0261S02573_4F1907552A__395110_49B7.Original"
+      ]
+    },
+    {
+      "sigHex": "10000600581b401f28231027",
+      "sigBytes": [
+        16,
+        0,
+        6,
+        0,
+        88,
+        27,
+        64,
+        31,
+        40,
+        35,
+        16,
+        39
+      ],
+      "rows": 6,
+      "cols": 16,
+      "xAxis": [
+        7000,
+        8000,
+        9000,
+        10000,
+        12000,
+        14000,
+        16000,
+        18000,
+        19000,
+        20000,
+        22000,
+        23000,
+        24000,
+        24960,
+        26000,
+        26800
+      ],
+      "yAxis": [
+        37,
+        51,
+        64,
+        117,
+        184,
+        224
+      ],
+      "le": true,
+      "occurrences": 4,
+      "occurrencePct": 2.247191011235955,
+      "avgPctChange": 18.911551391607873,
+      "medianPctChange": 17.428526262674772,
+      "sampleFiles": [
+        "Porsche_997_TT_3.6_Turbo_2007_Turbo-Benzin___353KWKW_Bosch_00419300B7305858_0261208867_1039S19440_4EE3.Original",
+        "Porsche_997_TT_3.6_Turbo_2007_Turbo-Benzin___353KWKW_Bosch_0261208867_00419300B7215813_1039S14693_5A5E.Original",
+        "Porsche_997_TT_3.6_Turbo_2007_Turbo-Benzin___353KWKW_Bosch_0261208867_00419300B7215819_1039S14693_D06D.Original"
+      ]
+    },
+    {
+      "sigHex": "0004000700190032004b0064",
+      "sigBytes": [
+        0,
+        4,
+        0,
+        7,
+        0,
+        25,
+        0,
+        50,
+        0,
+        75,
+        0,
+        100
+      ],
+      "rows": 7,
+      "cols": 4,
+      "xAxis": [
+        25,
+        50,
+        75,
+        100
+      ],
+      "yAxis": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        6,
+        7
+      ],
+      "le": false,
+      "occurrences": 3,
+      "occurrencePct": 1.6853932584269662,
+      "avgPctChange": 224.97077887578368,
+      "medianPctChange": 224.97077887578368,
+      "sampleFiles": [
+        "Ford_Focus_2.5_Turbo_2008_Turbo-Benzin___165.5KWKW_Bosch_0261209048__393284_A120.Original",
+        "Ford_Focus_ST_2.5_Turbo_2005_Turbo-Benzin___165.5KWKW_Bosch_0261209048__393284_18B5.Original",
+        "Ford_Focus_ST_2.5_Turbo_2006_Turbo-Benzin___165.5KWKW_Bosch_0261209048__393284_D6A5.Original"
+      ]
+    },
+    {
+      "sigHex": "0a000e00802a802c802e8030",
+      "sigBytes": [
+        10,
+        0,
+        14,
+        0,
+        128,
+        42,
+        128,
+        44,
+        128,
+        46,
+        128,
+        48
+      ],
+      "rows": 14,
+      "cols": 10,
+      "xAxis": [
+        10880,
+        11392,
+        11904,
+        12416,
+        12928,
+        13696,
+        13952,
+        14464,
+        14976,
+        15680
+      ],
+      "yAxis": [
+        1600,
+        4000,
+        6000,
+        8000,
+        10000,
+        11000,
+        12000,
+        13000,
+        14000,
+        16000,
+        18000,
+        20000,
+        22000,
+        24000
+      ],
+      "le": true,
+      "occurrences": 2,
+      "occurrencePct": 1.1235955056179776,
+      "avgPctChange": -2.8353697883420352,
+      "medianPctChange": -1.0063462511211152,
+      "sampleFiles": [
+        "Fiat_Punto_Grande_1.4_TJET_2008_Turbo-Benzin___114KWKW_Bosch_0261S04662_51847238_397661_4CEA.Original",
+        "Fiat_Punto_Grande_1.4_TJET_2008_Turbo-Benzin___114KWKW_Bosch_0261S04662_51847238_397661_4CEA.Original"
+      ]
+    },
+    {
+      "sigHex": "0008000814501a901f402710",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        8,
+        20,
+        80,
+        26,
+        144,
+        31,
+        64,
+        39,
+        16
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        5200,
+        6800,
+        8000,
+        10000,
+        12000,
+        16000,
+        20000,
+        24000
+      ],
+      "yAxis": [
+        10240,
+        11520,
+        14080,
+        17920,
+        23040,
+        28160,
+        33280,
+        38400
+      ],
+      "le": false,
+      "occurrences": 2,
+      "occurrencePct": 1.1235955056179776,
+      "avgPctChange": 25.281778704199656,
+      "medianPctChange": 38.56186735061007,
+      "sampleFiles": [
+        "Ford_Focus_ST_2.5_Turbo_2005_Turbo-Benzin___165.5KWKW_Bosch_0261209048__393284_18B5.Original",
+        "Volvo_C70_2.5_Turbo_2005_Turbo-Benzin___165.5KWKW_Bosch_0261209009_Bosch__1764308467_ECCF.Original"
+      ]
+    },
+    {
+      "sigHex": "08000800d50a800c2b0ed50f",
+      "sigBytes": [
+        8,
+        0,
+        8,
+        0,
+        213,
+        10,
+        128,
+        12,
+        43,
+        14,
+        213,
+        15
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        2773,
+        3200,
+        3627,
+        4053,
+        4480,
+        5333,
+        6400,
+        7467
+      ],
+      "yAxis": [
+        6000,
+        8000,
+        9000,
+        10000,
+        12000,
+        16000,
+        20000,
+        24000
+      ],
+      "le": true,
+      "occurrences": 2,
+      "occurrencePct": 1.1235955056179776,
+      "avgPctChange": 22.21537067382693,
+      "medianPctChange": 22.21537067382693,
+      "sampleFiles": [
+        "Porsche_997_TT_3.6_Turbo_2007_Turbo-Benzin___353KWKW_Bosch_00419300B7305858_0261208867_1039S19440_4EE3.Original",
+        "Porsche_997_TT_3.6_Turbo_2007_Turbo-Benzin___353KWKW_Bosch_00419300B7305858_0261208867_1039S19440_4EE3.Original"
+      ]
+    },
+    {
+      "sigHex": "0008000801f403e805dc07d0",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        8,
+        1,
+        244,
+        3,
+        232,
+        5,
+        220,
+        7,
+        208
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        500,
+        1000,
+        1500,
+        2000,
+        2500,
+        3000,
+        3500,
+        4500
+      ],
+      "yAxis": [
+        2431,
+        2631,
+        2831,
+        3031,
+        3231,
+        3431,
+        3631,
+        3831
+      ],
+      "le": false,
+      "occurrences": 1,
+      "occurrencePct": 0.5617977528089888,
+      "avgPctChange": 4.0236328125,
+      "medianPctChange": 4.0236328125,
+      "sampleFiles": [
+        "BMW_E90-E91_320D_2007_Turbo-Benzin___119.9KWKW_Bosch__O_C1A942_381341_7271.Original"
+      ]
+    },
+    {
+      "sigHex": "0006000503e805dc07d00bb8",
+      "sigBytes": [
+        0,
+        6,
+        0,
+        5,
+        3,
+        232,
+        5,
+        220,
+        7,
+        208,
+        11,
+        184
+      ],
+      "rows": 5,
+      "cols": 6,
+      "xAxis": [
+        1000,
+        1500,
+        2000,
+        3000,
+        3500,
+        4000
+      ],
+      "yAxis": [
+        2931,
+        3331,
+        3531,
+        3581,
+        3631
+      ],
+      "le": false,
+      "occurrences": 1,
+      "occurrencePct": 0.5617977528089888,
+      "avgPctChange": 4.083702213279672,
+      "medianPctChange": 4.083702213279672,
+      "sampleFiles": [
+        "BMW_E90-E91_320D_2007_Turbo-Benzin___119.9KWKW_Bosch__O_C1A942_381341_7271.Original"
+      ]
+    },
+    {
+      "sigHex": "0900070000005000c8009001",
+      "sigBytes": [
+        9,
+        0,
+        7,
+        0,
+        0,
+        0,
+        80,
+        0,
+        200,
+        0,
+        144,
+        1
+      ],
+      "rows": 7,
+      "cols": 9,
+      "xAxis": [
+        0,
+        80,
+        200,
+        400,
+        800,
+        1200,
+        1500,
+        3000,
+        5000
+      ],
+      "yAxis": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6,
+        9
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 0.5617977528089888,
+      "avgPctChange": -20.267485734836054,
+      "medianPctChange": -20.267485734836054,
+      "sampleFiles": [
+        "Fiat_Punto_Grande_1.4_TJET_2008_Turbo-Benzin___114KWKW_Bosch_0261S04662_51847238_397661_4CEA.Original"
+      ]
+    },
+    {
+      "sigHex": "08000800f00ac012201c8025",
+      "sigBytes": [
+        8,
+        0,
+        8,
+        0,
+        240,
+        10,
+        192,
+        18,
+        32,
+        28,
+        128,
+        37
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        2800,
+        4800,
+        7200,
+        9600,
+        12000,
+        16000,
+        20000,
+        26000
+      ],
+      "yAxis": [
+        320,
+        427,
+        640,
+        1280,
+        1920,
+        2560,
+        3840,
+        5333
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 0.5617977528089888,
+      "avgPctChange": -1.6542844648884447,
+      "medianPctChange": -1.6542844648884447,
+      "sampleFiles": [
+        "Fiat_Punto_Grande_1.4_TJET_2008_Turbo-Benzin___114KWKW_Bosch_0261S04662_51847238_397661_4CEA.Original"
+      ]
+    },
+    {
+      "sigHex": "070007000000000a00140028",
+      "sigBytes": [
+        7,
+        0,
+        7,
+        0,
+        0,
+        0,
+        0,
+        10,
+        0,
+        20,
+        0,
+        40
+      ],
+      "rows": 7,
+      "cols": 7,
+      "xAxis": [
+        0,
+        2560,
+        5120,
+        10240,
+        15360,
+        20480,
+        28160
+      ],
+      "yAxis": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6,
+        9
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 0.5617977528089888,
+      "avgPctChange": 56.54825526563974,
+      "medianPctChange": 56.54825526563974,
+      "sampleFiles": [
+        "Fiat_Punto_Grande_1.4_TJET_2008_Turbo-Benzin___114KWKW_Bosch_0261S04662_51847238_397661_4CEA.Original"
+      ]
+    },
+    {
+      "sigHex": "05000500800c7017401fe02e",
+      "sigBytes": [
+        5,
+        0,
+        5,
+        0,
+        128,
+        12,
+        112,
+        23,
+        64,
+        31,
+        224,
+        46
+      ],
+      "rows": 5,
+      "cols": 5,
+      "xAxis": [
+        3200,
+        6000,
+        8000,
+        12000,
+        16000
+      ],
+      "yAxis": [
+        12508,
+        13361,
+        14214,
+        15068,
+        15921
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 0.5617977528089888,
+      "avgPctChange": -8.500039850163388,
+      "medianPctChange": -8.500039850163388,
+      "sampleFiles": [
+        "Fiat_Punto_Grande_1.4_TJET_2008_Turbo-Benzin___114KWKW_Bosch_0261S04662_51847238_397661_4CEA.Original"
+      ]
+    },
+    {
+      "sigHex": "04000400401fe02e803eb068",
+      "sigBytes": [
+        4,
+        0,
+        4,
+        0,
+        64,
+        31,
+        224,
+        46,
+        128,
+        62,
+        176,
+        104
+      ],
+      "rows": 4,
+      "cols": 4,
+      "xAxis": [
+        8000,
+        12000,
+        16000,
+        26800
+      ],
+      "yAxis": [
+        36045,
+        40960,
+        52429,
+        65535
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 0.5617977528089888,
+      "avgPctChange": 58.6596663955294,
+      "medianPctChange": 58.6596663955294,
+      "sampleFiles": [
+        "Fiat_Punto_Grande_1.4_TJET_2008_Turbo-Benzin___114KWKW_Bosch_0261S04662_51847238_397661_4CEA.Original"
+      ]
+    },
+    {
+      "sigHex": "0a000e00003440348034c034",
+      "sigBytes": [
+        10,
+        0,
+        14,
+        0,
+        0,
+        52,
+        64,
+        52,
+        128,
+        52,
+        192,
+        52
+      ],
+      "rows": 14,
+      "cols": 10,
+      "xAxis": [
+        13312,
+        13376,
+        13440,
+        13504,
+        13568,
+        13632,
+        13696,
+        13760,
+        13824,
+        13888
+      ],
+      "yAxis": [
+        1200,
+        3400,
+        4800,
+        5600,
+        6800,
+        7600,
+        9600,
+        11600,
+        12400,
+        14800,
+        16400,
+        19200,
+        21200,
+        25600
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 0.5617977528089888,
+      "avgPctChange": 0.9610100129842536,
+      "medianPctChange": 0.9610100129842536,
+      "sampleFiles": [
+        "Fiat_Punto_Grande_1.4_TJET_2008_Turbo-Benzin___114KWKW_Bosch_0261S04662_51847238_397661_4CEA.Original"
+      ]
+    },
+    {
+      "sigHex": "000c0008064008200c7f0c80",
+      "sigBytes": [
+        0,
+        12,
+        0,
+        8,
+        6,
+        64,
+        8,
+        32,
+        12,
+        127,
+        12,
+        128
+      ],
+      "rows": 8,
+      "cols": 12,
+      "xAxis": [
+        1600,
+        2080,
+        3199,
+        3200,
+        4960,
+        6080,
+        7040,
+        8000,
+        10080,
+        12000,
+        14080,
+        16000
+      ],
+      "yAxis": [
+        0,
+        363,
+        364,
+        1504,
+        2064,
+        2432,
+        2800,
+        3536
+      ],
+      "le": false,
+      "occurrences": 1,
+      "occurrencePct": 0.5617977528089888,
+      "avgPctChange": 36.04166666666666,
+      "medianPctChange": 36.04166666666666,
+      "sampleFiles": [
+        "Ford_Focus_ST_2.5_Turbo_2005_Turbo-Benzin___165.5KWKW_Bosch_0261209048__393284_18B5.Original"
+      ]
+    },
+    {
+      "sigHex": "000a00030fa0136017c01f40",
+      "sigBytes": [
+        0,
+        10,
+        0,
+        3,
+        15,
+        160,
+        19,
+        96,
+        23,
+        192,
+        31,
+        64
+      ],
+      "rows": 3,
+      "cols": 10,
+      "xAxis": [
+        4000,
+        4960,
+        6080,
+        8000,
+        10080,
+        12000,
+        14080,
+        16000,
+        20000,
+        24000
+      ],
+      "yAxis": [
+        11469,
+        13926,
+        16384
+      ],
+      "le": false,
+      "occurrences": 1,
+      "occurrencePct": 0.5617977528089888,
+      "avgPctChange": 0.60175306633099,
+      "medianPctChange": 0.60175306633099,
+      "sampleFiles": [
+        "Ford_Focus_ST_2.5_Turbo_2006_Turbo-Benzin___165.5KWKW_Bosch_0261209048__393284_D6A5.Original"
+      ]
+    },
+    {
+      "sigHex": "06000800500096002c015802",
+      "sigBytes": [
+        6,
+        0,
+        8,
+        0,
+        80,
+        0,
+        150,
+        0,
+        44,
+        1,
+        88,
+        2
+      ],
+      "rows": 8,
+      "cols": 6,
+      "xAxis": [
+        80,
+        150,
+        300,
+        600,
+        1200,
+        2500
+      ],
+      "yAxis": [
+        18060,
+        22321,
+        26588,
+        32988,
+        39388,
+        43654,
+        46641,
+        47921
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 0.5617977528089888,
+      "avgPctChange": 11.62859728107344,
+      "medianPctChange": 11.62859728107344,
+      "sampleFiles": [
+        "Mini_Cooper_S_1.6_Turbo_2007_Turbo-Benzin___128KWKW_Bosch_0261S04_07507548_394883_B96E.Original"
+      ]
+    },
+    {
+      "sigHex": "0a0008004001200300054006",
+      "sigBytes": [
+        10,
+        0,
+        8,
+        0,
+        64,
+        1,
+        32,
+        3,
+        0,
+        5,
+        64,
+        6
+      ],
+      "rows": 8,
+      "cols": 10,
+      "xAxis": [
+        320,
+        800,
+        1280,
+        1600,
+        1920,
+        2240,
+        2560,
+        3200,
+        3840,
+        4800
+      ],
+      "yAxis": [
+        8192,
+        9830,
+        11469,
+        13107,
+        14746,
+        16384,
+        18022,
+        21299
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 0.5617977528089888,
+      "avgPctChange": 2.3783720579592327,
+      "medianPctChange": 2.3783720579592327,
+      "sampleFiles": [
+        "Peugeot_207_1.6_THP_16V_2008_Turbo-Benzin___114.7KWKW_Bosch___393691_3E4C.Original"
+      ]
+    },
+    {
+      "sigHex": "08000800581b401f1027e02e",
+      "sigBytes": [
+        8,
+        0,
+        8,
+        0,
+        88,
+        27,
+        64,
+        31,
+        16,
+        39,
+        224,
+        46
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        7000,
+        8000,
+        10000,
+        12000,
+        16000,
+        20000,
+        24000,
+        27000
+      ],
+      "yAxis": [
+        27117,
+        30655,
+        35840,
+        40960,
+        46080,
+        48640,
+        51200,
+        53760
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 0.5617977528089888,
+      "avgPctChange": 7.254268283833021,
+      "medianPctChange": 7.254268283833021,
+      "sampleFiles": [
+        "Porsche_997_TT_3.6_Turbo_2007_Turbo-Benzin___353KWKW_Bosch_00419300B7305858_0261208867_1039S19440_4EE3.Original"
+      ]
+    }
+  ]
+}

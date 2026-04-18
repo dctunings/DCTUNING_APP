@@ -1,0 +1,53 @@
+{
+  "family": "EDC16_C8",
+  "totalPairs": 29,
+  "maps": [
+    {
+      "sigHex": "0008000803e805dc07d009c4",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        8,
+        3,
+        232,
+        5,
+        220,
+        7,
+        208,
+        9,
+        196
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        1000,
+        1500,
+        2000,
+        2500,
+        3000,
+        3500,
+        4000,
+        4500
+      ],
+      "yAxis": [
+        3631,
+        3681,
+        3731,
+        3781,
+        3831,
+        3931,
+        4031,
+        4131
+      ],
+      "le": false,
+      "occurrences": 1,
+      "occurrencePct": 3.4482758620689653,
+      "avgPctChange": 5.527716186252762,
+      "medianPctChange": 5.527716186252762,
+      "sampleFiles": [
+        "Fiat_Stilo_1.9_16V_JTD_2005_Turbodiesel___84.6KWKW_Bosch_0281011831_Bosch_372148_BB4B.Original"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1177 @@
+{
+  "family": "MED17",
+  "totalPairs": 265,
+  "maps": [
+    {
+      "sigHex": "000800080fa017c01f402ee0",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        8,
+        15,
+        160,
+        23,
+        192,
+        31,
+        64,
+        46,
+        224
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        4000,
+        6080,
+        8000,
+        12000,
+        16000,
+        19995,
+        24000,
+        26080
+      ],
+      "yAxis": [
+        8960,
+        12800,
+        16640,
+        20480,
+        24320,
+        28160,
+        32000,
+        35840
+      ],
+      "le": false,
+      "occurrences": 98,
+      "occurrencePct": 36.9811320754717,
+      "avgPctChange": 14.578346507105415,
+      "medianPctChange": 16.31060334722585,
+      "sampleFiles": [
+        "Audi_A3_2.0_TFSI_2007_Turbo-Benzin___147.1KWKW_Bosch_0261S02470_1K0907115Q__391082_3C99.Original",
+        "Audi_A3_2.0_TFSI_2007_Turbo-Benzin___147.1KWKW_Bosch_0261S02470_1K0907115Q__391082_3C99.Original",
+        "VW_Eos_2.0_TFSI_2007_Turbo-Benzin___147.1KWKW_Bosch_0261S02080_1K0907115B__376240_5464.Original"
+      ]
+    },
+    {
+      "sigHex": "000800060fa01b5822602ee0",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        6,
+        15,
+        160,
+        27,
+        88,
+        34,
+        96,
+        46,
+        224
+      ],
+      "rows": 6,
+      "cols": 8,
+      "xAxis": [
+        4000,
+        7000,
+        8800,
+        12000,
+        20000,
+        22000,
+        24000,
+        26800
+      ],
+      "yAxis": [
+        9830,
+        12288,
+        13926,
+        14746,
+        15565,
+        16384
+      ],
+      "le": false,
+      "occurrences": 16,
+      "occurrencePct": 6.037735849056604,
+      "avgPctChange": 45.0264789735716,
+      "medianPctChange": 65.74346350559375,
+      "sampleFiles": [
+        "Audi_RS3_2.5_TFSI_2017_Turbo-Benzin___250.1KWKW_Bosch_0261S02825_8P0907404___51.91_87FE.Original",
+        "Audi_RS3_2.5_TFSI_2017_Turbo-Benzin___250.1KWKW_Bosch_0261S02825_8P0907404___51.91_87FE.Original",
+        "Audi_TT_RS_plus_2.5_TFSI_V5_2017_Turbo-Benzin___264.8KWKW_Bosch_0261S02835_8J0907404M__526648_8DD3.Original"
+      ]
+    },
+    {
+      "sigHex": "000c00080fa0138819001f40",
+      "sigBytes": [
+        0,
+        12,
+        0,
+        8,
+        15,
+        160,
+        19,
+        136,
+        25,
+        0,
+        31,
+        64
+      ],
+      "rows": 8,
+      "cols": 12,
+      "xAxis": [
+        4000,
+        5000,
+        6400,
+        8000,
+        10000,
+        12000,
+        16000,
+        18000,
+        20000,
+        22000,
+        24000,
+        26000
+      ],
+      "yAxis": [
+        17920,
+        19200,
+        20480,
+        21760,
+        23040,
+        24320,
+        25600,
+        28160
+      ],
+      "le": false,
+      "occurrences": 8,
+      "occurrencePct": 3.018867924528302,
+      "avgPctChange": 9.99886467050777,
+      "medianPctChange": 9.998864670507768,
+      "sampleFiles": [
+        "Audi_RS3_2.5_TFSI_2017_Turbo-Benzin___250.1KWKW_Bosch_0261S02825_8P0907404___51.91_87FE.Original",
+        "Audi_TT_RS_plus_2.5_TFSI_V5_2017_Turbo-Benzin___264.8KWKW_Bosch_0261S02835_8J0907404M__526648_8DD3.Original",
+        "Audi_RS3_2.5_TFSI_2012_Turbo-Benzin___250.1KWKW_Bosch_0261S02825_8P0907404___51.91_87FE.Original"
+      ]
+    },
+    {
+      "sigHex": "000a00060a660b330c000ccd",
+      "sigBytes": [
+        0,
+        10,
+        0,
+        6,
+        10,
+        102,
+        11,
+        51,
+        12,
+        0,
+        12,
+        205
+      ],
+      "rows": 6,
+      "cols": 10,
+      "xAxis": [
+        2662,
+        2867,
+        3072,
+        3277,
+        3482,
+        3686,
+        3891,
+        4096,
+        4301,
+        4506
+      ],
+      "yAxis": [
+        120,
+        700,
+        1500,
+        3000,
+        6000,
+        10000
+      ],
+      "le": false,
+      "occurrences": 8,
+      "occurrencePct": 3.018867924528302,
+      "avgPctChange": 9.776708965645087,
+      "medianPctChange": 9.776708965645087,
+      "sampleFiles": [
+        "Audi_RS3_2.5_TFSI_2017_Turbo-Benzin___250.1KWKW_Bosch_0261S02825_8P0907404___51.91_87FE.Original",
+        "Audi_TT_RS_plus_2.5_TFSI_V5_2017_Turbo-Benzin___264.8KWKW_Bosch_0261S02835_8J0907404M__526648_8DD3.Original",
+        "Audi_RS3_2.5_TFSI_2012_Turbo-Benzin___250.1KWKW_Bosch_0261S02825_8P0907404___51.91_87FE.Original"
+      ]
+    },
+    {
+      "sigHex": "0005000500ab00b800c500d3",
+      "sigBytes": [
+        0,
+        5,
+        0,
+        5,
+        0,
+        171,
+        0,
+        184,
+        0,
+        197,
+        0,
+        211
+      ],
+      "rows": 5,
+      "cols": 5,
+      "xAxis": [
+        171,
+        184,
+        197,
+        211,
+        224
+      ],
+      "yAxis": [
+        77,
+        91,
+        97,
+        104,
+        111
+      ],
+      "le": false,
+      "occurrences": 8,
+      "occurrencePct": 3.018867924528302,
+      "avgPctChange": 11.329188157505078,
+      "medianPctChange": 13.2720947265625,
+      "sampleFiles": [
+        "Audi_RS3_2.5_TFSI_2017_Turbo-Benzin___250.1KWKW_Bosch_0261S02825_8P0907404___51.91_87FE.Original",
+        "Audi_TT_RS_plus_2.5_TFSI_V5_2017_Turbo-Benzin___264.8KWKW_Bosch_0261S02835_8J0907404M__526648_8DD3.Original",
+        "Audi_RS3_2.5_TFSI_2012_Turbo-Benzin___250.1KWKW_Bosch_0261S02825_8P0907404___51.91_87FE.Original"
+      ]
+    },
+    {
+      "sigHex": "000500053adc3c863e313fdc",
+      "sigBytes": [
+        0,
+        5,
+        0,
+        5,
+        58,
+        220,
+        60,
+        134,
+        62,
+        49,
+        63,
+        220
+      ],
+      "rows": 5,
+      "cols": 5,
+      "xAxis": [
+        15068,
+        15494,
+        15921,
+        16348,
+        16774
+      ],
+      "yAxis": [
+        77,
+        91,
+        97,
+        104,
+        111
+      ],
+      "le": false,
+      "occurrences": 8,
+      "occurrencePct": 3.018867924528302,
+      "avgPctChange": 11.329188157505078,
+      "medianPctChange": 13.2720947265625,
+      "sampleFiles": [
+        "Audi_RS3_2.5_TFSI_2017_Turbo-Benzin___250.1KWKW_Bosch_0261S02825_8P0907404___51.91_87FE.Original",
+        "Audi_TT_RS_plus_2.5_TFSI_V5_2017_Turbo-Benzin___264.8KWKW_Bosch_0261S02835_8J0907404M__526648_8DD3.Original",
+        "Audi_RS3_2.5_TFSI_2012_Turbo-Benzin___250.1KWKW_Bosch_0261S02825_8P0907404___51.91_87FE.Original"
+      ]
+    },
+    {
+      "sigHex": "040004001027e02e204e9065",
+      "sigBytes": [
+        4,
+        0,
+        4,
+        0,
+        16,
+        39,
+        224,
+        46,
+        32,
+        78,
+        144,
+        101
+      ],
+      "rows": 4,
+      "cols": 4,
+      "xAxis": [
+        10000,
+        12000,
+        20000,
+        26000
+      ],
+      "yAxis": [
+        32768,
+        39322,
+        45875,
+        58982
+      ],
+      "le": true,
+      "occurrences": 8,
+      "occurrencePct": 3.018867924528302,
+      "avgPctChange": 95.87762426175418,
+      "medianPctChange": 171.75759222773289,
+      "sampleFiles": [
+        "Ford_Mondeo_2.0_SCTI_2011_Turbo-Benzin__176.5KWKW_Bosch___513771_41BA.Original",
+        "Ford_Mondeo_2.0_SCTI_2011_Turbo-Benzin__176.5KWKW_Bosch___513771_41BA.Original",
+        "Volvo_V70_2.0_T_2011_Turbo-Benzin__119.9KWKW_Bosch___523065_0C91.Original"
+      ]
+    },
+    {
+      "sigHex": "00080009011f023d03ae051f",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        9,
+        1,
+        31,
+        2,
+        61,
+        3,
+        174,
+        5,
+        31
+      ],
+      "rows": 9,
+      "cols": 8,
+      "xAxis": [
+        287,
+        573,
+        942,
+        1311,
+        1679,
+        2048,
+        3072,
+        4055
+      ],
+      "yAxis": [
+        0,
+        19,
+        31,
+        40,
+        50,
+        63,
+        83,
+        113,
+        150
+      ],
+      "le": false,
+      "occurrences": 6,
+      "occurrencePct": 2.2641509433962264,
+      "avgPctChange": 55.73771063375788,
+      "medianPctChange": 55.73771063375788,
+      "sampleFiles": [
+        "VW_Golf_2.0_TFSI_R_2017_Turbo-Benzin__198.6KWKW_Bosch_0261S02782_1K8907115F__510589_3CA4.Original",
+        "VW_Golf_2.0_TFSI_R_2012_Turbo-Benzin__198.6KWKW_Bosch_0261S02782_1K8907115F__510589_3CA4.Original",
+        "VW_Golf_2.0_TFSI_R_2012_Turbo-Benzin__198.6KWKW_Bosch_0261S02782_1K8907115F__510589_3CA4.Original"
+      ]
+    },
+    {
+      "sigHex": "00080008828687868c869186",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        8,
+        130,
+        134,
+        135,
+        134,
+        140,
+        134,
+        145,
+        134
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        33414,
+        34694,
+        35974,
+        37254,
+        38534,
+        39814,
+        41094,
+        42374
+      ],
+      "yAxis": [
+        200,
+        300,
+        400,
+        500,
+        600,
+        700,
+        800,
+        900
+      ],
+      "le": false,
+      "occurrences": 4,
+      "occurrencePct": 1.509433962264151,
+      "avgPctChange": -93.0287021404063,
+      "medianPctChange": -93.0287021404063,
+      "sampleFiles": [
+        "Audi_TT_RS_plus_2.5_TFSI_V5_2017_Turbo-Benzin___264.8KWKW_Bosch_0261S02835_8J0907404M__526648_8DD3.Original",
+        "Audi_TT_RS_plus_2.5_TFSI_V5_2012_Turbo-Benzin___264.8KWKW_Bosch_0261S02835_8J0907404M__526648_8DD3.Original",
+        "Audi_TT_RS_plus_2.5_TFSI_V5_2012_Turbo-Benzin___264.8KWKW_Bosch_0261S02835_8J0907404M__526648_8DD3.Original"
+      ]
+    },
+    {
+      "sigHex": "080008000000a00f401fe02e",
+      "sigBytes": [
+        8,
+        0,
+        8,
+        0,
+        0,
+        0,
+        160,
+        15,
+        64,
+        31,
+        224,
+        46
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        0,
+        4000,
+        8000,
+        12000,
+        16000,
+        20000,
+        24000,
+        28000
+      ],
+      "yAxis": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70
+      ],
+      "le": true,
+      "occurrences": 4,
+      "occurrencePct": 1.509433962264151,
+      "avgPctChange": 70.20533352595947,
+      "medianPctChange": 70.20533352595947,
+      "sampleFiles": [
+        "Peugeot_508_1.6_THP_2017___114KWKW_Bosch___517036_AC27.Original",
+        "Peugeot_508_1.6_THP_2012___114KWKW_Bosch___517036_AC27.Original",
+        "Peugeot_RCZ_1.6THP_2010_Turbo-Benzin__114.7KWKW_Bosch___505552_736B.Original"
+      ]
+    },
+    {
+      "sigHex": "000800080fa017701f402710",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        8,
+        15,
+        160,
+        23,
+        112,
+        31,
+        64,
+        39,
+        16
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        4000,
+        6000,
+        8000,
+        10000,
+        14000,
+        18000,
+        22000,
+        26000
+      ],
+      "yAxis": [
+        8960,
+        12800,
+        16640,
+        20480,
+        24320,
+        28160,
+        32000,
+        35840
+      ],
+      "le": false,
+      "occurrences": 4,
+      "occurrencePct": 1.509433962264151,
+      "avgPctChange": 12.189721563981038,
+      "medianPctChange": 12.189721563981038,
+      "sampleFiles": [
+        "VW_Golf5_2.0_TFSI_EDITION_30_2007_Turbo-Benzin___169.2KWKW_Bosch_0261S02429_1K0907115L__386855_5B6F.Original",
+        "VW_Golf5_2.0_TFSI_EDITION_30_2007_Turbo-Benzin___169.2KWKW_Bosch_0261S02429_1K0907115L__386855_5B6F.Original",
+        "VW_Golf5_2.0_TFSI_EDITION_30_2007_Turbo-Benzin___169.2KWKW_Bosch_0261S02429_1K0907115L__386855_5B6F.Original"
+      ]
+    },
+    {
+      "sigHex": "0500060064002c01f4015802",
+      "sigBytes": [
+        5,
+        0,
+        6,
+        0,
+        100,
+        0,
+        44,
+        1,
+        244,
+        1,
+        88,
+        2
+      ],
+      "rows": 6,
+      "cols": 5,
+      "xAxis": [
+        100,
+        300,
+        500,
+        600,
+        700
+      ],
+      "yAxis": [
+        8000,
+        8800,
+        9200,
+        10000,
+        12000,
+        13000
+      ],
+      "le": true,
+      "occurrences": 4,
+      "occurrencePct": 1.509433962264151,
+      "avgPctChange": 12.63179169333377,
+      "medianPctChange": 12.63179169333377,
+      "sampleFiles": [
+        "VW_Vento_2.0_TSI_2010_Turbo-Benzin___155.2KWKW_Bosch_0261201888_1K0907115AB_399537_0BF6.Original",
+        "VW_Vento_2.0_TSI_2010_Turbo-Benzin___155.2KWKW_Bosch_0261201888_1K0907115AB_399537_0BF6.Original",
+        "VW_Vento_2.0_TSI_2010_Turbo-Benzin___155.2KWKW_Bosch_0261201888_1K0907115AB_399537_0BF6.Original"
+      ]
+    },
+    {
+      "sigHex": "040004001027b036204e9065",
+      "sigBytes": [
+        4,
+        0,
+        4,
+        0,
+        16,
+        39,
+        176,
+        54,
+        32,
+        78,
+        144,
+        101
+      ],
+      "rows": 4,
+      "cols": 4,
+      "xAxis": [
+        10000,
+        14000,
+        20000,
+        26000
+      ],
+      "yAxis": [
+        29491,
+        36045,
+        42598,
+        49152
+      ],
+      "le": true,
+      "occurrences": 3,
+      "occurrencePct": 1.1320754716981132,
+      "avgPctChange": 196.12604711646054,
+      "medianPctChange": 196.12604711646054,
+      "sampleFiles": [
+        "Alfa_159_1750TBI_2017_Turbo-Benzin__147.1KWKW_Bosch_0261S07354_51901122_515934_0AEB.Original",
+        "Alfa_159_1750TBI_2012_Turbo-Benzin__147.1KWKW_Bosch_0261S07354_51901122_515934_0AEB.Original",
+        "Alfa_159_1750TBI_2017_Turbo-Benzin__147.1KWKW_Bosch_0261S07354_51901122_515934_0AEB.Original"
+      ]
+    },
+    {
+      "sigHex": "08000400190032004b006400",
+      "sigBytes": [
+        8,
+        0,
+        4,
+        0,
+        25,
+        0,
+        50,
+        0,
+        75,
+        0,
+        100,
+        0
+      ],
+      "rows": 4,
+      "cols": 8,
+      "xAxis": [
+        25,
+        50,
+        75,
+        100,
+        125,
+        150,
+        175,
+        188
+      ],
+      "yAxis": [
+        65526,
+        65530,
+        65532,
+        65534
+      ],
+      "le": true,
+      "occurrences": 2,
+      "occurrencePct": 0.7547169811320755,
+      "avgPctChange": -50.7514450867052,
+      "medianPctChange": -50.7514450867052,
+      "sampleFiles": [
+        "Audi_RS5_4.2_FSI_V8_2011_Benzin___331KWKW_Bosch_0261S07236_8T2907560___523849_B5D7.Original",
+        "Audi_RS5_4.2_FSI_V8_2011_Benzin___331KWKW_Bosch_0261S07236_8T2907560___523849_B5D7.Original"
+      ]
+    },
+    {
+      "sigHex": "000800060fa017701f402710",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        6,
+        15,
+        160,
+        23,
+        112,
+        31,
+        64,
+        39,
+        16
+      ],
+      "rows": 6,
+      "cols": 8,
+      "xAxis": [
+        4000,
+        6000,
+        8000,
+        10000,
+        12000,
+        16000,
+        20000,
+        24000
+      ],
+      "yAxis": [
+        6652,
+        11518,
+        13828,
+        15614,
+        16384,
+        24576
+      ],
+      "le": false,
+      "occurrences": 2,
+      "occurrencePct": 0.7547169811320755,
+      "avgPctChange": 20.988539930905816,
+      "medianPctChange": 20.988539930905816,
+      "sampleFiles": [
+        "Audi_RS6_5.0_V10_TFSI_2010_Turbo-Benzin___426.6KWKW_Bosch_0261S02371_4F1907552A__395111_42EC.Original",
+        "Audi_RS6_5.0_V10_TFSI_2010_Turbo-Benzin___426.6KWKW_Bosch_0261S02371_4F1907552A__395111_42EC.Original"
+      ]
+    },
+    {
+      "sigHex": "0008000617701f4027102ee0",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        6,
+        23,
+        112,
+        31,
+        64,
+        39,
+        16,
+        46,
+        224
+      ],
+      "rows": 6,
+      "cols": 8,
+      "xAxis": [
+        6000,
+        8000,
+        10000,
+        12000,
+        16000,
+        20000,
+        24000,
+        26000
+      ],
+      "yAxis": [
+        6652,
+        11518,
+        13828,
+        15614,
+        16384,
+        24576
+      ],
+      "le": false,
+      "occurrences": 2,
+      "occurrencePct": 0.7547169811320755,
+      "avgPctChange": 12.899687773315893,
+      "medianPctChange": 12.899687773315893,
+      "sampleFiles": [
+        "Audi_RS6_5.0_V10_TFSI_2010_Turbo-Benzin___426.6KWKW_Bosch_0261S02371_4F1907552A__395111_42EC.Original",
+        "Audi_RS6_5.0_V10_TFSI_2010_Turbo-Benzin___426.6KWKW_Bosch_0261S02371_4F1907552A__395111_42EC.Original"
+      ]
+    },
+    {
+      "sigHex": "06000800500096002c015802",
+      "sigBytes": [
+        6,
+        0,
+        8,
+        0,
+        80,
+        0,
+        150,
+        0,
+        44,
+        1,
+        88,
+        2
+      ],
+      "rows": 8,
+      "cols": 6,
+      "xAxis": [
+        80,
+        150,
+        300,
+        600,
+        1200,
+        2500
+      ],
+      "yAxis": [
+        18054,
+        22321,
+        26588,
+        32988,
+        39388,
+        43654,
+        46641,
+        47921
+      ],
+      "le": true,
+      "occurrences": 2,
+      "occurrencePct": 0.7547169811320755,
+      "avgPctChange": 11.38168224548668,
+      "medianPctChange": 11.62859728107344,
+      "sampleFiles": [
+        "Mini_Cooper_S_2010_Turbo-Benzin___128.7KWKW_Bosch__0089RY0G931BRSP09_383504_CFAA.Original",
+        "Mini_Cooper_S_2010_Turbo-Benzin___128.7KWKW_Bosch__0089RY0GB02BRSD11_390364_4FAA.Original"
+      ]
+    },
+    {
+      "sigHex": "0008000814501a901f402710",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        8,
+        20,
+        80,
+        26,
+        144,
+        31,
+        64,
+        39,
+        16
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        5200,
+        6800,
+        8000,
+        10000,
+        12000,
+        16000,
+        20000,
+        24000
+      ],
+      "yAxis": [
+        10240,
+        11520,
+        14080,
+        17920,
+        23040,
+        28160,
+        33280,
+        38400
+      ],
+      "le": false,
+      "occurrences": 1,
+      "occurrencePct": 0.37735849056603776,
+      "avgPctChange": 38.56186735061007,
+      "medianPctChange": 38.56186735061007,
+      "sampleFiles": [
+        "Ford_Focus_RS_2010_Turbo-Benzin___224.3KWKW_Bosch_0261209484_Bosch__507106_7D59.Original"
+      ]
+    },
+    {
+      "sigHex": "001000060fa0177023002710",
+      "sigBytes": [
+        0,
+        16,
+        0,
+        6,
+        15,
+        160,
+        23,
+        112,
+        35,
+        0,
+        39,
+        16
+      ],
+      "rows": 6,
+      "cols": 16,
+      "xAxis": [
+        4000,
+        6000,
+        8960,
+        10000,
+        12000,
+        14000,
+        16000,
+        17000,
+        18080,
+        19040,
+        20000,
+        20960,
+        22080,
+        24000,
+        26080,
+        28200
+      ],
+      "yAxis": [
+        3072,
+        3277,
+        3482,
+        3727,
+        4096,
+        4301
+      ],
+      "le": false,
+      "occurrences": 1,
+      "occurrencePct": 0.37735849056603776,
+      "avgPctChange": 23.762514292088465,
+      "medianPctChange": 23.762514292088465,
+      "sampleFiles": [
+        "Ford_Focus_RS_2010_Turbo-Benzin___224.3KWKW_Bosch_0261209484_Bosch__507106_7D59.Original"
+      ]
+    },
+    {
+      "sigHex": "000c0008064008200c7f0c80",
+      "sigBytes": [
+        0,
+        12,
+        0,
+        8,
+        6,
+        64,
+        8,
+        32,
+        12,
+        127,
+        12,
+        128
+      ],
+      "rows": 8,
+      "cols": 12,
+      "xAxis": [
+        1600,
+        2080,
+        3199,
+        3200,
+        4960,
+        6080,
+        7040,
+        8000,
+        10080,
+        12000,
+        14080,
+        16000
+      ],
+      "yAxis": [
+        0,
+        363,
+        364,
+        1504,
+        2064,
+        2432,
+        2800,
+        3536
+      ],
+      "le": false,
+      "occurrences": 1,
+      "occurrencePct": 0.37735849056603776,
+      "avgPctChange": 36.04166666666666,
+      "medianPctChange": 36.04166666666666,
+      "sampleFiles": [
+        "Ford_Focus_RS_2010_Turbo-Benzin___224.3KWKW_Bosch_0261209484_Bosch__507106_7D59.Original"
+      ]
+    },
+    {
+      "sigHex": "0004000700190032004b0064",
+      "sigBytes": [
+        0,
+        4,
+        0,
+        7,
+        0,
+        25,
+        0,
+        50,
+        0,
+        75,
+        0,
+        100
+      ],
+      "rows": 7,
+      "cols": 4,
+      "xAxis": [
+        25,
+        50,
+        75,
+        100
+      ],
+      "yAxis": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        6,
+        7
+      ],
+      "le": false,
+      "occurrences": 1,
+      "occurrencePct": 0.37735849056603776,
+      "avgPctChange": 39.94149085451417,
+      "medianPctChange": 39.94149085451417,
+      "sampleFiles": [
+        "Ford_Focus_RS_2010_Turbo-Benzin___224.3KWKW_Bosch_0261209484_Bosch__507106_7D59.Original"
+      ]
+    },
+    {
+      "sigHex": "10000800000005000a000f00",
+      "sigBytes": [
+        16,
+        0,
+        8,
+        0,
+        0,
+        0,
+        5,
+        0,
+        10,
+        0,
+        15,
+        0
+      ],
+      "rows": 8,
+      "cols": 16,
+      "xAxis": [
+        0,
+        5,
+        10,
+        15,
+        25,
+        38,
+        50,
+        63,
+        75,
+        88,
+        100,
+        113,
+        125,
+        138,
+        150,
+        161
+      ],
+      "yAxis": [
+        64,
+        77,
+        91,
+        104,
+        117,
+        131,
+        144,
+        157
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 0.37735849056603776,
+      "avgPctChange": 13.629395922169696,
+      "medianPctChange": 13.629395922169696,
+      "sampleFiles": [
+        "Mini_Cooper_1.6_Turbo_2011_Turbo-Benzin__155.2KWKW_Bosch_0261S04443_07615526_395150_DF69.Original"
+      ]
+    },
+    {
+      "sigHex": "080007000000010002000300",
+      "sigBytes": [
+        8,
+        0,
+        7,
+        0,
+        0,
+        0,
+        1,
+        0,
+        2,
+        0,
+        3,
+        0
+      ],
+      "rows": 7,
+      "cols": 8,
+      "xAxis": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "yAxis": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 0.37735849056603776,
+      "avgPctChange": 6.923076923076921,
+      "medianPctChange": 6.923076923076921,
+      "sampleFiles": [
+        "Peugeot_508_1.6THP_2011_Turbo-Benzin__114.7KWKW_Bosch___515869_7323.Original"
+      ]
+    },
+    {
+      "sigHex": "08000500a00f581b401f1027",
+      "sigBytes": [
+        8,
+        0,
+        5,
+        0,
+        160,
+        15,
+        88,
+        27,
+        64,
+        31,
+        16,
+        39
+      ],
+      "rows": 5,
+      "cols": 8,
+      "xAxis": [
+        4000,
+        7000,
+        8000,
+        10000,
+        12000,
+        16000,
+        20000,
+        26000
+      ],
+      "yAxis": [
+        11228,
+        12081,
+        12508,
+        12934,
+        13361
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 0.37735849056603776,
+      "avgPctChange": 24.875105850568822,
+      "medianPctChange": 24.875105850568822,
+      "sampleFiles": [
+        "Volvo_V70_2.0_T_2011_Turbo-Benzin__119.9KWKW_Bosch___523065_0C91.Original"
+      ]
+    },
+    {
+      "sigHex": "08000500a00f581be02e803e",
+      "sigBytes": [
+        8,
+        0,
+        5,
+        0,
+        160,
+        15,
+        88,
+        27,
+        224,
+        46,
+        128,
+        62
+      ],
+      "rows": 5,
+      "cols": 8,
+      "xAxis": [
+        4000,
+        7000,
+        12000,
+        16000,
+        20000,
+        22000,
+        24000,
+        26000
+      ],
+      "yAxis": [
+        11228,
+        12081,
+        12508,
+        12934,
+        13361
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 0.37735849056603776,
+      "avgPctChange": 27.86829409707643,
+      "medianPctChange": 27.86829409707643,
+      "sampleFiles": [
+        "Volvo_XC60_2.5_T5_2013_Turbo-Benzin__176.5KWKW_Bosch___524905_8B49.Original"
+      ]
+    }
+  ]
+}

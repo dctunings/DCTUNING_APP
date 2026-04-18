@@ -1,0 +1,380 @@
+{
+  "family": "EDC15",
+  "totalPairs": 498,
+  "maps": [
+    {
+      "sigHex": "0010000d0064025802bc0320",
+      "sigBytes": [
+        0,
+        16,
+        0,
+        13,
+        0,
+        100,
+        2,
+        88,
+        2,
+        188,
+        3,
+        32
+      ],
+      "rows": 13,
+      "cols": 16,
+      "xAxis": [
+        100,
+        600,
+        700,
+        800,
+        900,
+        1000,
+        1250,
+        1500,
+        1750,
+        2000,
+        2500,
+        3000,
+        3500,
+        4000,
+        4500,
+        6000
+      ],
+      "yAxis": [
+        2500,
+        3000,
+        3500,
+        4000,
+        4500,
+        5000,
+        6000,
+        7000,
+        8000,
+        9000,
+        10000,
+        11000,
+        12000
+      ],
+      "le": false,
+      "occurrences": 4,
+      "occurrencePct": 0.8032128514056224,
+      "avgPctChange": 136.76105670882617,
+      "medianPctChange": 136.76105670882617,
+      "sampleFiles": [
+        "VW_Tuareg_2.5_TDI__2004____128KWKW_Bosch_EDC16_7L0907401B__382093_2CAA.Original",
+        "VW_Tuareg_2.5_TDI__2004____128KWKW_Bosch_EDC16_7L0907401B__382093_2CAA.Original",
+        "VW_Tuareg_2.5_TDI__2004____128KWKW_Bosch_EDC16_7L0907401B__382093_2CAA.Original"
+      ]
+    },
+    {
+      "sigHex": "080008000000e007b80ba00f",
+      "sigBytes": [
+        8,
+        0,
+        8,
+        0,
+        0,
+        0,
+        224,
+        7,
+        184,
+        11,
+        160,
+        15
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        0,
+        2016,
+        3000,
+        4000,
+        5500,
+        7014,
+        8500,
+        9492
+      ],
+      "yAxis": [
+        100,
+        350,
+        650,
+        1000,
+        2000,
+        3000,
+        4000,
+        5000
+      ],
+      "le": true,
+      "occurrences": 2,
+      "occurrencePct": 0.4016064257028112,
+      "avgPctChange": 4.9793800297433854,
+      "medianPctChange": 4.9793800297433854,
+      "sampleFiles": [
+        "Kia_cee`d_1.6_CRDi_2004_Turbo-Diesel___77.2KWKW_Bosch___511818_A9D6.Original",
+        "Kia_Soul_1.6_CRDi_2004_Turbo-Diesel___77.2KWKW_Bosch___501555_EE8C.Original"
+      ]
+    },
+    {
+      "sigHex": "100010004006d007c409b80b",
+      "sigBytes": [
+        16,
+        0,
+        16,
+        0,
+        64,
+        6,
+        208,
+        7,
+        196,
+        9,
+        184,
+        11
+      ],
+      "rows": 16,
+      "cols": 16,
+      "xAxis": [
+        1600,
+        2000,
+        2500,
+        3000,
+        3500,
+        4000,
+        4500,
+        5000,
+        5500,
+        6000,
+        6500,
+        7000,
+        7500,
+        8000,
+        8500,
+        9000
+      ],
+      "yAxis": [
+        0,
+        500,
+        1000,
+        1250,
+        1500,
+        1750,
+        2000,
+        2250,
+        2500,
+        2750,
+        3000,
+        3250,
+        3500,
+        4000,
+        5000,
+        6000
+      ],
+      "le": true,
+      "occurrences": 2,
+      "occurrencePct": 0.4016064257028112,
+      "avgPctChange": 1.994740746769641,
+      "medianPctChange": 1.994740746769641,
+      "sampleFiles": [
+        "Kia_cee`d_1.6_CRDi_2004_Turbo-Diesel___77.2KWKW_Bosch___511818_A9D6.Original",
+        "Kia_Soul_1.6_CRDi_2004_Turbo-Diesel___77.2KWKW_Bosch___501555_EE8C.Original"
+      ]
+    },
+    {
+      "sigHex": "0008000801f403e805dc07d0",
+      "sigBytes": [
+        0,
+        8,
+        0,
+        8,
+        1,
+        244,
+        3,
+        232,
+        5,
+        220,
+        7,
+        208
+      ],
+      "rows": 8,
+      "cols": 8,
+      "xAxis": [
+        500,
+        1000,
+        1500,
+        2000,
+        2500,
+        3000,
+        3500,
+        4500
+      ],
+      "yAxis": [
+        2431,
+        2631,
+        2831,
+        3031,
+        3231,
+        3431,
+        3631,
+        3831
+      ],
+      "le": false,
+      "occurrences": 1,
+      "occurrencePct": 0.2008032128514056,
+      "avgPctChange": 3.937499999999994,
+      "medianPctChange": 3.937499999999994,
+      "sampleFiles": [
+        "BMW_E90-E91_325D_2002_Turbodiesel___144.9KWKW_Bosch__O_81M934_376968_531B.Original"
+      ]
+    },
+    {
+      "sigHex": "0006000503e805dc07d00bb8",
+      "sigBytes": [
+        0,
+        6,
+        0,
+        5,
+        3,
+        232,
+        5,
+        220,
+        7,
+        208,
+        11,
+        184
+      ],
+      "rows": 5,
+      "cols": 6,
+      "xAxis": [
+        1000,
+        1500,
+        2000,
+        3000,
+        3500,
+        4000
+      ],
+      "yAxis": [
+        2931,
+        3331,
+        3531,
+        3581,
+        3631
+      ],
+      "le": false,
+      "occurrences": 1,
+      "occurrencePct": 0.2008032128514056,
+      "avgPctChange": 4.0000000000000036,
+      "medianPctChange": 4.0000000000000036,
+      "sampleFiles": [
+        "BMW_E90-E91_325D_2002_Turbodiesel___144.9KWKW_Bosch__O_81M934_376968_531B.Original"
+      ]
+    },
+    {
+      "sigHex": "05000c0013001c0026003300",
+      "sigBytes": [
+        5,
+        0,
+        12,
+        0,
+        19,
+        0,
+        28,
+        0,
+        38,
+        0,
+        51,
+        0
+      ],
+      "rows": 12,
+      "cols": 5,
+      "xAxis": [
+        19,
+        28,
+        38,
+        51,
+        64
+      ],
+      "yAxis": [
+        77,
+        90,
+        102,
+        128,
+        154,
+        179,
+        205,
+        255,
+        793,
+        1108,
+        1503,
+        1978
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 0.2008032128514056,
+      "avgPctChange": 2.352190572203061,
+      "medianPctChange": 2.352190572203061,
+      "sampleFiles": [
+        "Ford_Mondeo_2.2_CDTi_2004_Turbo-Diesel___147.1KWKW_Bosch___511366_3B62.Original"
+      ]
+    },
+    {
+      "sigHex": "10001000d007c409b80bac0d",
+      "sigBytes": [
+        16,
+        0,
+        16,
+        0,
+        208,
+        7,
+        196,
+        9,
+        184,
+        11,
+        172,
+        13
+      ],
+      "rows": 16,
+      "cols": 16,
+      "xAxis": [
+        2000,
+        2500,
+        3000,
+        3500,
+        4000,
+        4500,
+        5000,
+        5500,
+        6000,
+        6500,
+        7000,
+        7500,
+        8000,
+        8500,
+        9000,
+        9600
+      ],
+      "yAxis": [
+        500,
+        750,
+        1000,
+        1250,
+        1500,
+        1750,
+        2000,
+        2250,
+        2500,
+        2750,
+        3000,
+        3250,
+        3500,
+        4000,
+        4500,
+        5000
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 0.2008032128514056,
+      "avgPctChange": 2.9960652051714387,
+      "medianPctChange": 2.9960652051714387,
+      "sampleFiles": [
+        "Kia_cee`d_1.6_CRDi_2004_Turbo-Diesel___77.2KWKW_Bosch___511818_A9D6.Original"
+      ]
+    }
+  ]
+}

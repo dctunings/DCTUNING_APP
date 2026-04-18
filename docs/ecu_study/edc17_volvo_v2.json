@@ -1,0 +1,99 @@
+{
+  "family": "EDC17_Volvo",
+  "totalPairs": 27,
+  "maps": [
+    {
+      "sigHex": "040004000400140032000701",
+      "sigBytes": [
+        4,
+        0,
+        4,
+        0,
+        4,
+        0,
+        20,
+        0,
+        50,
+        0,
+        7,
+        1
+      ],
+      "rows": 4,
+      "cols": 4,
+      "xAxis": [
+        4,
+        20,
+        50,
+        263
+      ],
+      "yAxis": [
+        465,
+        684,
+        903,
+        1469
+      ],
+      "le": true,
+      "occurrences": 2,
+      "occurrencePct": 7.4074074074074066,
+      "avgPctChange": 58.68473895582329,
+      "medianPctChange": 58.68473895582329,
+      "sampleFiles": [
+        "Volvo_V70_2.4_2.0_Benzin___103KWKW_Denso____DA0D.Original",
+        "Volvo_V70_2.4_2.0_Benzin___103KWKW_Denso____DA0D.Original"
+      ]
+    },
+    {
+      "sigHex": "10000600a00fc017801b401f",
+      "sigBytes": [
+        16,
+        0,
+        6,
+        0,
+        160,
+        15,
+        192,
+        23,
+        128,
+        27,
+        64,
+        31
+      ],
+      "rows": 6,
+      "cols": 16,
+      "xAxis": [
+        4000,
+        6080,
+        7040,
+        8000,
+        8960,
+        10080,
+        11040,
+        12000,
+        12960,
+        14080,
+        16000,
+        18080,
+        20000,
+        22080,
+        24000,
+        26080
+      ],
+      "yAxis": [
+        3072,
+        3277,
+        3482,
+        3686,
+        3891,
+        4096
+      ],
+      "le": true,
+      "occurrences": 1,
+      "occurrencePct": 3.7037037037037033,
+      "avgPctChange": 19.406054054054046,
+      "medianPctChange": 19.406054054054046,
+      "sampleFiles": [
+        "Volvo_V70_2.5_LPT_2001_Turbo-Benzin___154.5KWKW_Bosch_0261208289__359462_B209.Original"
+      ]
+    }
+  ]
+}
