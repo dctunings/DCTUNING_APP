@@ -70,6 +70,35 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #577–592 — Golf 4 1.9 TDI tail + V5/V6/R32 ME7.x petrol
+
+**Golf 4 1.9 TDI 110.3 kW PD150** (#577) — 0281010744 sw362706 —
+sister of #547/#570 same hardware.
+
+**Golf 4 1.9 SDI 50hp** (#578) — 0281010373 038906012DB sw354379.
+
+**Golf 4 2.3 V5 (5-cyl petrol) Bosch ME7.x** (#579-#587):
+- 0261206176 071906018R sw359159 (#579, 256KB) and sw359505 (#580,
+  #581 — 2 sister files same SW) — early 110.3 kW V5
+- 0261206799 066906032A sw360835 (#583) and sw368356 (#582) —
+  newer 125 kW V5 1MB
+- 0261207375 066906032AG sw363056 (#584, 125 kW) — newer
+- 0261204753 071906018 sw358164 (#585, #586 — 2 sister files) and
+  sw350041 (#587, 1998 V5 110hp) — older 110.3 kW V5
+
+**Golf 4 2.8 V6 Bosch ME7.x 150 kW** (#588, #589):
+- 0261206239 022906032B sw354081 (#588) — 856B/16
+- 0261206619 022906032E sw354077 (#589) — 1770B/25
+2 different hardware codes for VR6 200hp.
+
+**Golf 4 R32 V6 ME7.x** (#590-#592):
+- 0261207884 022906032CN sw366355 (#590) — sister of #320 prior
+- 0261207884 022906032CN sw371197 (#591) — sister of #328 same SW
+- 0261208231 022906032DN sw368661 (#592) — newer 022906032DN
+
+No new wires. R32 V6 ME7.x clusters small enough to be covered by
+generic me7 def via signatures.
+
 ## VW Pairs #561–576 — Golf 4 1.9 TDI 95.6kW (130hp) + 84.6kW (115hp) PD
 
 16 more Golf 4 1.9 TDI PD pairs continuing the 524KB EDC15P catalog:
