@@ -64,6 +64,93 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pair #42 — SIMOS PCR21 · 03L906023L SM2G0LK000000 (Audi A3 1.6 TDI CR, 2009)
+- 2 MB. 17,757 B / 188 regions — heavy emission-off Stage 1.
+- SAME pattern as pair 27 (same SW serial SM2G0LK000000 on 03L906023QC).
+  Offsets IDENTICAL — serial is the discriminator, not the part number.
+  0x18D412 / 0x18CE32 / 0x18D832 / 0x18DE32 etc. all flag-byte flips.
+- Confirms: **03L906023L + 03L906023QC with same SM2G0LK000000 SW
+  share the same map layout**. Two part numbers, one SW base.
+- **Code: deferred** — same story as pair 27.
+
+## Pair #41 — SIMOS PCR21 · 03L906023LF SM2F0L9500000 (Audi A3 1.6 TDI CR, ?)
+- 2 MB. 8,613 B / 23 regions.
+- Different pattern from other 1.6 CR pairs — this tuner raised 8×112
+  at 0x1CEF72 by +25 % and 1536B region at 0x1874C0 by +24 %.
+  Larger bulk % raises, not just flag flips.
+- Same SW serial as pair 39 (SM2F0L9500000) but on different part
+  number 03L906023LF — offsets DIFFER from pair 39 (0x1CEF72 vs
+  0x1BDADC) — so **part number also matters** even when SW serial
+  matches. Earlier conclusion (pair 42) needs nuance.
+- **Code: deferred**.
+
+## Pair #40 — SIMOS PCR21 · 03L906023L SM2F0G4000000 (Audi A3 1.6 TDI CR, ?)
+- 2 MB. 20,272 B / 109 regions — MEDIUM-heavy tune.
+- Mix of +75 %/+55 % small table raises and −50 % reductions in the
+  0x1D0xxx range (20-byte tables, value halvings). Consistent LE +6 %
+  across many = one parameter scaled 6 % in LE + a second parameter
+  zeroed/halved in BE.
+- **Code: deferred**.
+
+## Pair #39 — SIMOS PCR21 · 03L906023FL SM2F0L9500000 (Audi A3 1.6 TDI CR, ?)
+- 2 MB. 9,131 B / 29 regions — moderate tune.
+- 128×7 at 0x1CEF70 BE +10.5 % = sizeable boost-target-ish map raised.
+- Big monitoring reductions: 0x1C34AA 6B −73 %, 0x1C3492 6B −62 %.
+- 384B at 0x1BDADC +16 % = bulk region raised.
+- **Code: deferred**.
+
+## Pair #38 — SIMOS PCR21 · 03L906023A SM2E0DG000000 (Audi A3 1.6 TDI CR, ~2010)
+- 2 MB. 8,335 B / 68 regions.
+- Cluster of LE +5 % across 10+ cells at 0x1D5xxx range = one parameter
+  scaled 5 % in LE alongside mixed BE changes.
+- Several 14-18B regions with BE +129 % to +250 % = near-zero flag
+  bytes flipped on (emission-off switches — **different location**
+  from the 0x18Dxxx block seen in pair 25-27 because different SW
+  serial family SM2E vs SM2G).
+- **Code: deferred**.
+
+## Pair #37 — MED17 · 0261S02187 / 03C906056CP sw 378110 (Audi A3 1.6 FSI 115ps, 2006)
+- 2 MB MED17. Medium Stage 1: 2,253 bytes / 38 regions.
+- 24×3 / 12×5 / 12×3 boost-ish tables at 0x1C6007 / 0x1C6013 /
+  0x1C8BCB all BE +17-32 %. Cluster = primary boost target.
+- 0x1D52C6 38B BE +15.8 % / LE −65.6 % = clear BE cleanness (LE
+  nonsense) so **BE is correct byte order here**.
+- **Code: deferred**.
+
+## Pair #36 — MED17 · 0261S02057 / 03C906056AP sw 379130 (Audi A3 1.6 FSI 115ps)
+- 2 MB MED17. Very light Stage 1: 257 bytes / 10 regions.
+- Three 12×10 / 12×9 boost tables at 0x1C96C8 / 0x1C952E / 0x1C8A35
+  all +1.6–3.2 % BE — boost slightly raised only.
+- Similar part number family to pair 37 (03C906056AP vs 03C906056CP).
+- **Code: deferred**.
+
+## Pair #35 — ME7/Simos4 · 5WP40242 / 06A906033DT (Audi A3 1.6 8V 75kW, 2005)
+- 512 KB Siemens/Bosch ME7 or Simos4 (5WP serial prefix = Siemens).
+- 321 B / 3 regions — minimal tune.
+- 12×16 at 0x079D92 BE +8.3 % — boost/load target raised.
+- 8×15 at 0x07B640 BE +0.8 % — negligible.
+- **Code: deferred**.
+
+## Pair #34 — Siemens Simos4 · 5WP40344 / 06A906033GQ (Audi A3 1.6 Benzin 75kW, 2007)
+- 512 KB. Very light: 346 B / 3 regions.
+- 12×16 at 0x07A88A BE +10 % — boost/load target raised.
+- 170B at 0x07BBCE BE −18.7 % — monitoring reduction.
+- **Code: deferred**. Family detection needs improvement — these
+  5WP40344 binaries are Siemens Simos 2.1/4 variants, currently
+  mis-hinted as "Siemens-PPD?".
+
+## Pair #33 — MED17.5.25 · 0261S04859 / 03C906016S sw 505087 (Audi A3 1.4 TFSI 125ps, 2010)
+- 2 MB MED17.5. 1,304 bytes / 29 regions. Medium tune.
+- 0x054B28 6B **BE +991 % / LE +40 %** — near-zero flag byte flipped.
+- 0x05571A 42B **−100 %** (317→0) = threshold zeroed (monitor off).
+- 0x05F39A 202B BE −93.6 % / LE +334.8 % = one byte order shows
+  zero-out, the other shows jump-up = data is stored in a way where
+  the byte meanings diverge sharply — **probably 4-byte aligned data
+  that neither pure BE nor pure LE u16 fits**. These might be
+  float32 or 32-bit int values. MED17.5 uses both.
+- 16×6 at 0x05F476 BE −64 % LE +86 % — same 4-byte alignment issue.
+- **Code: deferred**.
+
 ## Pair #32 — MED17.5.25 · 0261S04652 / 03C906016F sw 399977 (Audi A3 1.4 TFSI 122ps, 2008)
 - 2 MB MED17.5. Light Stage 1: 330 bytes / 5 regions.
 - 12×9 at 0x0543A0 BE +7.7 % — boost target (typical factor 0.001 bar
