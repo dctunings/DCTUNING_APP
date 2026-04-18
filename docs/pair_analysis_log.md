@@ -70,6 +70,40 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #385–400 — Golf 5 GTI Edition 30 + R32 V6 + Golf 6 1.4 TSI
+
+**Golf 5 GTI 2.0 TFSI MED17 continued** (#385-394):
+- sw375753 1K0907115A (#385) — sister of #384 same SW
+- sw378111 1K0907115A (#386) — sister SW + same hardware
+- sw378113 1K0907115B (#387) — sister
+- sw381190 1K0907115J (#391) — already covered by 0x1CE0C8 wired def
+- sw386459 8P0907115B (#390) — sister
+- sw386675 1P0907115 (#388) — `0x1CD67A` sub-cluster
+- sw386876 8P0907115B (#392) — sister of #306 (already noted)
+- sw387445 8P0907115B (#394, **GTI Edition 30 169.2 kW = 230 hp**) —
+  3699 B / 29 regions, **heavier tune than standard 200hp GTI**
+- sw391082 8P0907115B (#393) — sister of 1K0907115Q sw391082
+  (cross-part-number same SW)
+
+**Golf 5 R32 V6** (#395-397):
+- 022906032CE sw377419 (#395, 1MB) — 911B / 11 regions tune
+- 022906032CN sw366310 (#396, 1MB) — 620B / 7 regions
+- 022906032JR sw382160 (#398, 1MB) — 415B / 8 regions
+
+**Pair #397** — Temic DSG `02E300047F 069116402ea` — transmission
+control file, NOT engine ECU. Skip from engine analysis.
+
+**Golf 6 1.4 TSI MED17 0261S05812 03C906027BA sw515355** (#399,
+256KB) — small 517B / 16 regions tune. Newer EA111 1.4 TSI 160hp.
+
+**Golf 6 1.6 TDI CR Siemens 03L906023MK SM2F0L9500000** (#400,
+**503 KB ROM!** — NEW dump format size 0x7AE00 = 503KB) — 16278 B /
+239 regions = same SIMOS PCR21 emission disable + tune pattern as
+2 MB version, just in a smaller chiptool extracted format.
+
+NEW dump format: **503 KB SIMOS PCR21 partial dump** (different from
+the 393 KB Q3 partial dump or 2 MB standard).
+
 ## VW Pairs #369–384 — Golf 5 2.0 TFSI MED17 universal IQ release variants
 
 16 pairs of Golf 5 2.0 TFSI MED17 across 1K0907115/A/F/G + 1P0907115D
