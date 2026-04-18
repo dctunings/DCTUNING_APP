@@ -19,6 +19,8 @@ import { scanBinaryForMaps, classifyCandidates, matchUnknownsByDNA } from '../li
 import type { ClassificationResult, ScannedCandidate } from '../lib/mapClassifier'
 import { applyMemoryToCandidates, buildEntryFromCandidate, candidateSigHex } from '../lib/memoryLookup'
 import type { MemoryMatch, FingerprintEntry } from '../lib/memoryLookup'
+import { diffBinaries, findCoveringCandidate } from '../lib/binaryDiff'
+import type { DiffSummary, DiffRegion } from '../lib/binaryDiff'
 
 // ─── Transpose helper (kept for any future use) ──────────────────────────────
 function transposeGrid(grid: number[][]): number[][] {
@@ -722,7 +724,13 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   // user has previously confirmed "this exact Kf_ signature = this map".
   const [memoryMatches, setMemoryMatches] = useState<MemoryMatch[]>([])
   // UI state for the "Confirm as…" dialog that writes an entry to memory.
-  const [confirmingCand, setConfirmingCand] = useState<ScannedCandidate | null>(null)
+  // Stage1 / tuned pair for diff mode — user loads a second binary and we show
+  // every byte region that changed between ORI and Stage1, so they can see
+  // what a tuner actually modified in real files.
+  const [stage1Buffer, setStage1Buffer] = useState<ArrayBuffer | null>(null)
+  const [stage1Name, setStage1Name] = useState<string>('')
+  const [diffResult, setDiffResult] = useState<DiffSummary | null>(null)
+  const [diffBusy, setDiffBusy] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [scannerBusy, setScannerBusy] = useState(false)
   const [scannerDebug, setScannerDebug] = useState('')
@@ -795,6 +803,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     setLibFallbackNote(''); setLibOriginalNum(''); setLibLoadError('')
     setScanResult(null); setShowScanner(false)
     setMemoryMatches([])
+    // Loading a new ORI invalidates any previous Stage1 diff.
+    setStage1Buffer(null); setStage1Name(''); setDiffResult(null); setDiffBusy(false)
 
     // Run binary map scanner in background
     const ecuForScan = det?.def ?? null
@@ -889,6 +899,129 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     reader.onload = () => processFile(reader.result as ArrayBuffer, file.name)
     reader.readAsArrayBuffer(file)
   }, [processFile])
+
+  // ─── ORI vs Stage1 diff mode ─────────────────────────────────────────────
+  // Load a Stage1 / tuned counterpart to the currently-loaded ORI binary.
+  // The diff shows every byte region that a tuner actually modified — the
+  // most direct evidence of which maps matter for this specific ECU variant.
+  const handleStage1Load = async () => {
+    if (!fileBuffer) { setLoadError('Load the ORI file first.'); return }
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const api = (window as any).api
+      const loadArrayBuffer = async (): Promise<{ buf: ArrayBuffer; name: string } | null> => {
+        if (api?.openEcuFile) {
+          const r = await api.openEcuFile()
+          if (!r) return null
+          return {
+            buf: new Uint8Array(r.buffer).buffer,
+            name: (r.path || r.name) as string,
+          }
+        }
+        // Fallback: file input
+        return new Promise((resolve) => {
+          const input = document.createElement('input')
+          input.type = 'file'
+          input.accept = '.bin,.hex,.ori,.ori2,.mod,.s1,.stage1'
+          input.onchange = (ev) => {
+            const f = (ev.target as HTMLInputElement).files?.[0]
+            if (!f) { resolve(null); return }
+            const fr = new FileReader()
+            fr.onload = () => resolve({ buf: fr.result as ArrayBuffer, name: f.name })
+            fr.readAsArrayBuffer(f)
+          }
+          input.click()
+        })
+      }
+      const loaded = await loadArrayBuffer()
+      if (!loaded) return
+
+      setDiffBusy(true)
+      setStage1Buffer(loaded.buf)
+      setStage1Name(loaded.name)
+      // Defer so React can paint the busy state before the diff runs.
+      setTimeout(() => {
+        try {
+          const summary = diffBinaries(fileBuffer, loaded.buf)
+          setDiffResult(summary)
+        } catch (e) {
+          setLoadError(`Diff failed: ${String(e)}`)
+        } finally {
+          setDiffBusy(false)
+        }
+      }, 30)
+    } catch (err) {
+      setDiffBusy(false)
+      setLoadError(String(err))
+    }
+  }
+
+  /** Save a DiffRegion as a memory fingerprint. If the region aligns with a
+   *  scanner candidate, we use that candidate's Kf_ header + dimensions —
+   *  that's the ideal case (verified "tuner modified this 12×16 boost map").
+   *  Otherwise we store a region-only fingerprint (no axis/dim info, just
+   *  the before-bytes hex as the sig). */
+  const saveRegionToMemory = async (
+    region: DiffRegion,
+    label: string,
+    factor: number,
+    unit: string,
+    category: string,
+  ): Promise<boolean> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const api = (window as any).api
+    if (!api?.memory?.save || !fileBuffer) return false
+    // Try to pair with a scanner candidate
+    const scanCands = scanResult
+      ? [...scanResult.candidates.map(cc => cc.candidate), ...scanResult.unmatched.map(cc => cc.candidate)]
+      : []
+    const covering = findCoveringCandidate(region, scanCands)
+    let entry
+    if (covering) {
+      entry = buildEntryFromCandidate(fileBuffer, covering, {
+        ecuFamily: selectedEcu?.family ?? detected?.def.family ?? 'UNKNOWN',
+        partNumber: null,
+        mapName: label,
+        category: category as 'boost'|'fuel'|'torque'|'ignition'|'smoke'|'limiter'|'emission'|'misc',
+        factor,
+        unit: unit || null,
+        confirmedBy: 'diff',
+      })
+    } else {
+      // No candidate — save a region-only fingerprint. Use first 12 bytes of
+      // the before-region as the sig surrogate. Future scans won't auto-match
+      // this (no Kf_ header), but the record is still useful for review.
+      const sigBytes = region.before.slice(0, 12)
+      let sigHex = ''
+      for (let i = 0; i < sigBytes.length; i++) sigHex += sigBytes[i].toString(16).padStart(2, '0')
+      entry = {
+        ecuFamily: selectedEcu?.family ?? detected?.def.family ?? 'UNKNOWN',
+        partNumber: null,
+        sigHex,
+        rows: 1, cols: region.length,
+        dtype: 'uint8' as const, le: true,
+        factor,
+        offsetVal: 0,
+        unit: unit || null,
+        mapDefId: null,
+        mapName: label,
+        category,
+        xAxis: null, yAxis: null,
+        dataMin: region.beforeMin,
+        dataMax: region.beforeMax,
+        dataMean: region.beforeMean,
+        dna128: null,
+        confirmedBy: 'diff-region',
+        notes: `byte region @ 0x${region.offset.toString(16)} len ${region.length}`,
+      }
+    }
+    try {
+      const res = await api.memory.save(entry)
+      return !!res?.ok
+    } catch {
+      return false
+    }
+  }
 
   // Loading state for the Preview Changes button — inline scanner for Delphi/no-signature
   // ECUs takes 3-5 seconds on a 4MB binary and blocks the UI thread. Without this flag
@@ -2121,6 +2254,66 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         {libLoadError && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 6 }}>{libLoadError}</div>}
       </div>
 
+      {/* ── ORI vs Stage1 diff ────────────────────────────────────────────── */}
+      {/* Load a tuned counterpart and see exactly which byte regions the    */}
+      {/* tuner modified. Each region can be saved to memory as a verified   */}
+      {/* fingerprint for future binaries.                                   */}
+      {fileBuffer && (
+        <div style={{ marginTop: 16, padding: '12px 14px', borderRadius: 10, background: 'rgba(184,240,42,0.03)', border: '1px solid rgba(184,240,42,0.15)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--lime)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              ORI vs Stage1 Diff
+            </span>
+            {stage1Name && (
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                vs <span style={{ color: 'var(--text-secondary)' }}>{stage1Name.split(/[\\/]/).pop()}</span>
+              </span>
+            )}
+            {!stage1Name && (
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1 }}>
+                Load a Stage1 or tuned binary to see what bytes a tuner actually changed
+              </span>
+            )}
+            <button
+              className="btn-secondary"
+              style={{ fontSize: 11, padding: '4px 12px' }}
+              onClick={handleStage1Load}
+              disabled={diffBusy}
+            >
+              {diffBusy ? 'Diffing…' : stage1Name ? 'Load different Stage1' : 'Load Stage1 / Tuned'}
+            </button>
+          </div>
+
+          {diffResult && !diffResult.sizesMatch && (
+            <div style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 6, padding: '8px 10px' }}>
+              File sizes don't match — the two files aren't an ORI/Stage1 pair of the same variant.
+            </div>
+          )}
+          {diffResult?.sameBytes && (
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', padding: '8px 0' }}>
+              No differing bytes — the two files are byte-identical.
+            </div>
+          )}
+
+          {diffResult && diffResult.sizesMatch && !diffResult.sameBytes && (
+            <div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
+                <strong style={{ color: 'var(--text-primary)' }}>{diffResult.regions.length}</strong> modified regions ·
+                {' '}<strong style={{ color: 'var(--text-primary)' }}>{diffResult.changedBytes.toLocaleString()}</strong>
+                {' / '}
+                {diffResult.totalBytes.toLocaleString()} bytes changed
+                {' '}({((diffResult.changedBytes / diffResult.totalBytes) * 100).toFixed(3)}%)
+              </div>
+              <DiffRegionList
+                regions={diffResult.regions}
+                scanResult={scanResult}
+                onSave={saveRegionToMemory}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Binary Map Scanner ─────────────────────────────────────────────── */}
       {(scanResult || scannerBusy) && (
         <div style={{ marginTop: 16, border: '1px solid rgba(184,240,42,0.2)', borderRadius: 10, overflow: 'hidden' }}>
@@ -2306,17 +2499,6 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                         }}>
                           UNKNOWN
                         </span>
-                        <button
-                          onClick={() => setConfirmingCand(cc.candidate)}
-                          style={{
-                            fontSize: 10, padding: '2px 8px', borderRadius: 4,
-                            background: 'rgba(0,174,200,0.1)', border: '1px solid rgba(0,174,200,0.3)',
-                            color: 'var(--accent)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700,
-                          }}
-                          title="Confirm what this map is — saved to memory for future binaries"
-                        >
-                          Confirm as…
-                        </button>
                       </div>
                     ))}
                     {scanResult.unmatched.length > 15 && (
@@ -3226,208 +3408,183 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         {step === 3 && renderStep3()}
         {step === 4 && renderStep4()}
       </div>
+    </div>
+  )
+}
 
-      {/* ── "Confirm as…" modal for unknown scanner candidates ─────────────── */}
-      {/* Writes a new row to local memory.db so the scanner auto-identifies   */}
-      {/* this exact Kf_ signature on every future binary.                     */}
-      {confirmingCand && fileBuffer && (
-        <ConfirmCandidateDialog
-          candidate={confirmingCand}
-          buffer={fileBuffer}
-          ecuFamily={selectedEcu?.family ?? detected?.def.family ?? 'UNKNOWN'}
-          partNumber={null}
-          onCancel={() => setConfirmingCand(null)}
-          onSaved={(entry) => {
-            setConfirmingCand(null)
-            // Move the confirmed candidate from unmatched → memoryMatches locally.
-            const sig = candidateSigHex(fileBuffer, confirmingCand)
-            if (sig) {
-              setMemoryMatches(prev => [
-                ...prev,
-                { candidate: confirmingCand, entry, sigHex: sig },
-              ])
-              setScanResult(prev => prev ? {
-                ...prev,
-                unmatched: prev.unmatched.filter(cc => cc.candidate.offset !== confirmingCand.offset),
-              } : prev)
-            }
-          }}
+// ─── Diff region list — one row per DiffRegion ──────────────────────────────
+// Shows what a tuner changed on this specific ECU variant. Each row lets the
+// user save the finding to the local memory DB so future binaries of the same
+// variant auto-identify the map.
+function DiffRegionList(props: {
+  regions: DiffRegion[]
+  scanResult: ClassificationResult | null
+  onSave: (region: DiffRegion, label: string, factor: number, unit: string, category: string) => Promise<boolean>
+}) {
+  const { regions, scanResult, onSave } = props
+  // Show most-changed regions first — those are the likely primary tuning targets.
+  const sorted = [...regions].sort((a, b) => b.pctChange - a.pctChange)
+  return (
+    <div style={{ display: 'grid', gap: 4, maxHeight: 420, overflowY: 'auto' }}>
+      {sorted.slice(0, 50).map((r, idx) => (
+        <DiffRegionRow
+          key={`${r.offset}-${idx}`}
+          region={r}
+          scanResult={scanResult}
+          onSave={onSave}
         />
+      ))}
+      {sorted.length > 50 && (
+        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', textAlign: 'center', padding: 6 }}>
+          +{sorted.length - 50} more regions (sorted by % change)
+        </div>
       )}
     </div>
   )
 }
 
-// ─── Confirm-as modal ────────────────────────────────────────────────────────
-// Lightweight overlay form. Lets the user give a scanner candidate a name,
-// factor, unit, category, and optional notes — then writes it to the local
-// memory.db via the preload bridge. Next time the same Kf_ header appears in a
-// binary (any binary), the scanner will auto-identify it at 100% confidence.
-function ConfirmCandidateDialog(props: {
-  candidate: ScannedCandidate
-  buffer: ArrayBuffer
-  ecuFamily: string
-  partNumber: string | null
-  onCancel: () => void
-  onSaved: (entry: FingerprintEntry) => void
+function DiffRegionRow(props: {
+  region: DiffRegion
+  scanResult: ClassificationResult | null
+  onSave: (region: DiffRegion, label: string, factor: number, unit: string, category: string) => Promise<boolean>
 }) {
-  const { candidate, buffer, ecuFamily, partNumber, onCancel, onSaved } = props
-
-  const [mapName, setMapName] = useState('')
-  const [category, setCategory] = useState<'boost' | 'fuel' | 'torque' | 'ignition' | 'smoke' | 'limiter' | 'emission' | 'misc'>('boost')
+  const { region, scanResult, onSave } = props
+  const [open, setOpen] = useState(false)
+  const [label, setLabel] = useState('')
   const [factor, setFactor] = useState('1')
-  const [offsetVal, setOffsetVal] = useState('0')
   const [unit, setUnit] = useState('')
-  const [notes, setNotes] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState<string>('')
+  const [category, setCategory] = useState('boost')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
 
-  const sigHex = candidateSigHex(buffer, candidate) ?? ''
+  // Pair the region with a scanner candidate if its data block overlaps.
+  const scanCands = scanResult
+    ? [...scanResult.candidates, ...scanResult.unmatched]
+    : []
+  const covering = (() => {
+    const regEnd = region.offset + region.length
+    for (const cc of scanCands) {
+      const c = cc.candidate
+      const elSize = c.dtype === 'uint16' || c.dtype === 'int16' ? 2 : 1
+      const cStart = c.offset
+      const cEnd = c.offset + c.rows * c.cols * elSize
+      if (region.offset < cEnd && regEnd > cStart) return cc
+    }
+    return null
+  })()
+
+  const suggestedLabel = covering?.bestMatch?.mapDefName ?? ''
+  if (suggestedLabel && !label) setLabel(suggestedLabel)
 
   const save = async () => {
-    setErr('')
-    if (!mapName.trim()) { setErr('Map name is required'); return }
-    const f = parseFloat(factor)
-    if (!Number.isFinite(f) || f === 0) { setErr('Factor must be a non-zero number'); return }
-    const o = parseFloat(offsetVal)
-    if (!Number.isFinite(o)) { setErr('Offset must be a number'); return }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const api = (window as any).api
-    if (!api?.memory?.save) { setErr('Memory API not available'); return }
-    setBusy(true)
-    try {
-      const entry = buildEntryFromCandidate(buffer, candidate, {
-        ecuFamily,
-        partNumber,
-        mapName: mapName.trim(),
-        category,
-        factor: f,
-        offsetVal: o,
-        unit: unit.trim() || null,
-        notes: notes.trim() || null,
-        confirmedBy: 'user',
-      })
-      const res = await api.memory.save(entry)
-      if (!res?.ok) throw new Error(res?.error ?? 'save failed')
-      onSaved(res.entry as FingerprintEntry)
-    } catch (e: any) {
-      setErr(String(e?.message ?? e))
-    } finally {
-      setBusy(false)
-    }
+    setSaving(true)
+    const ok = await onSave(region, label || 'Unnamed region', parseFloat(factor) || 1, unit, category)
+    setSaving(false)
+    if (ok) { setSaved(true); setOpen(false) }
   }
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000,
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
-    }} onClick={onCancel}>
-      <div
-        onClick={e => e.stopPropagation()}
-        style={{
-          background: 'var(--bg-secondary)', borderRadius: 14, border: '1px solid var(--border)',
-          maxWidth: 540, width: '100%', padding: 24, color: 'var(--text-primary)',
-        }}
-      >
-        <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>Confirm map identity</div>
-        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16 }}>
-          Saves a fingerprint to local memory so the scanner auto-identifies this Kf_
-          header on every future binary.
-        </div>
-        <div style={{ padding: '10px 12px', background: 'var(--bg-card)', borderRadius: 8, border: '1px solid var(--border)', marginBottom: 16, fontSize: 11, display: 'grid', gridTemplateColumns: '140px 1fr', gap: '4px 10px' }}>
-          <span style={{ color: 'var(--text-muted)' }}>Offset</span>
-          <span style={{ fontFamily: 'monospace' }}>0x{candidate.offset.toString(16).toUpperCase().padStart(6, '0')}</span>
-          <span style={{ color: 'var(--text-muted)' }}>Dimensions</span>
-          <span>{candidate.rows} × {candidate.cols} ({candidate.dtype}, {candidate.le ? 'LE' : 'BE'})</span>
-          <span style={{ color: 'var(--text-muted)' }}>Signature (hex)</span>
-          <span style={{ fontFamily: 'monospace', fontSize: 10, wordBreak: 'break-all' }}>{sigHex}</span>
-          <span style={{ color: 'var(--text-muted)' }}>Value range</span>
-          <span>{candidate.valueRange.min} – {candidate.valueRange.max} (mean {candidate.valueRange.mean.toFixed(1)})</span>
-          <span style={{ color: 'var(--text-muted)' }}>ECU family</span>
-          <span>{ecuFamily}</span>
-        </div>
-
-        <div style={{ display: 'grid', gap: 10 }}>
-          <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Map name *</span>
-            <input
-              value={mapName}
-              onChange={e => setMapName(e.target.value)}
-              placeholder="e.g. Boost Pressure Target"
-              style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit' }}
-              autoFocus
-            />
-          </label>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-            <label style={{ display: 'grid', gap: 4 }}>
-              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Category</span>
-              <select value={category} onChange={e => setCategory(e.target.value as typeof category)} style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit' }}>
-                <option value="boost">boost</option>
-                <option value="fuel">fuel</option>
-                <option value="torque">torque</option>
-                <option value="ignition">ignition</option>
-                <option value="smoke">smoke</option>
-                <option value="limiter">limiter</option>
-                <option value="emission">emission</option>
-                <option value="misc">misc</option>
-              </select>
-            </label>
-            <label style={{ display: 'grid', gap: 4 }}>
-              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Factor *</span>
-              <input
-                value={factor}
-                onChange={e => setFactor(e.target.value)}
-                placeholder="e.g. 0.1"
-                style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit' }}
-              />
-            </label>
-            <label style={{ display: 'grid', gap: 4 }}>
-              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Unit</span>
-              <input
-                value={unit}
-                onChange={e => setUnit(e.target.value)}
-                placeholder="e.g. mbar"
-                style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit' }}
-              />
-            </label>
-          </div>
-
-          <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Offset (raw)</span>
-            <input
-              value={offsetVal}
-              onChange={e => setOffsetVal(e.target.value)}
-              placeholder="0"
-              style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'inherit' }}
-            />
-          </label>
-
-          <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Notes</span>
-            <textarea
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              placeholder="Anything worth remembering about this map…"
-              rows={2}
-              style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 12, fontFamily: 'inherit', resize: 'vertical' }}
-            />
-          </label>
-        </div>
-
-        {err && (
-          <div style={{ marginTop: 12, padding: '8px 10px', borderRadius: 6, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', fontSize: 11 }}>
-            {err}
-          </div>
+      padding: '8px 10px', borderRadius: 6,
+      background: saved ? 'rgba(34,197,94,0.04)' : 'rgba(255,255,255,0.02)',
+      border: `1px solid ${saved ? 'rgba(34,197,94,0.25)' : 'rgba(255,255,255,0.05)'}`,
+      fontSize: 11, color: 'var(--text-secondary)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => setOpen(!open)}>
+        <span style={{ fontFamily: 'monospace', fontWeight: 700, minWidth: 78, color: 'var(--text-primary)' }}>
+          0x{region.offset.toString(16).toUpperCase().padStart(6, '0')}
+        </span>
+        <span style={{ minWidth: 56 }}>{region.length} B</span>
+        <span style={{ minWidth: 90 }}>
+          {region.changedBytes}/{region.length} diff
+        </span>
+        <span style={{ minWidth: 70, fontWeight: 700, color: region.pctChange > 20 ? '#f59e0b' : region.pctChange > 5 ? '#b8f02a' : 'var(--text-muted)' }}>
+          {region.pctChange.toFixed(1)}%
+        </span>
+        {covering ? (
+          <span style={{ fontSize: 10, color: 'var(--accent)' }}>
+            ↳ covers {covering.candidate.rows}×{covering.candidate.cols} candidate
+            {covering.bestMatch && <span style={{ marginLeft: 4, color: 'var(--text-secondary)' }}>
+              ({covering.bestMatch.mapDefName}, {Math.round(covering.bestMatch.score)}%)
+            </span>}
+          </span>
+        ) : (
+          <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>(no candidate at this offset)</span>
         )}
-
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
-          <button className="btn-secondary" onClick={onCancel} disabled={busy}>Cancel</button>
-          <button className="btn-primary" onClick={save} disabled={busy}>
-            {busy ? 'Saving…' : 'Save to memory'}
-          </button>
-        </div>
+        {saved && <span style={{ marginLeft: 'auto', fontSize: 10, color: '#22c55e', fontWeight: 700 }}>✓ saved</span>}
+        {!saved && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--text-muted)' }}>{open ? '▼' : '▶'}</span>}
       </div>
+
+      {open && !saved && (
+        <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 10.5, color: 'var(--text-muted)', marginBottom: 10 }}>
+            <div>
+              <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 2 }}>ORI</div>
+              <div>range {region.beforeMin}–{region.beforeMax}, mean {region.beforeMean.toFixed(1)}</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 2 }}>Stage1</div>
+              <div>range {region.afterMin}–{region.afterMax}, mean {region.afterMean.toFixed(1)}</div>
+            </div>
+          </div>
+          {covering && (
+            <div style={{ marginBottom: 10, fontSize: 10.5, color: 'var(--text-muted)' }}>
+              <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 2 }}>Scanner sees</div>
+              <div>
+                {covering.candidate.rows}×{covering.candidate.cols} {covering.candidate.dtype} ({covering.candidate.le ? 'LE' : 'BE'})
+                {covering.candidate.axisX && ` · X ${covering.candidate.axisX.min}–${covering.candidate.axisX.max}`}
+                {covering.candidate.axisY && ` · Y ${covering.candidate.axisY.min}–${covering.candidate.axisY.max}`}
+              </div>
+              {covering.hypotheses.length > 0 && (
+                <div style={{ marginTop: 4 }}>
+                  <span style={{ fontWeight: 700 }}>Top guesses:</span>{' '}
+                  {covering.hypotheses.slice(0, 3).map((h, i) => (
+                    <span key={h.mapDefId} style={{ marginRight: 8 }}>
+                      <span style={{ color: 'var(--text-secondary)' }}>{h.mapDefName}</span>
+                      <span style={{ color: 'var(--text-muted)' }}> ({Math.round(h.score)}%)</span>
+                      {i < 2 && ','}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
+            <input
+              value={label}
+              onChange={e => setLabel(e.target.value)}
+              placeholder="Map name (e.g. Boost Target)"
+              style={{ fontSize: 11, padding: '6px 8px', borderRadius: 5, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'inherit' }}
+            />
+            <select value={category} onChange={e => setCategory(e.target.value)}
+              style={{ fontSize: 11, padding: '6px 8px', borderRadius: 5, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'inherit' }}>
+              <option value="boost">boost</option>
+              <option value="fuel">fuel</option>
+              <option value="torque">torque</option>
+              <option value="ignition">ignition</option>
+              <option value="smoke">smoke</option>
+              <option value="limiter">limiter</option>
+              <option value="emission">emission</option>
+              <option value="misc">misc</option>
+            </select>
+            <input value={factor} onChange={e => setFactor(e.target.value)} placeholder="factor (e.g. 0.1)"
+              style={{ fontSize: 11, padding: '6px 8px', borderRadius: 5, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'inherit' }} />
+            <input value={unit} onChange={e => setUnit(e.target.value)} placeholder="unit (e.g. mbar)"
+              style={{ fontSize: 11, padding: '6px 8px', borderRadius: 5, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'inherit' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              className="btn-primary"
+              style={{ fontSize: 11, padding: '4px 14px' }}
+              onClick={save}
+              disabled={saving || !label.trim()}
+            >
+              {saving ? 'Saving…' : 'Save to memory'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
