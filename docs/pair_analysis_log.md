@@ -64,6 +64,25 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #398–412 — A4 2.0 TDI PD 2005-2008 EDC16 PD SW catalog
+
+15 more A4 2.0 TDI PD 103hp EDC16 PD pairs (512KB + 2MB mix).
+
+New SW bases: 378330, 380416, 381377, 383294, 383711, 389287, 389844,
+390981, 390982, 391501 (×2), 391502, 391503, 393546.
+
+VW part numbers: 03G906016CL (×4), 03G906016GN (×2), 03G906016JD,
+03G906016JE, 03G906016KM (×2), 03G906016KN (×2), 03G906016LQ (×2),
+03G906016MH.
+
+Tunes consistent 800-3,300 B for 512KB stripped, 2,100-2,500 B for
+2MB. Typical light EDC16 PD Stage 1 profile.
+
+Plus Pair #407 · A4 2.0 TDI PD 2007 Siemens 03G906018AQ SN100L6000000
+16,179 B / — AQ heavy tune consistent with earlier AQ pairs (all ~15-16KB).
+
+**Code: no change** — EDC16 PD generic catchall works.
+
 ## Pairs #383–397 — A4 2.0 TDI CR 2014 + DPF variants + EDC16 PD
 
 15 more pairs:
