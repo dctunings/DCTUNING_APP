@@ -64,6 +64,59 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #807–822 — A6 2.7 V6 TDI EDC17 CP44 + EDC17 +0x180000 dump format
+
+**EDC17 CP44 524KB-vs-2MB dump format CONFIRMED at +0x180000** (same
+shift as EDC16 PD documented earlier):
+- Pair #798 0281013178 4F0907401B sw377322 (524 KB) — cal at
+  `0x0704E1 + 0x01C817`
+- Pair #803 4F0907401B sw377322 (2 MB) — cal at `0x1F04E1 + 0x19C817`
+- Δ = exactly 0x180000 (1.5 MB) for both regions
+
+So Bosch EDC16 PD AND EDC17 CP44 BOTH use the 524KB→2MB +0x180000
+dump-format shift. Likely a common BSL/chiptool extraction format.
+
+**4F0907401B SW cluster** (2 MB EDC17 CP44):
+- sw377322 (#798/#803) — `0x1F04E1 + 0x19C817` (or 0x0704E1+0x01C817 in 524KB)
+- sw377107 (#799) — `0x1F04DD + 0x1F187D` (sister to 377322 within ~4B)
+- sw376966 (#800) — `0x1F0399 + 0x19B755` (slightly shifted but similar
+  region — older sub-revision)
+
+So 4F0907401B 376966 / 377107 / 377322 are **3 SWs in same SGO
+cluster** at high-region 0x1F04xx. **Wire candidate**.
+
+**4F0907401C SW cluster** (524 KB EDC17 CP44 chiptool):
+- sw380752 (#804) and sw380756 (#805) — IDENTICAL offsets `0x078F47
+  + 0x05A7AB`. **2 SWs same SGO**. Wire candidate.
+- sw380785 (#810) — `0x070681 + 0x05A7B3` (Δ from sw380752/756 = 4-8 B,
+  sister cluster — same SGO with tiny rev shift)
+- sw382074 (#812) — `0x021A75 + 0x07067D` (`0x07067D` matches 380785's
+  `0x070681` within 4 B; same cluster)
+- sw380777 (#809) — DIFFERENT cluster `0x017095 + 0x012CBF` (12×5 map)
+- sw380779 (#806) — `0x023939 + 0x023BD1` paired 9-byte (Δ = 0x298)
+- sw382460 (#813) — `0x016B81 + 0x05B43D` (Δ = 0x448BC, non-mirror)
+- sw382064 (#811) — `0x069F8B + 0x069F13` paired 15-byte (Δ = 0x78)
+
+So **4F0907401C** has at least **3 distinct SGO sub-clusters** by SW:
+- "early" (380752/380756/380785/382074) — `0x07xxxx + 0x05Axxxx`
+- "mid" (380779) — `0x023xxx`
+- "late" (382460) — `0x016xxx + 0x05Bxxx`
+
+**4F0907401D**: pair #807 sw377323 (262 KB chiptool) — `0x031419 +
+0x031885` — sister of 4F0907401B sw377104 (#802 262KB) which shares
+`0x0317CB + 0x031943`. So 4F0907401B and D share half-dump format.
+
+Pair #808 0281012561 4F0907402D sw377323 (524 KB) — `0x05A15F +
+0x01516F`. Note part **4F0907402D** (with D suffix on 402, not 401)
+— this is a different ECU position. Cal layout matches 4F0907401C
+sw380752 cluster shape (0x05A1xx near 0x05A7xx).
+
+**Code: WIRE candidate** edc17_cp44_4f0907401b_376_377 covering
+sw 376966/377107/377322 — 3-SW cluster at 0x1F04E1 + 0x19C817 (in
+2MB form) or 0x0704E1 + 0x01C817 (in 524KB form). Also wire
+edc17_cp44_4f0907401c_380752_756 (2 SWs at 0x078F47 + 0x05A7AB)
+for 524KB chiptool variants.
+
 ## Pairs #791–806 — A6 2.7 Bi-Turbo ME7.x catalog + more EDC15 mirrors
 
 A6 2.7 Bi-Turbo (V6 petrol biturbo Allroad 2.7T 250-280hp) ME7.x —
