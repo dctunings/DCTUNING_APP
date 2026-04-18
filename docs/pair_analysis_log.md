@@ -64,6 +64,37 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #1063–1078 — Q5 8K1907401A 3.0 V6 TDI cluster + Q7 4L0907401
+
+**Q5 8K1907401A 3.0 V6 TDI cluster** (continues across batches):
+- sw398809 (#1055 + #1058 — 2 files same SW) — 4078B and 4889B
+- sw505414 (#1059) — 5008B / 135 regions
+- sw510978 (#1060 + #1061) — 7482B/66 + 2404B/96 — same SW two SGOs
+- sw510978 (#1061) and sw516619 (#1062) — **IDENTICAL 7482B/66 +
+  7479B/66** → 2 SWs same SGO. Wire candidate.
+- sw516614 (#1054), sw516619 (#1057) — 4143B/129 + 4872B/133 (different
+  cluster from sw510978/516619 #1061/#1062)
+
+So sw516619 ALSO has 2 distinct SGO sub-clusters depending on
+file/tuner — same pattern as sw510978.
+
+Q5 8R0907401J sw516613 (#1063, DPF) — sister of cross-chassis A5
+8K1907401A sw516613 cluster I documented earlier. Same SW number,
+different VAG part-prefix (8R = Q5 facelift).
+
+Q5 4L0907401A sw518178 (#1056) — sister of A5 #645 (4L0907401A
+sw518178). Same Q7-prefix part on Q5 file.
+
+**Q7 3.0 V6 TDI 4L0907401** — first proper Q7 batch:
+- sw379749 (#1063 2 MB, #1068 524 KB) — **both stage1+++ full
+  recals** (36% / 81% changed). Same SW, two formats, both heavy.
+- sw379810 (#1064 524 KB) — 5715B / 131 regions
+- sw381556 (#1068 524 KB) — 6199B / 192 regions
+- sw383721 (#1065 524 KB) — 1754B / 43 regions (very light tune)
+- sw383723 (#1066 2 MB) — 5654B / 129 regions
+
+Q7 4L0907401 mostly 524 KB chiptool dumps with varied tuners.
+
 ## Pairs #1047–1062 — Q5 03L906018DN cluster +1 SW + Q5 2.0 TFSI MED17
 
 **03L906018DN heavy-tune cluster expanded to 3 SWs**:
