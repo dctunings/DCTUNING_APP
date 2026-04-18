@@ -70,6 +70,40 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #785–800 — Passat 2.0 TDI CR 398757 cluster MAJOR expansion
+
+**398757 def expanded BIG: +3 SWs (398820/398822/398823)**:
+- 03L906022G sw397892 (#794, #800 — 2 sister files) → `0x1EF502 +
+  0x1EFF46` IDENTICAL (already in def)
+- 03L906022QF sw398822 (#797, #798 — 2 sister files) → IDENTICAL
+- 03L906022QD sw398820 (#777 prior batch) → IDENTICAL — added now
+- 03L906022QG sw398823 (#800) → IDENTICAL — added
+- 03L906022QC sw398819 (#775 prior) → IDENTICAL (already added)
+
+**398757 def now covers 17 SWs** spanning A3/A4/A6/Allroad/Q5/Passat/
+Golf/Jetta 2.0 TDI CR with the IDENTICAL `0x1EF502/0x1EFF46`
+protection ceiling.
+
+**0x1ED29A sister sub-cluster** (Δ=-0x2268 from 0x1EF502):
+- 03L906022CL sw396433 (#793) → `0x1ED29A 2KB + 0x1EDCDE 512B +
+  0x1EDABC 512B + 0x1F8246 200B + 0x1F6294 6B`
+- 03L906022CM sw395423 (#795, #796 — 2 sister files) → IDENTICAL
+  `0x1ED29A` cluster
+- 2 SWs across CL/CM share IDENTICAL sister sub-cluster. Could wire
+  separately as sister of 398757 def.
+
+**Other Passat 2.0 TDI CR variants** (#784-#791):
+- 03L906022CM sw397845 (#785) — 4053B/66 (524KB)
+- 03L906022QG sw398823 (#786, #787 — 2 sister files 524KB) —
+  3971B/57 + 4060B/67
+- 03L906022BT sw398816 (#788) — 4071B/64 (524KB)
+- 03L906022MS sw399859 (#789) — 2604B/46 (524KB)
+- 0281015029 03L906022BT sw501923 (#790, **2MB!**) — 4084B/66
+- 0281015029 03L906022BT sw505918 (#791, 524KB) — 4250B/72
+- 03L906022QA sw505916 (#792, 2MB) — 11555B/156 = stage1+++ heavy
+- 03L906022BL sw397866 (#793, 2MB) — 4383B/107 (sister of #762
+  same SW different file)
+
 ## VW Pairs #769–784 — Passat 03L906022 cluster expansion + 398757/iqrelease
 
 **Wire actions taken**:
