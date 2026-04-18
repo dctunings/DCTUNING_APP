@@ -64,6 +64,61 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pair #12 — EDC15P+/EDC16 PD · 03G906016BQ sw 399895 (Audi A3 2.0 TDI, 2005)
+- 1 MB stripped. 1,567 bytes changed / 48 regions.
+- SAME pattern as Pairs #9–11: 0x0EDDxx cluster with consistent LE %
+  scaling + 0x0DDDxx / 0x0DDExx BE +45-66 % torque-ish region.
+- Top: 0x0DDE88 118B BE μ3000→5000 +67 %, 0x0DDDD2 122B BE +60 %
+  (these decode cleanly as Nm/10 → 300→500 Nm torque ceiling raise).
+- **Code: deferred** — same reason as #9-11.
+
+## Pair #11 — EDC15P+/EDC16 PD · 03G906016G sw 368508 (Audi A3 2.0 TDI, 2004)
+- 1 MB stripped. 1,206 bytes / 40 regions.
+- Same pattern. Top: 0x0F855F 13B LE +8.4 %, 0x0EBA45 33B LE +41.8 %,
+  0x0F8613 13B LE +6.1 %.
+- **Code: deferred**.
+
+## Pair #10 — EDC16 PD · 03G906016J sw 368596 (Audi A3 1.9 TDI EDC16, 2004)
+- 1 MB stripped. 1,645 bytes / 38 regions.
+- Filename explicitly says "EDC16" — confirms the 1MB 0281011xxx binaries
+  in this library are EDC16 PD, not EDC15P+.
+- Same LE +7 % cluster at 0x0F85xx plus other LE +9 % spikes at 0x0F552D.
+- Suggests scaled IQ parameter across multiple cells (typical
+  per-gear or per-temperature storage of the same multiplier-like value).
+- **Code: deferred**.
+
+## Pair #9 — EDC15P+/EDC16 PD · 03G906016CC sw 371093 (Audi A3 1.9 TDI 105ps, 2005)
+- ORI: `Audi___A3_1.9_TDI_2005_..._0281011832_03G906016CC_371093_DB69.Original`
+- Stage1: `..._371093_D98E.Stage1`
+- 1 MB stripped. 1,216 bytes changed across 30 regions.
+- **Important observation**: LE interpretation gives **consistent +7.5%** across
+  6 regions at 0x0EDDxx while BE gives random % — this binary stores data
+  little-endian (consistent with C167 EDC15P+ which is LE-native, unlike
+  EDC16 PPC which is BE).
+- Top LE changes (factor unknown, raw ints):
+  - 6× 13B tables at 0x0EDD3F–0x0EDDA3 all +7.5% LE — one parameter
+    scaled across 6 cells.
+  - 0x0DDE80 126B +50% BE (3000→4500) — may be boost target mbar, would
+    mean 3.0→4.5 bar which is unrealistic; more likely this is torque
+    limit Nm/10 (300→450 Nm Stage 1 is typical for 1.9 TDI 105ps).
+  - 0x0DDDCC 128B +47% BE — paired table to the above.
+- **Code: no change**. Byte-order observation may inform EDC15P+ detection
+  logic later but no per-variant offsets warrant code change on one pair.
+
+## Pair #8 — EDC16U34 PD · 03G906021CS sw 376704 (Audi A3 1.9 TDI 105ps, 2004)
+- ORI: `Audi___A3__1.9TDI__2004____77.2KWKW_Bosch_0281012608_03G906021CS_376704_7E9E.Original`
+- Stage1: `..._376704_7312.Stage1`
+- 512 KB stripped cal, 1,773 bytes changed across 75 regions.
+- Top changes (raw BE u16):
+  - 3× 34B at 0x051754 / 0x05172A / 0x05177E — all +60% (2200-2400 → 3500-3800 raw).
+    Per-RPM-band IQ or smoke-limit cluster.
+  - 0x0540B3 loose 11B +43% (32376 → 46355). Large raw value, likely a threshold.
+  - 4× identical 7B at 0x056C41 / 0x056E01 / 0x056FC1 / 0x057181 — all −23.6%
+    (all 49155 → 37550). Duplicate values = per-gear/cyl reduction of a single
+    parameter (probably torque-drop-per-gear or EGR duty cut).
+- **Code: no change** — no ASCII symbols to anchor names, no second
+  03G906021CS pair yet to cross-verify. Logged for future cross-reference.
+
 ## Summary after 7 pairs
 
 | Family | Pairs | Verified mapDefs code-changed |
