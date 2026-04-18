@@ -64,6 +64,21 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #383–397 — A4 2.0 TDI CR 2014 + DPF variants + EDC16 PD
+
+15 more pairs:
+- Pairs #383-386 · A4 2.0 TDI CR 2014 03L906018JL — SW 522944,
+  1037517561, 532876, 524104. Tunes 3.3-10.6 KB.
+- Pair #387 · A4 2.0 TDI CR DPF 03L906018JL sw 522824 — DPF variant.
+- Pairs #388-391 · A4 2.0 TDI CR DPF variants — 03L906022B sw400963 /
+  sw505497, 03L906018JR sw515572, 03L906019AL sw517566.
+- Pair #392 · Audi A4 2.0 TDI CR DPF 2012 — ONLY 33 bytes changed /
+  2 regions = near-no-op or checksum-only update.
+- Pairs #393-397 · A4 2.0 TDI PD 2004-2005 512KB/2MB EDC16 PD variants
+  — 03G906016FP, 03G906016CL, 03G906016GN (×2), 03G906016LQ.
+
+**Code: no change**. Running total: 397 of 1,270 (31.3%).
+
 ## Pairs #368–382 — A4 2.0 TDI CR 2012-2014 EDC17 C46/C64 continued
 
 15 more A4 2.0 TDI CR 2012-2014 pairs. Predominantly 03L906018JL
