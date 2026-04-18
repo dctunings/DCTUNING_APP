@@ -2449,6 +2449,64 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── MED17 Scirocco 1.4 TSI EA111 03C906016L — IQ release at 0x054912 (2MB) ──
+  //
+  // VW Scirocco 1.4 TSI 92kW (EA111 twincharged) MED17. 2008-2010 era.
+  // 4 pairs at sw505084 observed — dominant IQ release cluster at 0x054912.
+  // Verified in pair_analysis_log.md VW pairs #965, #966, #967, #972.
+  //   0x054B28  6B u16 BE — IQ ceiling peak (raw 4135 → 45110, +991%)
+  //   0x05484A  8B u16 BE — IQ release upper (raw 8270 → 52315, +533%)
+  //   0x054912  64B u16 BE — primary IQ release (raw 11340 → 29791, +163%)
+  //   0x05571A  42B u16 BE — emission limit (raw 317 → 0, -100%)
+  // Pairs #965/#966 hit this cluster hard; pairs #967/#972 target different
+  // torque tables — both confirm ORI layout at sw505084.
+  {
+    id: 'med17_scirocco_14tsi_03c906016l_054912',
+    name: 'Bosch MED17 (VW Scirocco 1.4 TSI EA111 — 03C906016L 0x054912 IQ)',
+    manufacturer: 'Bosch',
+    family: 'MED17',
+    identStrings: ['03C906016L', '505084', '0261S05589'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Scirocco 1.4 TSI 92kW EA111 (03C906016L sw 505084, 2008-2010)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'med17_scirocco_016l_iq_release',
+        name: 'IQ Release 64B (03C906016L sw505084)',
+        category: 'fuel',
+        desc: 'Primary IQ release at 0x054912 (32 u16 BE = 64 B). Raw 11340 → 29791 (+163%). Observed in 2 of 4 pairs at this SW — tuner-selection pattern (heavier tunes hit this, torque-limiter tunes do not).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x054912,
+        rows: 1, cols: 32, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 29000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 35000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 42000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'med17_scirocco_016l_iq_ceiling_peak',
+        name: 'IQ Ceiling Peak 6B (03C906016L sw505084)',
+        category: 'fuel',
+        desc: 'Companion IQ ceiling peak at 0x054B28 (3 u16 BE = 6 B). Raw 4135 → 45110 (+991%). Small-cell peak that only heavy tunes hit.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x054B28,
+        rows: 1, cols: 3, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 C46 VW Golf 2.0 TDI CR 03L906022G/RP — 12×15 IQ ceiling (2MB) ──
   //
   // VW Golf 2.0 TDI CR 80-125 kW EDC17 C46 newer 505xxx+ generation.

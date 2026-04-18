@@ -70,6 +70,75 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #961–977 — Scirocco 1.4 TSI MED17 EA111 (1 NEW def) + Passat5 1.6/2.0 FSI + TFSI variants
+
+**NEW DEF WIRED — MED17 Scirocco 1.4 TSI EA111 03C906016L sw505084**:
+
+4 sister pairs at same ORI (#965/#966/#967/#972):
+- #965/#966 (2MB, 2009): Heavy unlock tunes hitting the IQ cluster
+  - `0x054B28 6B` IQ ceiling peak (raw 4135 → 45110 +991%)
+  - `0x05484A 8B` IQ release upper (raw 8270 → 52315 +533%)
+  - `0x054912 64B` primary IQ release (raw 11340 → 29791 +163%)
+  - `0x05571A 42B` emission limit (raw 317 → 0, -100%)
+- #967/#972 (2MB): Torque-limiter-style tunes targeting `0x05AA4D 12×6`
+  / `0x05CE3E 16×6` mirror set (different map — stock value reductions)
+- All 4 share the SAME ORI structure (sw505084) — tuner style dictates
+  which cluster gets hit.
+- Wired `med17_scirocco_14tsi_03c906016l_054912` with fixedOffset 0x054912
+  (64B IQ release) + 0x054B28 (6B ceiling peak) — HIGH confidence anchors.
+
+**03C906016 sw399401 + sw505084** observations:
+- #971 03C906016 (no suffix) sw399401 2MB — only 122B/2 regions changed.
+  Different SW family from 399401B, very light tune. Logged only.
+- #969 03C906016B sw399401 (262KB compact format) — `0x015138 40B` BE
+  1737 → 7333 +322%. Compact-format IQ ceiling.
+
+**03C906027AT** — sw504569 (262KB #970, 2MB #977) and sw509113 (2MB #974/#975):
+- Different dump formats across same SGO. 2MB #974 hits `0x04D3AA 8B`
+  (BE 15478 → 45820 +196%) + `0x04FE76 92B` (BE 12243 → 32894 +169%).
+- 2 dump format variants across same SW — no clean fixed anchor yet.
+
+**03C906027F sw501379** (#968, 262KB compact):
+- `0x00F72A 92B` IQ release BE 12243 → 32894 +169% — same structure
+  as sw509113's 2MB `0x04FE76` but at compact-format anchor.
+- Confirms MED17 compact-vs-2MB dump-format shift on same map.
+
+**03C906056DC sw377814** (#961 — Passat5 1.6 FSI):
+- 2MB, 18 regions · matches #960 AA sw381957 anchors exactly
+  at `0x1D526C / 0x1D5298 / 0x1C61E6 / 0x1C6126`. DC/AA sub-cluster
+  confirmed — logged for future wire after 3rd same-anchor SW.
+
+**06F906056AM sw376501** (#962 — Passat5 2.0 FSI 2005):
+- MED17 NA 2.0 FSI 110kW. 46 regions. Torque edits at
+  `0x1C9FAE 128B` +16.6%, `0x1CA579 7B` -16.3%, `0x1C9A4C 12×11`
+  small-cell torque tweak +2.6%. No cluster yet.
+
+**06J906026D sw393392** (#963 — Passat6 2.0 TFSI EA888 Gen2 2009):
+- 262KB compact · MED17 EA888 Gen2 — `0x00F617 120B` IQ release
+  BE 10604 → 25700 +142%. SAME 120B IQ unlock as Golf EA113 MED17
+  (0x1CE0C8), at compact-format anchor. Confirms EA113/EA888
+  IQ release pattern is universal MED17 — only anchor and magnitude
+  vary.
+
+**03C907309A sw504449** (#973 — Scirocco service ECU code 262KB):
+- Heavy tune with `0x015E90 46B` BE 3455 → 43530 +1160% IQ peak.
+- `0x0126A4 6B` BE 4135 → 45110 +991% — SAME pattern as
+  03C906016L sw505084's `0x054B28` at compact-format anchor.
+- Compact→2MB shift: 0x054B28 - 0x0126A4 = 0x42484 — consistent
+  with ~0x42000 compact-format offset family.
+
+**03C906016DF sw522132** (#976 — Scirocco 2010 late variant):
+- 2MB · 7 regions · 609B, lighter pattern.
+- `0x04FF7E 96B` BE 30036 → 38282 +27.5% — same region as sw509113
+  `0x04FE76` (Δ=0x108 anchor shift). Related pattern.
+
+**Scirocco BS sw518327** (#964 — 03C906027BS):
+- 1540096B (NEW 1.47MB dump format!) — MED17.
+- `0x05049C 96B` BE 16300 → 34389 +111% IQ release candidate.
+- Single-SW observation — too new a variant to wire yet.
+
+---
+
 ## VW Pairs #945–960 — Passat 3C EDC16 PD + CC 03L906022CL + W8 ME7 + 1.6 FSI MED17
 
 **EDC17 C46 03L906022CL** — NEW CL suffix observed:
