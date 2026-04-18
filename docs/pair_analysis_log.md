@@ -64,6 +64,41 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pair #47 — EDC17 C64 · 04L906021AL sw 533836 (Audi A3 1.6 TDI CR, 2013, Bosch)
+- 2 MB. **Bosch** now — not Siemens. This is the newer Bosch EDC17 C64
+  replacement for SIMOS PCR21 on 1.6 TDI CR (2013+).
+- 3,646 bytes / 72 regions. LE +3-4 % cluster across 0x156xxx range
+  (many 9-10B regions showing consistent +3.0–3.5 % LE) = one
+  parameter scaled across multiple cells.
+- Classic Bosch tune profile, not the Siemens emission-off pattern.
+- **Code: deferred**. Noting 04L906021AL as a new Bosch EDC17 C64
+  variant not yet in our def.
+
+## Pair #46 — SIMOS PCR21 · 03L906023PN SM2F0L9500000 (Audi A3 1.6 TDI CR 90ps, 2012)
+- 2 MB. 19,975 B / 235 regions — heavier than #45 but same pattern.
+- 14B flag blocks at 0x18CE5A / 0x18D25A / 0x18D85A / 0x18C87A etc.
+- **Code: deferred**.
+
+## Pair #45 — SIMOS PCR21 · 03L906023JK SM2F0K3000000 (Audi A3 1.6 TDI CR, 2011)
+- 2 MB. 12,459 B / 141 regions. Same pattern. 14B flag blocks at
+  0x18CCEE / 0x18D10E / 0x18D0EE etc. Offsets shifted from SM2F0G
+  variants by ~0x400 bytes.
+- **Code: deferred**.
+
+## Pair #44 — SIMOS PCR21 · 03L906023JK SM2G0LK000000 (Audi A3 1.6 TDI CR, 2010)
+- 2 MB. 17,757 B / 188 regions. **Offsets IDENTICAL to pair 42**
+  (03L906023L + SM2G0LK000000). Confirms: third part number sharing
+  the SM2G0LK000000 SW base. 03L906023JK + 03L906023L + 03L906023QC
+  all share this SW and offsets.
+- **Code: deferred**. If we ever wire SM2G0LK000000 offsets, it'll
+  cover at least 3 part numbers.
+
+## Pair #43 — SIMOS PCR21 · 03L906023JK SM2F0G4000000 (Audi A3 1.6 TDI CR, 2010)
+- 2 MB. 12,480 B / 141 regions.
+- Same 14B flag pattern but offsets at 0x18D60A / 0x18DA2A — shifted
+  from SM2F0K3 and SM2G0LK serials. Confirms SW serial drives offset.
+- **Code: deferred**.
+
 ## Pair #42 — SIMOS PCR21 · 03L906023L SM2G0LK000000 (Audi A3 1.6 TDI CR, 2009)
 - 2 MB. 17,757 B / 188 regions — heavy emission-off Stage 1.
 - SAME pattern as pair 27 (same SW serial SM2G0LK000000 on 03L906023QC).
