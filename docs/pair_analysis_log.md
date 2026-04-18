@@ -64,6 +64,32 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #233–247 — A4 1.9/2.0 TDI PD continued + first PPD1.2 FG variant
+
+15 more Audi A4 TDI pairs:
+
+- Pair #233 · A4 1.9 TDI PD 2006 512KB EDC16 PD 03G906016GD sw392909.
+- Pair #234 · A4 1.9 TDI PD 2008 **2.5MB** file (2626048 B, unusual —
+  probably full ECU dump including code section) 03G906016GD sw392909
+  6,147 B / 301 regions.
+- Pair #235 · A4 2.0 TDI 88.3kW 2010 **03L906019AL sw517566** 2MB —
+  EDC17 C64 (same variant seen in earlier batch — multiple pairs).
+- Pairs #236-237 · A4 2.0 8V 2001 1MB ME7.5 non-turbo petrol (8E0907557).
+- Pairs #238-239 · A4 2.0 TDI 103hp 2MB EDC16 PD 03G906016JE / 03G906016KN.
+- Pair #240 · A4 2.0 TDI 103hp 2002 EDC16 PD 03G906016FQ sw382419.
+- Pair #241 · A4 2.0 TDI 103hp 2002 EDC16 PD 03G906021AN sw390138.
+- Pair #242 · **NEW PPD1.2 variant** — A4 2.0 TDI 125kW Siemens
+  03G906018DH SN100K5300000 (already in our identStrings). 3,200 B.
+- Pair #243 · **NEW PPD1.2 part number** — 03G906018FG SN100L3000000.
+  11,358 B / 84 regs. Different part number from DH/AQ. Need to
+  add FG to vag_ppd1 identStrings.
+- Pairs #244-247 · More A4 2.0 TDI 103hp 2004 EDC16 PD variants —
+  03G906016KN / 03G906016GN / 03G906016FP / 03G906016KN (again).
+
+**CODE CHANGE**: Add `03G906018FG` to vag_ppd1 identStrings — new
+PPD1.2 variant seen for the first time. Offset behaviour TBD but
+detection should recognise it. Also add `SN100L3000000`.
+
 ## Pairs #218–232 — A4 1.9 TDI EDC15 + EDC16 PD continued
 
 15 more Audi A4 1.9 TDI pairs, mostly 512KB EDC15 and 2MB EDC16 PD:

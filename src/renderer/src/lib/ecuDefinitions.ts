@@ -7573,6 +7573,8 @@ export const ECU_DEFINITIONS: EcuDef[] = [
       'SN100L6000000',  // AQ variant base SW — shares LADSOLL offset with DH (see AQ doc block)
       'SN100K5400000',  // Pair #118 — third SW serial family of 03G906018DH (2006 binaries)
       'SN100K5300000',  // Pair #7 (earlier batch) — 256KB Bosch-labelled DH cal dump
+      '03G906018FG',    // Pair #243 — new VAG part-number variant (2002 A4 2.0 TDI)
+      'SN100L3000000',  // ↳ accompanying SW serial for the FG variant
     ],
     fileSizeRange: [524288, 2097152],   // up to 2MB — real PPD1.2 binaries are 2MB
     vehicles: [
