@@ -2777,6 +2777,54 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 C46 VW Sharan 2.0 TDI CR 03L906018HH/HJ/HK — 0x06B4FE cluster ───
+  //
+  // VW Sharan Mk2 (7N chassis) 2.0 TDI CR 103 kW EDC17 C46. 2010-2012.
+  // 4 SWs across 3 part suffixes (HH/HJ/HK) share the SAME 2KB protection
+  // ceiling anchor at 0x06B4FE. Verified in pair_analysis_log.md VW pairs:
+  //   #1013 sw518191 HH · #1015 sw518192 HJ · #1020 sw518177 HK ·
+  //   + #1017 sw517509 HK (anchor at 0x06B12A, Δ=-0x3D4 sub-variant)
+  //
+  // Map structure (tight raw-value signature across 4 SWs):
+  //   0x06B4FE  2 KB (1024 cells u16 BE) — protection ceiling
+  //                                        raw 21275 → 47483 (+123%)
+  // Companion maps vary per SW at Δ=4-8 offsets — not wired per-def yet.
+  //
+  // NOTE: sw518189 H (pair #1024) hits 0x06B4FE at SAME anchor but raw
+  // 21260 → 57390 (+170%) — different tuner/target (398757-family target).
+  // Stock raw 21260 vs 21275 close — code-layout identical. sw518189 added
+  // as identString since ORI structure matches.
+  {
+    id: 'edc17_c46_sharan_03l906018hxx_06b4fe',
+    name: 'Bosch EDC17 C46 (VW Sharan 2.0 TDI CR 100-103kW — 03L906018HH/HJ/HK/H 0x06B4FE)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['03L906018HH', '03L906018HJ', '03L906018HK', '03L906018H', '517509', '518177', '518189', '518191', '518192'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Sharan 2.0 TDI CR 100-103kW (03L906018HH/HJ/HK/H sw 517509/518177/518189/518191/518192, 2010-2012)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_sharan_06b4fe_protection',
+        name: 'Protection Ceiling 2KB (Sharan 03L906018HH/HJ/HK/H)',
+        category: 'limiter',
+        desc: 'Main protection ceiling at 0x06B4FE (1024 cells u16 BE = 2 KB). Verified across 4 SWs sharing EXACT anchor + raw signature: stock 21275 → tuner consensus 47483 (+123%). sw517509 HK uses Δ=-0x3D4 anchor (0x06B12A) — same map, slight SW-rev shift. sw518189 H hits same anchor with different target (57390, +170%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06B4FE,
+        rows: 32, cols: 32, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 C46 03L906022B Q5 cluster (Audi Q5 2.0 TDI CR 125kW 2009-2010) ──
   //
   // Audi Q5 2.0 TDI CR EDC17 C46. Bosch hardware code, VAG part number

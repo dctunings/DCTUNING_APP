@@ -70,6 +70,47 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1009–1024 — Sharan 03L906018xx cluster — 1 NEW def + massive same-chassis family
+
+**MAJOR cluster verification — VW Sharan Mk2 7N 2.0 TDI CR family**:
+16 pairs, all 2010 Sharan 103kW EDC17 C46, spanning 6 part suffixes
+(G/HH/HJ/HK/M/PM/H) and 13+ SWs.
+
+**NEW DEF WIRED — 0x06B4FE protection ceiling cluster**:
+
+`edc17_c46_sharan_03l906018hxx_06b4fe` — 4 SWs, 3 part suffixes:
+- sw518191 03L906018HH (#1013) @ 0x06B4FE 2043B BE 21305 → 47454 +122.7%
+- sw518192 03L906018HJ (#1015) @ 0x06B4FE 2047B BE 21275 → 47483 +123.2%
+- sw518177 03L906018HK (#1020) @ 0x06B4FE 2047B BE 21275 → 47483 +123.2%
+- sw517509 03L906018HK (#1017) @ 0x06B12A 2047B (Δ=-0x3D4 shifted)
+- sw518189 03L906018H (#1024) @ 0x06B4FE 2048B BE 21260 → 57390 +170%
+  (different tuner target using 398757-family value 57390 at same anchor)
+
+Tight raw-value signature cross-SW (21275 → 47483 +123%) confirms
+shared code layout. Added 5 SWs + 4 part suffixes to identStrings.
+
+**Dominant Sharan 16×12 main IQ map** (observation — anchor drifts too
+wide for fixedOffset):
+- 0x07C768 / 0x07C96C / 0x07CBF8 / 0x07CBFA / 0x07CBFC / 0x07CDBC /
+  0x07D0FC — anchor range Δ=0x994 across 10+ pairs
+- Stock raw 12575-12817 → tune target 22817-27948 (+98-122%)
+- Will require signature-based wire in future session.
+
+**Special observations**:
+
+- #1018/#1019 sw518177 HK: 79.4% of file changed (1.66 MB modified!)
+  Clearly a FULL calibration replacement — not a pair-diff target.
+- #1013 sw518191 HH: Notable cluster of THREE adjacent regions at
+  0x06BC00/06B4FE/06C5CA (509/2043/1021 bytes) — possibly one big
+  ~4 KB region that calSearch would see as one map.
+- #1023 sw524660 03L906018PM: `0x07C278 16×11` +163% — SHAPE differs
+  from the rest (16×11 not 16×12) — slightly different map. PM suffix
+  is a separate sub-family.
+- #1010 sw518714 G: only 6-byte 6B entries showing — pair diff has
+  small tune or torque-limit only.
+
+---
+
 ## VW Pairs #994–1008 — Scirocco 0x069EB2 NEW cluster (5 pairs, 3 SWs) + Scirocco R added
 
 **MASSIVE NEW DEF — 0x069EB2 protection ceiling cluster** (5 pairs):
