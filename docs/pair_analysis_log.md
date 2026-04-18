@@ -64,6 +64,41 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #1143–1158 — RS6 V10 TFSI + S3 1.8T MED17/ME7.x catalog
+
+**RS6 V10 5.0 TFSI 4F1907552A** (C6 RS6 580hp BiTurbo V10) cluster:
+- 0261S02371 sw398562 (#1136) — 1295B / 44 regions
+- 0261S02371 sw395111 (#1139) — 1412B / 48 regions
+- 0261S02573 sw398567 (#1138) — 1294B / 44 regions ← **MATCHES
+  sw398562 IDENTICAL!**
+- 0261S02573 sw395110 (#1137 / #1140 — 2 files same SW 2008+2009)
+  — 1697B / 51 regions
+
+**Wire candidate**: 4F1907552A sw398562 (0261S02371) + sw398567
+(0261S02573) share IDENTICAL 1294-1295B / 44 region pattern across
+2 different hardware codes. 2-SW cluster.
+
+**S3 1.8T MED17/ME7.x 8L0906018K** (older A3/S3 154kW 210hp):
+- sw352049 (#1146) — 630B / 17 regions
+- sw352377 (#1141) — 557B / 16 regions
+- sw352465 (#1148 + #1149 — duplicate file alphabetically) — 466B
+  / 12 regions
+All 3 SWs in similar small-tune range (466-630B). Different SGO
+sub-clusters but same hardware family.
+
+**S3 1.8T 8L0906018N** (newer 180hp):
+- sw352820 (#1142) — 734B / 23 regions
+- sw354092 (#1147) — 726B / 20 regions
+
+**S3 1.8T 8N0906018H/AH/CH** (newest 225hp):
+- 8N0906018H sw360283 (#1144) — 1314B / 27 regions
+- 8N0906018AH sw360322 (#1145) — 2397B / 46 regions
+- 8N0906018CH sw367511 (#1143) — 1167B / 14 regions
+
+RS6 4.2 V8 BiTurbo continued (#1134/#1135):
+- 4D1907558F sw370934 (#1134) — 1293B / 17 regions
+- 4D1907558 sw367265 (#1135) — 1003B / 22 regions
+
 ## Pairs #1127–1142 — RS3/RS4/RS5/RS6 high-power petrol catalog
 
 **RS3 2.5 TFSI 5-cyl Bosch MED17** — 2.6 MB Siemens-style dumps:
