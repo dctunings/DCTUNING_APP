@@ -64,6 +64,69 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #631–646 — A5 3.0 V6 TDI 8K0907401x deep catalog
+
+16 more A5 3.0 V6 TDI pairs across **8K0907401, 8K0907401N, 8K0907401P,
+8K0907401S, 8K1907401A, 8K2907401**.
+
+**A5 3.0 V6 TDI 8K0907401 (524KB chiptool dumps)** — common
+"DPF-disable + tune" tool signature:
+- sw390155 (#622) → `0x0669CA` (9B repeating +90%) — 4× same value
+- sw392904 (#623) → `0x06F8B2` cluster — 22B at +28% / 328B at -28%
+- sw393570 (#624) → `0x07498A` (160B +96%)
+- **sw399857 + sw510328** (#625, #626) → IDENTICAL offsets
+  `0x066FFA + 0x0665B2 + 0x06672A + 0x0668A2` (10B repeating -80%).
+  Two SW versions, same SGO chiptool dump. Confirms cross-SW layout.
+
+**A5 3.0 V6 TDI 8K0907401 (full 2MB)**:
+- sw392914 (#627) and sw394960 (#628) → identical offsets
+  `0x1F8AF6 + 0x1F8B84 + 0x1F8D6E` (16×13 + 16×16). **2 SWs same
+  SGO** — and this is the SAME layout as A5 2.7 V6 TDI sw392966
+  (pair #593) just shifted by 0x84. So the 2.7 and 3.0 SGOs share
+  same template, with cal addresses offset by ~0x80 between them.
+- sw392904 (#631) → `0x1F3320 + 0x1F33F8 16×16`. Combined with
+  sw390626/sw510328 (#616/#618 prior batch) → **3 SWs share the
+  0x1F3320 SGO base**: 390626, 392904, 510328. **Strong wire
+  candidate**.
+
+**A5 3.0 V6 TDI 8K1907401A**:
+- sw516682 (#629) → `0x1E3C8C / 0x1E3CA8 / 0x1E3CB8` cluster (5B
+  regions all +779%) — **same as pair #535 (A5 8K1907401A sw516682)**
+  from earlier batch. Cross-batch confirmation.
+- sw514659 (#630) → `0x1E0696` (128B -50%) — note: my **2.7 wired
+  def uses 0x1E0782 with the SAME -50% halve pattern**. Almost
+  identical offset (Δ = 0xEC). The 3.0 limiter is at 0x1E0696, the
+  2.7 is at 0x1E0782. Very similar. Could share a "halve limiter"
+  preset across both 2.7 and 3.0 with offset switched.
+- sw516620 (#632, #637 — same SW two files) → `0x1E3D5A 16×16` —
+  same as pair #614 sw516618. Confirms 516xxx 3.0 TDI cluster.
+
+**A5 3.0 V6 TDI 8K0907401N/P/S**:
+- 8K0907401N sw400928 (#633) → `0x1D5B40` (11B +74%)
+- 8K0907401P sw397833 (#634) → `0x1DEE7C` (10B +108%)
+- 8K0907401S sw399375 (#635) → `0x1D5B40` (11B +74%) — **same as N**
+- 8K2907401 sw516617 (#636) → `0x1E3E32 16×9` (+156%)
+
+**UNIVERSAL "dead-zone" pattern across most 8K0907401x and
+8K1907401A pairs**:
+- `0x190EB6 / 0x190EE6 / 0x190EE6 / 0x191046` 80-byte block
+  cleared to 0x32 (-99.9%)
+- `0x190DDA / 0x190F6A` 34-byte block cleared to 0x32
+- `0x190EA6 / 0x191036` 8-byte block cleared to 0x32
+
+This appears in EVERY 8K0907401x 2MB pair regardless of SW. It is
+**not a tune** — it's a **DPF/EGR/lambda monitor disable** that
+tuners apply universally on these EDC17 diesel ECUs. Should be
+flagged as `category: 'emission'` and shown to user as
+"Emission Monitoring Disable" not "Boost Map -99.9%".
+
+**Code action items**:
+1. New ECU def candidate `edc17_a5_30tdi_8k0907401_390xxx_510xxx`
+   for the 3-SW cluster sharing `0x1F3320 / 0x1F33F8`.
+2. Add a "dead-zone classifier" — when a region clears to 0x32 with
+   -99.9% delta in EDC17 diesel, label it as emission-monitor disable
+   automatically instead of treating it as a boost target.
+
 ## Pairs #615–630 — A5 2.7/3.0 V6 TDI continued + 3.0 8K0907401 catalog
 
 16 pairs spanning A5 2.7 V6 TDI tail-end and **A5 3.0 V6 TDI** (same
