@@ -70,6 +70,61 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #129–160 — Eos + Golf 1.4 TSI MED17 + Golf 1.6 TDI Siemens PCR21
+
+**VW Eos 2.0 TDI CR + 2.0 TFSI catalog** (#129-134):
+- 03L906022PL sw399327 (#129) — Eos EDC17 C46
+- 03L906022G sw506133 (#130) — Eos EDC17 C46 cluster sister
+- 03G906021CE sw382429 (#131) — Eos 2.0 TDI PD
+- 0261S02281 1Q0907115 sw378595 (#132, 2 MB) — Eos 2.0 TFSI MED17
+- 0261S02080 1K0907115B sw376240 (#133) — Eos 2.0 TFSI MED17
+- 0261S04094 06J906026AF sw397285 (#134) — Eos 2.0 TFSI USA model
+
+**VW Golf 1.4 TSI MED17 03C906016xx** (#143-150):
+- sw504449 0261S05805 03C906016AH (#143) — Golf 1.4 TSI 89.7 kW
+- sw515947 0261S06488 03C906016BM (#144)
+- sw528891 0261S06488 03C906016BM (#147 — 1.5 MB ROM)
+- sw518914 0261S06488 03C906016BM (#148)
+- sw507134 0261S05808 03C906016AJ (#149)
+- 03C906032Q (#145, 256 KB MED17 partial dump)
+- 04E906016AD sw533765 (#146 — **4 MB ROM** TC1797 full dump)
+
+**VW Golf 1.6 TDI Siemens PCR21 cluster** (#154-160) — large
+SM-serial family:
+- 03L906023HM SM2F0G4000000 (#154 stage1+++) — 19.6 KB
+- 03L906023HM SM2F0K3000000 (#155 stage1+++) — 24.6 KB (+++)
+- 03L906023A SM2G0M0000000 (#156, #160) — 21.9KB + 21.4KB
+- 03L906023A SM2E0DG000000 (#157) — 19.6KB
+- 03L906023DR SM2F0G4000000 (#158, Siemens-Continental) — 20.3KB
+- 03L906023MK SM2G0M0000000 (#160) — 21.4KB
+
+All 2 MB Siemens PCR21 with 19.5-24.6 KB changed = **same SIMOS PCR21
+emission-disable + tune family** as Caddy 1.6 TDI cluster from prior
+batches. SN serial families:
+- SM2E0xx — older 2010-2011 EU5
+- SM2F0xx — middle 2011-2012
+- SM2G0xx — newer 2012+ EU5+
+
+**VW Golf 2.0 TDI CR 03L906018BB sw510943** (#136) — `0x06AD86`
+2 KB protection ceiling + sister regions. Δ=0x44 from my wired
+Caddy 03L906018xx 0x06ADCA cluster. Same SGO structure, different
+anchor → could add sw510943 to Caddy def with note about offset shift.
+
+**VW Golf 2.0 TDI CR 04L906021EP sw537361** (#138) — NEW VAG part
+prefix `04L` (newer EU6 generation 2013+). 135.3 kW. Different SGO
+from 03L family.
+
+**Other Golf**:
+- VW Golf 0281001851 038906018AE (#135) — 256 KB EDC15 V6 TDI 1.9
+- VW Golf 1.8 TFSI 0261B04884 (#136) — only 279B = no real tune
+- VW Golf 2002 0281010xxx variants (#139-141) — small EDC15 PD tunes
+- VW Golf 1.2 TSI 222288 (#142) — Siemens 2 MB MED17 small tune
+- VW Golf 1.4 0261203614 030906027T sw355255 (#143 — 65 KB ME7.0)
+- VW Golf 1.6 16V Marelli 036906034DR (#151, #152) — Magneti Marelli
+  IAW7G (sister of Bora 1.6 16V Marelli)
+- VW Golf 1.6 5WP4417 06A906019AK (#153) — Siemens VR4 sister
+- VW Golf 1.6 TDI 04L906021AP sw539271 (#154 — **4 MB ROM**)
+
 ## VW Pairs #97–128 — Corrado + Crafter 2.0/2.5/2.7 TDI catalog
 
 **VW Crafter 2.0 TDI CR EDC17 03L906012A** cluster (#106-112):
