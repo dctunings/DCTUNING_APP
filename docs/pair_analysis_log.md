@@ -70,6 +70,36 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #881–896 — Passat 2013 03L906018xx + 04L906021DT EU6
+
+**Strong pair confirmations**:
+- 03L906018NF sw524631 (#881) and 03L906018NG sw524632 (#882) →
+  IDENTICAL 8607B/67 regions across NF/NG suffixes (sister of
+  Audi #92 same SW). Likely same SGO at sister anchor.
+- 03L906012AA sw527066 (#891) and sw535337 (#892) → IDENTICAL
+  6126B/117 regions across 2 SWs same hardware. Wire candidate.
+
+**04L906021DT EU6 cluster**:
+- sw531109 (#885) — 15677B/161
+- sw533908 (#886) — 16083B/176
+- 2 SWs same EU6 hardware sharing similar pattern. Could wire.
+
+**Other Passat 03L906018 variants**:
+- 03L906018PA sw522984 (#883, alt file from #869) — 9525B/105
+  (different stage1)
+- 03L906018PA sw536214 (#893) — newer 2014 SW
+- 03L906018G sw527009 (#887) — bare G suffix (not the GG already
+  noted)
+- 03L906018PG sw524682 (#888) — NEW PG suffix
+- 03L906018QP sw528371 (#889) — NEW QP suffix
+- 03L906018RF sw529268 (#890) — NEW RF suffix
+- 03L906018NJ sw531634 (#895) — sister of Audi/Caddy NJ cluster
+- 03L906019FK sw532889 (#884) — NEW FK suffix EDC17 C64
+- 03L906019GG sw535316 (#894) — sister of Golf #10 same hardware
+
+**03G906021AB sw394115 0281012119** (#896, Passat 2.0 TDI PD 524KB)
+— sister of #5/#680 same hardware code.
+
 ## VW Pairs #865–880 — Passat 2012 03L906018xx variant catalog
 
 16 more Passat 2.0 TDI CR 2012 EDC17 C46 pairs across many part
