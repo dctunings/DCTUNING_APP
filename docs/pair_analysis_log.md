@@ -64,6 +64,90 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pair #57 — EDC17 C46 · 03L906022BQ sw 394169 (Audi A3 2.0 TDI CR 140ps, 2008)
+- 2 MB. 8,026 B / 107 regions. Heavy Stage 1.
+- 0x1EDCDE / 0x1EE988 large 511B regions BE +168-232 % / LE +2 % =
+  **BE clean, LE noise** — these are the classic EDC17 C46 big-
+  change regions (same pattern as sw 398757 in pair 55).
+- **Code: deferred**. Adds another EDC17 C46 SW data point. Pattern
+  holds across 394169 / 396412 / 398757 / 506186.
+
+## Pair #56 — EDC17 C46 · 03L906022DT sw 506186 (Audi A3 2.0 TDI CR 140ps, 2008)
+- 512 KB stripped cal. 2,482 B / 36 regions. Light Stage 1.
+- Different offset regime (0x064xxx) from the 2MB variants — because
+  this is a stripped cal-only dump; the 0x064 lives inside the cal
+  block that's excised from position 0x1E6000 in the full 2MB file.
+- **Code: deferred**.
+
+## Pair #55 — EDC17 C46 · 03L906022BQ sw 398757 (Audi A3 2.0 TDI CR, 2008)
+- 2 MB. 10,651 B / 95 regions. Heavy tune (matches the sw 398757
+  pattern seen in 7 other pairs in the earlier batch analysis).
+- 0x1EF502 2,048 B **BE +302 %** / LE +33 % — the "raise dramatic"
+  region seen across all sw 398757 tunes.
+- 0x1EFF46 512 B BE +298 % — paired region.
+- These are the big-change protection ceilings the whole sw 398757
+  variant shares. The same offsets appeared in earlier batch data.
+- **Code: promising** — sw 398757 now confirmed across multiple pairs
+  with identical offset pattern. Candidate for a per-variant entry.
+
+## Pair #54 — EDC16 PD · 03G906021AN sw 391819 (Audi A3 2.0 TDI CR 100kW, 2008)
+- 2 MB "EDC16 PD" per filename (but 03G906021AN is actually EDC17 C46
+  early or a rebadged 2.0 TDI CR — the "CR" tag means common-rail not
+  pumpe-düse, despite the "PD" naming heuristic). Bosch part 0281017xxx.
+- 3,939 B / 103 regions.
+- 0x1DA969 / 0x1DAB69 7B BE +660 % / LE +39 % — flag-like bytes.
+- **Code: deferred**. Family-hint regex needs tightening for 0281017.
+
+## Pair #53 — EDC17 C46 · 03L906022BQ sw 396412 (alt Stage 1, same SW as #4)
+- 512 KB stripped cal. 4,277 B / 79 regions — DIFFERENT tuner's
+  Stage 1 for the same SW version as my originally-analysed pair #4.
+- Top: 0x078246 200B BE+LE +200 % (both byte orders same = symmetric
+  values around 32768), 16×9 at 0x076B38 BE +112.6 % LE −2.1 % (BE
+  is the clean interpretation).
+- **Code: deferred**. Same variant as #4 so offsets overlap but this
+  tuner went heavier.
+
+## Pair #52 — EDC17 C46 · 03L906022BQ sw 396412 (Audi A3 2.0 TDI CR "Turbo-Diesel" filename)
+- 512 KB. 2,706 B / 39 regions.
+- IDENTICAL to my previously-analysed pair #4 (same file, same tune).
+  Duplicate entry in the library.
+- **Code: no change** — already covered by pair #4.
+
+## Pair #51 — PPD1.2 · 03G906018DH SN100L4000000 (Audi A3 2.0 TDI BKD, 2007)
+- **256 KB stripped cal-only** dump. 13,664 B changed = 5.2 % (very
+  high for a cal block — this is the whole cal being remapped).
+- 5,376 B at 0x01C7F2 BE +118 % — same pattern as the 03G906018DH
+  SN100L8000000 BC52 (my original pair #1): **the DH torque-monitor
+  ceiling pinned at 55415 raw**. Just at the 256 KB cal-dump's
+  internal offset (0x01C7F2), not the full-file 0x05C7FA.
+  Conversion: full-file 0x05C7FA − 0x040000 (cal block start) = 0x01C7FA. Close
+  to 0x01C7F2 — 8-byte offset difference probably alignment. So
+  this IS the same torque monitor map as pair #1.
+- **Code: finding** — confirms the 03G906018DH torque-monitor map is
+  at cal-relative 0x01C7FA / full-file 0x05C7FA, consistent across
+  the two SW serials SN100L4 and SN100L8. That offset now verified
+  across 2 pairs.
+
+## Pair #50 — EDC16 PD · 03G906016G sw 369819 (Audi A3 2.0 TDI 2004, 1MB)
+- 1 MB EDC15P+/EDC16 PD. 2,487 B / 162 regions.
+- 0x0E342F 13B BE +349 % / LE +8.5 %, 0x0EC3E7 9B BE +185 % / LE +11.9 %.
+- Mixed byte-order clues again — LE consistent ~8-12 % on cluster cells
+  but BE big on flag bytes. Same family as pairs 9-12.
+- **Code: deferred**.
+
+## Pair #49 — EDC16U34 PD · 03G906021AB sw 392913 (Audi A3 2.0 TDI 2004, 512KB)
+- 512 KB EDC16U34 cal. 5,004 B / 205 regions — very heavy tune.
+- Top: 0x06B675 / 0x06B661 9B BE +75-80 % / LE +7-10 %. Likely
+  cluster of boost/IQ raise.
+- **Code: deferred**.
+
+## Pair #48 — EDC17 C64 · 04L906021N sw 531315 (Audi A3 1.6 TDI CR, 2014)
+- 2 MB Bosch EDC17 C64. 10,333 B / 108 regions — heavy.
+- 0x12A238 / 0x12A344 8B +31000-32000 % BE — near-zero flag bytes
+  flipped on.
+- **Code: deferred**. Another EDC17 C64 variant to track alongside
+  pair 47's 04L906021AL.
+
 ## Pair #47 — EDC17 C64 · 04L906021AL sw 533836 (Audi A3 1.6 TDI CR, 2013, Bosch)
 - 2 MB. **Bosch** now — not Siemens. This is the newer Bosch EDC17 C64
   replacement for SIMOS PCR21 on 1.6 TDI CR (2013+).
