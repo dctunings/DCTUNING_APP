@@ -2042,7 +2042,11 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17 (8K1907401A — Audi A5 2.7 V6 TDI 163-190ps 2009+)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['8K1907401A', '516657', '516662', '516664', '516665'],
+    // IMPORTANT: 8K1907401A is shared hardware between A5 2.7 AND 3.0 V6 TDI.
+    // Match on the 2.7-specific SW versions ONLY — bare '8K1907401A' would
+    // false-match A5 3.0 TDI (sw 396465 / 399371 / 516618) which has a
+    // completely different SGO base (0x1DExxx / 0x1D5xxx / 0x1E3D5A).
+    identStrings: ['516657', '516662', '516664', '516665'],
     fileSizeRange: [2097152, 2097152],
     vehicles: ['Audi A5 2.7 V6 TDI 163-190ps (8K1907401A sw 516657-516665, 2009-2011)'],
     checksumAlgo: 'bosch-crc32',

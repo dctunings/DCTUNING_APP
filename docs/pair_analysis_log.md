@@ -64,6 +64,58 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #615–630 — A5 2.7/3.0 V6 TDI continued + 3.0 8K0907401 catalog
+
+16 pairs spanning A5 2.7 V6 TDI tail-end and **A5 3.0 V6 TDI** (same
+8K1907401A part number — SAME hardware, different cal base).
+
+**Key finding**: Bosch 8K1907401A is the **shared ECU hardware** for
+A5 V6 TDI 2.7 AND 3.0 — the differentiator is the SGO/cal base,
+not the part number. **Code implication**: my just-wired
+`edc17_a5_27tdi_8k1907401a` def is correct for sw 516657/516662/
+516664/516665 but WILL falsely match a 3.0 V6 TDI sw396465/399371/
+516618/516662 (same part). **Need to refine identStrings to require
+both `8K1907401A` AND a 2.7-specific SW** OR add cal-content check.
+
+A5 3.0 V6 TDI 8K1907401A SGO clusters:
+- **sw396465** (#612) — cal at `0x1DE5C8/0x1DEAF8/0x1DEAC0/0x1DE638/
+  0x1DEA88` — 16-byte regions clustered at 0x1DExxx. Different from
+  2.7's 0x1DBCCC. **Higher offset = 3.0 specific?**
+- **sw399371** (#613) — cal at `0x1D50C2-0x1D6` series — 6B regions
+  repeating, likely N75 PWM scaling
+- **sw516618** (#614) — `0x1E3D5A` (16×16) — 1.45 MB changed bytes
+  due to full-recal "stage1+++" file (most are 0xFF→0x05 noise; the
+  real change is the 16×16 IQ map at 0x1E3D5A)
+
+A5 3.0 V6 TDI 8K0907401 (older hardware):
+- **sw390626 / sw510328** (#616, #620 / #618, #621) — share cal at
+  `0x1F3320` (128B) + `0x1F33F8` (16×16). Two SW versions, same SGO.
+  Wire candidate: small ECU def for 8K0907401 sw390626/510328.
+- **sw392914** (#615) — multi-cluster: `0x1ED43E + 0x1BC408 +
+  0x1F0DA2 + 0x1F9406` — different SGO, looks like older 2007 base.
+
+A5 2.7 V6 TDI 8K1907401A continued:
+- **sw516662** (#606) — 1.45 MB changed (full-recal). Among the
+  changes: `0x1DBD1A`, `0x1DBE16`, `0x1E541E` — all overlap with my
+  wired def offsets. So def works for sw516662 too despite the noise.
+- **sw511914** (#607) — pre-516xxx. Different SGO at `0x190ECA +
+  0x190CCF` (8×3). Not covered by my wired def.
+- **sw516657 DPF variant** (#611) — DIFFERENT cal layout from #604
+  (sw516657 non-DPF). DPF SGO at `0x1E3BB6 / 0x1E39B6` (two 16×6).
+  **Same SW + DPF flag = different SGO**. Need DPF in identStrings.
+
+A5 2.7 V6 TDI 8K0907401 (older hardware, DPF):
+- Pair #608 part `37390626531` (typo/tool prefix; real PN 8K0907401
+  sw390626) — different SGO. Pair #609 8K0907401 sw390155 — yet
+  another SGO. Pair #610 8K0907401 sw392961 (DPF-CR-2010) — yet
+  another. **Multiple SGOs per part-number for older 8K0907401**.
+
+**Code action item — refine wired ECU def**: my new
+`edc17_a5_27tdi_8k1907401a` should also include a check that excludes
+3.0 TDI SW numbers. Easiest: change identStrings to require the SW
+strings (`516657`, etc.) that are 2.7-specific, drop the bare
+`8K1907401A` from the list.
+
 ## Pairs #599–614 — A5 2.7 V6 TDI EDC17 8K0907401 / 8K1907401A
 
 16 pairs of A5 2.7 V6 TDI — Bosch part numbers `8K0907401` (early
