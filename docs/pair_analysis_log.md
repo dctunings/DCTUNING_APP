@@ -70,6 +70,40 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #625–640 — Golf 5 2.0 TDI EDC16 PD + PPD1.2 + 2.0 TFSI
+
+**Golf 5 2.0 TDI EDC16 PD 03G906021AB** (#625-#628):
+- sw391525 (#625, #626 — 2 sister files) — 2689B/54 + 2664B/53
+- sw392942 (#627) — 2995B / 73 regions (sister of #364 same SW)
+- sw392942 (#628, 524 KB) — 3318B / 158 regions (524KB version of
+  same SW, different format)
+
+**Golf 5 2.0 TDI PD EDC15P 1MB** (#629-#636):
+- 0281011632 03G906016CF sw368924 (#629) — sister of #355 same hardware
+- 0281012253 03G906016HJ sw372673 (#630) — sister of #360 same hardware
+- 03G906016KC sw400908 (#631)
+- 0281011956 03G906016T sw374184 (#632)
+- 0281011902 03G906016FL sw371095 (#634)
+- 0281011903 03G906016FM sw375892 (#636) — sister of #624 byte-identical
+
+**Golf 5 2.0 TDI PD EDC16 PD 524KB**:
+- 0281012948 03G906021FN sw378333 (#633) — sister of #362
+- 03G906021QE sw390984 (#635) — 2161B / 205 regions
+- 03G906021AN sw389263 (#637) — sister of #359
+
+**Golf 5 2.0 TDI PPD1.2 Siemens** (#638, #639):
+- 03G906018FB SN100L4000000 (#638, 256 KB) — sister of my wired
+  PPD1.2 def (FB + SN100L7 + SN100L8 already covered, SN100L4 also
+  in identStrings)
+- 03G906018CT SN100L4000000 (#639, **249,856 B = 244 KB ROM** —
+  NEW dump format size!) — CT variant matches PPD1.2 def
+  identStrings
+
+**Golf 5 2.0 TFSI 0261S02217 1K0907115F sw377837** (#640) — sister
+of #380 same hardware/SW
+
+No new wires — many sister/cross-batch confirmations.
+
 ## VW Pairs #609–624 — Golf 5 1.9 TDI EDC16 PD + 2.0 FSI MED17
 
 **Golf 5 1.9 TDI EDC16 PD continued** (#609-#619):
