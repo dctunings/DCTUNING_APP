@@ -70,6 +70,61 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1041–1056 — Sharan QA/sw513673 + T4 2.5 TDI EDC15 PD catalog sweep
+
+**Pair #1041** sw513673 HH Sharan (sister of #1030) — same ORI, different
+Stage1. Both confirm same HH 144B anchor at `0x056B6E` (Δ=0xB4 from the
+wired 0x056E22 cluster anchor). Note: sw513673 at anchor 0x056B6E while
+sw518177 at 0x056E22 — Δ=0x2B4 anchor shift between HH/HK sub-SWs.
+Too much drift for single fixedOffset. Logged for signature wire.
+
+**Pair #1042** sw526305 `03L906018QA` Sharan 2013 100kW — anchor-shifted
+variant of 0x06AD86 cluster:
+- `0x06CC76 2048B` (Δ=+0x1EF0 from 0x06AD86) BE 21260 → 57390 +170%
+- `0x06D6AA 512B` + `0x06D490 524B` — same companion structure shifted
+- `0x07DC2E 202B` +1402% — SAME 200B IQ pattern at same relative offset
+- QA suffix is a 2013 revision with cal-block shift. Single SW — log only.
+
+**Sharan ME7 VR6 2.8 NA** (#1043, #1044):
+- sw355260 `021906256P` — 4 × 256B loose regions ~+6% (NA torque lift)
+- sw356659 `021906256AD` — `0x00B852 33B` emission-cut BE 65535 → 0
+- Different SGO suffixes (P vs AD), different anchors — no cluster yet.
+
+**Sharan Quattro 1.9 TDI** (#1045) — `038906019FC` sw362766 EDC15 PD 84.6kW:
+- `0x0555CA 6B` / `0x0555E4 6B` / `0x06554E 52B` / `0x0655E4 6B` all
+  BE 13345 → 56610 +324% — same cell replicated 4× (EDC15 multi-mirror
+  on +0x10000 stride). Classic EDC15 cal mirror confirms.
+
+**T4 2.5 TDI EDC15 PD catalog** (#1046–#1056 — 11 pairs):
+All are Bosch EDC15 PD 524KB (or 262KB for AP/P suffixes) on
+074906018/021 SGO family. Power variants 64.7/75/110.3 kW.
+
+Anchor drift per SW too wide for fixedOffset wiring:
+- #1046 sw352548 N 110kW: `0x05B556/073556 200B` (+0x20000 mirror pair)
+- #1048/#1049 sw360076/sw362446 AK 64.7kW: `0x0766xx` and `0x076xxx`
+  sister anchors per SW
+- #1052 sw352549 M 75kW: `0x05B5A6/0735A6 120B` (+0x20000 mirror)
+- #1053 sw360078 AM 75kW: `0x04D224/0x06D224 10B` (+0x20000 mirror)
+  BE 4135 → 57641 +1294% (extreme IQ lift)
+- #1054 sw360077 AL 75kW: `0x0561A2/0661A2 13B` (+0x10000 mirror)
+  BE 18097 → 34524 +91%
+- #1055/#1056 sw351975/sw367084 BG 75kW: SAME ORI, 2 sister tunes at
+  `0x07658C 15B` / `0x06D810 12×13` — both mild tunes ~+14%
+
+EDC15 mirror patterns confirmed (+0x10000 and +0x20000 strides).
+Non-turbo/low-power variants with per-SW map layouts — each SW would
+need its own fixedOffset if wired. Defer to signature wire.
+
+**Pair #1047** sw356432 `074906021S` T4 2.5 TDI 64.7kW 262KB — smaller
+dump format. Non-PD (021 suffix = Bosch TDI traditional injection).
+`0x03C1xx` 11-12B loose edits +70/−30% range.
+
+**Pair #1050** sw358944-945 `074906021P` 262KB + **#1051** sw?
+`074906021AP` 262KB — T4 2.5 TDI 75kW traditional injection variants.
+`0x03C930/03CB88 8-10B` loose edits +105-241% (IQ lift).
+
+---
+
 ## VW Pairs #1025–1040 — MASSIVE 0x1F007A cross-VW + 0x06AD86/0x06B4FE Sharan expansion
 
 **0x1F007A def HUGELY EXPANDED — 3 NEW SWs + 2 NEW maps**:
