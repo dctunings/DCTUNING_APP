@@ -70,6 +70,54 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #401–416 — Golf 6 1.6 TDI Siemens + 2.0 TDI CR 524KB clusters
+
+**Golf 6 1.6 TDI Siemens PCR21** (#401-#406) — 5 more SM-serial
+pairs covering the family:
+- SM2E0DB000000 03L906023AN (#401, 2MB) — 16437B / 249 regions
+- SM2E0DG000000 03L906023B (#403, 503KB) — 16456B / 248 regions
+- SM2G0LD000000 03L906023ML (#404, 503KB) — 19993B / 225 regions
+- SM2F0L9500000 03L906023MP (#405, 503KB) — 16286B / 239 regions
+- SM2F0K3000000 03L906023M (#406, 2MB) — 20054B / 230 regions
+
+Two consistent change-byte clusters within Siemens PCR21:
+- **~16,300 B** (SM2E0DB / SM2E0DG / SM2F0L9500000) — older SN ranges
+- **~20,000 B** (SM2F0K3000000 / SM2G0LD000000) — newer SN ranges
+
+Pair #402 SIZE MISMATCH skipped. Pair #407 SIZE MISMATCH skipped.
+
+**STRONG WIRE: Golf 6 03L906022AG/AH/BG sw396031/396032/396043
+0x06513A cluster** (#410-#412):
+- 03L906022AG sw396031 (#410) — `0x06513A 6B + 0x079DB6 200B + ...`
+  (4056B / 72 regions)
+- 03L906022AH sw396032 (#411) — IDENTICAL byte/region count, same
+  cluster
+- 03L906022BG sw396043 (#412) — IDENTICAL `0x06513A` + ALL 8 top
+  regions match sw396031
+
+**3 SWs across 3 part suffixes (AG/AH/BG) share IDENTICAL SGO**.
+Wired as `edc17_c46_golf6_20tdi_03l906022x_06513a` — sister of my
+main 0x06625E iqrelease def (Δ=0x1124 anchor shift). **16th wired
+ECU def.**
+
+**0x06625E iqrelease def +1 SW**:
+- 03L906022LF sw504863 (#408) and sw505933 (#409) — IDENTICAL
+  `0x06625E 6B + 0x064B80 14B + 0x064CC0 13B`. sw504863 ADDED to
+  identStrings. sw505933 already there.
+
+**Other Golf 6 524KB pairs**:
+- 03L906022AG sw399393 (#411) — `0x0657D6 + 0x07A456` = sister of
+  my iqrelease def (sw399393 not yet there but offset matches)
+- 03L906022LD sw507615 (#414) — `0x07FE7C + 0x064CC0/CE8/D10` IQ
+  variations (different cluster — limiter drop pattern)
+- 03L906022HH sw396029 (#415) — small 2720B / 36 regions
+- 03L906022LK sw398791 (#416) — `0x0657D6 6B raw 2130→61525` —
+  sister of iqrelease def (sw398791 already there)
+
+**Wire actions taken**:
+- Wired NEW `edc17_c46_golf6_20tdi_03l906022x_06513a` def (3 SWs)
+- Added sw504863 to iqrelease def (now 8 SWs)
+
 ## VW Pairs #385–400 — Golf 5 GTI Edition 30 + R32 V6 + Golf 6 1.4 TSI
 
 **Golf 5 GTI 2.0 TFSI MED17 continued** (#385-394):

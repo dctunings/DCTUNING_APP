@@ -2681,6 +2681,69 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 C46 VW Golf 6 2.0 TDI CR 03L906022AG/AH/BG — 0x06513A sister ────
+  //
+  // VW Golf 6 2.0 TDI CR 103 kW EDC17 C46. 3 SW versions across 3 part
+  // suffixes (AG/AH/BG) share the SAME SGO at offset 0x06513A — sister
+  // sub-cluster of my main 0x06625E IQ release cluster (Δ=0x1124).
+  // Verified in pair_analysis_log.md VW pairs #410 sw396031 (AG), #411
+  // sw396032 (AH), #412 sw396043 (BG).
+  //
+  // Common modifications (524 KB form):
+  //   0x06513A  6 B = 3 cells u16 BE — IQ release point (raw 2130 → 61525,
+  //                                    +2788% — same value treatment as
+  //                                    my main 0x06625E def, just different
+  //                                    anchor for AG/AH/BG hardware)
+  //   0x079DB6  200 B = 100 cells u16 BE — secondary release at +200%
+  //   0x063D34 / 0x063C44  13-14 B IQ stage regions
+  //   0x0786F0  16×9 IQ map
+  {
+    id: 'edc17_c46_golf6_20tdi_03l906022x_06513a',
+    name: 'Bosch EDC17 C46 (VW Golf 6 2.0 TDI CR 103kW — 03L906022AG/AH/BG 0x06513A)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['396031', '396032', '396043'],
+    fileSizeRange: [524288, 524288],
+    vehicles: ['VW Golf 6 2.0 TDI CR 103kW (03L906022AG/AH/BG sw 396031/396032/396043, 2009)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_golf6_06513a_iq_release',
+        name: 'IQ Release Point (Golf 6 03L906022AG/AH/BG 0x06513A)',
+        category: 'fuel',
+        desc: 'IQ release point at 0x06513A (3 uint16 BE cells = 6 B). Verified across 3 SWs / 3 part suffixes sharing IDENTICAL offset and treatment. μ 2130 → 61525 raw (+2788%). Sister sub-cluster of 0x06625E iqrelease def (Δ=0x1124 anchor shift for AG/AH/BG hardware).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06513A,
+        rows: 1, cols: 3, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 58000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_c46_golf6_06513a_release_b',
+        name: 'IQ Release B 200B (Golf 6 03L906022AG/AH/BG)',
+        category: 'fuel',
+        desc: 'Secondary IQ release at 0x079DB6 (100 uint16 BE cells = 200 B). Verified across same 3 SWs. μ 4135 → 12405 raw (+200%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x079DB6,
+        rows: 1, cols: 100, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 12000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 14000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 16000 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
   // ── EDC17 C46 VW Golf 2.0 TDI CR 03L906022x — IQ Release cluster (524KB) ──
   //
   // VW Golf 2.0 TDI CR 80-103 kW EDC17 C46. 6 SW versions across 5 part
@@ -2708,7 +2771,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17 C46 (Golf 2.0 TDI CR 80-103kW — 03L906022G/AG/HR/LB/LF/MC IQ release)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['396418', '396420', '399396', '505933', '507639', '507643', '514600'],
+    identStrings: ['396418', '396420', '399396', '504863', '505933', '507639', '507643', '514600'],
     fileSizeRange: [524288, 524288],   // 524 KB chiptool dump format
     vehicles: ['VW Golf 2.0 TDI CR 80-103kW (03L906022G/AG/HR/LB/LF/MC sw 396418-514600, 2008-2010)'],
     checksumAlgo: 'bosch-crc32',
