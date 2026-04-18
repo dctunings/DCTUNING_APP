@@ -64,6 +64,33 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #503–517 — A4 3.0 V6 TDI CR EDC17 CP44 catalog
+
+15 more pairs — mostly A4 3.0 V6 TDI CR 2008-2012 EDC17 CP44
+variants (176.5kW / 240ps).
+
+Part numbers in this chunk: 8K0907401E/F/P, 8K1907401A (most common),
+4G0907401 (newer gen). Plus crossover hits to A4 2.0 TDI CR already
+catalogued (03L906018ES sw521079, 03L906018JL sw522942, 03L906019AL
+sw517566, 03L906022BQ sw398756, 03L906022B sw396469, 03L906022FG
+sw506127).
+
+SW bases for 3.0 V6 TDI CR: 397833, 397836, 399371, 501408, 502378,
+507647, 516617, 516620, 528339.
+
+Tunes 3.7-15.1KB typical.
+
+**Outliers**:
+- Pair #510 · 03L906022B sw396469 — 1,546,425 B (73.7%) full recal.
+- Pair #516 · 03L906019AL sw517566 — 249,401 B (11.9%) heavy recal.
+
+**Confirming earlier finding**: 8K1907401A sw 516617 matched Pair #515
+(4,763 B) — this SW was in the v3.5.34 batch-analysis data as a
+high-pair-count variant. Candidate for per-SW code wiring when
+prioritising V6 TDI CR coverage.
+
+**Code: no change**.
+
 ## Pairs #488–502 — A4 2.7 TDI CR DPF + 3.0 V6 TDI EDC17 CP44 early
 
 - Pairs #488-490 · A4 2.7 V6 TDI CR DPF 2010 2MB EDC17 CP44 139.7kW.
