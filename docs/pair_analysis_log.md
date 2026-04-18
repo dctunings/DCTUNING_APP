@@ -64,6 +64,22 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #308–322 — A4 2.0 TDI CR 2008-2009 EDC17 C46 more SW bases
+
+15 more A4 2.0 TDI CR EDC17 C46. New SW bases: 400967, 399350, 500141,
+500115, 500121, 500122, 500123, 500153, 517561. Mix of 512KB stripped
+cal and 2MB full binaries. Tunes 1,800-10,600 B typical Stage 1.
+
+New VW part numbers seen: 03L906022SB/FG, 03L906022ML, 03L906022NN,
+03L906022MG. All variants of the same 2.0 TDI CR 140ps engine (some
+88/100/105/125kW output-specific).
+
+**Outlier**: Pair #308 (sw 396468) — 1,546,744 B changed (73.8%) —
+full recal, match to earlier pair #305 pattern (same tuner/shop).
+
+**Code: no change** — EDC17 C46 generic signature detection covers
+all of these.
+
 ## Pairs #293–307 — A4 2.0 TDI CR 2008 EDC17 C46 SW catalogue
 
 15 more 2MB / 512KB Audi A4 2.0 TDI CR 2008 EDC17 C46 pairs. Primary
