@@ -70,6 +70,45 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #481–496 — Golf 4 1.4-1.6 ME7.x + Marelli + Siemens petrol
+
+**Golf 4 1.4 16V Bosch ME7** (#481-#483):
+- 0261207179 036906032P — 2 SWs sw354828 + sw360260 (sister hardware)
+- Sister of #321 + #592 + #593
+
+**Golf 4 1.4 16V Marelli** (#482) — `61600.502.00 036906014P` IAW4LV
+family.
+
+**Golf 4 1.6 16V Bosch ME7** (#484, #485):
+- 0261206826 036906032D sw354518 — sister hardware
+- 0261207702 032906032D sw366875 — sister hardware
+
+**Golf 4 1.6 16V Marelli** (#486, #494) — IAW4LV.H 036906034BB and
+IAW4MV.DR 036906034DR families.
+
+**Golf 4 1.6 8V/i Siemens 5WP families** (#487, #490, #491):
+- 5WP4395 06A906019 (#487)
+- 5WP4858 06A906019BF (#491)
+- 5WP4417 06A906019AK (#490)
+- All 256KB Siemens-Simtec.
+
+**Golf 4 1.6 L Siemens 5WP40019 06A906033 S337031000000** (#488)
+— 524KB, 558B / 4 regions.
+
+**Golf 4 1.6 L Marelli 61600-518-09 036906034AM** (#489) — Marelli
+524KB.
+
+**Pair #491 Golf 4 1.6i Marelli IAW4LV.H sw3772** — **63.7% changed
+(334 KB) stage1+++ full recal**. Pair #492 same ORI with different
+stage1 → only 771B/18 regions normal tune. Same ROM, two tuner
+approaches.
+
+**Golf 4 1.8 20V Bosch 0261206076 06A906018CL sw359100** (#495,
+256KB ME7.x) — small 1270B / 9 regions.
+
+**Golf 4 1.8 L 0261206887 06A906032DR sw360272** (#496, 1MB ME7.x)
+— only 189B / 6 regions = light tune.
+
 ## VW Pairs #465–480 — Golf 3 VR6 ME7.x + Golf 3 GTI Siemens + Golf 4 Marelli
 
 **Golf 3 2.0L GTI Siemens 5WP4158 (#465, 32KB)** — Siemens-Simtec
