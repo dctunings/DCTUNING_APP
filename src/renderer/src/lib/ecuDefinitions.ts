@@ -7460,12 +7460,32 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     //   EGRKL / N75 duty:  raw/655.36 = %       (bias 0)
     //
     // CRITICAL — the fixedOffset values below are VARIANT-SPECIFIC. They are
-    // verified for 03G906018DH SN100L8000000 only. Other variants (03G906018AQ
-    // tested, 03G906016*, 03G906021*, etc.) have DIFFERENT offsets — loading
-    // them will point to wrong data. A multi-variant override system is a TODO.
+    // verified for 03G906018DH SN100L8000000 only. Other variants have different
+    // offsets — loading them will point to wrong data. Once we have 3+ variants
+    // analysed we add a per-variant `variants: []` override field to the EcuDef;
+    // until then findings for other variants go in the comment block below.
+    //
+    // ── Verified offsets per variant ────────────────────────────────────────
+    // 03G906018DH SN100L8000000 (Audi A3 BKD 140ps, 2006) — populated below ─┐
+    //   MENZK           0x07BBB3  14×8   uint16 BE  factor 1/250   mg/st     │
+    //   LADSOLL         0x06126E  3×16   uint16 BE  factor 1/12.06 hPa       │
+    //   MDFAW           0x07B954  5×8    uint16 BE  (raw-32768)/32 Nm        │
+    //   Torque monitor  0x05C7FA  1×2688 uint16 BE  (raw-32768)/32 Nm        │
+    //   EGR/switches    0x056D40  12×16  uint16 BE  factor 1/655.36 %        │
+    //                                                                         │
+    // 03G906018AQ SN100L6000000 (Audi A4 BKD 140ps, 2007) — NOT yet wired ──┤
+    //   LADSOLL family  0x06126E-0x062662 (11× 16×8 tables at 0x200 stride)   │
+    //                   SAME OFFSET AS DH for primary boost table ✓           │
+    //   Per-gear torque 0x04AD3A  loose 28B  (raw-32768)/32 Nm  ~367→423 Nm   │
+    //   Smoke-limit-ish 0x05E530-0x05F530 (multiple 16×10 tables +1.3%)       │
+    //   MENZK           NOT at 0x07BBB3 — AQ variant stores it elsewhere      │
+    //   MDFAW           NOT at 0x07B954 — AQ variant stores it elsewhere      │
+    //                                                                         │
+    // When we hit 3+ variants, migrate DH and AQ offsets to a                 │
+    // `variants: [{ match: ['03G906018DH'], overrides: {...} }]` field.  ─────┘
     identStrings: [
       'PPD1.1', 'PPD1.2', 'PPD1.3', 'PPD1.5', 'PPD1',
-      '03G906018DH',    // the specific calibration variant these offsets target
+      '03G906018DH',    // the specific calibration variant the active fixedOffsets target
       'SN100L8000000',  // the SW version of that variant
     ],
     fileSizeRange: [524288, 2097152],   // up to 2MB — real PPD1.2 binaries are 2MB
