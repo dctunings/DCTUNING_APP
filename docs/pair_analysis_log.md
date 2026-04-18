@@ -64,6 +64,36 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #903–918 — A6 3.0 V6 TDI 4G0907401 + 4G0907589 BiTDI 313ps 2012-2013
+
+This batch covers the **2012-2013 A6 C7 facelift 3.0 V6 TDI** pairs:
+- 4G0907401 SW versions: 518146, 521649, 521654, 522808, 522832,
+  525505, 527031 ×2 (2012+2013 same SW different files), 532819
+- 4G0907589 (new BiTDI 230.2 kW = 313 ps) SW versions: 522990, 524644,
+  526374, 528336
+
+**4G0907589 BiTDI 313 ps NEW HIGH-POWER VARIANT**: this is the
+newer A6 BiTurbo 3.0 V6 TDI (313ps from 2012-on, replaces the
+4F0907401E 240ps). 4 SW versions seen, all 2 MB EDC17.
+- Pair #896 has **786 KB ROM size** — odd. Likely a chiptool partial
+  dump (768 KB = 524 KB + 256 KB = could be cal+config block extract).
+
+4G0907401 pairs continued (180 kW / 240 ps standard 3.0 TDI):
+- sw527031 appears in BOTH 2012 (#899) and 2013 (#908) — same SW, two
+  different files, different changed-byte counts (10726 vs 3273) →
+  different tuners
+- sw521649 appears in BOTH 2011 (#892) and 2013 (#906) — same SW two
+  years, similar mods (~3.3 KB each)
+- sw532819 appears in BOTH 2011 (#890) and 2013 (#904) — confirms
+  sw532819 has been around for 2 model years
+
+So same SW number persists across model years, with the 4G part-no
+being stable. **No new wires** — too many variants, each with 1-2
+pairs, to assemble a strong cluster.
+
+Pair #893 ("Turbo-Benzin" mislabel — actually 3.0 TDI) sw521654 →
+46 regions but no top-line details captured in trimmed output.
+
 ## Pairs #887–902 — A6 3.0 V6 TDI 8K1907401A cross-chassis + 4G/4L cluster
 
 **8K1907401A sw516613 cross-chassis confirmation**: pair #882
