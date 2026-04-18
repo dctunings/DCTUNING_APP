@@ -70,6 +70,35 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #449–464 — Golf 3 1.9 TDI EDC0/1 cont + Golf 3 2.0 GTI Motronic
+
+**Golf 3 1.9 TDI EDC0/1 continued** (#449-#458):
+- 0281001309 028906021AF sw357867 (#449) — 247B/3 regions
+- 0281001313 028906021AK sw357871 (#450) and sw357872 (#451) — 178B
+  + 447B (sister SWs)
+- 0281001369 028906021AT sw355100 (#452, 256KB)
+- 0281001412 028906021DD sw355564 (#453)
+- 0281001422 028906021BF sw355102 (#454, 256KB)
+- 0281001473 028906021DF sw355219 (#458, 256KB, 80.9 kW = 110hp)
+- 0281001650 028906021GG sw358903 (#455, 256KB)
+- 0281001729 028906021HD sw947 (#456, 256KB) — sw with low number
+- 0281001730 028906021HG sw945 (#457, 256KB)
+
+All small EDC0/1 tunes — same characterization as prior batch.
+
+**Golf 3 2.0 16V Siemens 5WP4133 037906024AB** (#459, 32KB) — early
+Siemens 2.0 16V — only 4 regions / 431B.
+
+**Golf 3 2.0 GTI Motronic** (#460-#464) — pre-OBD 32KB:
+- 0261200598 037906024C sw357235 (#460) — only 56B / 1 region = no
+  real tune
+- 0261203266 037906024D sw357468 (#461 + #462 — 2 different stage1s)
+  — 1141B/8 + 730B/3
+- 0261200596 037906024B sw356789 (#463)
+- 0261200596 037906024B sw200597 (#464, 1992 — sw200597 oldest SW)
+
+Pre-OBD Motronic 2.0 GTI 115hp variants. Same family — all 32KB ROMs.
+
 ## VW Pairs #433–448 — Golf 3 1.9 TDI early EDC0/1 + 1.8 ME7.x
 
 **Golf 3 1.9 TDI EARLY** (#433-#447) — 16 pairs covering pre-OBD
