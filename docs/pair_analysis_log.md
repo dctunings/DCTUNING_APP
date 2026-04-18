@@ -64,6 +64,53 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #647–662 — A5 3.0 V6 TDI 8K1907401A 516613 cluster + 4G/4L/8R cross-platform
+
+**Strong wire candidate: 8K1907401A sw516613** appears 4 times across
+this batch (#638, #646, #647, #650 — sister files, different tuners
+or different model years):
+- All hit `0x1E424E 16×16` (+116%) — the main IQ ceiling
+- All hit the `0x19152E` 80B emission-disable region
+- Pairs #646 and #647 also write a 131072 B (128 KB) block at
+  `0x160000` — this is a **`stage1+++` tuner signature** that fills
+  the upper 128 KB padding region with non-FF data (probably for
+  serial/license tracking)
+
+**8K1907401A SW cluster summary** (cumulative across batches):
+- sw516613 → `0x1E424E` (4 pairs)
+- sw516617 → `0x1E3D5A` (2 pairs from before + #641 here)
+- sw516620 → `0x1E3D5A` (#632, #637)
+- sw516682 → `0x1E3C8C` (3 pairs across batches)
+- sw399371 → `0x1E2C98` (#640, #613)
+
+These are 5 distinct sub-SGOs in the 516xxx range, each tied to a
+specific SW number. So WS the variants table for 8K1907401A 3.0 TDI
+needs 5 entries with offsets in the 0x1E2xxx-0x1E4xxx range.
+
+**Cross-vehicle part-number bleed** (same engine, different VW part
+prefixes). All A5 3.0 TDI files in this batch but with different
+"vehicle-specific" part numbers:
+- **8K1907401A** — A5-prefix (5 SGOs above)
+- **4G0907401** — A6 C7 prefix on A5 file (sw519312 #644 / #649 / #651,
+  sw521696 #652, sw528339 #653) — newer generation 2012+
+- **4L0907401A** — Q7 prefix on A5 file (sw518178 #645 — CP44 family
+  at `0x1FAAF6 16×16`)
+- **4F0907401E** — A6 C6 prefix on A5 file (sw516625 #648 — `0x1D7510`
+  +217% repeating cluster)
+- **8R0907401J** — Q5 prefix on A5 file (sw505414 #643 — `0x1A95CA`)
+
+**Code finding**: VAG part-number prefix (`8K`/`4G`/`4L`/`4F`/`8R`)
+ties to the **donor vehicle**, NOT the engine ECU SGO. A correctly
+designed loader should match on `907401[A-Z]?` regardless of prefix
+and use the SW number + vehicle context to disambiguate.
+
+Pair #644 is interesting: 4G0907401 sw519312 in `Diesel` filename
+hits `0x1C2964/0x1BA026` (+205%/+133%) but pairs #649/#651 with the
+SAME 4G0907401 sw519312 in `Benzin` filename (mislabel — actually
+diesel) hit `0x1822F4` (the EGR-disable). Different tuners modifying
+DIFFERENT regions of the same ROM, which is why we need ALL the
+known offsets in our def, not just one tuner's preferred map.
+
 ## Pairs #631–646 — A5 3.0 V6 TDI 8K0907401x deep catalog
 
 16 more A5 3.0 V6 TDI pairs across **8K0907401, 8K0907401N, 8K0907401P,
