@@ -70,6 +70,42 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #849–864 — Passat 0x06AD86 +sw510959 + sister sub-clusters
+
+**Golf 0x06AD86 def +1 SW**:
+- 03L906018BF sw510959 (#857) → IDENTICAL `0x06AD86 + 0x06B7CA +
+  0x06B5A8 + 0x07E036` cluster. ADDED sw510959. Now **11 SWs**.
+
+**Sister sub-clusters of 0x06AD86** (NOT in fixedOffset def):
+- 03L906018H sw513674 (#846 prior) → `0x06AE46` (Δ=+0xC0 sister)
+- 03L906018NT sw522948 (#862) → `0x06CC76` (Δ=+0x1EF0 sister) +
+  `0x06D6AA + 0x06D490 + 0x07DC2E` — large 0x06CC76 sub-cluster
+- 03L906018PR sw526304 (#860, #861 — 2 sister files) → `0x07C4A8
+  16×16 + 0x07C6DA 510B + 0x07BF46 16×9` — this is the 03L906018JL
+  522xxx cluster pattern (sister of 398757-style at low region)
+
+**Multiple sister files of same SW**:
+- 03L906018BF sw510959 (#849, #850 stage1+++, #859 393KB, #857) —
+  4 different files of same hardware/SW
+- 03L906018PR sw526304 (#860, #861) — 2 sister files
+- 03L906018BC sw510944 (#854, alt file) — already in def
+
+**03L906018BN sw513642** (#856) — NEW BN suffix, 8991B/59 — sister
+of NT sw522948 cluster.
+
+**03L906022CB sw518155** (#856) — `0x070292 2KB + 0x07000A 512B`
+cluster — NEW CB suffix, NEW 0x070292 sub-cluster.
+
+**03L906022CD sw535350** (#858, 2MB) — light 2693B/48 tune.
+
+**03L906019DH sw518154** (#852, alt file from #828) — 2692B/50
+(lighter than #828's 14KB heavy tune of same SW).
+
+**03L906019FC sw526357** (#853, Passat) — sister of Amarok 03L906019FC
+sw518109 cluster.
+
+**03L906019DS sw518128** (#864) — NEW DS suffix.
+
 ## VW Pairs #833–848 — Passat 0x06AD86 cross-VW expansion + 398757 +2 more
 
 **Golf 0x06AD86 def +2 SWs**:
