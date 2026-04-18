@@ -64,6 +64,34 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #1175–1190 — S4 generations B4/B5/B6 catalog
+
+**S4 B4 1992 2.2 20V Turbo** (4 pairs #1166-1169) — Bosch 0261200465
+4A0907551A/AA, 32 KB–65 KB ROMs. Pre-OBD-II Motronic. SW versions
+356702/356703/357248/357250/357391. Tiny tunes (~1 KB / 7-8 regions).
+NEW EARLY ECU FAMILY not in our defs.
+
+**S4 B5 2.7 V6 BiTurbo Bosch ME7.x 8D0907551 [/A/D/G]** (#1170-1175):
+- 0261206382 8D0907551D sw350243 (#1170) — 806B/27 regions
+- 0261204474 8D0907551 (#1171/#1172 — 2 files no SW listed) —
+  1020B/14 + 625B/14 (524 KB ROMs older)
+- 0261206776 8D0907551G sw354123 (#1173) — 967B/26
+- 0261206110 8D0907551A sw352741 (#1174) — 725B/23
+- 0261206776 8D0907551G sw360855 (#1175) — 969B/28 (sister of
+  sw354123 same hardware code, 2 SWs same part-prefix)
+
+**S4 B6 4.2 V8** (#1176-#1180):
+- Bosch ME7.x: 0261208459/207990/207992/207997 8E0907560 — multiple
+  0261207/0261208 hardware codes, varied SWs (366830, 367687, 368396,
+  370551). 1-1.8 KB tunes / 12-21 regions.
+- **Siemens** 0261208666/208442 8E0907560/4E0907560 (#1179, #1181) —
+  Siemens-VDO PPD ECU on S4 4.2 V8 (some EU markets). 1.5-2.7 KB
+  tunes. Different ECU family from Bosch ME7.x.
+
+The 4.2 V8 is the dominant S4 B6/B7 (RS4 lite) engine. Tunes are
+small (1-2 KB) — high power baseline (340-360 hp), limited tune
+headroom.
+
 ## Pairs #1159–1174 — S3 1.8T tail + S3 2.0 TFSI MED17 + early S4 2.2 20V
 
 **S3 2.0 TFSI 8P0907115B/H/AB MED17** (8P S3 265hp):
