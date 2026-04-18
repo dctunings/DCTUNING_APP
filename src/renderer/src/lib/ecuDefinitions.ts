@@ -2022,6 +2022,116 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 Audi A5 2.7 V6 TDI 8K1907401A (sw 516xxx cluster) ──────────────
+  //
+  // Audi A5 2.7 V6 TDI 2009+ ECU. Bosch part number 8K1907401A. Verified by
+  // pair analysis across 4 different SW versions (516657, 516662, 516664,
+  // 516665) all sharing identical big-region offsets (see pair_analysis_log.md
+  // pairs #601-604). Five maps consistently modified across all 4 tunes:
+  //
+  //   0x1DBCCC  12 cells u16 — primary IQ ceiling (raw 13035 → 38465, +200%)
+  //   0x1DBC18  12 cells u16 — sister IQ stage    (raw 26954 → 39243, +50%)
+  //   0x1E0782  128 B = 64 cells u16 — limiter ceiling halved (32830 → 16450)
+  //   0x1DBE10  12 cells u16 — N75 minimum drop   (57068 → 30446, -47%)
+  //   0x1E541E  6 B = 3 cells u16 — point limit   (32788 → 61468, +88%)
+  //
+  // Tuning treatment: each tuner pinned within ~10% of the same target. Stage
+  // 1 multipliers below match the consensus of 4 independent tunes.
+  {
+    id: 'edc17_a5_27tdi_8k1907401a',
+    name: 'Bosch EDC17 (8K1907401A — Audi A5 2.7 V6 TDI 163-190ps 2009+)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['8K1907401A', '516657', '516662', '516664', '516665'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['Audi A5 2.7 V6 TDI 163-190ps (8K1907401A sw 516657-516665, 2009-2011)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_a5_27tdi_iq_ceiling',
+        name: 'Injected Quantity Ceiling (8K1907401A 516xxx)',
+        category: 'fuel',
+        desc: 'Primary IQ ceiling at 0x1DBCCC (12 uint16 cells). Verified across 4 independent Stage 1 pairs (sw 516657/516662/516664/516665) — μ 13035 → 38465 raw (+195%). Pin near tuner consensus to expose full IQ range.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1DBCCC,
+        rows: 1, cols: 12, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 38000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 42000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_a5_27tdi_iq_stage_b',
+        name: 'IQ Stage B (8K1907401A 516xxx)',
+        category: 'fuel',
+        desc: 'Companion IQ stage at 0x1DBC18 (12 uint16 cells). Verified across same 4 pairs — μ 26954 → 39243 raw (+45%). Sister to Ceiling A.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1DBC18,
+        rows: 1, cols: 12, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 39000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 42000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc17_a5_27tdi_limiter_drop',
+        name: 'Limiter Ceiling (halve to release) (8K1907401A 516xxx)',
+        category: 'limiter',
+        desc: 'Limiter ceiling at 0x1E0782 (128 bytes = 64 uint16 cells). Verified across 4 pairs — μ 32830 → 16450 raw (-50%). Tuners HALVE this region — counterintuitive — likely a "max-cut threshold" where lowering the ceiling raises the trigger point in derate logic. Apply with same -50% intent.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1E0782,
+        rows: 1, cols: 64, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 0.5 },
+        stage2: { multiplier: 0.4 },
+        stage3: { multiplier: 0.3 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc17_a5_27tdi_n75_minimum',
+        name: 'N75 Minimum Drop (8K1907401A 516xxx)',
+        category: 'boost',
+        desc: 'N75 minimum / boost-target floor at 0x1DBE10 (12 uint16 cells). Verified across 4 pairs — μ 57068 → 30446 raw (-47%). Drop to allow lower boost duty floor for response.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1DBE10,
+        rows: 1, cols: 12, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 0.55 },
+        stage2: { multiplier: 0.50 },
+        stage3: { multiplier: 0.45 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc17_a5_27tdi_point_ceiling',
+        name: 'Point Ceiling (8K1907401A 516xxx)',
+        category: 'limiter',
+        desc: 'Single-point ceiling at 0x1E541E (3 uint16 cells). Verified across 4 pairs — μ 32788 → 61468 raw (+88%). Likely a one-shot torque-limit ceiling; raise toward max.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1E541E,
+        rows: 1, cols: 3, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 62000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 64000 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
   // ── Continental SIMOS 18 (VW Golf R / Audi RS3) ──────────────────────────
   {
     id: 'simos18',

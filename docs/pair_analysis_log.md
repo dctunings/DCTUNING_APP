@@ -64,6 +64,52 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #599–614 — A5 2.7 V6 TDI EDC17 8K0907401 / 8K1907401A
+
+16 pairs of A5 2.7 V6 TDI — Bosch part numbers `8K0907401` (early
+2007-08) and `8K1907401A` (2009+). All EDC17, mostly 2 MB, one 524 KB
+chiptool half-dump (#600).
+
+**8K0907401 SGO clusters identified**:
+- `0x1F8972 / 0x1F8A00 / 0x1F8BEA` cluster — SW **392966** (#593, #596)
+- `0x1F8AF6 / 0x1F8B84 / 0x1F8D6E` cluster — SW **393599** (#594) +
+  `0x1F8AF6 + 0x1CF02E series` SW **394958** (#595, #598)
+- `0x1F8B5E / 0x1F8BEC / 0x1F8DD6` cluster — SW **510327** (#592)
+- `0x1F0DC2 + 0x1EB5B2 series` cluster — SW **392961** "CR" variant
+  (#597, #601) — 5 sequential 10B regions at 0x1EB5B2-0x1EBB90 look
+  like an N75 / boost-pressure stage limiter table.
+- `0x1EBB52 + 0x1C67D0 series` cluster — SW **392961** non-"CR"
+  variant (#591) — yes, **same SW 392961 has TWO distinct SGOs**
+  depending on the "CR" label in the filename. So even the file
+  metadata distinguishes ROM revisions where SW number doesn't.
+
+**8K1907401A SGO confirmed shared** across consecutive SW versions
+**516657 / 516662 / 516664 / 516665** (#601-#604): all hit
+`0x1DBCCC` (12B +200% — primary IQ ceiling), `0x1DBC18` (12B +50%),
+`0x1E0782` (128B -50% — limiter ceiling halved), `0x1DBE10` (12B
+-46%), `0x1E541E` (6B). This 4-pair shared-SGO confirmation is the
+**cleanest variant cluster yet** — would be a high-confidence
+candidate for a single `edc17_8k1907401a_516xxx` ECU def with
+fixedOffset entries for these 5 maps.
+
+**Code-actionable** (high-conf):
+- New ECU def `edc17_a5_27tdi_8k1907401a` with maps at
+  - `0x1DBCCC` 12 cells (probably 6×2 IQ ceiling, +200%)
+  - `0x1DBC18` 12 cells (sister IQ stage)
+  - `0x1E0782` 128 B (likely 32×u16 = 16×4 N75/torque limit)
+  - `0x1DBE10` 12 cells (N75 minimum)
+  - `0x1E541E` 6 B (point limit / one-shot ceiling)
+- identStrings: `'8K1907401A'` + SW range 516657-516665
+
+Pair #604 has Bosch hardware code `0281014394` — note `0281014xxx`
+is EDC17 family, NOT EDC16 (my pair.js family detector incorrectly
+groups it). Fix in pair.js — minor analysis-tool bug, no app impact.
+
+Also visible from this batch — same `0x1E0782` 128B "halve the
+limit ceiling" tweak appears in 4 separate 8K1907401A files. This
+is the fingerprint of a known tuning preset (likely a popular paid
+tool's ceiling-cut signature).
+
 ## Pairs #583–598 — A5 2.0 TFSI MED17 8K2907115x catalog
 
 16 pairs, mostly **A5 2.0 TFSI MED17** at part numbers 8K2907115 with
