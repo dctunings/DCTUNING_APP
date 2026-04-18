@@ -70,6 +70,40 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #737–752 — Passat 2.0 TDI EDC15/16 PD + PPD1.2 variants
+
+**Passat 1.9 TDI 2005-2006** (#737-#739):
+- Pair #737 SIZE MISMATCH skipped
+- 0281013260 03G906021AN sw382088 (#738, 524KB) — 1380B/53
+- 0281013260 03G906021LR sw380420 (#739, 524KB sister hardware) —
+  2252B/90
+
+**Passat 1.8T 0261206452 4B0906018AC sw352160** (#740) — sister of
+#699 same hardware/SW.
+
+**Passat 2.0 TDI PD EDC15P/EDC16 PD** (#741-#748):
+- 0281012119 03G906021AB sw377578 (#741) and sw376296 (#747) and
+  sw382427 (#743) — 3 SWs same hardware
+- 0281012719 03G906021AC sw378802 (#742, 256KB)
+- 0281013 03G906021AB sw382417 (#748, 2MB)
+- 0281011145 038906016K sw372127 (#745) and 038906016K sw382052
+  (#746) — sister
+- 03G906021AB sw382441 (#752, 2MB) — **stage1+++ 13.9% changed
+  (291KB)**
+
+**Passat 2.0 TDI PPD1.2 Siemens** (#744, #749, #750, #751):
+- 03G906018 SN000F7500000 (#744, **244 KB ROM** = 249856 bytes —
+  same NEW format as #639/#638 PPD1 partial dump for older SN000F
+  variant)
+- **03G906018A SN0I0M8000000** (#749, 2MB) — NEW SN serial family
+  `SN0I` (likely Italian market). 5820B / 66 regions.
+- **03G906018CD SN0I0M8000000** (#750, 2MB) — NEW part `03G906018CD`.
+  4070B / 54 regions.
+- 03G906018FH SN100L3000000 (#751, 256KB partial dump) — sister of
+  Audi A3 PPD1.2 cluster. **16013B / 81 regions = heavy tune**.
+
+ADDED `03G906018CD` + `SN0I0M8000000` to PPD1.2 def's identStrings.
+
 ## VW Pairs #721–736 — Passat 1.9 TDI EDC15P PD massive variant set
 
 16 more Passat 1.9 TDI EDC15P PD pairs across 12+ distinct hardware
