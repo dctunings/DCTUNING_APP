@@ -64,6 +64,39 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #1015–1030 — Q5 03L906022B 4-SW cluster wired + 03L906018DN sister
+
+**Strong wire confirmed and wired**: Audi Q5 2.0 TDI CR 125 kW with
+03L906022B (2 MB EDC17 C46) — 4 SW versions sharing the SAME
+"protection ceiling" structure as the wired 398757 / 03L906022FG defs:
+- sw500146 (#1012) — anchor 0x1ED9DE (-0xA80)
+- sw505968 (#1013) — anchor 0x1EE3DE (-0x80)
+- sw516675 (#1014) — anchor 0x1EE45E (default)
+- sw518746 (#1020) — anchor 0x1EE45E (IDENTICAL to sw516675)
+
+**Wired** as `edc17_c46_03l906022b_q5` with 3 maps (Protection Ceiling
+A/B/C at 0x1EE45E / 0x1EEEA2 / 0x1EEC80) — sister of 398757/FG defs.
+
+This is the **3rd protection-ceiling-style def** in the codebase
+(398757, 03L906022FG, now Q5 03L906022B) — strong evidence that this
+is a Bosch EDC17 C46 family-wide pattern, not a per-VAG-part-no
+quirk. Future wires can use this template for similar SGOs.
+
+**Q5 03L906018DN cluster** (105 kW 03L906018DN) — 2 SWs share:
+- sw511941 (#1018) — 5566B / 196 regions
+- sw511942 (#1019) — 5544B / 191 regions
+- 2 sequential SWs, similar pattern. Moderate-confidence cluster
+  (not wired — different cal layout from 03L906022B).
+
+Q5 03L906022B older 524 KB (#1006/1007/1008) and the 5-region 393KB
+chiptool variants — same hardware, different dump format.
+
+Q5 03L906022GE / 022Q / 022P / 022NH — single-pair part numbers,
+no cluster identified.
+
+Q5 03L906018DN sw515568 (#1016) and sw521635 (#1017) — different
+SGOs (3649B vs 5830B) — same part number but different cal bases.
+
 ## Pairs #999–1014 — Q3 / Q5 2.0 TDI CR EDC17 C46 catalog
 
 End of A8 batch (#990 V6 TDI 4D2907401A sw354602 — 524KB EDC15P).

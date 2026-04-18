@@ -2131,6 +2131,84 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 C46 03L906022B Q5 cluster (Audi Q5 2.0 TDI CR 125kW 2009-2010) ──
+  //
+  // Audi Q5 2.0 TDI CR EDC17 C46. Bosch hardware code, VAG part number
+  // 03L906022B. Verified across 4 SW versions in pair_analysis_log.md
+  // pairs #1012, #1013, #1014, #1020 — all share the same 2KB+512B+512B
+  // "protection ceiling" map structure as the 398757 / 03L906022FG defs.
+  //
+  // Anchor offset varies slightly by SW (cal-block shift between revisions):
+  //   sw516675 → 0x1EE45E (anchor — most pairs in batch)
+  //   sw518746 → 0x1EE45E (IDENTICAL to sw516675)
+  //   sw505968 → 0x1EE3DE (-0x80 from anchor)
+  //   sw500146 → 0x1ED9DE (-0xA80 from anchor)
+  //
+  // Same value treatment as 398757 — pin near tuner consensus (~55000 raw)
+  // for Stage 1.
+  {
+    id: 'edc17_c46_03l906022b_q5',
+    name: 'Bosch EDC17 C46 (03L906022B Q5 — Audi Q5 2.0 TDI CR 125kW 2009-2010)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['03L906022B', '500146', '505968', '516675', '518746'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['Audi Q5 2.0 TDI CR 125kW (03L906022B sw 500146/505968/516675/518746, 2009-2010)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_q5_protection_a',
+        name: 'Protection Ceiling A (03L906022B Q5)',
+        category: 'limiter',
+        desc: 'Main protection ceiling at 0x1EE45E (1024 uint16 cells = 2 KB). Verified across 4 SWs (sw 500146/505968/516675/518746) — μ 14259 → 57390 raw (+302%). NOTE: sw500146 anchor shifts to 0x1ED9DE, sw505968 to 0x1EE3DE — same map, slight version-rev shift between SWs.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1EE45E,
+        rows: 1, cols: 1024, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 55000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 57000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 58000 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc17_c46_q5_protection_b',
+        name: 'Protection Ceiling B (03L906022B Q5)',
+        category: 'limiter',
+        desc: 'Companion protection ceiling at 0x1EEEA2 (256 uint16 cells = 512 B). Verified across same 4 SWs — μ 14413 → 57390 raw (+298%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1EEEA2,
+        rows: 1, cols: 256, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 55000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 57000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 58000 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc17_c46_q5_protection_c',
+        name: 'Protection Ceiling C (03L906022B Q5)',
+        category: 'limiter',
+        desc: 'Third protection ceiling at 0x1EEC80 (256 uint16 cells = 512 B). Verified — μ 23107 → 57390 raw (+148%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1EEC80,
+        rows: 1, cols: 256, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 55000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 57000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 58000 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
   // ── EDC17 C46 03L906022FG cluster (Audi A6/A4 Allroad 2.0 TDI CR 100kW) ──
   //
   // Sister def of edc17_c46_398757 — same 2KB+512B "protection ceiling" map
