@@ -64,6 +64,47 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #1047–1062 — Q5 03L906018DN cluster +1 SW + Q5 2.0 TFSI MED17
+
+**03L906018DN heavy-tune cluster expanded to 3 SWs**:
+- sw515568 (#1037) — 8013B / 42 regions ← already in cluster
+- sw517530 (#1038) — 8023B / 42 regions ← **NEW SW joins cluster**
+- sw515569 (prior pairs)
+- All share `0x06A906 2048B` + sister 512B regions (heavy
+  protection-ceiling cluster)
+
+Pair #1040 sw517530 (different file with 0281017328 hw prefix) →
+4013B / 153 regions — DIFFERENT cluster (light tune). So sw517530
+ships in TWO files with different cal bases — same SW two SGOs again.
+
+**03L906018DN light-tune cluster expanded too**:
+- sw521080 (#1043) — 4101B / 115 regions ← NEW SW
+- sw521636 (#1042) — 4101B / 115 regions ← matches sw521635/521636
+  pattern from prior batch
+- Both 4101B/115 region pattern → same SGO
+
+Q5 03L906018JL:
+- sw526366 (#1039) — 8495B / 86 regions
+- sw526365 (#1046, DPF) — 4344B / 152 regions
+
+Q5 03L906018SH sw532878 (#1043) — **NEW PART NUMBER** for 2014+ Q5
+2.0 TDI 110 kW. Hardware 0281019898.
+
+**Q5 2.0 TFSI MED17 8K2907115D** (#1047-1050):
+- sw515352 + sw505608 — 4 files total — 2 distinct **TUNER
+  signatures** (1910B/23 regions and 1830B/74 regions) appear in
+  BOTH SW versions. So sw515352 and sw505608 share the same SGO,
+  with two different tuner approaches (1910B = signature A,
+  1830B = signature B).
+
+Q5 3.0 V6 TDI:
+- 03L906022FG sw506148 (#1051) — sister of A4 Allroad / A6 506xxx
+  cluster
+- 4G0907401 sw518172 (#1052) — **4 MB full TC1797 ROM** (sister of
+  A6 D4 #910 4MB pair)
+- 8K1907401A sw516613 (#1053) — joins the cross-chassis 8K1907401A
+  cluster (A5 + A6 + Q5)
+
 ## Pairs #1031–1046 — Q5 03L906018DN cluster expansion (3 distinct SGOs)
 
 **Q5 03L906018DN now has 3 distinct SGO clusters identified**:
