@@ -64,6 +64,22 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #173–187 — 15 more Audi A4 1.8T ME7.5 1MB SW variants
+
+All 1MB ME7.5 Audi A4 1.8T (150/180/225ps). Bosch 0261206xxx /
+0261207xxx / 0261208xxx part numbers with 8E0909018* VW part.
+Tunes are consistently small (300-2500 B / 15-65 regions), matching
+typical ME7.5 Stage 1 profile (boost + fuel raise, maybe timing).
+Family detection works via existing `me7` ECU def — no per-variant
+entry needed. Notable: Pair #182 is a NEAR-NO-OP (34 B / 1 region)
+— effectively stock.
+
+SW versions in this chunk: 368075, 352051, 354008, 366494, 355966,
+360990, 369307, 366871, 369011, 363466, 369013, 352051 (dup),
+363497, 366883, 368075 (dup).
+
+**Code: no change** — ME7 existing def covers this territory.
+
 ## Pairs #158–172 — A4 1.8 20V NA + A4 1.8T ME7.5 1MB petrol catalogue
 
 More Audi A4 early petrol pairs:
