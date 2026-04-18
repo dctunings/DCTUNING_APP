@@ -70,6 +70,39 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #753–768 — Passat 2.0 TDI CR EDC17 C46 + more PPD1.2
+
+**Passat 2.0 TDI EDC16 PD 03G906021** (#753-#755):
+- 03G906021MR sw382425 (#753) — 1422B/103
+- 03G906021NK sw389874 (#754, #755 — 2 sister files) — 3247B/247 +
+  3231B/246 IDENTICAL pattern, sister of #901
+
+**Passat 2.0 TDI Siemens PPD1.2** (#756-#758):
+- 03G906018 SN000F7500000 (#756, 256KB) — sister of #686/#744
+- 03G906018EM SN100L4000000 (#757, 256KB) — already covered (EM
+  added in v3.5.69)
+- 03G906018EM SN1R0M8000000 (#758, 2MB) — NEW SN serial `SN1R`
+  family. Already in identStrings (Audi pair #257)
+
+**Passat 2.0 TDI BlueMotion 03L906018NT sw526310** (#759, 2MB EDC17
+C46) — NEW NT part suffix.
+
+**Passat 2.0 TDI CR 03L906018BN sw527017** (#760) — NEW BN suffix.
+
+**Passat 2.0 TDI CR 03L906022 cluster** (#761-#768):
+- 03L906022BN sw394179 (#761) — 10079B/83
+- 03L906022BL sw397866 (#762, #765 — 2 different files different
+  sizes) — 10208B/106 + 326B/3 (#765 essentially no real tune)
+- 03L906022BL sw394168 (#768) — 10558B/103
+- 03L906022QC sw398819 (#763, 524KB) — 2562B/34
+- 03L906022BQ/QD sw398820 (#764) — 5669B/107
+- 03L906022BQ/G sw394105 (#766) — 5846B/177
+- 0281015029 03L906022BT sw505918 (#767, 524KB) — 3183B/66
+
+Many sister Passat 2.0 TDI CR variants. The #761/#762/#768 pattern
+(10000-10500B / 83-103 regions) suggests cluster. Could check
+offsets — likely 398757-style protection ceiling at varied anchors.
+
 ## VW Pairs #737–752 — Passat 2.0 TDI EDC15/16 PD + PPD1.2 variants
 
 **Passat 1.9 TDI 2005-2006** (#737-#739):
