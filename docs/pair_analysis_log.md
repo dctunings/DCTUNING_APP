@@ -64,6 +64,88 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #1239–1270 — END OF AUDI: TT mk1/mk2 + TT RS + early 1990s V8
+
+**Final batch — 32 pairs to complete the 1270-pair Audi catalog.**
+
+TT mk1 1.8T tail (more 8L/8N0906018x variants — same family as
+prior batches, no new wires).
+
+**TT 2.0 TDI CR 03L906022BQ** (sister of A3/A4 398757 wired def):
+- sw398759 (#1247 + #1249) — 2 files same SW 2008+2010 → wire
+  candidate but offset-shift from sw398757 — could ADD `'398759'`
+  to the existing `edc17_c46_398757` def's identStrings
+- sw396445 (#1248) — different SW, same part
+- TT 2.0 TDI **DELPHI** (#1250) — non-Bosch ECU, 1.5 MB Delphi
+  format. NEW ECU FAMILY (Delphi DCM6.2 / DCM6.2V) not in our defs.
+- 03L906018DT sw510940 (#1251) — newer 03L906018DT variant
+
+**TT mk2 2.0 TFSI MED17 8J0907115** — wire candidate:
+- 0261S02084 sw381176 (#1252 + #1263 same SW two files) — 1 SW
+- 0261S02084 sw386455 (#1251 + #1253 same SW two files) — 1 SW
+- 0261S02519 sw387549 — appears in **5 SEPARATE PAIRS**: #1254,
+  #1256, #1257 (260 KB MED17 2.0 TFSI extracted), #1258, #1264, #1265
+  (all part 8J0907115/N) — extremely common SW
+- 0261S02581 sw393740 (#1255, #1266) — 2 files same SW
+- 0261S02519 sw387549 8J0907115L #1257 = 260 KB extract format
+- 0261201881 sw396768 8J0907115L (#1257 wait that was #1257) —
+  another variant
+- **5+ pairs of sw387549 — strongest TT mk2 wire candidate**
+
+**TT 3.2 V6 R32 022906032GP** (#1259-1261) — TT V6 3.2L ME7.x
+(R32 engine):
+- sw384438 (#1259) — 0261201449 hardware
+- sw384450 (#1260) — 0261201450 hardware (sister hw +1)
+- sw382194 (#1261) — 0261201228 hardware
+
+**TT RS plus 2.5 TFSI 5-cyl** (#1262) — 8J0907404M sw526648 — 264.8 kW
+(360 hp) RS-spec. Sister of RS3 2.5 TFSI 8J0907404M sw517006 from
+prior batch.
+
+**TT2 (mk2) duplicates** (#1263-#1266) — same pairs as mk2 2.0 TFSI
+above but filename has "TT2" prefix. Alphabetical sort accident —
+same files indexed twice.
+
+**Pre-OBD Audi 200 V8 + V8 3.6/4.2** (#1267-#1270, 1989-1992):
+- Audi TYP 200 V8 1992 Bosch 0261200183 441907404D sw355770 — 32 KB
+  ROM. Classic Motronic 1.0/1.7.
+- Audi V8 3.6L Bosch 0261200461 441907404F sw356465 — 32 KB ROM
+- Audi V8 4.2L Bosch 0261203226 441907557E sw357441 — 65 KB ROM
+- Audi V6 EDC16 3.0 TDI 2002 (#1268) — sister of A6 V6 TDI EDC16
+  catalog from earlier
+
+**END of Audi catalog. Final stats**:
+
+- **1270 ORI/Stage1 pairs** processed across 1270 files
+- **8 wired ECU defs** added in this session:
+  1. `edc17_c46_398757` (03L906022BQ sw398757)
+  2. `edc17_c46_03l906022fg` (5 SWs FG cluster)
+  3. `edc17_c46_03l906022b_q5` (4 SWs Q5 cluster)
+  4. `edc17_c46_03l906018jl_060de2` (11 SWs JL pre-522xxx cluster)
+  5. `edc17_a5_27tdi_8k1907401a` (4 SWs A5 2.7 TDI)
+  6. `edc17_cp44_a6_27tdi_4f0907401c` (7 SWs A6 2.7 TDI)
+  7. `edc17_cp44_a8_42tdi_4h0907409` (4 SWs A8 D4 4.2 V8 TDI)
+  8. `edc16_a6_20tdi_03g906016bf` (3 SWs A6 2.0 TDI PD)
+
+- **Major code findings documented**:
+  - EDC15 5-mirror system (+0x8000 / +0x10000 / +0x18000 / +0x20000 /
+    +0x38000) per hardware code
+  - EDC16 PD / EDC17 CP44 524 KB ↔ 2 MB dump format +0x180000 shift
+  - 4G0907401 4 MB TC1797 full-ROM dump format
+  - Q3 393 KB partial dump format
+  - "Protection ceiling 2KB+512B+512B" map structure is family-wide
+    Bosch EDC17 C46 pattern (5+ part numbers wired or candidate)
+  - Universal MED17 unlock region at 0x015109/0x017222/0x060008 —
+    NOT a real tune, should be classified as `security_unlock`
+  - Universal EDC17 diesel emission disable at 0x190xxx —
+    DPF/EGR/lambda monitor, NOT a tune
+  - Same-SW-different-SGO pattern observed 7+ times (SW number alone
+    insufficient to identify ROM)
+  - VAG part-prefix bleed: 8K/4G/4L/4F/8R 907401x are all the same
+    3.0 V6 TDI hardware reused across A5/A6/Q5/Q7/A8
+
+**Next: BMW catalog (D:\DATABASE\Tuning_DB_BIN\BMW)** if continuing.
+
 ## Pairs #1223–1238 — TT mk1 1.8T variants (Bosch ME7.x catalog)
 
 16 more TT mk1 1.8T 132.4 kW (180 hp) and 165.5 kW (225 hp) ME7.x
