@@ -64,6 +64,98 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #583–598 — A5 2.0 TFSI MED17 8K2907115x catalog
+
+16 pairs, mostly **A5 2.0 TFSI MED17** at part numbers 8K2907115 with
+suffixes A/D/L/P/Q/R/S. Sizes mixed: 256 KB (smaller dump format) and
+2 MB (full).
+
+Pairs #573-574 still 03L906018JL TDI tail-end: SW **522923 / 524103**
+both share the `0x0615D6` cluster (sister to 521020/521021/519311 from
+prior batch — 130 kW pre-522xxx generation). So the `0x061486-0x0615D6`
+cluster spans SW 519311 → 524103 — wide SW range, same SGO base.
+
+**MED17 cross-part-number SGO match — important**:
+- 8K2907115**D** sw514910 (pair #589) and 8K2907115**L** sw512972
+  (pair #588) → **identical** offsets: 0x05570C/0x055682, 0x05E29E,
+  0x06EC08, 0x06ECFC, 0x06EB14. Same SGO, two different VW part
+  number suffixes. Suffix only changes order code / variant code —
+  not the ROM map layout.
+- 8K2907115L sw502740 (pair #582) and 8K2907115L sw502740 (pair #583,
+  same part + SW, different file) → **different SGO** (one at 0x05CEA8
+  cluster, one at 0x06030C/0x062EA0 cluster). **Same SW two SGOs again
+  — third time pattern**. Confirms SGO ≠ SW.
+
+**MED17 universal "always-changed" regions** (likely security/unlock,
+NOT actual tune content) — appear in nearly every MED17 pair regardless
+of SW:
+- 256 KB dumps: `0x015109 / 0x015FB1 / 0x017222` 120-byte block
+  (+99-118%) — top of cal section, MED17 immobilizer/comp area
+- 2 MB dumps: `0x060008 / 0x0604A2` 64-byte block — same region, just
+  shifted by the 2 MB layout offset
+- These should NOT be treated as "boost target +118%" maps. They are
+  consistent across `397259, 399256, 502880, 506775, 512972, 514910,
+  398607` and many others — too universal to be a real tune.
+
+**Other findings this batch**:
+- 8K2907115Q sw399256 has both 256 KB pair (#579, 40 regions) and
+  2 MB pair (#580, 6 regions) — same SW, two **different dump
+  formats**. The 256 KB is just the 2 MB cal section extracted.
+- 8K2907115S sw502740 (pair #583) — yet another part-suffix sharing
+  the same SW. **VAG part suffix is mostly a hardware revision marker,
+  not a software identity.**
+- 8K2907115A sw397259 (pair #577) and 8K2907115P sw398607 (pair #537
+  prior batch) → both early SW (3xxxxx series), 256 KB dumps, similar
+  MED17 layout. Likely shared base SGO.
+
+**Code: candidate `med17_2_0_tfsi_8K2907115` ECU def with universal
+maps + SW-cohort variants table. Mark `0x015109/0x017222 (256KB)` and
+`0x060008/0x0604A2 (2MB)` regions as `category: 'security_unlock'` so
+the diff UI doesn't flag them as boost target.**
+
+## Pairs #567–582 — A5 2.0 TDI CR EDC17 03L906019AL/JL SGO clusters
+
+16 pairs all 03L906019AL or 03L906018JL — 2MB EDC17 C46/C64. This
+batch lets us cluster the SW numbers into SGO families because
+multiple SW versions share the SAME big-region offsets:
+
+**03L906019AL clusters now confirmed**:
+- **`0x1C1414` cluster** (12×15 mainmap @ +73977%/LE+46% raw → boost
+  scaling) — SW **515287, 518002, 518003**. All 100-119.9 kW models.
+  Pair #558 (sw518002) and #564 (sw518002 again, different file) and
+  #563 (sw518002 dupe? — same offsets) all match.
+- **`0x1E14A0` cluster** (510B + 16×9 mainmap) — SW **515516, 517565**.
+  All 125 kW models (including pair #565 confirms #545 from prior batch).
+- **`0x1D1CE2` cluster** (2KB + 4×512B) — SW **517561** (hardware-B
+  variant of same SW as `0x1E12EE` cluster — same SW two SGOs
+  reconfirmed; this is the second time this happens).
+- **`0x1E0E54` cluster** — SW 502340/502357 (from prior batch).
+
+**03L906018JL clusters now confirmed**:
+- **`0x07D3FE` cluster** (510B + 16×16 + 16×9 — same as 398757 we
+  already wired) — SW **522909, 522924, 522922**. All 105-130 kW
+  newest 2012-13 generation. Pair #569 also has this with prefix
+  `0281018128` Bosch hw revision.
+- **`0x061486` cluster** (22B + 362B at 0x066E18) — SW **519311,
+  521021, 521020**. 130 kW pre-522xxx generation. Different cal
+  region entirely from 522xxx — this is the OLDER C46 generation.
+- **`0x058B66 + 0x07D40E` cluster** — SW **522943** (different from
+  522909 by 34 — but uses the older 0x058xxx low-region layout WITH
+  newer high-region 0x07Dxxx layout — TRANSITIONAL SGO).
+
+Pair #559 03L906022B sw516684 (sister of pair #535 A5 8K1907401A
+sw516682 — note the **2-digit SW difference** is critical) hits
+`0x1EE45E` (2KB) + `0x1EEEA2` + `0x1EEC80` — same as 03L906022FG
+sw506125 / sw506148 from prior batch (`0x1EE4F2` etc — within 200B).
+**So 03L906022B sw516684 SHARES the 03L906022FG SGO** despite
+different part number. **Code implication**: SGO base may correlate
+with model-year cohort across different VAG part numbers.
+
+**Code: building the variants-table mental model is paying off** —
+6 distinct SGO clusters identified across ~30 pairs, each with 2-5
+SW versions. A loader that uses cal-region content-fingerprint
+instead of SW-string match would correctly identify all of them.
+
 ## Pairs #550–566 — A5 2.0 TDI CR EDC17 C64 SGO catalog
 
 15 pairs, **all** A5 2.0 TDI CR generation. All 2MB EDC17 except #542
