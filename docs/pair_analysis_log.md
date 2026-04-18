@@ -64,6 +64,116 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pair #32 — MED17.5.25 · 0261S04652 / 03C906016F sw 399977 (Audi A3 1.4 TFSI 122ps, 2008)
+- 2 MB MED17.5. Light Stage 1: 330 bytes / 5 regions.
+- 12×9 at 0x0543A0 BE +7.7 % — boost target (typical factor 0.001 bar
+  in MED17 would give 3.3 bar → 3.6 bar).
+- Two 12×16 tables at 0x05848E / 0x05849A +1.3 % — duplicated
+  primary boost/torque map with small increase.
+- 0x0547D6 22B LE +16 % — cluster of related values scaled up.
+- **Code: deferred**. Note: 0261S04652 is a MED17.5.25 part number
+  our def currently identifies only as generic MED17.
+
+## Pair #31 — MED17 1.2 TFSI · 04E906016H sw 533205 (Audi A3 1.2 TFSI 105ps, later)
+- 4 MB MED17 (probably MED17.5 or newer). Tiny edit: 212 B / 15 regions.
+- STRONG signal: **LE consistent +10.9 %** across 7 × 12-byte regions
+  at 0x2621xx (μ 19000-36000 raw → ×1.11). One parameter scaled up
+  10.9 %, stored in 7 cells.
+- 0x2628AC 28B LE +15.5 % — related block.
+- No BE cleanness — LE is the correct byte order (TriCore MED17).
+- **Code: deferred**. 04E906016H is VAG's newer 1.2 TFSI part number
+  not yet in our ECU def list.
+
+## Pair #30 — EDC15P+ · 0281012195 / 045906019CA sw 378836 (Audi A2 1.4 TDI, 2004)
+- 512 KB EDC15P+ cal. 3,604 bytes / 78 regions — medium-heavy tune.
+- SAME 0x20000 ROM/RAM MIRROR pattern as pairs 28 and 29. Every change
+  is duplicated at offset+0x20000.
+- Big BE -72 % to -92 % reductions on multiple 6-8B regions =
+  flag bytes being zeroed (monitoring disables).
+- 0x04D316 / 0x06D316 6B +78 % — a pair of small increases (same
+  value in both mirror copies).
+- **Code: deferred** — pattern now CONFIRMED across 3 A2 1.4 TDI
+  EDC15P+ variants. edc15 def would benefit from an 0x20000 mirror
+  flag so when we write Stage 1, we write to BOTH copies.
+
+## Pair #29 — EDC15P+ · 0281011404 / 045906019BA sw 367361 (Audi A2 1.4 TDI, 2004)
+- 512 KB EDC15P+. 1,546 bytes / 82 regions.
+- Same 0x20000 mirror pattern — 0x056xxx paired with 0x076xxx.
+- Cluster of BE -76 % to -86 % (6-9B regions) = flag bytes zeroed.
+  Values going from 40000-59000 raw down to 7000-14000 = threshold
+  lowered dramatically or toggled.
+- **Code: deferred**.
+
+## Pair #28 — EDC15P+ · 0281010220 / 045906019G sw 360497 (Audi A2 1.4 TDI 75ps)
+- 512 KB EDC15P+ (1.4 TDI 75ps). 1,586 bytes / 74 regions.
+- **IMPORTANT FINDING: 0x20000 ROM/RAM MIRROR**. Every modified
+  region is DUPLICATED at offset + 0x20000 (e.g. 0x04D750 mirrors to
+  0x06D750). The tuner modified BOTH copies. This is characteristic
+  of EDC15P+ ECUs that keep a ROM master + RAM mirror at a fixed
+  stride of 128 KB. If our code writes only to one copy, the ECU
+  boots with inconsistent cal and derates.
+- Top changes:
+  - 0x04D750 / 0x06D750 40B BE +323 % (one pair of 40B regions).
+  - 0x0572B4 / 0x0772B4 199B BE +75 % (large table raised).
+  - 0x04C996 / 0x06C996 6B BE −55 % (threshold lowered).
+- **Code: deferred**. But the mirror finding is meaningful — warrants
+  a follow-up TODO to make the app handle 0x20000 mirror writes.
+
+## Pair #27 — SIMOS PCR21 · 03L906023QC SM2G0LK000000 (Audi A1 1.6 TDI CR, 2012)
+- 2 MB. 30,290 bytes / 259 regions — comparable to pair 26.
+- Same 14-byte region pattern at 0x18D412 / 0x18CE32 / 0x18D832 etc.
+  Offsets SHIFTED by ~0x44 bytes vs pair 25 (SM2G0LB → SM2G0LK SW ver).
+- Confirms: SIMOS PCR21 1.6 TDI CR has a large block of switch bytes
+  at 0x18C0xx–0x190Axx that tuners flip for DPF/EGR-off style mods.
+  Offsets drift per SW version.
+- **Code: deferred**. Would need dedicated SIMOS PCR21 1.6 TDI CR
+  ECU def with per-SW-version switch block offsets.
+
+## Pair #26 — SIMOS PCR21 · 03L906023KJ SM2G0LB000000 Stage1+++ (Audi A1 1.6 TDI CR)
+- 2 MB. **32,392 bytes / 261 regions** — extreme tune (Stage1+++ label
+  is correct — far more changes than the Stage1 pair 25 with same SW).
+- Same 14B region pattern as pair 25, **same offsets** (SM2G0LB SW
+  serial shared between 03L906023KG and 03L906023KJ part numbers).
+- Adds dozens more 14B flag-byte flips beyond pair 25's set.
+- **Code: deferred** — same family as pair 25.
+
+## Pair #25 — SIMOS PCR21 · 03L906023KG SM2G0LB000000 (Audi A1 1.6 TDI CR 90ps, 2012)
+- 2 MB. **17,791 bytes / 229 regions** — HEAVY Stage 1 (typical
+  Euro-5 1.6 TDI CR "DPF-off / EGR-off" tune shape).
+- Dozens of 14-byte regions at 0x18Dxxx / 0x18Exxx showing massive
+  % increases (+100–11000 %) — but the raw values go from near-zero
+  to near-max u16 (0x0000→0xFFFF range). These are **enabler/flag
+  switch bytes for emission monitoring**; the tuner flipped them
+  on/off to disable DPF regen, EGR, AdBlue checks etc.
+- LE interpretation is effectively 0 % on these = the true "byte
+  flip" is happening in BE. Consistent with the SIMOS PCR21 TriCore
+  AURIX architecture.
+- **Code: deferred**. These switch blocks are high-value for customer
+  use (DPF-off is a common ask) but need dedicated ECU def + the
+  scanner + a proper "emission-off" addon integration to be safe.
+  Noting for a focused follow-up.
+
+## Pair #24 — SIMOS PCR21 · 03L906023A SM2E0DB000000 (Audi A1 1.6 TDI CR 105ps, 2004)
+- 1 MB cal-only SIMOS PCR21 (earlier SM2E serial than 2012 variants).
+  512 bytes / 15 regions.
+- 32×4 / 16×8 / 8×16 tables at 0x07E6AB / 0x07E6B3 / 0x07E6C3 ALL
+  show the SAME +17.9 % BE change — this is the SAME data block read
+  with 3 different dimension hypotheses by the stride clusterer. Real
+  map is probably one of these — likely 16×8 (128 cells) or 32×4.
+- 0x0CDE09 63B **BE -100%** (4699 → 0) = monitor threshold zeroed.
+- 128×7 at 0x0CD6xx / 0x0CD686 BE +5 % = large slow-growth tune of a
+  low-cell-value table (probably IQ or SOI table raw mg×100).
+- **Code: deferred**.
+
+## Pair #23 — MED17 1.4 TFSI · 03C906027CF sw 517923 (Audi A1 1.4 TFSI 185ps, 2012)
+- 2 MB MED17, higher-output 1.4 TFSI (185ps not 122ps like 03C906016BG).
+- 1,020 bytes / 18 regions.
+- Top: 0x054784 8×5 BE +81.6 %, three 64×4 tables at 0x054514 /
+  0x054524 / 0x054534 all BE ~+40–45 %. These four-table cluster
+  is classic MED17 boost-target per-mode variants.
+- 0x0503AF 23B BE +90 % / LE +83 % — protection ceiling raise.
+- **Code: deferred**.
+
 ## Pair #22 — MED17.1.6 · 03C906016BG sw 522238 (Audi A1 1.4 TFSI)
 - 2 MB MED17. Very light tune — 212 bytes / 4 regions.
 - Top LE changes: 0x057DC0 24B +15.7 %, 0x057B54 12×15 +4.5 %.
