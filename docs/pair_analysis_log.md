@@ -64,6 +64,40 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #83–97 — more EDC17 C46 A3 2.0 TDI CR 2010-2013 variants
+
+Fifteen more pairs of the same A3 2.0 TDI CR family, mostly 2MB
+Bosch EDC17 C46. Brief per-pair entries:
+
+- Pair #83 · 03L906022BQ sw 398757 (2010 alt) 10,726 B / 97 regs.
+- Pair #84 · 03L906019AL sw 517565 (2010 125kW) 2MB EDC17 C64-era,
+  6,586 B / 64 — different 2.0 TDI CR variant, higher output 170ps.
+- Pair #85 · 03L906018AG sw 508211 (2011 100kW) 5,484 B / 53 — light.
+- Pair #86 · 03L906018AG sw 516679 (2011 100kW) 5,483 B / 56.
+- Pair #87 · 03L906018AG sw 507685 (2011 103kW) 5,737 B / 55.
+- Pair #88 · 03L906018AG sw 510938 (2011) 8,854 B / 72.
+- Pair #89 · 03L906018AG sw 516676 (2011 105kW) 8,680 B / 116.
+- Pair #90 · 03L906018AG sw 510939 (2011 125kW) 8,990 B / 73.
+- Pair #91 · 03L906018AG sw 516679 (2011 99kW) 8,680 B / 116 —
+  identical pattern to pair #89 despite power difference in filename.
+- Pair #92 · 03L906018AH sw 516677 (2012 cal-dump 384KB) 2,568 B / 65.
+- Pair #93 · 03L906018JL sw 521653 (2012 100kW) 8,592 B / 91 — new
+  part number 03L906018JL (vs AG/AH earlier).
+- Pair #94 · 03L906018AG sw 516680 (2012) **1,670,390 B changed**
+  (79.7 % of file) — this is a FULL RE-CAL, not a Stage 1 diff.
+  The "Stage1" label is misleading; the file is a different binary
+  altogether. Marking to skip in future cross-reference.
+- Pair #95 · 03L906018JL sw 522943 (2012 130kW) 6,413 B / 48 —
+  higher-output JL.
+- Pair #96 · 04L906021AS sw 547592 (2013 110kW) 4 MB EDC17 C64 next
+  gen — different file size (4 MB vs 2 MB). First 4 MB EDC17 C64 seen.
+- Pair #97 · Bosch 1037531110 sw 531110 (2013 110kW) 16,240 B / 178 —
+  very heavy tune, different part number format (1037*).
+**Code: deferred** — the repeat SW version hits (398757, 507685,
+508211, 516679, 516680) build confidence in our v3.5.35 wiring of
+sw 398757. Other SW versions could get the same treatment when we
+dedicate per-variant entries. Pair #94 is an outlier (full recal).
+
 ## Pairs #68–82 — EDC17 C46 Audi A3 2.0 TDI CR 140ps SW catalogue
 
 Fifteen consecutive pairs, all 140ps 2.0 TDI CR on 03L906018/022
