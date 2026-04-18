@@ -64,6 +64,34 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #143–157 — Audi A4 1.8 TFSI 256KB + ME7.1 128KB 1.6/1.8 NA petrol
+
+- Pairs #143–145 · A4 1.8 TFSI 256KB cal dumps — 0261201961 / 8K1907115D
+  (398674), 8K1907115C (503660) — all ~900 B light Stage 1 tunes.
+  EA888 Gen1 1.8 TFSI on Bosch MED17.1.1.
+- Pairs #146–147 · A4 2.0 TFSI "USA Stage1ell" 2009 (155.2kW / 211hp)
+  — 8K2907115D (397281) and 8K2907115P (500889). 256KB cal dumps,
+  moderate ~2000 B tunes. Probably MED17.1.6.
+- Pair #148 · A4 1.4 TSI 2010 · 03C906016S sw 505087 (256KB).
+  1,782 B / 26 — duplicate of pair #33's full-file analysis at a
+  different binary form. Same Stage 1 pattern.
+- Pair #149 · **Audi A4 1.6 8V 1998 · 0261203555 / 3B0907557B sw 17043
+  128KB** — first 128KB ME7.0/ME7.1 seen. 617 B / 5 regs, tiny tune
+  on naturally-aspirated 1.6. Not a high-value tuning target.
+- Pairs #150–157 · 9 more 128KB Audi A4 1.6/1.8 ME7 NA petrol variants
+  (0261203xxx / 0261204xxx Bosch part numbers, 8D0907557* VW part).
+  All 128KB, small 500-2200 B tunes. ME7.0/ME7.1 NA petrol calibrations.
+  NOT a realistic tuning target — NA 1.6/1.8 doesn't gain much from
+  software. Common modifications seen: ignition timing adjust, rev
+  limit, speed limiter.
+- Pair #158 · Siemens 5WP4422 / 8E0906018AM S34C039000000 (2005 A4 1.6
+  petrol) 512KB. Only 306 B / 3 regs. Siemens Simos 8.1 probably.
+
+**Code: deferred**. Note: the 128KB ME7.0/ME7.1 NA petrol binaries
+here are essentially legacy — Bosch ME7 was superseded. Low priority
+for per-variant code entries. Our `me7` generic def should catch
+these via signature detection.
+
 ## Pairs #128–142 — more MED17 2.0 TFSI 200ps + first V6 3.2 FSI ME9.1
 
 - Pair #128 · MED17 0261S02517 / 8P0907115B sw 387458 (2005) 2MB,
