@@ -64,6 +64,40 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #128–142 — more MED17 2.0 TFSI 200ps + first V6 3.2 FSI ME9.1
+
+- Pair #128 · MED17 0261S02517 / 8P0907115B sw 387458 (2005) 2MB,
+  2,707 B / 48 regs. Duplicate SW # from earlier pair #120 but
+  different file hash.
+- Pair #129 · MED17 0261S02041 / 8P0907115 sw 387577 (2006) 2MB,
+  1,044 B / **only 3 regs** — very light/surgical tune.
+- Pair #130 · MED17 0261S02079 / 1K0907115A sw 387568 (2006) 2MB —
+  NEW part number 1K0907115A (VW Golf Mk5 crossover part). 1,378 B.
+- Pair #131 · MED17 0261S02340 / 8P0907115B sw 380990 (2006) 1,302 B.
+- Pair #132 · MED17 0261S02470 / 1K0907115Q sw 391082 (2007) 2,667 B.
+- Pair #133 · MED17 0261S02517 / 8P0907115T sw 387458 (2007) 1,952 B —
+  sw 387458 now confirmed across 3 pairs (#120, #128, #133). Stable.
+- Pair #134 · MED17 0261S04240 / 8P0907115Q sw 396770 (2008) 1,403 B —
+  new Bosch prefix 0261S04 (MED17.5.25 family).
+- Pair #135 · MED17 0261S04240 / 8P0907115AE sw 396770 (2009) 256KB
+  cal-dump — same bytes-changed count (1,403) as full-file pair #134.
+  This confirms the 256KB is the same tune, just cal-only dump.
+- Pair #136 · 0261S05898 / 8P0907115Q sw 502774 — SIZE MISMATCH, skipped.
+- Pairs #137–141 · **Audi A3 3.2 V6 FSI / ME9.1** — 0261208088,
+  0261208792, 0261208793, 0261201260, 0261201522 (all 022906032*
+  part numbers). 1MB ME9.1 VR6 petrol files. 400-1,400 B tiny tunes
+  (V6 FSI rarely gets heavily tuned). NEW family identified — **ME9.1
+  is not in our ecuDefinitions.ts yet**. Family hint detection needs
+  update to catch `022906032*` + `0261208xxx`.
+- Pair #142 · Bosch 0261201672 / 1P0907115A sw 389460 (A4 1.8 TFSI
+  2008) 256KB cal-dump, 939 B / 10 regs. Simos or Bosch EA888
+  1.8 TFSI — newer part number family.
+
+**Code: deferred**. NEW ACTIONABLE: add ME9.1 (Audi V6 3.2 FSI)
+ECU def with identStrings matching 022906032*, 0261208088/792/793,
+0261201260/522. Our ecuDefinitions.ts has `me9` for Ford 2.5T but
+not VAG ME9.1 for the 3.2 VR6 FSI. Small gap. TODO.
+
 ## Pairs #113–127 — EDC16 PD A3 2.0 TDI + MED17 A3 2.0 TFSI 200ps
 
 15 more pairs:
