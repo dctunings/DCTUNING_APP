@@ -7575,6 +7575,8 @@ export const ECU_DEFINITIONS: EcuDef[] = [
       'SN100K5300000',  // Pair #7 (earlier batch) — 256KB Bosch-labelled DH cal dump
       '03G906018FG',    // Pair #243 — new VAG part-number variant (2002 A4 2.0 TDI)
       'SN100L3000000',  // ↳ accompanying SW serial for the FG variant
+      'SN1R0M8000000',  // Pairs #257, #262 — AQ variant later SW family
+      'SN1S0M8000000',  // Pair #256 — AQ variant S-series SW family
     ],
     fileSizeRange: [524288, 2097152],   // up to 2MB — real PPD1.2 binaries are 2MB
     vehicles: [

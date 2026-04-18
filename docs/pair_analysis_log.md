@@ -64,6 +64,39 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #248–262 — more A4 2.0 TDI PD + 3 new PPD1.2 SN serials
+
+15 more pairs:
+
+- Pair #248 · A4 2.0 TDI 125kW PPD1.2 03G906018AQ **SN100K5400000**
+  — new SN100K5 variant of AQ. 15,483 B heavy tune.
+- Pair #249 · same AQ SN100L6000000 — 249856 B partial cal dump.
+- Pair #250 · A4 2.0 TDI PD 103hp 03G906016MF sw391830 2MB EDC16 PD.
+- Pair #251 · 512KB EDC16 PD 03G906016GC sw380439 2,852 B / 199.
+- Pair #252 · 2MB EDC16 PD 03G906016JD sw378340 1,755 B.
+- Pair #253 · 2MB EDC16 PD 03G906016KM sw386351 1,954 B.
+- Pair #254 · 2MB EDC16 PD 03G906016KN sw389287 1,954 B —
+  IDENTICAL bytes-changed and region count to #253 — same tuner
+  applying same pattern to different SW binaries.
+- Pair #255 · A4 2.0 TDI PPD1.2 AQ **SN100L6000000** sw — the
+  heaviest AQ tune I've seen: 14,177 B / 131 regs.
+- Pairs #256-258 · **THREE** PPD1.2 AQ with NEW SN serials —
+  SN1S0M8000000 (101,271 B / 101 regs — 4.8%),
+  SN1R0M8000000 (100,641 B / 91 regs — 4.8%),
+  SN1R0M8000000 (102,921 B / 88 regs — 4.9%).
+  These three look like **full recals**, not Stage 1 diffs.
+- Pairs #259-262 · 512KB EDC16 PD A4 2.0 TDI 2006 variants —
+  03G906016FP sw389839, 03G906016KN sw391503 (2 copies), sw380410.
+
+**CODE CHANGE**: Add `SN1R0M8000000`, `SN1S0M8000000`, `SN100K5400000`
+to vag_ppd1 identStrings. These are three more PPD1.2 AQ SW serial
+generations seen in this batch.
+
+**Outlier note**: Pairs #256-258 had 4.8% changed (~100 KB) which is
+way beyond a typical Stage 1 (<1%). These are probably full recal
+swaps (replaced the whole cal block with a performance cal), not
+delta tunes. Treat as reference only.
+
 ## Pairs #233–247 — A4 1.9/2.0 TDI PD continued + first PPD1.2 FG variant
 
 15 more Audi A4 TDI pairs:
