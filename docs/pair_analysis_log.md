@@ -70,6 +70,35 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #433–448 — Golf 3 1.9 TDI early EDC0/1 + 1.8 ME7.x
+
+**Golf 3 1.9 TDI EARLY** (#433-#447) — 16 pairs covering pre-OBD
+era (1996-2002) Bosch EDC0/EDC1 early diesel ECUs. Bosch hardware
+codes 0281001xxx with VAG part numbers 028906021xx (AF/AK/AT/BD/BF/
+DD/FB/FS/GG/GH).
+
+ROM sizes: 65 KB (most) and 256 KB (older 1997-1998 variants with
+0281001422/0281001439/0281001564/0281001650/0281001652/0281001666
+hardware).
+
+Same SW = same hardware = mostly same SGO (small variations between
+stage1 files):
+- 0281001309 028906021AF — 4 SWs (sw355547, sw355548, sw357867, sw357868)
+- 0281001313 028906021AK — 2 SWs (sw355569, sw355570)
+- 0281001412 028906021DD — 2 SWs (sw355563, sw355564)
+- Various other single-SW pairs
+
+All tiny tunes (180-2784 B / 3-117 regions). These pre-OBD EDC0/1
+ECUs predate proper ECU defs in our system — could add a generic
+`edc1_early` family def with signatures, but very low tuning volume
+in 2024+.
+
+**Pair #433 Golf 3 1.8 0261203184/185 8A0907311H sw357577** (65KB
+ME7.x petrol) — small 1230B / 5 regions.
+
+**No new wires** — too many distinct part numbers / SWs each with
+single-pair confirmation. Out of practical fixed-offset wiring scope.
+
 ## VW Pairs #417–432 — Golf 6 03L906022 cluster expansion + Golf GTD 0x06AD86
 
 **iqrelease def (0x06625E) +2 SWs**:
