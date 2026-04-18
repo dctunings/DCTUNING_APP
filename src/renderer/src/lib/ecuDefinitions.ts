@@ -2821,6 +2821,327 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage3: { multiplier: 1.50, clampMax: 65000 },
         critical: false, showPreview: false,
       },
+      // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 CP44 MAJOR additions ──
+      // 12×16 LE Y=5000-7100 — 116 real CP44 files (51.6%!) +9.9%. V6 TDI rail/pressure primary.
+      // Sample: Audi A6 3.0 TDI CR 2017 0281019739 4G0907589. Most-modified CP44 map overall.
+      {
+        id: 'edc17_cp44_12x16_rail',
+        name: 'EDC17 CP44 Rail Primary 12×16 (Kf_)',
+        category: 'fuel',
+        desc: 'EDC17 CP44 V6 TDI primary rail pressure / IQ duration — 116 files (51.6% of all CP44 pairs) +9.9% avg. Y 5000-7100 = rail pressure in bar × 10. The most commonly-modified CP44 map across ALL Audi 3.0 V6 TDI CR tunes (A6/A7/A8/Q5/Q7/SQ5 2009-2019).',
+        signatures: [
+          [0x10,0x00,0x0c,0x00,0x7c,0x15,0x70,0x17,0x58,0x1b,0x40,0x1f],
+        ],
+        sigOffset: 0,
+        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'bar',
+        skipCalSearch: true,
+        minQuality: 0,
+        stage1: { multiplier: 1.08, clampMax: 18000 },
+        stage2: { multiplier: 1.15, clampMax: 19000 },
+        stage3: { multiplier: 1.25, clampMax: 22000 },
+        critical: false, showPreview: true,
+      },
+      // CP44 12×16 secondary — 29 files +9.9%, Y=0-5500 mg/st injection duration variant.
+      {
+        id: 'edc17_cp44_12x16_iq',
+        name: 'EDC17 CP44 IQ 12×16 (Kf_)',
+        category: 'fuel',
+        desc: 'EDC17 CP44 IQ/duration 12×16 — 29 files +9.9% avg. Complement to the rail primary, covers injection quantity by RPM/load for V6 TDI.',
+        signatures: [
+          [0x10,0x00,0x0c,0x00,0xb0,0x04,0x08,0x07,0xd0,0x07,0xc4,0x09],
+        ],
+        sigOffset: 0,
+        rows: 12, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.08 },
+        stage2: { multiplier: 1.18 },
+        stage3: { multiplier: 1.28, clampMax: 65000 },
+        critical: false, showPreview: false,
+      },
+      // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 CP24 (Audi V8 4.2 TDI, 24 pairs) ──
+      // 8×16 LE Y=2000-8800 — 20 V8 files (83%!) +3%. PRIMARY V8 TDI base cal.
+      {
+        id: 'edc17_cp24_8x16_base',
+        name: 'EDC17 CP24 V8 TDI Base 8×16 (Kf_)',
+        category: 'fuel',
+        desc: 'EDC17 CP24 V8 TDI base calibration — 20 files (83% of CP24 pairs) +3% avg. Primary Audi A8/Q7 4.2 V8 TDI base map. Stock is very conservative — universally modified in V8 TDI Stage 1 tunes.',
+        signatures: [
+          [0x10,0x00,0x08,0x00,0xc8,0x00,0xf4,0x01,0xe8,0x03,0xdc,0x05],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.08 },
+        stage2: { multiplier: 1.15 },
+        stage3: { multiplier: 1.25, clampMax: 65000 },
+        critical: false, showPreview: true,
+      },
+      // CP24 14×13 LE — 10 files +94.7%! Massive smoke ceiling on A4 3.0 TDI CR 2011.
+      // Also the 14×12 variant (4 files +89.8%) — group both into one entry with 2 sigs.
+      {
+        id: 'edc17_cp24_14x13_smoke',
+        name: 'EDC17 CP24 Smoke Ceiling 14×13/14×12 (Kf_)',
+        category: 'smoke',
+        desc: 'EDC17 CP24 smoke/torque ceiling — 10 files (41.7%) +94.7% avg on 14×13, plus 14×12 variant (+89.8%, 4 files). Tuners nearly DOUBLE stock. Primary V8 TDI Stage 1 unlock target.',
+        signatures: [
+          [0x0d,0x00,0x0e,0x00,0x4c,0x04,0xb0,0x04,0xb8,0x06,0xd0,0x07],
+          [0x0c,0x00,0x0e,0x00,0x4c,0x04,0xb0,0x04,0xb8,0x06,0xd0,0x07],
+        ],
+        sigOffset: 0,
+        rows: 14, cols: 13, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.30 },
+        stage2: { multiplier: 1.60 },
+        stage3: { multiplier: 1.90, clampMax: 65000 },
+        critical: false, showPreview: true,
+      },
+      // CP24 8×8 LE Y=0,700,1500,2200 — 8 files +60.7%! Narrow X (4440-7000) boost ceiling.
+      {
+        id: 'edc17_cp24_8x8_ceiling',
+        name: 'EDC17 CP24 V8 Boost Ceiling 8×8 (Kf_)',
+        category: 'limiter',
+        desc: 'EDC17 CP24 V8 TDI boost ceiling — 8 files (33%) +60.7% avg. Narrow X axis 4440-7000 = boost pressure/torque-demand range. Tuners raise ~1.6× stock for V8 TDI Stage 1.',
+        signatures: [
+          [0x08,0x00,0x08,0x00,0x58,0x11,0x6c,0x11,0x80,0x11,0x94,0x11],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 8, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.25 },
+        stage2: { multiplier: 1.50 },
+        stage3: { multiplier: 1.70, clampMax: 65000 },
+        critical: false, showPreview: true,
+      },
+      // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 C41 (8 pairs, high-density) ──
+      // 8×8 LE Y=0,1000,2000,3500 — 16 occurrences across 8 files (2× per file on avg) +9.1%.
+      // PRIMARY C41 base cal. C41 binaries always carry this map.
+      {
+        id: 'edc17_c41_8x8_base',
+        name: 'EDC17 C41 Base 8×8 (Kf_)',
+        category: 'torque',
+        desc: 'EDC17 C41 base cal 8×8 — 16 occurrences across 8 real C41 pairs (2 copies per file) +9.1% avg. PRIMARY C41 base calibration always modified on Stage 1.',
+        signatures: [
+          [0x08,0x00,0x08,0x00,0xe8,0x03,0x40,0x06,0xac,0x0d,0x94,0x11],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 8, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.10 },
+        stage2: { multiplier: 1.20 },
+        stage3: { multiplier: 1.32, clampMax: 65000 },
+        critical: false, showPreview: false,
+      },
+      // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 Cx BIG CEILINGS ──
+      // 8×16 LE Y=3431 — 15 files +116.6%! Tuners more than DOUBLE. Major ceiling.
+      {
+        id: 'edc17_cx_8x16_ceiling',
+        name: 'EDC17 Cx Ceiling 8×16 (Kf_)',
+        category: 'limiter',
+        desc: 'EDC17 Cx large-change ceiling 8×16 — 15 files +116.6% avg. Tuners more than double stock. Very conservative protection limit.',
+        signatures: [
+          [0x10,0x00,0x08,0x00,0x40,0x06,0x80,0x0c,0xac,0x0d,0xd8,0x0e],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 16, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.40 },
+        stage2: { multiplier: 1.80 },
+        stage3: { multiplier: 2.20, clampMax: 65000 },
+        critical: false, showPreview: false,
+      },
+      // Cx 16×16 LE Y=4915 — 11 files +107.5% avg. Big Cx ceiling variant.
+      {
+        id: 'edc17_cx_16x16_ceiling',
+        name: 'EDC17 Cx Ceiling 16×16 (Kf_)',
+        category: 'limiter',
+        desc: 'EDC17 Cx 16×16 high-gain ceiling — 11 files +107.5% avg. Full 16×16 protection table, tuners approximately double stock.',
+        signatures: [
+          [0x10,0x00,0x10,0x00,0xb8,0x0b,0xac,0x0d,0xa0,0x0f,0x94,0x11],
+        ],
+        sigOffset: 0,
+        rows: 16, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.35 },
+        stage2: { multiplier: 1.70 },
+        stage3: { multiplier: 2.00, clampMax: 65000 },
+        critical: false, showPreview: false,
+      },
+      // Cx 8×8 LE Y=3681 — 11 files +63.7%. Another ceiling variant with narrow Y.
+      {
+        id: 'edc17_cx_8x8_v4',
+        name: 'EDC17 Cx Ceiling 8×8 v4 (Kf_)',
+        category: 'torque',
+        desc: 'EDC17 Cx 8×8 ceiling v4 — 11 files +63.7% avg. Y range around 3681-4500 suggests a torque/boost ceiling similar to the primary Cx ceiling but shifted axis.',
+        signatures: [
+          [0x08,0x00,0x08,0x00,0xb8,0x0b,0xa0,0x0f,0x94,0x11,0x88,0x13],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 8, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.20 },
+        stage2: { multiplier: 1.40 },
+        stage3: { multiplier: 1.55, clampMax: 65000 },
+        critical: false, showPreview: false,
+      },
+      // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 GEN (1991 pairs) BIG ADDITIONS ──
+      // 8×16 LE Y=500-750 — 122 files +8.8%. N75-like variant on larger Y range.
+      {
+        id: 'edc17_gen_8x16_n75',
+        name: 'EDC17 Generic N75 8×16 (Kf_)',
+        category: 'boost',
+        desc: 'EDC17 generic N75 duty / boost map 8×16 — 122 files +8.8% avg. Base cal variant covering multiple CP lines.',
+        signatures: [
+          [0x10,0x00,0x08,0x00,0x78,0x05,0xd0,0x07,0xc4,0x09,0xb8,0x0b],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: '%',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.05 },
+        stage2: { multiplier: 1.12 },
+        stage3: { multiplier: 1.20, clampMax: 1000 },
+        critical: false, showPreview: false,
+      },
+      // GEN 22×4 LE smoke limiter — 64 files +22.1%. Companion to the CP14/CP44 21×6 smoke.
+      {
+        id: 'edc17_gen_22x4_smoke',
+        name: 'EDC17 Generic Smoke 22×4 (Kf_)',
+        category: 'smoke',
+        desc: 'EDC17 generic smoke limit 22×4 — 64 real EDC17 tune files +22.1% avg. Variant of the CP family smoke limiter with different row count.',
+        signatures: [
+          [0x04,0x00,0x16,0x00,0xbc,0x02,0x20,0x03,0x84,0x03,0xb6,0x03],
+        ],
+        sigOffset: 0,
+        rows: 22, cols: 4, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.12 },
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.40, clampMax: 65000 },
+        critical: false, showPreview: false,
+      },
+      // GEN 16×16 LE Y=100-700 — 56 files (+24.7%, EDC17) + 12 files (+24.7% Cx) = 68 total.
+      {
+        id: 'edc17_gen_16x16_n75',
+        name: 'EDC17 Generic N75 16×16 (Kf_)',
+        category: 'boost',
+        desc: 'EDC17 generic full 16×16 N75 table — 56 EDC17 + 12 Cx = 68 total files +24.7% avg. Complements the 10×16 N75 variants.',
+        signatures: [
+          [0x10,0x00,0x10,0x00,0x00,0x00,0xb0,0x04,0xd0,0x07,0xc4,0x09],
+        ],
+        sigOffset: 0,
+        rows: 16, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: '%',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.08 },
+        stage2: { multiplier: 1.18 },
+        stage3: { multiplier: 1.30, clampMax: 1000 },
+        critical: false, showPreview: false,
+      },
+      // GEN 8×21 LE — 69 files +30.7%. Transposed variant of 21×6 smoke (larger Y).
+      {
+        id: 'edc17_gen_8x21_smoke',
+        name: 'EDC17 Generic Smoke 8×21 (Kf_)',
+        category: 'smoke',
+        desc: 'EDC17 generic smoke/boost ceiling 8×21 — 69 files +30.7% avg. Wider RPM coverage (0-1536) variant of CP family smoke limiter.',
+        signatures: [
+          [0x15,0x00,0x08,0x00,0x78,0x05,0x40,0x06,0xd0,0x07,0xc4,0x09],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 21, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.15 },
+        stage2: { multiplier: 1.30 },
+        stage3: { multiplier: 1.45, clampMax: 65000 },
+        critical: false, showPreview: false,
+      },
+      // GEN 8×13 LE — 59 files +55.8%. Same sig as BMW+C41 (already added as edc17_bmw_c41_8x13),
+      // but the generic pool adds 59 MORE files to that signature's backing — now 86 total.
+      // No new mapDef needed — already covered via edc17_bmw_c41_8x13.
+      // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 C46 full 16×16 ──
+      // 16×16 LE Y=500-700 — 22 real C46 files +8.1%. Full N75/boost table variant.
+      {
+        id: 'edc17_c46_16x16_n75',
+        name: 'EDC17 C46 N75 Full 16×16 (Kf_)',
+        category: 'boost',
+        desc: 'EDC17 C46 full 16×16 N75 — 22 real C46 files +8.1% avg. Larger variant of the 10×16 N75 map, covers full RPM×load grid.',
+        signatures: [
+          [0x10,0x00,0x10,0x00,0x00,0x00,0xa4,0x06,0xd0,0x07,0xc4,0x09],
+        ],
+        sigOffset: 0,
+        rows: 16, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: '%',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.05 },
+        stage2: { multiplier: 1.12 },
+        stage3: { multiplier: 1.20, clampMax: 1000 },
+        critical: false, showPreview: false,
+      },
+      // C46 12×5 LE — 18 files +37.9%. Shorter-row transpose variant — smoke/IQ.
+      {
+        id: 'edc17_c46_12x5',
+        name: 'EDC17 C46 Smoke 12×5 (Kf_)',
+        category: 'smoke',
+        desc: 'EDC17 C46 12×5 smoke/IQ variant — 18 real C46 files +37.9% avg. Narrow transpose variant.',
+        signatures: [
+          [0x05,0x00,0x0c,0x00,0x58,0x02,0xee,0x02,0x20,0x03,0x84,0x03],
+        ],
+        sigOffset: 0,
+        rows: 12, cols: 5, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.18 },
+        stage2: { multiplier: 1.30 },
+        stage3: { multiplier: 1.45, clampMax: 65000 },
+        critical: false, showPreview: false,
+      },
+      // ── VERIFIED FROM D: DRIVE v2 STUDY — EDC17 Ford (80 pairs) ──
+      // 16×16 LE Y=0-5000 — 5 files +10% Ford Transit 2.2 TDCi (Visteon hardware). Base cal.
+      {
+        id: 'edc17_ford_transit_16x16',
+        name: 'EDC17 Ford Transit TDCi 16×16 (Kf_)',
+        category: 'fuel',
+        desc: 'EDC17 Ford Transit 2.2 TDCi base cal 16×16 — 5 real Transit tunes +10% avg. Visteon-supplied hardware (6C11 / AG91 part numbers).',
+        signatures: [
+          [0x10,0x00,0x10,0x00,0x00,0x00,0x80,0x02,0xc0,0x03,0xa0,0x05],
+        ],
+        sigOffset: 0,
+        rows: 16, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.10 },
+        stage2: { multiplier: 1.20 },
+        stage3: { multiplier: 1.30, clampMax: 65000 },
+        critical: false, showPreview: false,
+      },
+      // Ford Mondeo 2.2 TDCi 16×16 LE Y=0-26500 — 4 files +100% (tuners DOUBLE).
+      {
+        id: 'edc17_ford_mondeo_16x16',
+        name: 'EDC17 Ford Mondeo 2.2 TDCi Ceiling 16×16 (Kf_)',
+        category: 'limiter',
+        desc: 'EDC17 Ford Mondeo 2.2 TDCi ceiling map — 4 files +100% avg (tuners double stock). Y axis 0-26500 raw range suggests protection/ceiling table. Bosch 513174/513490 part numbers.',
+        signatures: [
+          [0x10,0x00,0x10,0x00,0x00,0x00,0xec,0x01,0xd7,0x03,0xc3,0x05],
+        ],
+        sigOffset: 0,
+        rows: 16, cols: 16, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.30 },
+        stage2: { multiplier: 1.60 },
+        stage3: { multiplier: 1.90, clampMax: 65000 },
+        critical: false, showPreview: false,
+      },
     ],
   },
 
