@@ -64,6 +64,46 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #887–902 — A6 3.0 V6 TDI 8K1907401A cross-chassis + 4G/4L cluster
+
+**8K1907401A sw516613 cross-chassis confirmation**: pair #882
+(A6 3.0 V6 TDI) hits `0x1E4046 + 0x1E424E` — IDENTICAL to A5 3.0 V6
+TDI 8K1907401A sw516613 (pairs #638/#646/#647/#650 prior batches).
+**Same SGO covers BOTH A5 and A6 3.0 V6 TDI** — cross-chassis sharing
+in 8K1907401A part number.
+
+**8K1907401A sw516617 cross-chassis confirmation**: pair #888 (A6 3.0)
+hits `0x1B8F04 + 0x1B8DB8` — IDENTICAL to A5 8K1907401A sw516617
+(#641 / #829). Cross-chassis again.
+
+So **8K1907401A** part number covers A5 + A6 3.0 V6 TDI with
+identical SGO per SW. The 8K prefix doesn't restrict to A5 — same
+ECU shipped on A5 AND A6 facelift.
+
+**4G0907401 / 4L0907401 cross-prefix cluster** (newer 2010+):
+- 4L0907401C sw513648 (#890) — `0x1C7074 + 0x1BE2CA`
+- 4G0907401 sw515581 (#886, #889 same SW two files) — `0x1CA326 +
+  0x1CA56A` OR `0x1BFFEC + 0x1B814A` (different tuners)
+- 4G0907401 sw518172 (#885) — `0x1CC1BE + 0x1CC402`
+- 4G0907401 sw521649 (#892) — `0x1BF94C + 0x1A6B32`
+- 4G0907401 sw515579 (#891) — `0x16A838 + 0x16AA7C`
+- 4G0907401 sw532819 (#889 here? no #890) — `0x1C1B7C + 0x1B9CDA`
+
+Many 4G/4L pairs share the **two 16×16 maps Δ 0x244 apart** pattern
+(boost target + IQ target). Offsets shift by SW. Could be a wire
+candidate using signature anchors instead of fixedOffset.
+
+**4F0907401E 2009-2011 (newer)** — too fragmented to wire:
+- sw399807 (#878) — `0x1D666C + 0x1D6794`
+- sw508391 (#880, #884 same SW two files) — different SGOs each time
+- sw516623 (#879, #883, #887 — three pairs same SW) — `0x19175C`
+  emission disable in 2 pairs; sw516623 (#879) has additional
+  `0x1D7AEE + 0x1E0F38` real cal mods
+- sw516624 (#881) — emission disable only
+
+**Code: no new wires this batch — 4F0907401E too fragmented and
+the 4G/4L cluster needs signature-based detection.**
+
 ## Pairs #871–886 — A6 3.0 V6 TDI 4F0907401C cluster expansion + 5-SW cluster
 
 **MAJOR cluster expansion**: 4F0907401C 524KB 3.0 TDI now has 5 SW
