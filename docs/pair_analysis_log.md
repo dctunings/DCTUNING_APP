@@ -64,6 +64,56 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #775–790 — A6 2.5 V6 TDI 256KB +0x8000 mirror generalized + EDC17 CP44 4F/4E
+
+**+0x8000 mirror generalizes** to all 256 KB EDC15 V6 TDI 2.5L ROMs
+beyond just 0281001781/1931 — also confirmed for:
+- 0281010496 (#768, #770) — `0x0047D4 + 0x00C7D4`
+- 0281001774 8D0907401A (#771) — `0x005066 + 0x00D066`
+- 0281001834 8D0907401H (#772) — `0x0042FE + 0x00C2FE`
+
+Generalized rule: **all 256 KB EDC15 V6 TDI 2.5L ROMs use +0x8000
+mirror** regardless of hardware code (pre-PD vs PD doesn't matter
+in this displacement family).
+
+Pair #773 0281001836 4B0907401C sw351068 → `0x03C462 + 0x03C44E`
+(NOT a mirror, two related cal entries Δ=0x14). Same hardware as
+prior pairs #743/#746 — confirms 0281001836 family is in the
++0x38000 mirror group, not +0x8000.
+
+A6 V6 TDI EDC17 CP44 NEW pairs:
+- Pair #777 4F0907401C sw383851 (524 KB CP44 chiptool) — `0x07085F
+  + 0x0708EB` cluster, 15B regions at +143%/+123%
+- Pair #779 4E0907401C sw375254 (2 MB CP44) — `0x1FDF20` 16B -88%
+  + `0x1F1C07` 9B -67%
+- Pair #780 4F0907401B sw375256 (2 MB CP44) — `0x1F0BC7 + 0x1F0E7B`
+  cluster
+- Pair #781 4F0907401B sw379479 (524 KB chiptool half-dump) — yet
+  another tool format
+- Pair #778 4E0907401B sw371075 (524 KB chiptool) — `0x04FB04 +
+  0x05772F` (sister to pair #673 same SW)
+
+Pair #769 0281011387 8E0907401J sw367775 (1 MB EDC15P+) — sister to
+pair #754 same SW (different tuner file, much heavier 22 KB
+modification). Cal at `0x01211E + 0x02211C` (Δ ≈ 0x10000) — confirms
++0x10000 mirror for 0281011387.
+
+Pair #775 0281010395 sw354333 (524 KB, different file from #753
+same SW) — DIFFERENT cluster `0x04CF0E + 0x06CF0E` (Δ = 0x20000 =
+**+0x20000 mirror inside a 524 KB EDC15P ROM**). So 0281010395 sw
+354333 ALSO uses the +0x20000 mirror — joins the EDC15P+ family.
+Same SW as pair #753 had different tuner mods at different offsets,
+but the underlying mirror offset is consistent (+0x20000 for this
+hardware).
+
+Pair #774 0281010095 4B1907401A sw354255 — different file from #758
+same SW. Cal at `0x06CF0E + 0x077304` — also `+0x20000`-style mirror
+(0x06CF0E + 0x10000 = 0x07CF0E, near-but-not-exact 0x077304).
+
+**No new wires this batch — all clusters already documented; main
+contribution is generalizing +0x8000 mirror rule to all 256 KB V6
+TDI ROMs.**
+
 ## Pairs #759–774 — A6 2.5 V6 TDI EDC15P/P+ catalog + NEW +0x10000 mirror
 
 This batch is **dominated by A6 2.5 V6 TDI EDC15P / EDC15P+ pairs**
