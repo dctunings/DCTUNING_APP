@@ -70,6 +70,36 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #593–608 — Golf 5 1.4 TSI MED17 + 1.6 FSI MED17 + 1.9 TDI
+
+**Golf 5 1.4 (atmospheric)** (#593) — 0261207189 036906032L sw360898
+sister of #321/#478/#592.
+
+**Golf 5 1.4 TSI MED17 03C906032/056** (#594-#599):
+- 0261S02238 03C906056BG sw380009 (#594, 2 MB) — 125 kW (170 hp)
+  TSI Twincharger
+- 0261201355 03C906032 sw387599 (#595, 256KB) — 103 kW
+- 0261201539 03C906032 sw387541 (#596, 256KB) — 125 kW
+- 0261201355 03C906032E sw383956 (#597) — 89.7 kW
+- 0261201768 03C906032C sw393651 (#598) — 103 kW
+- 0261201355 03C906032E sw500419 (#599) — 89.7 kW newer SW
+
+**Golf 5 1.6 FSI MED17 03C906056** (#600-#606):
+- 0261S02070 03C906056BA sw369726 (#600, 2 MB) — 77 kW
+- 0261S02187 03C906056CP sw378110 (#601) — 73.5 kW
+- 0261S02117 03C906056AB sw374339 (#602) — 84.6 kW
+- 0261S02150 03C906056CB sw374345 (#603) — 84.6 kW
+- 0261S02183 03C906056CG sw376036 (#604) — 84.6 kW
+- 0261S02183 03C906056CG sw377833 (#605, #606 — 2 sister files
+  same SW different stage1) — 84.6 kW
+
+**Golf 5 1.9 TDI EDC16 PD** (#607, #608):
+- 03G906021HB sw380774 (#607, 524 KB)
+- 03G906021AB sw391592 (#608, 524 KB)
+
+No new wires. Many distinct hardware codes / SWs each with single
+or paired tunes.
+
 ## VW Pairs #577–592 — Golf 4 1.9 TDI tail + V5/V6/R32 ME7.x petrol
 
 **Golf 4 1.9 TDI 110.3 kW PD150** (#577) — 0281010744 sw362706 —
