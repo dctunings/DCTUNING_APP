@@ -70,6 +70,35 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #705–720 — Passat 1.8 TFSI MED17 + 1.9 TDI variants
+
+**Passat 1.8 TFSI MED17 0261201537 06J906026/6J_906_026B** (#706-#715):
+- sw393905 (#706, #707, #714 — 3 different files of same SW) —
+  745B/26 + 741B/26 + 717B/25 — sister files
+- sw391697 (#709 2MB, #715 256KB — same SW two formats) — 627B/21
+  + 717B/25
+- sw396601 (#710 1.5MB, #712 2MB) — 779B/23 + 250B/6
+- sw396605 0261201950 06J906026AD (#708) — sister hardware
+
+**Passat 1.8 TFSI 0261S05550 06J906026ER sw501343** (#711, 1.5MB) —
+newer ER suffix.
+
+**Passat 1.8i 0261204956 8D0907558S sw359187** (#713) — only 4 bytes
+= byte-identical / no real tune.
+
+**Passat 1.8T 0261207928 8E0909018A sw366497** (#705, 1MB) — 509B
+small tune.
+
+**Passat 1.9 TDI variants** (#716-#720):
+- 0281010218 038906019CD sw352904 (#716, 524KB) — 3517B/129 regions
+- 0281001727 038906018N (#717, 256KB EDC15V) — 2104B/88 regions
+- 038906018FS sw??? (#718) — 1570B/28
+- 0281010554 038906019EA sw360477 (#719, 524KB) — sister SW
+- 0281012742 03G906021DP sw377575 (#720, 524KB EDC16 PD)
+
+No new wires this batch — Passat 1.8 TFSI sister files share patterns
+but offsets vary per stage1 (typical MED17 universal IQ release).
+
 ## VW Pairs #689–704 — Passat 1.6/1.8 + 1.6 TDI Siemens + 1.8T ME7.x
 
 **Passat 1.6 1995 0261204502 8D0907558 sw357462** (#689) — 131KB
