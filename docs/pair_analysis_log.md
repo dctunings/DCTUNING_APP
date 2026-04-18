@@ -70,6 +70,28 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #337–352 — Golf 5 1.9 TDI 03G906021xx PD catalog
+
+16 pairs of Golf 5 1.9 TDI PD covering many 03G906016xx and
+03G906021xx part suffixes (BCB/CB/EB/FS/GD/GR/KH/PD/PF/QJ/QK/R/TQ/
+TS). All EDC15/EDC16 PD with 524 KB or 1-2 MB ROMs.
+
+**Same-SW-multi-file findings**:
+- 03G906016FS sw370811 (#337, #338 — 2 files) — different mod sets
+  (1275B vs 2303B / 37 vs 171 regions)
+- 03G906021AB sw393568 (#341) + sw394921 (#342) — sister SWs
+  (1249B + 2383B respectively, no shared offset cluster)
+- 03G906021PD sw389297 (#345) + sw393550 (#346, #347 same SW two
+  files) — 73-121 region range, sister SWs
+- 03G906021QJ sw389289 (#343) + sw391847 (#350) — sister SWs
+
+**No tight wire-able cluster** — too many part suffixes each with
+its own SW + SGO. Covered by generic edc16 def via signatures.
+
+Pair #346/#347 sw393550 03G906021PD — 2 files same SW: 3165B / 73
+regions vs 3013B / 71 regions — slightly different tuner mods on
+same ROM.
+
 ## VW Pairs #321–336 — Golf 4 ME7.x + Golf 4/5 R32 + Golf 5 1.9 TDI variants
 
 **Golf 4 1.4i 16V Bosch 0261207189 sw360898** (#321) — small 735 B
