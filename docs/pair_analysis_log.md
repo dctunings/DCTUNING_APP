@@ -64,6 +64,44 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #951–966 — A7 BiTDI tail + A8 D3 2.5 TDI + A8 D4 3.0 TDI
+
+A7 BiTDI 4G0907589 cluster continues:
+- sw524644 (#941) and sw526374 (#942) — both 150 regions, ~5.7 KB
+  tunes, sister files of A6 #895 sw526374 and #902 sw524644.
+- sw508390 (#946) 4F0907401E DPF — **1.45 MB changed (69%)** stage1+++
+  full recal.
+
+**A8 D3 (2002-2010) 2.5 V6 TDI EDC15V** — Bosch 0281001435,
+0281001941, 0281010149 with VW part numbers 4D0907401A/J/K. All
+**256 KB ROMs** pre-PD VR generation. Pair #952 (4D0907401J sw358608)
+has small 743B tune; others have 3-4 KB tunes. Likely +0x8000 mirror
+applies (256KB V6 TDI rule documented earlier).
+
+**A8 D3 3.0 V6 TDI EDC17 CP44 4E0907401C/D** (524 KB chiptool):
+- sw374427 (#953) — `0x` (top trimmed)
+- sw375254 (#954) — sister of pair #779 (A6 sw375254)
+- sw379813 (#955) — newer 4E0907401D variant
+
+**A8 D4 (2010+) 3.0 V6 TDI CR** with 4G0907401 (same hw as A6 C7
+and A7):
+- Pair #956 sw518081 — **4 MB full ROM** (4194304 B) — full TC1797
+  dump format, sister of A6 #910 4MB pair
+- Pair #957 sw518081 — same SW but **2 MB extracted** — same SGO
+  base, different dump format. **Confirms 4MB-vs-2MB dump format
+  for 4G0907401** in addition to the EDC16/EDC17 524KB-vs-2MB
+  +0x180000 pattern.
+
+So Bosch EDC17 has at least THREE dump-format sizes for the same
+ECU:
+- **524 KB** chiptool extracted (just the cal block)
+- **2 MB** standard cal+ASW (typical Stage 1 download)
+- **4 MB** full TC1797 ROM (BSL/JTAG dump)
+
+Each format places the cal at different absolute file offsets — the
+loader needs to detect file size and apply the appropriate offset
+shift.
+
 ## Pairs #935–950 — A7 3.0 V6 TDI 4G0907401 (sister of A6 C7)
 
 A7 (Sportback fastback) shares the C7 platform with A6 facelift, so
