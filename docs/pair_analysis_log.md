@@ -70,6 +70,39 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #673–688 — Passat 1.9 TDI PD + 2.0 TDI CR + PPD1.2 variants
+
+**Passat (no model year — generic)** (#673-#679):
+- Bare 32KB ROM (#673) — 500B/3 regions = light pre-OBD
+- 0281010444 3B1907401F sw354375 (#674) — 524KB EDC15P PD VR6 TDI
+- 0281010558 038906019EH sw360706 (#675) — 524KB EDC15P PD
+- 0281011203 038906019KB sw366299 (#676 SIZE MISMATCH skipped, #677
+  503KB) — 16526B / 246 regions = heavy stage1+++
+- 03L906018RG sw529234 (#678, 2MB EDC17 C46) — NEW RG part suffix
+- 03L906022BT sw398816 (#679, 2MB EDC17 C46) — NEW BT suffix
+
+**Passat PPD1.2 03G906018EM SN100L8000000** (#680, 2MB) — NEW part
+variant `03G906018EM` ADDED to PPD1.2 def's identStrings. 15.3KB
+heavy tune.
+
+**Passat 2.0 TDI PD 0281012119 03G906021AB sw389290** (#681, 524KB).
+
+**Passat 0281010543 038906019DS sw360449** (#682 + #685 — 2 files
+same hardware/SW different stage1) — 3418B/98 + 3212B/95 sister.
+
+**Passat 0281010307 038906019BM sw360476** (#683) — 73.5 kW.
+
+**Passat 0281001720 038906018P** (#684, 256KB EDC15V) — 80.9 kW.
+
+**Passat PPD1 03G906018A SN000F7500000** (#686, 2MB Siemens —
+NEW EARLY PPD1 variant from 2002). NEW serial family `SN000F` — older
+Passat 2002 generation predates PPD1.2 (SN100xxxx). ADDED `03G906018A`
++ `SN000F7500000` to PPD1.2 def.
+
+**Passat 0281010940 038906019GS sw363212** (#687, 95.6 kW PD).
+
+**Passat Siemens 32KB** (#688) — pre-OBD Siemens (probably 1.6 8V).
+
 ## VW Pairs #657–672 — Golf 6 + Jetta 2.0 TDI CR + Jetta TFSI MED17
 
 **Golf 6 1.4 TSI 0261S04390 03C906016 sw502867** (#657, 256KB) —

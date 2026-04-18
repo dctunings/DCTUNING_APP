@@ -8755,6 +8755,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
       'SN100L7000000',  // ↳ accompanying SW serial for the FB variant
       '03G906018CT',    // VW Pair #365 — VW Golf 5 2.0 TDI 125kW PPD1.2 (CT variant)
       '03G906018HB',    // VW Pair #648 — VW Golf 5 2.0 TDI PPD1.2 (HB variant)
+      '03G906018EM',    // VW Pair #680 — Passat 2.0 TDI PPD1.2 (EM variant)
+      '03G906018A',     // VW Pair #686 — Passat 2.0 TDI PPD1 early (A variant)
+      'SN000F7500000',  // ↳ Passat 2002 SN serial family (older PPD1)
     ],
     fileSizeRange: [524288, 2097152],   // up to 2MB — real PPD1.2 binaries are 2MB
     vehicles: [
