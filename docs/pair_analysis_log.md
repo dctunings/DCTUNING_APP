@@ -64,6 +64,27 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #458–472 — A4 2.5 V6 TDI EDC15P+ catalog
+
+15 pairs of Audi A4 2.5 V6 TDI (AFB/AKE/BAU/BCZ engines, 150-180ps).
+
+Part numbers: 0281010146/158/492/493/823/825, 0281011255/388/435/444,
+0281012142 — ALL Bosch EDC15P+ family (0281010-0281012 prefixes,
+covered by v3.5.37 edc15 identStrings).
+
+VW parts: 8D0907401P, 3B0907401G, 8E0907401 (various suffixes C/D/H/M/
+S/T/AF). Audi A4 V6 TDI 2.5 specific.
+
+Sizes: 256KB cal-only, 512KB stripped, 1MB full.
+
+Tunes vary widely — 720 B to 24,200 B. The 2005 120kW 0281011444 pair
+#468 has **24,233 B changed** which is very heavy for EDC15 (maybe
+full recal rather than delta Stage 1).
+
+**Code: no change** — EDC15 signature detection + existing maps handle
+these. If we dedicate a V6 TDI variant later, these SW/part lists will
+be the basis.
+
 ## Pairs #443–457 — A4 2.0 TFSI newer + 2.4 V6 ME7 + 2.5 V6 TDI EDC15V
 
 - Pairs #443-444 · A4 2.0 TFSI 2008-2009 on 8K/8P 907115* parts (later
