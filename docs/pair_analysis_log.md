@@ -70,6 +70,59 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #994–1008 — Scirocco 0x069EB2 NEW cluster (5 pairs, 3 SWs) + Scirocco R added
+
+**MASSIVE NEW DEF — 0x069EB2 protection ceiling cluster** (5 pairs):
+
+`edc17_c46_scirocco_03l906018am_069eb2` wired — covers **3 SGOs + 3 SWs**:
+- sw508256 03L906018AM (#998, #1001, #1002 — three pairs same SW)
+- sw508235 03L906018AN (#999)
+- sw508234 03L906018AQ (#1003)
+- All 5 pairs share EXACTLY:
+  - `0x069EB2  2KB` BE 15351 → 57390 +274% (protection ceiling)
+  - `0x06A6D4  512B` BE 24523 → 57390 +134% (companion A)
+  - `0x06A8F6  512B` BE 24590 → 57390 +133% (companion B)
+- Raw 15351 vs 398757's 14259 → different hardware gen, same family.
+
+**sw507614 added to 2 existing defs** (pair #1000):
+- 12×15 IQ ceiling def: hits 0x1DBC2C + 0x1DE5B2 exactly
+- 0x1F007A shifted protection def: hits 0x1F007A + 0x1F0ABE exactly
+- Pair #1000 is THIRD file to confirm 0x1F007A cluster (now 3 SWs
+  covering sw504872/505989/507614).
+
+**Scirocco R 2.0 TSI added to Golf R def** (pair #1005):
+- sw504147 `8P0907115B` Scirocco R Mk2 — hits 0x1CEE80 120B EXACTLY
+  (BE 10750 → 65535 +510%)
+- Golf R 1K8907115F def now covers BOTH chassis (Golf R + Scirocco R)
+  on sw505204/510589/504147.
+
+**Compact format 393KB observed** (#997 sw511962 `03L906018GF`):
+- 393216 B = 384 KB compact EDC17 C46 dump format (NEW size variant)
+- `0x05E1E2 200B` BE 4135 → 12372 +200% — matches 200B pattern at
+  compact-format anchor.
+
+**Observations (no wire — insufficient repeats):**
+
+- #996 sw508256 AM — DIFFERENT tuner targeting 0x05AD70 12×15 +
+  0x05C7DC 12×16 IQ ceiling. Same ORI as 0x069EB2 cluster, different
+  tuner chose different maps. Confirms map-region independence.
+- #997 sw511962 GF 393KB — compact format IQ release observations.
+- #994 sw505482 03L906019AL EDC17 C64 (not C46) 2MB · different
+  family entirely · `0x1E0D34 16×12` +94% main IQ.
+- #995 sw507615 03L906022G 125kW — already in 12×15 def; this pair
+  confirms at `0x1F9C3C/1F99C2/1F9DCA` high-region maps (different
+  tuner targeting).
+- #1004 sw503606 `06J906026AR` 262KB Scirocco 2.0 TSI EA888 Gen2 —
+  `0x00F607 120B` IQ release BE 11441 → 25700 +125%.
+- #1006/#1008 sw395040 `06J906026AR` 262KB — `0x00F63F 120B` same
+  pattern (Δ=0x38 shift). 2 sisters (#1008 is "Letzte Bearbeitung"
+  duplicate of #1006).
+- #1007 sw503606 `06J906026D` 2MB (sister of #1004 262KB) — different
+  anchor pattern at `0x056ED4/E0C/E34/E48` — 2MB vs compact format
+  mapping difference.
+
+---
+
 ## VW Pairs #978–993 — Scirocco 2.0 TDI CR EDC17 C46 — HUGE expansion + 1 NEW anchor-shifted def
 
 **MAJOR cross-verification — Scirocco fits existing Golf defs:**

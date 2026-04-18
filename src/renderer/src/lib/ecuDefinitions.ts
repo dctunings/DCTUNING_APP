@@ -2244,9 +2244,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch MED17 (VW Golf R Mk6 2.0 TFSI 270hp — 1K8907115F sw505204/510589)',
     manufacturer: 'Bosch',
     family: 'MED17',
-    identStrings: ['1K8907115F', '505204', '510589'],
+    identStrings: ['1K8907115F', '505204', '510589', '504147'],
     fileSizeRange: [2097152, 2097152],
-    vehicles: ['VW Golf R Mk6 2.0 TFSI 198-202kW (1K8907115F sw 505204/510589, 2009-2012)'],
+    vehicles: ['VW Golf R / Scirocco R 2.0 TFSI 198-202kW (1K8907115F/8P0907115B sw 505204/510589/504147, 2008-2012)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFFC,
     checksumLength: 4,
@@ -2530,9 +2530,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17 C46 (VW Golf 2.0 TDI CR 80-125kW — 03L906022G/RP 12×15 IQ ceiling)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['505426', '505993', '507615', '507643', '516655', '504872'],
+    identStrings: ['505426', '505993', '507615', '507643', '516655', '504872', '507614'],
     fileSizeRange: [2097152, 2097152],
-    vehicles: ['VW Golf/Scirocco 2.0 TDI CR 80-125kW (03L906022G/RP sw 505426/505993/507615/507643/516655/504872, 2010-2013)'],
+    vehicles: ['VW Golf/Scirocco 2.0 TDI CR 80-125kW (03L906022G/RP sw 505426/505993/507614/507615/507643/516655/504872, 2010-2013)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFFC,
     checksumLength: 4,
@@ -2592,9 +2592,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17 C46 (VW Scirocco/Golf 2.0 TDI CR 103-125kW — 03L906022G 0x1F007A)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['505989', '504872', '03L906022R'],
+    identStrings: ['505989', '504872', '03L906022R', '507614'],
     fileSizeRange: [2097152, 2097152],
-    vehicles: ['VW Scirocco 2.0 TDI CR 103-125kW (03L906022G/R sw 505989/504872, 2009-2010)'],
+    vehicles: ['VW Scirocco 2.0 TDI CR 103-125kW (03L906022G/R sw 505989/504872/507614, 2009-2011)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFFC,
     checksumLength: 4,
@@ -2691,6 +2691,88 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage2: { multiplier: 1.0, addend: 0, clampMax: 57000 },
         stage3: { multiplier: 1.0, addend: 0, clampMax: 58000 },
         critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ── EDC17 C46 VW Scirocco 2.0 TDI CR 03L906018AM/AN/AQ — 0x069EB2 cluster ─
+  //
+  // VW Scirocco (Golf family) 2.0 TDI CR 100-103 kW EDC17 C46 late-gen.
+  // 3 SWs across 3 part suffixes (AM/AN/AQ) all share the SAME 2KB+512B+512B
+  // protection ceiling at 0x069EB2. Verified across 5 pairs in
+  // pair_analysis_log.md:
+  //   #998 sw508256 AM · #999 sw508235 AN · #1001/#1002 sw508256 AM ·
+  //   #1003 sw508234 AQ
+  //
+  // Map structure (EXACTLY same stock-to-target at each SW):
+  //   0x069EB2  2 KB (1024 cells u16 BE) — protection ceiling
+  //                                        (raw 15351 → 57390, +274%)
+  //   0x06A6D4  512 B (256 cells u16 BE) — companion A (raw 24523 → 57390)
+  //   0x06A8F6  512 B (256 cells u16 BE) — companion B (raw 24590 → 57390)
+  //
+  // SAME family-wide pattern as wired 398757 / 0x1F007A / 03L906018xx
+  // 0x06AD86 defs — just at a different per-SGO anchor (0x069EB2).
+  // Stock raw 15351 is slightly higher than 398757's 14259 = different
+  // hardware generation.
+  {
+    id: 'edc17_c46_scirocco_03l906018am_069eb2',
+    name: 'Bosch EDC17 C46 (VW Scirocco 2.0 TDI CR 100-103kW — 03L906018AM/AN/AQ 0x069EB2)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['03L906018AM', '03L906018AN', '03L906018AQ', '508234', '508235', '508256'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Scirocco 2.0 TDI CR 100-103kW (03L906018AM/AN/AQ sw 508234/508235/508256, 2011-2012)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_018am_protection_a',
+        name: 'Protection Ceiling A 2KB (03L906018AM/AN/AQ)',
+        category: 'limiter',
+        desc: 'Main protection ceiling at 0x069EB2 (1024 cells u16 BE = 2 KB). Verified across 5 pairs sharing IDENTICAL offset and raw signature: stock 15351 → tuner consensus 57390 (+274%). Pin near 55000 for Stage 1.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x069EB2,
+        rows: 32, cols: 32, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 57000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_c46_018am_protection_b',
+        name: 'Protection Ceiling B 512B (03L906018AM/AN/AQ)',
+        category: 'limiter',
+        desc: 'Companion ceiling A at 0x06A6D4 (256 u16 BE = 512 B). Raw 24523 → 57390 (+134%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06A6D4,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 57000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_c46_018am_protection_c',
+        name: 'Protection Ceiling C 512B (03L906018AM/AN/AQ)',
+        category: 'limiter',
+        desc: 'Companion ceiling B at 0x06A8F6 (256 u16 BE = 512 B). Raw 24590 → 57390 (+133%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06A8F6,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 57000 },
+        critical: true, showPreview: true,
       },
     ],
   },
