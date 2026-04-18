@@ -64,6 +64,49 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #1031–1046 — Q5 03L906018DN cluster expansion (3 distinct SGOs)
+
+**Q5 03L906018DN now has 3 distinct SGO clusters identified**:
+
+**Cluster 1 — Light tune at 0x07Cxxx** (114 regions, 3940-3971B):
+- sw518137, sw521635 (×2 files), sw521636 (×3 files) — all share
+  `0x07C306 16×4 (+219%)` + `0x07C448 16×16 (+84%)` cluster.
+  This is the "single boost+IQ map" tune signature — looks like a
+  smaller more focused tuner (OBD-only flash).
+- 5+ confirmed pairs in cluster. Wire candidate.
+
+**Cluster 2 — Heavy "protection ceiling" tune at 0x06Axxx** (43
+regions, 8013-8136B):
+- sw515568 (×3 files), sw515569 (×2 files), sw515573 (×1) — all
+  share `0x06A906 2048B (+119%)` + `0x06B128 / 0x06B34A / 0x06B5D2`
+  512B sister regions. **Same protection-ceiling structure as
+  398757/03L906022FG/Q5 022B defs but at LOWER offset 0x06Axxx**
+  (vs 0x1EE45E). Strong 6-pair cluster — wire candidate.
+
+**Cluster 3 — Q5 03L906018ES** sw521078 (#1034) — `0x06C7BE
+2048B (+170%)` + 4× 512B sister regions. Same protection-ceiling
+shape as cluster 2, different anchor (0x06C7BE vs 0x06A906). Sister
+SGO. Pair #1037 sw527084 hits similar region (76 regions, 8558B).
+
+**Pair #1029 sw515569 (different file)** — **79.6% changed = full
+recal stage1+++** with the entire ROM padding rewritten. Hidden
+inside the noise: the SAME `0x06A906` cluster from cluster 2. So
+even stage1+++ tunes preserve the same SGO targets.
+
+These findings tell us:
+1. 03L906018DN has at least 2 SGO bases (light vs heavy) within
+   the SAME part number — the differentiator is SW number range
+   (515xxx → heavy/0x06Axxx, 521xxx → light/0x07Cxxx)
+2. The "protection ceiling" 2KB + 4×512B map structure is now
+   confirmed across at least **5 distinct part numbers**:
+   - 03L906022BQ sw398757 (wired)
+   - 03L906022FG sw399349-503995 (wired)
+   - 03L906022B Q5 sw500146-518746 (wired)
+   - 03L906018DN sw515568-515569 (cluster 2 candidate)
+   - 03L906018ES sw521078 (cluster 3 candidate)
+
+**Bosch EDC17 C46 family-wide pattern** confirmed.
+
 ## Pairs #1015–1030 — Q5 03L906022B 4-SW cluster wired + 03L906018DN sister
 
 **Strong wire confirmed and wired**: Audi Q5 2.0 TDI CR 125 kW with
