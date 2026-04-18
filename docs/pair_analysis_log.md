@@ -70,6 +70,99 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #913–928 — PPD1.2 +EJ/CE/SN100L1 + Passat MED17 TFSI (2 NEW defs) + V6 TDI EDC15
+
+**PPD1.2 def expansion** — +2 part suffixes +1 serial sub-family:
+- `03G906018EJ` (#913, SN000F7500000) — NEW EJ suffix (Passat 2007 103kW)
+- `03G906018CE` (#914, #915, SN100L1000000) — NEW CE suffix (Passat 2007 103kW)
+- `SN100L1000000` — NEW SN100L1 sub-family for CE variant
+
+Pair #913 sw SN000F7500000: IQ ceiling pattern at `0x01BD7C 16×5`
+(raw 9252 → 10086 +9.0%), mirrored 8× at stride 0x200 through 0x01CB7C.
+Bosch PPD1.2 storage-mirror pattern.
+
+Pair #914 CE variant SN100L1000000: heavy tune with 213 regions over
+17273 bytes — loose modifications at `0x02F8xx` with boost and smoke
+peaks (BE 20 → 35607 on one cell). Aggressive stage.
+
+Pair #916 03G906018EM SN100L6000000 (125kW): emission-disable —
+`0x016D38 16×12` IQ map zeroed out (BE 6741 → 0). This is a
+Bosch-style DPF/EGR cut, not IQ release — characteristic of pairs
+that disable DPF regen and EGR closure. Already covered by PPD1.2 def.
+
+Pair #917 03G906018 SN0I0M8000000 Italian-market — already covered.
+
+**NEW DEFS WIRED (2) — MED17 Passat 2.0 TFSI cluster**:
+
+Pair #918 VW Passat 2.0 TFSI 2006 `8P0907115B` sw391091 (0261S02474):
+- 2MB · MED17 EA113
+- `0x1CE884  120B u16 BE` IQ ceiling (raw 10604 → 65535, +518%)
+- `0x1CF4A0  64B  u16 BE` IQ release (raw 32613 → 65535, +101%)
+- NEW def `med17_passat_20tfsi_8p0907115b_1ce884` wired.
+- Same 120B IQ unlock shape as Golf `med17_golf_20tfsi_1k0907115_1ce0c8`
+  but anchor shifted Δ=0x7BC — Passat 3C chassis sub-family.
+
+Pair #919 Passat 2.0 TFSI 2008 `3C0907115Q` sw387486 (0261S02105):
+- 2099200B = 2MB + 2KB (unusual dump format variant)
+- `0x1CE2A4 120B` IQ ceiling (raw 10604 → 65535, +518%)
+- `0x1CEEC0 64B` IQ release (raw 32613 → 65535, +101%)
+
+Pair #922 Passat 2.0L TFSI 2007 `3C0907115Q` sw387486 (0261S02333):
+- 2097152B standard 2MB format (SISTER of #919 — different 0261 serial
+  of same SGO, different dump size)
+- Same `0x1CE2A4` and `0x1CEEC0` anchors confirmed.
+- NEW def `med17_passat_20tfsi_3c0907115q_1ce2a4` wired with BOTH
+  0261 serials in identStrings + both file size formats supported.
+
+Third-sub-family confirmed: MED17 EA113 IQ unlock appears at 4 different
+anchors across 4 SGO clusters (Golf 0x1CE0C8, Passat 8P 0x1CE884, Passat
+3C 0x1CE2A4, plus the older 0x1CC6FC/0x1CD0C6/0x1CD67A SW-specific offsets).
+
+**Other pairs processed (no wire — observation only)**:
+
+Pair #920 Passat 2.0 V8 2001 `3B0907557R` sw366470 (ME7.1.1 Bosch V8):
+- 1MB · 18 regions · 1164B changed (0.111%)
+- Large loose region at `0x011DF2 191B` BE 22288 → 65535 +194%
+- Small loose edits at `0x0F18FC` / `0x019675` — torque limit areas
+- Single hardware known, no cluster yet — logged for cross-ref.
+
+Pair #921 Passat 2.0i 2002 `06B906033T` sw247607 (Siemens Simos3 5WP4010):
+- 512KB · 3 regions · 311B changed (0.059%) — light revision
+- `0x04B34A 8×15` BE 27561 → 29448 +6.8% (likely torque limit)
+- `0x04E34E 12×12` BE 31378 → 30776 −1.9% (lambda trim)
+- No cluster yet — single SW observation.
+
+Pair #923 Passat 2.0 TDI DPF 2005 `03G906021LR` sw380420 (EDC16 PD 103kW):
+- 524KB EDC16 PD · 90 regions · 2252B (0.430%)
+- DPF-enabled variant — many loose small edits at mid-region offsets
+- Candidate for future EDC16 PD DPF-specific cluster.
+
+Pair #924 Passat 2.3 V5 `071906018P` sw350042 (ME7.x Bosch 0261206165):
+- 256KB · 10 regions · 1272B (0.485%)
+- Three 256B regions at 0x00B8B3–0x00BB7C all +8% raw (power cluster)
+- Two 8×11 maps at 0x0091E8 / 0x00930C both +2.5%
+- Naturally-aspirated torque lift — logged for future V5 cluster.
+
+**Passat V6 TDI EDC15 cluster** (Bosch `0281010447 3B1907401B` sw366617):
+Pair #925 / #927 / #928 — 3 pairs same hardware+SW, 3 distinct tunes:
+- Pair #925: 3776B / 64 regions — `0x057476 loose 11B` +189%, twin
+  mirrors at `0x077xxx` (+0x20000) — EDC15 5-mirror layout confirmed
+- Pair #927: 2367B / 47 regions — same mirror pattern, different tune
+- Pair #928: 1682B / 53 regions — same mirror pattern, milder tune
+
+Pair #926 Passat V6 TDI `0281010101 3B1907401` sw354258 (EDC15 older):
+- 524KB · 66 regions · 2300B (0.439%)
+- `0x04CF0E`, `0x05CF0E`, `0x06CF0E` same-edit at stride 0x10000
+  (EDC15 +0x10000 mirror triplet) — smoke/IQ limit with 3 mirrors
+- `0x05728E`/0x06728E/0x07728E same-edit stride 0x10000 — 3rd triplet
+- Confirms EDC15 mirror layout (+0x10000 cal-mirror typical).
+
+No EDC15 V6 TDI 0281010447 def wired yet — 3 pairs at sw366617 is
+enough to see the pattern but I want one more HW variant before
+committing a cross-SW def. Logged for future wire.
+
+---
+
 ## VW Pairs #897–912 — Passat 2.0 TDI PPD1.2 BIG family expansion
 
 **PPD1.2 def +5 NEW SN0 serial families and 2 new part suffixes**:

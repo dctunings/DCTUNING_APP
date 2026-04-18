@@ -2337,6 +2337,118 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── MED17 Passat 2.0 TFSI 8P0907115B — IQ release at 0x1CE884 (2MB) ──
+  //
+  // VW Passat 2.0 TFSI (3C chassis) 147kW MED17 EA113. 2006 model year.
+  // Same Bosch MED17 120B IQ unlock pattern as Golf, different anchor.
+  // Verified in pair_analysis_log.md VW pair #918:
+  //   0x1CE884  120B u16 BE — primary IQ ceiling (raw 10604 → 65535, +518%)
+  //   0x1CF4A0  64B u16 BE — companion IQ release (raw 32613 → 65535, +101%)
+  // Anchor shift Δ=0x7BC vs Golf's 0x1CE0C8. Same-family sub-cluster.
+  {
+    id: 'med17_passat_20tfsi_8p0907115b_1ce884',
+    name: 'Bosch MED17 (VW Passat 2.0 TFSI 147kW — 8P0907115B 0x1CE884)',
+    manufacturer: 'Bosch',
+    family: 'MED17',
+    identStrings: ['8P0907115B', '391091', '0261S02474'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Passat 2.0 TFSI 147kW (8P0907115B sw 391091, 2006)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'med17_passat_8p0907115b_iq_release_a',
+        name: 'IQ Release A 120B (8P0907115B)',
+        category: 'fuel',
+        desc: 'Primary IQ release at 0x1CE884 (60 u16 BE = 120 B). μ 10604 → 65535 raw (+518%). Passat 3C-chassis anchor variant of the MED17 EA113 IQ unlock pattern.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1CE884,
+        rows: 1, cols: 60, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 63000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'med17_passat_8p0907115b_iq_release_b',
+        name: 'IQ Release B 64B (8P0907115B)',
+        category: 'fuel',
+        desc: 'Companion IQ release at 0x1CF4A0 (32 u16 BE = 64 B). μ 32613 → 65535 raw (+101%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1CF4A0,
+        rows: 1, cols: 32, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 63000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 65000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── MED17 Passat 2.0 TFSI 3C0907115Q — IQ release at 0x1CE2A4 (2MB/2MB+2K) ──
+  //
+  // VW Passat 2.0 TFSI 147kW MED17 EA113. 2007-2008 model years.
+  // Same 120B IQ unlock pattern at a third sub-family anchor.
+  // Verified in pair_analysis_log.md VW pairs:
+  //   #919 sw387486 (0261S02105) 2008 — 2099200B (2MB+2KB)
+  //   #922 sw387486 (0261S02333) 2007 — 2097152B (standard 2MB)
+  //   0x1CE2A4  120B u16 BE — primary IQ ceiling (raw 10604 → 65535, +518%)
+  //   0x1CEEC0  64B u16 BE — companion IQ release (raw 32613 → 65535, +101%)
+  // Note: Two file-size variants (2MB and 2MB+2KB) — same code structure.
+  {
+    id: 'med17_passat_20tfsi_3c0907115q_1ce2a4',
+    name: 'Bosch MED17 (VW Passat 2.0 TFSI 147kW — 3C0907115Q 0x1CE2A4)',
+    manufacturer: 'Bosch',
+    family: 'MED17',
+    identStrings: ['3C0907115Q', '387486', '0261S02105', '0261S02333'],
+    fileSizeRange: [2097152, 2099200],
+    vehicles: ['VW Passat 2.0 TFSI 147kW (3C0907115Q sw 387486, 2007-2008)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'med17_passat_3c0907115q_iq_release_a',
+        name: 'IQ Release A 120B (3C0907115Q)',
+        category: 'fuel',
+        desc: 'Primary IQ release at 0x1CE2A4 (60 u16 BE = 120 B). μ 10604 → 65535 raw (+518%). Passat 2007-2008 anchor variant.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1CE2A4,
+        rows: 1, cols: 60, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 63000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'med17_passat_3c0907115q_iq_release_b',
+        name: 'IQ Release B 64B (3C0907115Q)',
+        category: 'fuel',
+        desc: 'Companion IQ release at 0x1CEEC0 (32 u16 BE = 64 B). μ 32613 → 65535 raw (+101%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1CEEC0,
+        rows: 1, cols: 32, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 63000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 65000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 C46 VW Golf 2.0 TDI CR 03L906022G/RP — 12×15 IQ ceiling (2MB) ──
   //
   // VW Golf 2.0 TDI CR 80-125 kW EDC17 C46 newer 505xxx+ generation.
@@ -8830,6 +8942,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
       'SN000F7100000',  // ↳ Passat 2007 SN0 serial sub-family
       'SN000F7200000',  // ↳ Passat 2007 SN0 serial sub-family
       'SN000F7600000',  // ↳ Passat 2007 SN0 serial sub-family
+      '03G906018EJ',    // VW Pair #913 — Passat 2.0 TDI PPD1.2 (EJ variant)
+      '03G906018CE',    // VW Pair #914 — Passat 2.0 TDI PPD1.2 (CE variant, SN100L1)
+      'SN100L1000000',  // ↳ SN100L1 sub-family for CE variant
     ],
     fileSizeRange: [524288, 2097152],   // up to 2MB — real PPD1.2 binaries are 2MB
     vehicles: [
