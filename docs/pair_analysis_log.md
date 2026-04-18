@@ -70,6 +70,38 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #561–576 — Golf 4 1.9 TDI 95.6kW (130hp) + 84.6kW (115hp) PD
+
+16 more Golf 4 1.9 TDI PD pairs continuing the 524KB EDC15P catalog:
+
+**95.6 kW (130 hp PD)**:
+- 0281010702 038906019FG sw362796 (#561, #572 — 2 files same SW)
+  — 1288B/23 + 1312B/23 ≈ same SGO
+- 0281010702 038906019FG sw362471 (#567, #575 — 2 files same SW)
+  — 3690B/82 + 1435B/29 (different tuner approaches)
+- 0281010977 038906019HJ sw363142 (#562) and sw366272 (#563, #566
+  — duplicate file in alphabetical sort)
+- 0281011216 038906019KJ sw368577 (#564, #576 — 2 files same SW)
+  — 2049B/54 + 2088B/32 (similar treatments)
+
+**84.6 kW (115 hp PD)**:
+- 0281010215 038906019AR sw354298 (#568) and sw354613 (#571) —
+  sister SWs same hardware
+- 0281010091 038906019AM sw350875 (#573) — earlier 1999 PD
+
+**74.3 kW (100 hp PD)**:
+- 0281011065 038906019DD sw363709 (#565, **7578 B / 488 regions =
+  heavy stage1+++**) — sister of #326 same hardware/SW
+- 0281011109 038906019MQ sw363955 (#574)
+
+**110.3 kW (150 hp PD)**:
+- 0281010976 038906019HH sw366661 (#569) — sister of #181/#517 same
+  hardware
+- 0281010744 038906019FE sw362470 (#570) — sister of pair #547
+
+Same-SW two-file confirmations show consistent SGO across files for
+each SW. No new wires — covered by generic edc15p def.
+
 ## VW Pairs #545–560 — Golf 4 1.9 TDI 2002 catalog (massive variant set)
 
 16 more Golf 4 1.9 TDI 2002 pairs — many distinct hardware codes /
