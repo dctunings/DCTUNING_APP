@@ -64,6 +64,27 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #443–457 — A4 2.0 TFSI newer + 2.4 V6 ME7 + 2.5 V6 TDI EDC15V
+
+- Pairs #443-444 · A4 2.0 TFSI 2008-2009 on 8K/8P 907115* parts (later
+  Audi A4 B8 MED17.1.6). SW 398177 / 396770.
+- Pair #445 · A4 2.0 TFSI 2009 8K2907115L sw506775 2MB 1,061 B light.
+- Pairs #446-448 · A4 2.0 TFSI 256KB cal dumps (8K2907115 P/A/N)
+  2,000-2,500 B. Standard EA888 Gen2 Stage 1 depth.
+- Pair #449 · 2.0 TSI 2009 SIZE MISMATCH — skipped.
+- Pairs #450-454 · **A4 2.4 V6 FSI / ME7.x** 1MB Bosch 0261208038/039/122
+  with 8E0909052/552* parts. Small ~1KB tunes. New ECU family — A4
+  2.4 V6 "ASN" engine petrol on Bosch ME7.1 style (before ME9).
+- Pairs #455-456 · **A4 2.5 V6 TDI / EDC15V** 256KB files (0281001834
+  — EDC15V prefix I added in v3.5.37). Classic 2.5 V6 TDI AFB/AKE/BAU
+  110-132kW.
+- Pair #457 · A4 2.5 V6 TDI 180ps 0281010823 / 8E0907401D 512KB EDC15
+  sw363778 2,680 B — EDC15 PD variant on 2.5 TDI.
+
+**Code: no change** — all family-detected via existing me7/edc15
+defs, plus the 0261208038-122 variants would benefit from a note
+("A4 2.4 V6 FSI ASN ME7.1") in me7 def comment.
+
 ## Pairs #428–442 — A4 2.0 TFSI 2005-2008 MED17 200/220ps SW catalog
 
 15 more A4 2.0 TFSI 2MB MED17 pairs (147-162kW / 200-220ps).
