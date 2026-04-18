@@ -70,6 +70,48 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #321–336 — Golf 4 ME7.x + Golf 4/5 R32 + Golf 5 1.9 TDI variants
+
+**Golf 4 1.4i 16V Bosch 0261207189 sw360898** (#321) — small 735 B
+ME7.5 tune, 16 regions. 524 KB ROM.
+
+**Golf 4 1.6 16V Marelli 036906034CN** (#322) — Magneti Marelli
+IAW7G ECU, 524 KB. NEW Marelli family (sister of A2/Bora 1.6 16V
+Marelli).
+
+**Golf 4 1.6 L Siemens 5WP4190 06A906019** (#323) — Siemens VR4
+sister, 256 KB.
+
+**Golf 4 1.9 TDI variants**:
+- 0281010112 038906012L (#324) — only 532B / 6 regions = light tune
+- 0281010650 038906012FA sw360773 (#325) — 1096B / 41 regions
+- 0281011065 038906019DD sw363709 (#326) — 7578 B / 488 regions
+  (heavier tune)
+
+**Golf 4 R32 1.9 TDI PD (mislabeled — actually R32 V6)** Bosch
+0261201805 022906032KF sw389049 (#327) — only 326 B / 10 regions
+= very light tune. ME7.x VR6.
+
+**Golf 4 R32 V6 cluster**:
+- 0261207884 022906032CN sw371197 (#328) — 3172 B / 44 regions
+  (sister of #320 sw366355 same hardware)
+- 0261208467 022906032CD sw377452 (#329) — 2805 B / 79 regions
+
+**Golf 5 R32 0261208468 022906032CE sw377419** (#331) — 2530 B / 31
+regions, newer R32 V6 hardware.
+
+**Golf 5 2.0 TFSI 1K0907115 sw375457** (#330, MED17) — 1114 B / 32
+regions tune. Older sw than the wired 0x1CE0C8 cluster (375457 < 381190).
+
+**Golf 5 1.9 TDI 03G906016 cluster** (#332-335):
+- 03G906016EB sw375972 (#332) — 1781 B / 44 regions
+- 03G906016B sw369564 (#333) — 2976 B / 163 regions
+- 03G906016EB sw369952 (#334) — 987 B / 29 regions
+- 03G906016R sw374183 (#335) — 3243 B / 175 regions
+- 03G906016GR sw375576 (#336) — 1222 B / 30 regions
+Various part suffixes (B/EB/R/GR), each with own SW + own SGO. EDC16
+PD 1MB. No tight cluster found in this batch.
+
 ## VW Pairs #305–320 — Wire Golf R MED17 cluster + 0x1CE0C8 +1 SW
 
 **Wire actions taken**:
