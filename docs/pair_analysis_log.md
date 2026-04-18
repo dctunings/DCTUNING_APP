@@ -70,6 +70,55 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #289–304 — Golf 2.0 TFSI MED17 universal IQ release pattern
+
+**MAJOR Golf 2.0 TFSI MED17 cluster** — consistent IQ release pattern
+across MANY part numbers and SWs:
+
+**Pattern**: `120B at raw 10604 → 65535` (+518%) + `64B at raw
+32613/31579 → 65535` (+100-107%) — anchor varies by SW between
+0x1CC6FC and 0x1CE0C8.
+
+SWs catalogued in this batch (all share the universal pattern):
+- 1K0907115 sw374094 (#291) — 0x1CD0C6 + 0x1CD716 8×3
+- 1K0907115 sw387570 (#296, #297, two more files) — 0x1CD7BA/0x1CD7FE
+- 1K0907115A sw372619 (#292) — 0x1CC6FC + 0x1CCD6E
+- 1K0907115B sw387484 (#293) — 0x1CD67A + 0x1CDCF4
+- 1K0907115G sw378158 (#294) — 0x1CD67A + 0x1CDCF4 IDENTICAL to sw387484
+- 1K0907115J sw387479 (#299, #302, #303, #304 — 4 files) — 0x1CE139
+  + 0x1CE0C8/0x1CECE4 mix
+- 1K0907115J sw381190 (#301) — 0x1CE0C8 + 0x1CECE4
+- 1K0907115K sw386821 (#295) — 0x1CE0C8 + 0x1CECE4
+- 1K8907115F sw510589 (#289) — 0x1CEE80 + 0x1C3386
+- 1P0907115D sw377624 (#290) — 0x1CD67A + 0x1E58F4
+- 8P0907115B sw381231 (#300) — 0x1CE0C8 + 0x1CECE4 IDENTICAL to sw386821
+- 8P0907115B sw387479 (#304) — 0x1CE0C8 + 0x1CECE4
+
+**Sub-cluster A: `0x1CE0C8 + 0x1CECE4`** (most common):
+- sw381190 (1K0907115J)
+- sw381231 (8P0907115B)
+- sw386821 (1K0907115K)
+- sw387479 (8P0907115B + 1K0907115J)
+- 5 SWs across 3 part suffixes share IDENTICAL anchor.
+
+**Sub-cluster B: `0x1CD67A + 0x1CDCF4`** (older):
+- sw378158 (1K0907115G)
+- sw387484 (1K0907115B)
+- sw377624 (1P0907115D — first offset only)
+- 3 SWs same SGO across 3 part suffixes.
+
+**Sub-cluster A is wire candidate** — 5+ SWs sharing IDENTICAL
+0x1CE0C8 anchor in MED17 family.
+
+**Same-SW-multi-file findings**:
+- sw387570 1K0907115 — 3 different stage1 files for same SW
+- sw387479 1K0907115J — 4 different stage1 files for same SW
+
+**This is the universal MED17 EA113/EA888 IQ release map** I noted
+earlier in Audi work. Now broadly confirmed across VW Golf MED17 too.
+The 120B region at raw 10604 → 65535 is the consistent target across
+all 1K0907115/8P0907115/1P0907115/1K8907115 part variants.
+
 ## VW Pairs #273–288 — Wire 12×15 IQ ceiling cluster + Caddy/Golf cross-match
 
 **STRONG WIRE: 12×15 IQ ceiling cluster** (Amarok-shape map at

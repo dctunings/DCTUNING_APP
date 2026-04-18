@@ -2226,6 +2226,73 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── MED17 VW Golf 2.0 TFSI 1K0907115/8P0907115 — 0x1CE0C8 IQ release ─────
+  //
+  // VW Golf 2.0 TFSI 147 kW (200 hp) MED17. Bosch hardware multiple
+  // 0261S02xxx codes, VAG part numbers 1K0907115J/K, 8P0907115B (Audi A3
+  // S3 cross-chassis). 5 SW versions across 3 part suffixes share the SAME
+  // SGO base at offset 0x1CE0C8. Verified in pair_analysis_log.md VW pairs:
+  // #295 sw386821 (1K0907115K), #300 sw381231 (8P0907115B), #301 sw381190
+  // (1K0907115J), #304 sw387479 (8P0907115B), #299/302/303 sw387479
+  // (1K0907115J — 4 files of 8P + 1K sharing this SW).
+  //
+  // Common modifications (all SWs):
+  //   0x1CE0C8  120 B = 60 cells u16 BE — primary IQ release
+  //                                       (raw 10604 → 65535, +518%)
+  //   0x1CECE4   64 B = 32 cells u16 BE — companion IQ release
+  //                                       (raw 32613 → 65535, +101%)
+  //
+  // This is the **universal MED17 EA113/EA888 IQ release map** — same
+  // structure appears across MANY VW Golf MED17 SWs at slightly different
+  // anchors per SW family (0x1CC6FC / 0x1CD0C6 / 0x1CD67A / 0x1CE0C8).
+  // Wire matches the 0x1CE0C8 anchor cluster (5 SWs).
+  {
+    id: 'med17_golf_20tfsi_1k0907115_1ce0c8',
+    name: 'Bosch MED17 (VW Golf 2.0 TFSI 200hp — 1K0907115J/K + 8P0907115B 0x1CE0C8)',
+    manufacturer: 'Bosch',
+    family: 'MED17',
+    identStrings: ['381190', '381231', '386821', '387479'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Golf 2.0 TFSI 147kW (1K0907115J/K + 8P0907115B sw 381190/381231/386821/387479, 2005-2007)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'med17_golf_20tfsi_iq_release_a',
+        name: 'IQ Release A 120B (1K0907115J/K + 8P0907115B)',
+        category: 'fuel',
+        desc: 'Primary IQ release at 0x1CE0C8 (60 uint16 BE cells = 120 B). Verified across 5 SWs sharing IDENTICAL offset and treatment. μ 10604 → 65535 raw (+518%). The universal MED17 EA113/EA888 IQ release map — same shape appears across many VW Golf MED17 SWs at different anchors.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1CE0C8,
+        rows: 1, cols: 60, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 63000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 65000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'med17_golf_20tfsi_iq_release_b',
+        name: 'IQ Release B 64B (1K0907115J/K + 8P0907115B)',
+        category: 'fuel',
+        desc: 'Companion IQ release at 0x1CECE4 (32 uint16 BE cells = 64 B). Verified across same 5 SWs. μ 32613 → 65535 raw (+101%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1CECE4,
+        rows: 1, cols: 32, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 63000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 65000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 C46 VW Golf 2.0 TDI CR 03L906022G/RP — 12×15 IQ ceiling (2MB) ──
   //
   // VW Golf 2.0 TDI CR 80-125 kW EDC17 C46 newer 505xxx+ generation.
