@@ -64,6 +64,44 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #1095–1110 — Q7 4L0907401C/D variant catalog + DPF variants
+
+Q7 4L0907401C 2 MB EDC17 CP44 SW versions:
+- sw510913 (#1089) — 5081B / 57 regions
+- sw510992 (#1093) — 5101B / 56 regions
+- sw517545 (#1097) — 5160B / 55 regions
+- sw518045 (#1095) — 4003B / 112 regions (different sub-cluster)
+- sw529204 (#1096) — 4794B / 126 regions
+
+The 510913/510992/517545 cluster (all ~5100B / 55-57 regions) — 3
+SWs with similar pattern. Moderate cluster, could wire.
+
+Q7 4L0907401A DPF V6 variants (#1098-1101):
+- sw393538 (#1098) — 4461B / 116 regions (sister of #1081 same SW
+  but different file pattern → 4954B/49)
+- sw394196 (#1099) — 5370B / 170 regions
+- sw508343 (#1100) — 5158B / 117 regions
+- sw518178 (#1101) — 5040B / 207 regions
+
+Pair #1090 4L0907401A sw503984 — **92.7% changed = stage1+++ full
+recal** (1.94 MB modified, 1259 regions).
+
+Pair #1091/#1092 — `510906C815Q` part code (looks like a part-no
+typo) sw510906 — 6570B/135 + 5044B/55 across 2 files.
+
+Pair #1086 4L0907401D sw518178 (different file from #1085) — 2085B
+/ 73 regions. So sw518178 has THREE distinct SGO sub-clusters across
+6 files (across 4L0907401A and 4L0907401D suffixes):
+- 4998B / 44 regions (#1080)
+- 5040B / 207 regions (#1101)
+- 5303B / 88 regions (#1087)
+- 5136B / 46 regions (#1088)
+- 2085B / 73 regions (#1086)
+- 1796B / 69 regions (#1078)
+
+Same SW, 6 files, 6 different patterns — confirms tuner-by-tuner
+variation is significant within the same SW.
+
 ## Pairs #1079–1094 — Q7 3.0 V6 TDI 4L0907401 / 4L0907401A clusters
 
 **Q7 4L0907401 524 KB cluster** — 2 SWs share identical pattern:
