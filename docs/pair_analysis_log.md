@@ -64,6 +64,32 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #1191–1206 — S4/S5/S6 V8 + S6 V10 catalog
+
+S4 4.2 V8 tail-end: more 0261201112/207990/208459/208462 part numbers
+across Bosch ME7.x and Siemens-VDO PPD ECUs. Same vehicle ships with
+either ECU depending on market.
+
+**S5 4.2 V8 FSI MED17 8T0907560** (B8 generation):
+- 0261S02329 sw390268 (#1187) — 753B/21
+- 0261S02550 sw395091 8T0907560C (#1188) — 936B/17
+- 0261S02329 sw393902 (#1190) — 759B/22 (sister of #1187 same hardware)
+- 0261S02623 sw399146 8T0907560M (#1189) — **SIZE MISMATCH** — ORI
+  and Stage1 different sizes; not a real pair, skipped.
+
+**S6 4.2 V8 catalog (multi-generation)**:
+- C4 1995-1996 4A0907557C 213.3kW (#1192/#1193) — 65 KB ROM Motronic
+  2.5 era (older than ME7.0)
+- C5 1998 4D0907557H 250.1kW (#1194) — 131 KB ROM ME7.0
+- C5 2002 4D0907558 sw352381 (#1195) — 1 MB ME7.x
+- C5 2003 4D0907559D sw354120 (#1196) — 1 MB ME7.x
+- C5 2004 4D0907559AB sw362909 (#1191) — 1 MB ME7.x
+
+**S6 C7 5.2 V10 FSI MED17 4F1907552** (V10 Lambo Gallardo engine!):
+- 0261S02611 sw398048 (#1197) — 2 MB MED17, 3.2 KB / 77 regions tune
+- Sister of RS6 V10 5.0 TFSI but bigger displacement (5.2L vs 5.0L)
+- NEW HIGH-PERFORMANCE FAMILY not in our defs (Lambo-derived V10)
+
 ## Pairs #1175–1190 — S4 generations B4/B5/B6 catalog
 
 **S4 B4 1992 2.2 20V Turbo** (4 pairs #1166-1169) — Bosch 0261200465
