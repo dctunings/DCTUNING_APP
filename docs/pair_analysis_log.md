@@ -70,6 +70,36 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #801–816 — Passat 2.0 TDI CR sister files + iqrelease +sw507630
+
+**iqrelease def +sw507630** (Passat 03L906022EM 524KB) → IDENTICAL
+`0x06625E IQ release + 0x064CBE + 0x064BCE/64C96` cluster. Now
+12 SWs.
+
+**Multiple sister files of same SW** (this batch):
+- 03L906022G sw397892 (#801, #802 — 2 different stage1) — already
+  in 398757
+- 03L906022G sw505933 (#803) — sister
+- 03L906022G sw505978 (#804 stage1+++) — sister of #418/#419 prior
+- 03L906022MS sw500159 (#805, #806 — 2 sister files) — 7657B/48 +
+  7522B/47
+- 03L906022MS sw513692 (#807 524KB only 288B = no real, #815 2MB
+  8804B/80 — different sub-cluster at 0x1C8AAA)
+
+**03L906022CL sw394169** (#812, 2MB) → 10543B/103 — sister of
+#793 sw396433 same byte/region count. Same 0x1ED29A sub-cluster.
+
+**03L906022 various** continued:
+- 03L906022CL sw399864 (#808, 2MB) — 10266B/109 = 0x1F007A cluster
+  (could add to 398757 def)
+- 03L906022BL sw507677 (#811, 524KB) — 5349B/93
+- 03L906022KP sw506138 (#814, 2MB) — 3744B/68
+- 03L906022QE 0281015029 sw504856 (#816, 524KB) — 4644B/72
+
+**03L906018BF sw510959** (#809 stage1+++ 79% changed, #810 normal
+8925B/68) — NEW BF part suffix. Different from my wired Caddy
+03L906018xx cluster.
+
 ## VW Pairs #785–800 — Passat 2.0 TDI CR 398757 cluster MAJOR expansion
 
 **398757 def expanded BIG: +3 SWs (398820/398822/398823)**:
