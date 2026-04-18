@@ -70,6 +70,47 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #33–48 — Bora 1.9 TDI PD + Caddy 1.6 TDI CR Siemens PCR21
+
+**VW Bora 1.9 TDI PD variants** (#32-39):
+- 0281010744 038906019FE sw362470 (#32, 1MB) — 13.6KB / 516 regions
+  (heavy tune, stage1+++ probably)
+- 0281010653 038906012FD sw362774 (#33, #34 — 2 files same SW
+  2002+2003) — 2898B/99 + 3042B/115 — 90 hp PD
+- 0281001910 038906019H sw350172 (#35, 524KB) — 110 hp early PD
+- 0281010302 038906019CJ sw354461 (#36, 524KB) — 110 hp PD
+- 0281011314 038906012HF sw367051 (#37) — 90 hp PD newer
+- 0281011065 038906019DD sw363709 (#38, 524KB) — 100 hp PD
+- 0281010111 038906012K sw352565 (#40) — only 6 bytes changed = no
+  real tune
+
+**VW Bora 2.3 V5 0261206176 071906018R sw350044** (#39) — VR5 petrol,
+ME7.x 256KB, 17 regions.
+
+**VW Bus T5** (#41-42):
+- 0281010462 074906018AK sw360076 — Bus 64.7 kW — EDC15
+- 070906016EA sw394112 — Bus T5 TDI 128 kW EDC16 PD
+
+**VW Caddy 1.6 TDI CR Siemens PCR21** — strong cluster forming:
+- 03L906023PC sw SM2F0L9500000 (#43) — 19971B / 235 regions
+- 03L906023DB sw SM2F0K3000000 (#44 + #46 sister files) — 20025B
+  / 228 regions
+- 03L906023DB sw SM2F0K3000000 (#47, 2011 file) — 19994B / 235 regions
+- 03L906023PB sw SM2F0L9500000 (#48, 55.2 kW variant) — 19871B / 235
+  regions
+
+All 4 pairs share **~19900-20025 bytes changed / 228-235 regions**
+— VERY consistent pattern. This is the **SIMOS PCR21 emission-disable
++ tune signature** I documented earlier in Audi A3 1.6 TDI work.
+The SM2F0xxxx serial family marks Caddy/Polo/A3 1.6 TDI 2010-2013
+EU5 generation.
+
+**Wire candidate**: SIMOS PCR21 03L906023DB/PB/PC sw SM2F0K3xxx /
+SM2F0L9xxx — moderate-confidence cluster with consistent emission
+disable + tune signature. Would need offset extraction to pin maps.
+
+Pair #45 SIZE MISMATCH (different file sizes for ORI/Stage1) — skipped.
+
 ## VW Pairs #17–32 — Amarok 03L906019FA cluster wired + Bora variants
 
 **STRONG WIRE: Amarok 2.0 BiTDI 03L906019FA cluster** confirmed
