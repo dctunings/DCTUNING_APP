@@ -64,6 +64,54 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #871–886 — A6 3.0 V6 TDI 4F0907401C cluster expansion + 5-SW cluster
+
+**MAJOR cluster expansion**: 4F0907401C 524KB 3.0 TDI now has 5 SW
+versions sharing the `0x01C9A3 + 0x01CExx + 0x01D1xx` region:
+- sw389133 (#849, prior batch) — 0x01CE7D + 0x01D115 (-63% limiter)
+- sw391833 (#864 here) — 0x01CB1B + 0x01C9A3 (+111% IQ ceiling)
+- sw391845 (#857 prior) — 0x01CE7D + 0x01D115 (-63%)
+- sw395437 (#866 here) — 0x01C9A3 + 0x01CF91 (+78% / -63%)
+- sw395438 (#850 prior) — 0x01CE7D + 0x01D115 (-63%)
+
+So the cluster is forming 2 sub-groups based on which exact offset
+each tuner targeted (0x01CE7D vs 0x01C9A3) but they're all in the
+same 0x01C0xx-0x01D2xx region. **5-SW wire candidate** for 3.0 TDI.
+
+Other 4F0907401C 3.0 TDI variants this batch:
+- sw382452 (#862) — `0x0706F7 + 0x070CE5` — these are the SAME
+  offsets as 2.7 TDI 4F0907401C cluster I wired! sw382452 falls
+  in the SW range that overlaps 2.7 (380752-391860). Looking at
+  filename — labeled "171.4KW" which is 230hp, that's 3.0 TDI not
+  2.7 TDI (2.7 TDI is 132 kW). So **sw382452 IS 3.0 TDI but uses
+  the 2.7-style SGO**. Cross-displacement SW number reuse.
+- sw391833 (#864 + #868 — two files same SW) → DIFFERENT SGOs
+  (one at 0x01CB1B, other at 0x05A8AF). 6th time I've seen
+  same-SW-different-SGO pattern. Underscores SGO is determined by
+  hardware AND tool/dump format, not SW alone.
+
+**4F0907401E newer (2008+) cluster**:
+- sw399336 (#867) — `0x1D646E + 0x1D6CB4` (Δ = 0x846 = 2118)
+- sw516623 (#875, #877 — pair tools swapped ORI/Stage1!) — emission
+  disable at 0x19175C / 0x19166A. The two pairs are actually each
+  other's swap — alphabetical sort accident.
+- sw516624 (#876) — `0x191856 + 0x19175C` emission only
+
+**4G0907401 newer 2010+ (#869)** sw515241 — `0x15501E + 0x15636E`
+(Δ = 0x1350 = 4944) — different cal location entirely (lower in
+2 MB ROM). Newest VAG part-number prefix.
+
+**4E0907401B 524KB (older)** (#872, #873):
+- sw372202 → `0x0523A8 + 0x071B97`
+- sw372488 → `0x0523A8 + 0x06C2B3` — **2 SWs share `0x0523A8`**
+  (same 14B +164% region — IQ scaling)
+
+**Code: 5-SW 3.0 TDI cluster identified but offset variation
+(0x01CE7D vs 0x01C9A3 vs 0x01CB1B) within ±0xC means we'd need a
+tolerance-based fixedOffset, which our current schema doesn't
+support. Would need to wire as 2 separate defs (one per dominant
+offset) or extend the schema.**
+
 ## Pairs #855–870 — A6 3.0 V6 TDI 4F0907401C 524KB cluster (3 SWs share limiter)
 
 This batch is **mostly more A6 3.0 V6 TDI 4F0907401C 524KB pairs**.
