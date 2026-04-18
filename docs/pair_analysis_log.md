@@ -70,6 +70,49 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #257–272 — Golf 0x06AD86 +2 SWs + 03L906022JD/JF cluster
+
+**Golf 0x06AD86 cluster expanded to 6 SWs**:
+- 03L906018 (bare) sw509927 (#257) → IDENTICAL `0x06AD86 + 0x07E036`
+  ADDED to wired def
+- 03L906018AT sw509929 (#258) → IDENTICAL ADDED to wired def
+- 03L906018GC sw508903 (#259) → IDENTICAL (3rd confirmation file)
+- 03L906018BC sw510944 (#264, #265, #266 — 3 files all hit
+  0x06AD86) — confirms BC cluster
+- 03L906018LE sw519351 (#262) → `0x06B512 2KB + 0x07DADA 200B`
+  (Δ=0x78C sister sub-cluster — same family but offset shift means
+  sw519351 doesn't fit the fixedOffset)
+
+**03L906018GC sw508903 stage1+++ files** (#260 + #261 — 2 files
+both 79.7% changed = full recals) — same SGO targets preserved
+under noise.
+
+**03L906019DH sw518154** (#263) → `0x05EB60 12×15 + 0x060A5C 12×16`
+**SAME SHAPE as Amarok 03L906019FA IQ ceiling** but at much lower
+anchor (0x05EB60 vs Amarok's 0x0623F0). Different SGO instance of
+the same map structure. Could be added as variant of Amarok def.
+
+**03L906022JD sw518073 + 03L906022JF sw518079** (#268 + #269) →
+BOTH IDENTICAL `0x077DBA 16×16 + 0x037C7A 104B` cluster (3496B vs
+4147B — slightly different change counts but same structural map).
+**2 SWs across JD/JF part suffixes share SGO**. Wire candidate.
+
+**Pair #267** sw518073 03L906022JD — only 130 bytes / 4 regions
+changed = essentially no real tune (just clears 2 emission regions).
+Sister of #268 same SW with proper IQ map mod.
+
+**Pair #270** sw518131 03L906022CD — 0 bytes changed (byte-identical).
+
+**Pair #271** sw518131 03L906022CD — emission disable cluster only,
+no big map. Same SW as #270 (which was identical) but a different
+stage1 file with light tune.
+
+**Pair #272** 03L906022G sw397892 — `0x1EF502/0x1EFF46` (already
+covered by 398757 def, sw397892 in identStrings).
+
+**Wire actions taken**:
+- Added sw 509927 + 509929 to Golf 0x06AD86 def (now 6 SWs)
+
 ## VW Pairs #241–256 — Wire Golf 0x06AD86 cluster + 398757 +2 more SWs
 
 **STRONG WIRE: Golf 03L906018AR/BB/BC/GC 0x06AD86 cluster**:
