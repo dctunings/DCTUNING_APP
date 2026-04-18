@@ -64,6 +64,27 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #293–307 — A4 2.0 TDI CR 2008 EDC17 C46 SW catalogue
+
+15 more 2MB / 512KB Audi A4 2.0 TDI CR 2008 EDC17 C46 pairs. Primary
+variants:
+- 03L906022B (no suffix) with SW 392984/396468/396469/396470/396472/
+  396483/396484/398757/503995/505924/505962/519399 — 10-13 SW bases.
+- 03L906022JM sw396470
+- 03L906022JP/03L906022B sw396469
+- 03L906022MA/03L906022BQ sw398757
+- 03L906022FG sw503995
+
+Tunes typically 5-11KB, consistent EDC17 C46 Stage 1 depth.
+
+**Outlier**: Pair #305 (03L906022B sw396484) — 1,547,404 B changed
+(73.8%) — full recal, not a Stage 1 delta. Skip for cross-reference.
+
+**Code: no change** — all within existing edc17 / edc17_c46_398757
+territory. SW 396483 / 396468 / 396469 / 396470 / 396472 / 505924 /
+505962 / 519399 could potentially each get a per-SW def similar to
+v3.5.35 if we commit to the extra code volume. Not wiring speculatively.
+
 ## Pairs #278–292 — A4 2.0 TDI CR EDC17 C64 03L906019AL catalogue
 
 15 more pairs, mostly Audi A4 2.0 TDI CR EDC17 C64 variants with
