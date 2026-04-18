@@ -1324,6 +1324,66 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC16 PD Audi A6 2.0 TDI 0281011850 03G906016BF (sw 380199 / 382716) ─
+  //
+  // Audi A6 C5/C6 2.0 TDI PD 140ps. Bosch hardware code 0281011850, VAG part
+  // number 03G906016BF. Verified by 2 paired ORI/Stage1 files (pair_analysis
+  // _log.md pairs #684 sw380199 and #685 sw382716) sharing IDENTICAL
+  // modification offsets:
+  //
+  //   0x051E5F  7 cells u16 BE  — primary IQ ceiling (raw 19308 → 47812, +147%)
+  //   0x05F8FF  13 cells u16 BE — boost target (raw 15921 → 36444, +128%)
+  //
+  // The +0x18000 (96 KB) mirror discussed in the EDC15 doc above is NOT
+  // applicable here — EDC16 PD ROMs use Motorola HiLo and a single cal copy
+  // (the duplication seen in EDC15 was a C167 RAM-shadow). EDC16 uses MPC555.
+  {
+    id: 'edc16_a6_20tdi_03g906016bf',
+    name: 'Bosch EDC16 PD (03G906016BF — Audi A6 2.0 TDI 140ps PD 2004-2006)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['03G906016BF', '0281011850', '380199', '382716'],
+    fileSizeRange: [524288, 524288],
+    vehicles: ['Audi A6 C5/C6 2.0 TDI PD 140ps (03G906016BF sw 380199/382716, 2004-2006)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_a6_20tdi_iq_ceiling',
+        name: 'IQ Ceiling (03G906016BF 380199/382716)',
+        category: 'fuel',
+        desc: 'Primary IQ ceiling at 0x051E5F (7 uint16 BE cells). Verified across 2 independent Stage 1 pairs sharing exact offset and treatment — μ 19308 → 47812 raw (+147%). Pin near tuner consensus to release IQ.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x051E5F,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 47000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 53000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_a6_20tdi_boost_target',
+        name: 'Boost Target (03G906016BF 380199/382716)',
+        category: 'boost',
+        desc: 'Boost pressure target at 0x05F8FF (13 uint16 BE cells). Verified across same 2 pairs — μ 15921 → 36444 raw (+128%). Pin near tuner consensus to release boost.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x05F8FF,
+        rows: 1, cols: 13, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 36000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── Bosch EDC17 (VAG/BMW diesel) ─────────────────────────────────────────
   {
     id: 'edc17',

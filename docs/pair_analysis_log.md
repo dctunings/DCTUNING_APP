@@ -64,6 +64,51 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #679–694 — A6 1.9 TDI EDC15P+ +0x20000 mirror RE-CONFIRMED + A6 2.0 TDI EDC16 PD 03G906016BF cluster
+
+**EDC15P+ +0x20000 mirror RE-CONFIRMED in A6 chassis** (previously
+documented for A2 1.4 TDI). Pair #671 (A6 1.9 TDI PD 0281011213
+sw369570) — regions at `0x076D0A` AND `0x056D0A` get the SAME +88-95%
+modification. **Δ = 0x20000 = 128 KB**. So the EDC15P+ mirror lives
+across multiple chassis (A2, A6 — likely A3/A4 too).
+
+Other EDC15 in this batch:
+- Pair #670 0281010224 sw360072 — basic PD layout, no mirror visible
+  in tunes I see (probably mirror exists for cal but tune was small)
+- Pair #674-675 0281001259 028906021J — **65 KB ROMs** (small early
+  pre-PD VAG TDI, IDI conversion). Tiny tunes. Different from
+  256 KB EDC15V — these may be the very-early EDC1.4 ECU type.
+- Pair #676 0281001129 — **32 KB ROM** (even older, mid-90s). 8 regions.
+
+Note pairs #672 03G906016HS sw379819 and #673 0281011327 4E0907401H
+sw371075 — these are EDC16 PD, NOT EDC15. False sort by alphabetical
+filename. Pair #673's `4E0907401H` is the A8 4.0 V8 TDI part number,
+mislabeled in filename as "1.9 TDI" — it's actually V8 TDI.
+
+Pair #677 03L906022FG sw506100 (A6 2.0 TDI CR EDC17) — sister of
+prior batch pair #527 (Allroad 03L906022FG sw506125) — different
+cal `0x1DA624 12×15` + `0x1DCC8C 12×16` — same chassis pattern but
+this is a different SW. The 506xxx 03L906022FG cluster expands.
+
+Pair #678 0261S02466 4F2907115 sw394380 — A6 C6 2.0 TFSI MED17. Has
+the universal MED17 unlock pattern at `0x1CE8A0 120B` (+517%) +
+`0x1CF4BC 64B` — same as the universal A5 MED17 pattern from earlier.
+
+**STRONG WIRE CANDIDATE: A6 2.0 TDI EDC16 PD 0281011850 03G906016BF**
+- Pair #684 sw380199 → `0x051E5F (+147%)` + `0x05F8FF (+128%)`
+- Pair #685 sw382716 → `0x051E5F (+147%)` + `0x05F8FF (+128%)` — **IDENTICAL OFFSETS**
+- 2 SW versions sharing exact offsets is enough to wire for 0281011850.
+
+Other A6 2.0 TDI EDC16 PD variants (each different SGO):
+- 03G906016BF sw382716 (#679, no part-no prefix) → `0x05F9C9 + 0x05FAA5`
+  (close to but not exactly the wire-candidate offsets; this is a
+  different file format — likely chiptool extracted differently)
+- 03G906016GC sw389285 (#680) → `0x058E33 + 0x06CE0D`
+- 03G906021T 0281012234 sw377586 (#683) → `0x0518A3 + 0x064909`
+- 0281011850 03G906016BF sw372670 (#682, **2 MB** dump format!) →
+  `0x185E7C + 0x1DF8FB`. 2 MB EDC16 dump means full ROM image
+  including unused banks; the cal is at the high end.
+
 ## Pairs #663–678 — A5 tail + A6 1.9 TDI EDC15 EDC15V/EDC15P MIRROR pattern
 
 A5 3.0 V6 TDI tail-end (#654-657) confirms 4G0907401 sw519312/522947
