@@ -64,6 +64,42 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #98–112 — 2013-2015 EDC17 CR newer parts + EDC16 PD 2.0 TDI catalogue
+
+15 more pairs covering newer EDC17 C46/C64 variants and the older
+EDC16 PD 2.0 TDI 140ps family:
+
+- Pair #98 · 03L906018JL sw 518063 (2013 119.9kW) 2MB, 6,524 B / 46.
+- Pair #99 · 03L906018ES sw 527081 (2013 130.2kW) 2MB, 4,973 B / 154
+  — new part number 03L906018ES. Higher region count than usual.
+- Pair #100 · 03L906018JL sw 522918 (2013 130.2kW) 2MB, 6,417 B / 48.
+- Pair #101 · 03L906018JL sw 521650 (2013 88.3kW) 2MB, **141 B / 2**
+  — tiny tune (only 2 regions modified). Unusually light Stage 1.
+- Pair #102 · 04L906021ER sw 541673 (2014 135kW) **4 MB SIZE MISMATCH**
+  — ORI and Stage1 are different sizes. Skipped.
+- Pair #103 · 04L906021DS sw 543608 (2015 110.3kW) 4 MB, 10,111 B /
+  122. Another 4 MB EDC17 C64 variant.
+- Pair #104 · 03G906021AB sw 382417 (2.0 TDI PD) 2MB, 4,272 B / 273.
+  **EDC16 PD 2MB** — larger than usual 512KB/1MB. Possibly EDC16CP34.
+- Pair #105 · 03G906016BA sw 371953 (2.0 TDI PD 2004) 1MB, 1,624 B / 49.
+- Pair #106 · 03G906016DT sw 370570 (PD 2004) 1MB, 1,441 B / 65.
+- Pair #107 · 03G906016DR sw 390996 (PD 2004) 1MB, 1,422 B / 44 —
+  identical bytes-changed count to pair #109 (different SW, same tune).
+- Pair #108 · 03G906016G sw 370435 (PD 2004) **1.5 MB** (1,511,680 B)
+  — non-standard size. Cal + part of code dumped. 2,393 B / 46.
+- Pair #109 · 03G906016AT sw 369901 (PD 2004) 1MB, 2,527 B / 162.
+- Pair #110 · 03G906016G sw 377215 (PD 2005) 1MB, 1,422 B / 44.
+- Pair #111 · 03G906021GN sw 378960 (PD 2005) 512KB, 2,285 B / 180.
+- Pair #112 · 03G906021AB sw 382663 (PD 2006) 512KB, 1,889 B / 96.
+
+**Code: deferred**. The EDC16 PD 1MB family shows very consistent
+light-Stage-1 tune sizes (~1,400-2,500 B) across many variants —
+pattern is stable, suggests 03G906016* with 1MB size = Bosch EDC16
+PD variant with consistent tuning targets. Could be a candidate for
+a single dedicated ECU def with dimension-based map detection (no
+fixedOffset — rely on the scanner's Kf_ detection since these are
+stripped).
+
 ## Pairs #83–97 — more EDC17 C46 A3 2.0 TDI CR 2010-2013 variants
 
 Fifteen more pairs of the same A3 2.0 TDI CR family, mostly 2MB
