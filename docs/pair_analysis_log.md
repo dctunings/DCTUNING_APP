@@ -70,6 +70,39 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #497–512 — Golf 4 1.8T ME7.x catalog (large)
+
+16 pairs of Golf 4 1.8T 110.3 kW (150 hp) Bosch ME7.x — standard
+Audi A4/Passat sister cluster:
+
+**0261204673 06A906018R** — sw358109 (#499), sw359591 (#505) — 256KB
+**0261204800 06A906018BB** — sw359590 (#500), sw358105 (#506) — 256KB
+**0261206436 06A906032AR** — 4 SWs sw352163 (×2 #501, #507),
+  sw352357 (#508), sw352758 (#502) — 524KB. Same hardware, sister
+  SGOs, anchors at `0x019538-0x01955A` (Δ=0x22 between SWs),
+  `0x01D1AC/0x01D1EC` (Δ=0x40), `0x01CE20-0x01CE6C` cluster.
+**0261206517 06A906018CH sw352126** + **0261206518 06A906018CG
+sw352127** — sister hardware (517/518) with consecutive SWs and
+IDENTICAL byte/region count (2350B/20 + 2346B/20). Likely same
+SGO across the 2 hardware codes.
+**0261206868 8E0906018B sw360654** (#503, 1MB) — only 4 bytes
+changed = no real tune.
+**0261206887 06A906032DR** — sw360128 (#504), sw360272 (#496/498)
+— 1MB ME7.x.
+**0261207446 06A906032HS sw363354** (#511, 132.4 kW = 180hp) —
+0x0117B2 + 0x01F18D cluster.
+**0261207956 06A906032LQ sw366195** (#512, 180hp) — sister of #511.
+**0261207957 06A906032LT sw363601** (#497).
+
+**Wire candidate**: 0261206517/518 sw352126/352127 (CH/CG part
+suffixes, 2 SWs with sister hardware codes) sharing nearly identical
+byte/region count. Could check offsets for tight cluster match.
+
+The 0261206436 06A906032AR cluster across 4 SWs has anchor shift
+between SWs (~Δ=0x22-0x40) — too varied for fixedOffset wiring.
+
+No new wires this batch.
+
 ## VW Pairs #481–496 — Golf 4 1.4-1.6 ME7.x + Marelli + Siemens petrol
 
 **Golf 4 1.4 16V Bosch ME7** (#481-#483):
