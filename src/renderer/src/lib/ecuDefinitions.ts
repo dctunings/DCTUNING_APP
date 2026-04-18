@@ -1294,6 +1294,90 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage3: { multiplier: 0.85, clampMin: 700 },
         critical: false, showPreview: true,
       },
+      // ── VERIFIED FROM D: DRIVE STUDY (441 EDC16 Cx + 411 EDC16 generic pairs) ──
+      // Added based on byte-diff analysis of real ORI vs Stage1 binaries.
+      // See docs/ecu_study/edc16_cx_full.json and edc16_gen_full.json for source data.
+
+      // EDC16 10×4 BE "ceiling" map — 9 files (9%), avg +50% change.
+      // Small map with big change = hard-limit threshold that tuners roughly double.
+      {
+        id: 'edc16_ceiling_10x4',
+        name: 'EDC16 Small Ceiling Map',
+        category: 'limiter',
+        desc: 'Small 10×4 BE threshold map — verified in 9 EDC16 Stage 1 tunes with avg +50% change. Likely a pressure or speed protection ceiling that the stock calibration sets too conservative.',
+        signatures: [
+          [0x00,0x04,0x00,0x0a,0x01,0x90,0x01,0xf4,0x02,0x58,0x02,0xbc],
+        ],
+        sigOffset: 0,
+        rows: 10, cols: 4, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.20 },
+        stage2: { multiplier: 1.35 },
+        stage3: { multiplier: 1.50, clampMax: 65000 },
+        critical: false, showPreview: false,
+      },
+
+      // EDC16 10×16 BE N75 duty family — 9 files, +5.7% avg.
+      // Y=600-1050 = N75 duty cycle range. Complement to existing edc16_n75 (ASCII-based).
+      {
+        id: 'edc16_n75_kf',
+        name: 'N75 Wastegate Duty (Kf_ BE variant)',
+        category: 'boost',
+        desc: 'N75 wastegate duty cycle map — 9 real EDC16 tunes verified, avg +5.7%. BE variant with inline Kf_ header (no ASCII symbol). Complement to ASCII-based edc16_n75 lookup.',
+        signatures: [
+          [0x00,0x10,0x00,0x0a,0x00,0x00,0x02,0xbc,0x03,0xe8,0x04,0xe2],
+        ],
+        sigOffset: 0,
+        rows: 10, cols: 16, dtype: 'uint16', le: false,
+        factor: 0.1, offsetVal: 0, unit: '%',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.04 },
+        stage2: { multiplier: 1.10 },
+        stage3: { multiplier: 1.18, clampMax: 1000 },
+        critical: false, showPreview: false,
+      },
+
+      // EDC16 8×16 BE — 9 files, +4% avg. Small RPM axis (X=100-4500), wide Y=0-8000.
+      // Likely an EGR or emission correction map (Y 0-8000 at raw scale suggests mg/st).
+      {
+        id: 'edc16_8x16_be',
+        name: 'EDC16 Emission Correction 8×16',
+        category: 'emission',
+        desc: 'BE 8×16 map with RPM X axis — 9 EDC16 Stage 1 tunes verified, avg +4% change. Minor emission/correction table.',
+        signatures: [
+          [0x00,0x10,0x00,0x08,0x00,0x64,0x00,0xc8,0x01,0x2c,0x01,0x90],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 16, dtype: 'uint16', le: false,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.03 },
+        stage2: { multiplier: 1.08 },
+        stage3: { multiplier: 1.15, clampMax: 10000 },
+        critical: false, showPreview: false,
+      },
+
+      // EDC16 10×10 BE rail pressure variant — 6 files, +12% avg.
+      // X=1250-4500 RPM, typical diesel rail-pressure axis.
+      {
+        id: 'edc16_rail_10x10_be',
+        name: 'Rail Pressure (10×10 BE variant)',
+        category: 'fuel',
+        desc: 'Alternate rail pressure target 10×10 BE — 6 EDC16 Stage 1 tunes verified, avg +12% change. Found in variants where the main ASCII-tagged rail map is absent.',
+        signatures: [
+          [0x00,0x0a,0x00,0x0a,0x04,0xe2,0x05,0xdc,0x06,0xd6,0x07,0xd0],
+        ],
+        sigOffset: 0,
+        rows: 10, cols: 10, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'bar',
+        skipCalSearch: true,
+        minQuality: 0,
+        stage1: { multiplier: 1.03 },
+        stage2: { multiplier: 1.08 },
+        stage3: { multiplier: 1.15, clampMax: 1900 },
+        critical: false, showPreview: false,
+      },
     ],
   },
 
@@ -1905,6 +1989,110 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage3: { multiplier: 1.40, clampMax: 10000 },
         critical: false, showPreview: true,
       },
+      // ── VERIFIED FROM D: DRIVE STUDY (14,931 tune pairs analyzed) ──
+      // These map defs come from byte-diffing real ORI vs Stage1 files and grouping
+      // identical Kf_ header signatures across hundreds of tune files. Each sig here
+      // is backed by 50+ real-world tune examples with consistent %-change patterns.
+      // See docs/ecu_study/ for the full study data.
+
+      // IQ Scaling Map 8×14 — 176 C46 files (16%), 138 generic EDC17 files (5%),
+      // avg +15-16% change. Y-axis 82-8192 = IQ breakpoints at factor 0.01 (0.82-81.9 mg/st).
+      // Likely a torque-to-IQ conversion variant or injection-duration scaling map.
+      {
+        id: 'edc17_iq_scale_8x14',
+        name: 'IQ Scaling Map (8×14)',
+        category: 'fuel',
+        desc: 'Fuel injection scaling map found in 176+ real EDC17 C46 Stage 1 tunes (study avg +16% modification). Variant-shared across many sub-families. Raised in proportion with the main fuel chain.',
+        signatures: [
+          // IQ axis starting at 0x20 (32) - EDC17 C46 primary variant (176 files)
+          [0x0e,0x00,0x08,0x00,0x00,0x00,0x20,0x03,0xb0,0x04,0x40,0x06],
+          // Variant with different X axis start (50 C46 files)
+          [0x10,0x00,0x08,0x00,0x00,0x00,0x20,0x03,0xb0,0x04,0x78,0x05],
+          // Variant with start 800/0x320 (11+ files)
+          [0x10,0x00,0x08,0x00,0x20,0x03,0x78,0x05,0xdc,0x05,0x40,0x06],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 14, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.08 },
+        stage2: { multiplier: 1.16 },
+        stage3: { multiplier: 1.25, clampMax: 10000 },
+        critical: false, showPreview: true,
+      },
+
+      // N75 / Boost Target family — verified across 619 generic EDC17 + 132 C46 files
+      // Y-axis 500-975 = N75 duty cycle range (50-97.5% at factor 0.1).
+      // Currently separate from edc17_n75 because the sig axis differs (Kf_ inline vs ASCII).
+      {
+        id: 'edc17_n75_kf',
+        name: 'N75 Wastegate Duty (Kf_ variant)',
+        category: 'boost',
+        desc: 'N75 wastegate duty cycle map — verified against 619+ real EDC17 Stage 1 tunes (study avg +7.5%). Controls boost build rate. Must be re-tuned when boost target is raised to prevent spikes.',
+        signatures: [
+          // Most common N75 variant: 619 generic EDC17 files, 68 C46 files
+          [0x10,0x00,0x0a,0x00,0x40,0x06,0x60,0x09,0xb8,0x0b,0xac,0x0d],
+          // X axis starting at 0: 116 C46 files, 94 generic
+          [0x10,0x00,0x0a,0x00,0x00,0x00,0xa4,0x06,0xd0,0x07,0xc4,0x09],
+          // 8×16 variant with similar N75 pattern: 29 generic files
+          [0x10,0x00,0x08,0x00,0x78,0x05,0xd0,0x07,0xc4,0x09,0xb8,0x0b],
+          // 7×15 variant — lambda/boost-related family: 222 generic, 27 C46
+          [0x0f,0x00,0x07,0x00,0x78,0x05,0xd0,0x07,0xc4,0x09,0xb8,0x0b],
+          // 9×15 variant: 128 generic
+          [0x0f,0x00,0x09,0x00,0x78,0x05,0xd0,0x07,0xc4,0x09,0xb8,0x0b],
+        ],
+        sigOffset: 0,
+        rows: 10, cols: 16, dtype: 'uint16', le: true,
+        factor: 0.1, offsetVal: 0, unit: '%',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.05 },
+        stage2: { multiplier: 1.12 },
+        stage3: { multiplier: 1.20, clampMax: 1000 },
+        critical: false, showPreview: false,
+      },
+
+      // 10×4 BE EDC17 "ceiling" map — 168 generic EDC17 files, avg +50% change.
+      // Small map, big change percentage suggests a hard-limit / protection ceiling.
+      // X-axis values 500, 700, 701, 702 (very compressed) — likely a pressure or speed
+      // threshold table. Tuners roughly double the stock values.
+      {
+        id: 'edc17_ceiling_10x4',
+        name: 'EDC17 Ceiling 10×4',
+        category: 'limiter',
+        desc: 'Small 10×4 ceiling map verified in 168 real EDC17 Stage 1 tunes with avg +50% change. Exact purpose unclear (likely a pressure or speed threshold) but consistently raised alongside fuel and boost. Conservative +10% on Stage 1 — user can raise via Zone Editor if the binary category confirms.',
+        signatures: [
+          [0x04,0x00,0x0a,0x00,0xf4,0x01,0xbc,0x02,0xbd,0x02,0xbe,0x02],
+        ],
+        sigOffset: 0,
+        rows: 10, cols: 4, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.10 },
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.40, clampMax: 65000 },
+        critical: false, showPreview: false,
+      },
+
+      // 8×14 small correction map (atmospheric/temp) — 20 C46 files with X-axis 0-138
+      // (very small range, likely atmospheric pressure compensation in hPa).
+      // Avg +14% change. Skipped for preview — emission-adjacent.
+      {
+        id: 'edc17_atmos_corr',
+        name: 'Atmospheric/Temp Correction',
+        category: 'emission',
+        desc: 'Small atmospheric or temperature correction map — 20 C46 files verified, avg +14% change. Compensates fuel/boost for altitude/ambient conditions.',
+        signatures: [
+          [0x0e,0x00,0x08,0x00,0x00,0x00,0x0a,0x00,0x0f,0x00,0x14,0x00],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 14, dtype: 'uint16', le: true,
+        factor: 0.01, offsetVal: 0, unit: '%',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.08 },
+        stage2: { multiplier: 1.16 },
+        stage3: { multiplier: 1.25, clampMax: 10000 },
+        critical: false, showPreview: false,
+      },
       {
         id: 'edc17_turbo_protect_c46',
         name: 'Turbo Protection Limit (C46)',
@@ -2175,6 +2363,33 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { multiplier: 1.10, clampMax: 4480 },  // 4480 × 0.023438 = 105% ceiling
         stage2: { multiplier: 1.18, clampMax: 4907 },  // 115% ceiling
         stage3: { multiplier: 1.28, clampMax: 5120 },  // 120% ceiling
+        critical: false, showPreview: true,
+      },
+      // ── VERIFIED FROM D: DRIVE STUDY (789 ME7 tune pairs) ──
+      // ME7 boost-ceiling Kf_ variant 8×8 — 26 files (6%), avg +177% change.
+      // Tuners DOUBLE the values. Likely KFLDRL (per-gear load ceiling) or similar
+      // high-impact boost-related ceiling that isn't tagged by the LDRXN/LDRXNZK ASCII symbols.
+      {
+        id: 'me7_boost_ceiling_8x8',
+        name: 'ME7 Boost Ceiling 8×8 (Kf_)',
+        category: 'boost',
+        desc: 'ME7 boost ceiling map — verified in 26 real ME7 Stage 1 tunes with avg +177% change (tuners roughly double the stock values). 8×8 Kf_ inline variant complementing the ASCII-tagged LDRXN/LDRXNZK. Y-axis 3200-26120 suggests pressure or relative-charge range.',
+        signatures: [
+          // Primary: 26 files — X axis starts 0, 164, 328, 574
+          [0x08,0x00,0x08,0x00,0x00,0x00,0xa4,0x00,0x48,0x01,0x3e,0x02],
+          // Variant: 17 files — X axis starts 0, 160, 320, 576
+          [0x08,0x00,0x08,0x00,0x00,0x00,0xa0,0x00,0x40,0x01,0x40,0x02],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 8, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        // Stage 1 conservative (+20%) despite study showing +177% average — the study's high
+        // average reflects aggressive Stage 2/3 tunes, not baseline Stage 1. User can push
+        // higher via Zone Editor or the per-map slider.
+        stage1: { multiplier: 1.20 },
+        stage2: { multiplier: 1.60 },
+        stage3: { multiplier: 2.20, clampMax: 65000 },
         critical: false, showPreview: true,
       },
       {
