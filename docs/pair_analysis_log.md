@@ -70,6 +70,135 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #945–960 — Passat 3C EDC16 PD + CC 03L906022CL + W8 ME7 + 1.6 FSI MED17
+
+**EDC17 C46 03L906022CL** — NEW CL suffix observed:
+- Pair #949 Passat CC 2.0 TDI CR 2008 `03L906022CL` sw397843 (524KB) —
+  39 regions, dominant pattern `0x063Cxx` / `0x063Dxx` IQ tweaks
+  (+29% to +53% varied cells); twin `8×10` tables at `0x033AC2` / `0x033BF6`.
+- Pair #950 SAME sw397843 but labeled as `03L907309` (ECU unit code
+  variant labeling) — 38 regions with IDENTICAL patterns at same
+  offsets — confirms #949 = #950 code path, just different naming.
+- Not enough SWs yet for CL wire — observation only.
+
+**MED17 Passat B6 2.0 TFSI 3C0907115F cluster** (#947, #948):
+- 2 SWs on same SGO `3C0907115F`:
+  - sw391668 (2005): `0x1CDA66 120B` IQ ceiling (BE 10604 → 32896 +210%)
+  - sw377866 (2007): `0x1CD85A 120B` IQ ceiling (Δ=0x20C anchor shift)
+- 64B companion: `0x1CE0E0` (#947) / `0x1CDED4` (#948) — Δ=0x20C same
+- Note: This sub-family uses +210% (reach ~32896) vs other clusters'
+  +518% to 65535 ceiling. Softer tune, lower IQ ceiling target.
+- Different anchor per SW → signature wire needed (not fixedOffset).
+  Logged for future signature extraction.
+
+**EDC16 PD 03G906021AB cluster growing** — now 4 SWs:
+- Pair #941 1.9 TDI 77kW sw381562 (524KB, 120 regions, 2830B)
+- Pair #943 2.0 TDI 103kW sw382426 (524KB, 72 regions, 2238B)
+- Pair #944 2.0 TDI 103kW sw393514 (524KB, 189 regions, 4214B)
+- Pair #946 2.0 TDI 103kW sw389290 (0281012119, 524KB, 67 regions)
+- Shared region `0x06B5xx` / `0x06B2xx` IQ/torque area across all
+- Too many unique anchors per SW to fixedOffset wire — EDC16 PD style
+  varies per-SW more than EDC17 C46.
+
+**Passat 2.0 FSI MED17** (non-turbo, NA) — #945 `06F906056AN` sw376502:
+- 2MB · 52 regions · 1585B
+- `0x1CA0CB/F7/17B` power cluster +6-38%
+- NA MED17 family - different architecture from turbo FSI.
+- No cluster yet, logged.
+
+**EDC15 V6 TDI 0281010447 sub-family grew** — sw360452 (#953, #954):
+- `0281010447 3B1907401B` sw360452 (2001 110kW)
+- 524KB · 135 regions · ~5200B (2 stage1 variants, same ORI)
+- Dominant pattern: `0x04CF3E` + `0x056F36` + `0x0570B2` + mirrors at
+  +0x20000 — (0x06CF3E / 0x076F36 / 0x0770B2)
+- All show BE 4135 → 41000 **+891%** (same mirror set → same cell,
+  EDC15 stores identical cal at 5 locations +0x8000/+0x10000/+0x18000/
+  +0x20000/+0x38000). Sister of sw366617 #925/927/928.
+
+**Passat V6 TDI 1999 0281001938 3B0907401** (#952 — same HW as #931/#932):
+- sw356795-796 confirmed 3rd pair at this HW. EDC15 256KB variant.
+- Same mirror triplet at +0x8000/+0x30000 (`0x0046AA / 0x00C6AA /
+  0x03C6AA`) — BE 7205 → 30503 +323%.
+
+**Passat PD 038906019DS** (#951) 2002 95.6kW:
+- EDC15 PD older part (038 prefix, not 03G) — historical variant
+- `0x056E90` / `0x076E90` (+0x20000 mirror) cut to 0 — emission disable
+- `0x07FDA0`/`0x07FF5A` checksum-region edits — also typical EDC15.
+
+**Passat 1.6 FSI MED17 03C906056T/AA** (#959, #960):
+- sw374338 T (2006), sw381957 AA (2007) — 2 SGO variants, MED17
+- Dominant edits in `0x1D5x` cluster +10-16%, `0x1C9x` / `0x1C6x` IQ
+- Different anchors per SW — no fixedOffset wire.
+
+**Passat W8 07D906018B/C/E** — 3 SGOs across #956/#957/#958:
+- ME7 W8 4.0L naturally aspirated 202kW supercar-tier
+- #957 has `0x015FAA 118B` BE 27182 → 110 (emission-disable region)
+- #958 has SAME 118B pattern at `0x015C1E` (Δ=0x38C anchor shift)
+- Distinctive family signature but too few pairs (1 each of 3 SGOs).
+
+---
+
+## VW Pairs #929–944 — Passat 2.5 TDI V6 EDC15 expanded + MED17 3.6 FSI VR6 + EDC16 PD cluster
+
+**EDC15 V6 TDI cluster gets sw360452 sub-family** (pairs #953/#954 —
+continued into next batch; see #945-960 section).
+
+**EDC15 V6 TDI 0281001938 3B0907401 sw356795** cluster (#931, #932):
+- 256KB EDC15 older V6 TDI — sw356795-796 dual-calibration file
+- Shows stride 0x8000 / 0x30000 mirror pattern (3B mirrors):
+  `0x0046AA / 0x00C6AA / 0x03C6AA` all BE 7205 → 30503 +323%
+  `0x0053A4 / 0x00D3A4 / 0x03D3A4` all BE 16289 → 43323 +166%
+- Pair #932 same ORI, different Stage1 — 122 regions.
+
+**Passat V6 TDI 132kW** (#929, #933):
+- #929 `0281011386 8E0907401N` sw367176 — 1MB, 8B changed, **0 regions**
+  (tune essentially null — marker file or option flag only)
+- #933 `0281011387 8E0907401J` sw367775 — 1MB, 22484B (2.144%),
+  **452 regions** — heavy EDC15 cal across many mirrors
+  Dominant `0x01211E` / `0x02211C` / `0x04211C` / `0x07211C` /
+  `0x0CE11E` / `0x0EE11E` — EDC15 8E-hardware 6-position mirror:
+  +0x10000 / +0x20000 / +0x50000 / +0xBD000 / +0xDD000 pattern.
+  BE 4135 → 26665 +544% on IQ cells.
+
+**Passat 2.5 TDI 899988** (#930) — no hardware ID in filename,
+sw899988. 524KB. 21 regions. Likely a third-party flashed file.
+Won't catalog.
+
+**Passat 2.8 / 2.8 30V / 2.8i / 2.9 VR6** (#934-#936, #955):
+- #934 `0261207469 3B0907551CH` sw360666 — ME7 V6 30V 150kW
+  `0x016260/63E0 12×9` -15.5% torque limit ~= same map 2× mirror
+- #935 `0261203973 021906259B` sw355566 — ME7 VR6 128kW (131KB dump)
+- #936 `0261206387 3B0907551Q` sw354074 — ME7 V6 142kW
+- #955 `0261203967 021906256C` sw355937 — ME7 VR6 2.9i 136kW
+  `0x00B2xx`-`0x00B9xx` family — 256B loose edits +7-8%
+
+**Passat 3.6 FSI MED17 VR6 cluster** (#937-#940) — 4 pairs:
+- #937 `0261S02169 03H906032C` sw376323 (2005, 2MB) — 14 regions, 538B
+- #938 `0261S02616 03H906032AB` sw396324 (2007, 2MB) — 12 regions, 468B
+- #939 `0261S02454 03H906032AB` sw399164 (2008, **2605056B = 2.48MB**) —
+  NEW dump format! 13 regions, 592B
+- #940 `0261S02625 03H906032AB` sw394385 (2008, 2MB) — 13 regions, 592B
+- Shared torque cluster `12×16` near `0x1C8B/1C8C` + secondary `12×16`
+  near `0x1CA2/1CA4` + IQ `12×12` near `0x1C9A/1C9D`
+- Anchor drifts Δ=4B between same-year same-part sw394385/sw399164 —
+  too tight to group but not exact — need signature wire.
+- Logged for future signature extraction.
+
+**EDC16 PD 03G906021AB cluster START** — first 3 pairs (#941, #943, #944):
+- #941 1.9 TDI 77kW sw381562 · #943 2.0 TDI 103kW sw382426 · #944 2.0 TDI
+  103kW sw393514
+- Common region `0x06B5xx`, `0x06B2xx`, `0x056xxx`, `0x05Axxx`
+- Per-SW offset drift too much for fixedOffset — logged.
+
+**Passat 3c 03G906018EM with tool ID** (#942):
+- `03G906018EM 6576286552` (no SN serial — uses Bosch tool ID field)
+- 256KB · 58 regions · 5915B (2.256% — heavy tune)
+- `0x01ED0F 128×4` BE 27256 → 30248 +11% (large map edit)
+- `0x0145FF 16×3` +10.3% (smaller torque table)
+- EM is already in PPD1.2 def via existing identStrings (03G906018EM).
+
+---
+
 ## VW Pairs #913–928 — PPD1.2 +EJ/CE/SN100L1 + Passat MED17 TFSI (2 NEW defs) + V6 TDI EDC15
 
 **PPD1.2 def expansion** — +2 part suffixes +1 serial sub-family:
