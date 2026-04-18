@@ -64,6 +64,36 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #518–532 — A4 3.0 TDI DPF + 3.2 FSI Siemens + 4.2 V8
+
+- Pairs #518-520 · A4 3.0 V6 TDI CR 2013 more 03L906018JL SW 522910 /
+  522924 ×2. Classic CP44 Stage 1 depth.
+- Pair #521 · A4 3.0 V6 TDI CR DPF 8E0907401AL sw382432 — pre-CP44.
+- Pair #522 · A4 3.0 V6 TDI CR DPF 8K1907401A sw516682 — **1,448,495 B
+  changed (69%)** full recal.
+- Pair #523 · A4 3.0 V6 TDI CR DPF 8K1907401A sw502378 5.6KB.
+- Pair #524 · "SuperMappack" Audi A4 3.0 — 1.6MB weird size, **only
+  6 bytes changed** — mappack checksum-only tweak, not a real tune.
+- Pair #525 · A4 3.0 V6 FSI **petrol** (not TDI) Bosch 0261207473 —
+  A4 3.0 V6 FSI 218ps petrol 1MB ME7.x. 1,373 B.
+- Pair #526 · A4 3.0 V6 TDI early 0281013616 4F0907401C — EDC15P+/
+  EDC16 V6 TDI non-CR generation.
+- Pair #527 · A4 3.0i 240ps petrol 0261207839 1MB ME7.x 2.7KB.
+- Pairs #528-529 · **A4 3.2 FSI V6 SIEMENS** 2MB. 5WP4514 prefix,
+  8E0907559A/J part numbers, S6200L3R00000 / S6200P3000000 serials.
+  This is the **Siemens/Continental SIMOS 7-series** for 3.2 FSI.
+  Tiny ~500 B tunes (FSI V6 rarely tuned meaningfully).
+  NEW ECU family — `5WP4514` + Siemens 3.2 FSI not in ecuDefs.
+- Pair #530 · A4 4.2 V8 FSI Bosch 0261S02205 2MB MED17 308kW (420hp —
+  **RS4 V8**). 1.7KB light tune.
+- Pairs #531-532 · A4 4.2 V8 petrol 2006 Bosch 0261207994/208684 1MB
+  ME7.x 253kW (344hp). Audi A4 S4 V8. 1.5-1.8KB tunes.
+
+**Code gap**: Siemens 3.2 FSI (5WP4514 / S6200* serials) is another
+family not yet in ecuDefinitions.ts. Low tuning volume so low priority.
+
+**Code: no change**.
+
 ## Pairs #503–517 — A4 3.0 V6 TDI CR EDC17 CP44 catalog
 
 15 more pairs — mostly A4 3.0 V6 TDI CR 2008-2012 EDC17 CP44

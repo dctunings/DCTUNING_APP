@@ -2298,10 +2298,16 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           {diffResult && diffResult.sizesMatch && !diffResult.sameBytes && (
             <div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
-                <strong style={{ color: 'var(--text-primary)' }}>{diffResult.regions.length}</strong> modified regions ·
+                <strong style={{ color: 'var(--text-primary)' }}>{diffResult.regions.length}</strong> map-sized regions modified
+                {diffResult.noise.length > 0 && (
+                  <span style={{ marginLeft: 8, color: 'rgba(255,255,255,0.35)' }}>
+                    (+ {diffResult.noise.length} tiny changes ignored as noise)
+                  </span>
+                )}
+                <span style={{ marginLeft: 8 }}>·</span>
                 {' '}<strong style={{ color: 'var(--text-primary)' }}>{diffResult.changedBytes.toLocaleString()}</strong>
                 {' / '}
-                {diffResult.totalBytes.toLocaleString()} bytes changed
+                {diffResult.totalBytes.toLocaleString()} bytes total
                 {' '}({((diffResult.changedBytes / diffResult.totalBytes) * 100).toFixed(3)}%)
               </div>
               <DiffRegionList
@@ -3502,43 +3508,97 @@ function DiffRegionRow(props: {
       border: `1px solid ${saved ? 'rgba(34,197,94,0.25)' : 'rgba(255,255,255,0.05)'}`,
       fontSize: 11, color: 'var(--text-secondary)',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => setOpen(!open)}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', flexWrap: 'wrap' }} onClick={() => setOpen(!open)}>
         <span style={{ fontFamily: 'monospace', fontWeight: 700, minWidth: 78, color: 'var(--text-primary)' }}>
           0x{region.offset.toString(16).toUpperCase().padStart(6, '0')}
         </span>
-        <span style={{ minWidth: 56 }}>{region.length} B</span>
-        <span style={{ minWidth: 90 }}>
-          {region.changedBytes}/{region.length} diff
-        </span>
-        <span style={{ minWidth: 70, fontWeight: 700, color: region.pctChange > 20 ? '#f59e0b' : region.pctChange > 5 ? '#b8f02a' : 'var(--text-muted)' }}>
-          {region.pctChange.toFixed(1)}%
-        </span>
-        {covering ? (
-          <span style={{ fontSize: 10, color: 'var(--accent)' }}>
-            ↳ covers {covering.candidate.rows}×{covering.candidate.cols} candidate
-            {covering.bestMatch && <span style={{ marginLeft: 4, color: 'var(--text-secondary)' }}>
-              ({covering.bestMatch.mapDefName}, {Math.round(covering.bestMatch.score)}%)
-            </span>}
+        {/* Shape — either inferred (stride cluster) or raw size */}
+        {region.inferredRows && region.inferredCols ? (
+          <span style={{ minWidth: 70, color: 'var(--accent)', fontWeight: 700 }}>
+            {region.inferredCols}×{region.inferredRows}
           </span>
         ) : (
-          <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>(no candidate at this offset)</span>
+          <span style={{ minWidth: 70, color: 'var(--text-muted)' }}>{region.length} bytes</span>
         )}
-        {saved && <span style={{ marginLeft: 'auto', fontSize: 10, color: '#22c55e', fontWeight: 700 }}>✓ saved</span>}
-        {!saved && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--text-muted)' }}>{open ? '▼' : '▶'}</span>}
+        {/* Real values (u16 interpretation when possible) */}
+        {region.valueKind !== 'u8' && region.valueBeforeMean !== undefined ? (
+          <span style={{ minWidth: 200, color: 'var(--text-secondary)' }}>
+            <span style={{ color: 'var(--text-muted)' }}>ORI</span> {Math.round(region.valueBeforeMean)}
+            <span style={{ color: 'var(--text-muted)' }}> → Stage1</span> {Math.round(region.valueAfterMean!)}
+            <span style={{ color: 'var(--text-muted)', fontSize: 10 }}> ({region.valueKind})</span>
+          </span>
+        ) : (
+          <span style={{ minWidth: 200, color: 'var(--text-muted)', fontSize: 10 }}>
+            raw {region.beforeMin}–{region.beforeMax} → {region.afterMin}–{region.afterMax}
+          </span>
+        )}
+        {/* % change */}
+        <span style={{ minWidth: 60, fontWeight: 700, textAlign: 'right',
+          color: region.pctChange > 30 ? '#f59e0b' : region.pctChange > 8 ? '#b8f02a' : 'var(--text-muted)' }}>
+          {region.pctChange > 0 ? '+' : ''}{region.pctChange.toFixed(1)}%
+        </span>
+        {/* Scanner context (when a candidate sits on this same address) */}
+        {covering ? (
+          <span style={{ fontSize: 10, color: 'var(--accent)', flex: 1 }}>
+            ↳ matches {covering.candidate.rows}×{covering.candidate.cols} scanner candidate
+            {covering.bestMatch && <span style={{ marginLeft: 4, color: 'var(--text-secondary)' }}>
+              (guess: {covering.bestMatch.mapDefName}, {Math.round(covering.bestMatch.score)}%)
+            </span>}
+          </span>
+        ) : region.inferredRows ? (
+          <span style={{ fontSize: 10, color: 'var(--text-muted)', flex: 1, fontStyle: 'italic' }}>
+            shape inferred from {region.inferredRows} modified rows, stride {region.stride} bytes
+          </span>
+        ) : (
+          <span style={{ fontSize: 10, color: 'var(--text-muted)', flex: 1, fontStyle: 'italic' }}>
+            loose block (not map-shaped)
+          </span>
+        )}
+        {saved && <span style={{ fontSize: 10, color: '#22c55e', fontWeight: 700 }}>✓ saved</span>}
+        {!saved && <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{open ? '▼' : '▶'}</span>}
       </div>
 
       {open && !saved && (
         <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 10.5, color: 'var(--text-muted)', marginBottom: 10 }}>
-            <div>
-              <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 2 }}>ORI</div>
-              <div>range {region.beforeMin}–{region.beforeMax}, mean {region.beforeMean.toFixed(1)}</div>
+          {/* Interpreted values (u16) — the meaningful numbers if we have them */}
+          {region.valueKind !== 'u8' && region.valueBeforeMean !== undefined ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 11, color: 'var(--text-muted)', marginBottom: 10 }}>
+              <div>
+                <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 2 }}>
+                  ORI values ({region.valueKind})
+                </div>
+                <div>range <span style={{ color: 'var(--text-primary)' }}>{region.valueBeforeMin} – {region.valueBeforeMax}</span></div>
+                <div>average <span style={{ color: 'var(--text-primary)' }}>{region.valueBeforeMean.toFixed(1)}</span></div>
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 2 }}>
+                  Stage1 values ({region.valueKind})
+                </div>
+                <div>range <span style={{ color: 'var(--text-primary)' }}>{region.valueAfterMin} – {region.valueAfterMax}</span></div>
+                <div>average <span style={{ color: 'var(--text-primary)' }}>{region.valueAfterMean!.toFixed(1)}</span></div>
+              </div>
             </div>
-            <div>
-              <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 2 }}>Stage1</div>
-              <div>range {region.afterMin}–{region.afterMax}, mean {region.afterMean.toFixed(1)}</div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 10.5, color: 'var(--text-muted)', marginBottom: 10 }}>
+              <div>
+                <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 2 }}>ORI (raw bytes)</div>
+                <div>range {region.beforeMin}–{region.beforeMax}, mean {region.beforeMean.toFixed(1)}</div>
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 2 }}>Stage1 (raw bytes)</div>
+                <div>range {region.afterMin}–{region.afterMax}, mean {region.afterMean.toFixed(1)}</div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Shape hint */}
+          {region.inferredRows && (
+            <div style={{ marginBottom: 10, padding: '6px 10px', background: 'rgba(0,174,200,0.05)', border: '1px solid rgba(0,174,200,0.2)', borderRadius: 6, fontSize: 10.5, color: 'var(--text-secondary)' }}>
+              Looks like a <strong>{region.inferredCols}×{region.inferredRows} uint16 table</strong> —
+              inferred from {region.inferredRows} modified rows at {region.stride}-byte stride.
+              Real tuner changes usually sit on map boundaries like this.
+            </div>
+          )}
           {covering && (
             <div style={{ marginBottom: 10, fontSize: 10.5, color: 'var(--text-muted)' }}>
               <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 2 }}>Scanner sees</div>
