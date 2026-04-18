@@ -268,8 +268,19 @@ export function scanBinaryForMaps(
     }
   }
 
-  candidates.sort((a, b) => b.confidence - a.confidence || a.offset - b.offset)
-  return candidates
+  // ── De-duplicate by data-block offset ──
+  // Pass 1 (Kf_ LE) and Pass 2 (Kf_ BE) can both latch onto the same data
+  // block if the dimension bytes happen to parse in both byte orders. Collapse
+  // to one candidate per unique offset — keep whichever has higher confidence.
+  // Also collapses Pass 1+2 vs fallback passes that happen to hit the same block.
+  const byOffset = new Map<number, ScannedCandidate>()
+  for (const c of candidates) {
+    const existing = byOffset.get(c.offset)
+    if (!existing || c.confidence > existing.confidence) byOffset.set(c.offset, c)
+  }
+  const deduped = Array.from(byOffset.values())
+  deduped.sort((a, b) => b.confidence - a.confidence || a.offset - b.offset)
+  return deduped
 }
 
 // ─── Kf_ region scanner ───────────────────────────────────────────────────────

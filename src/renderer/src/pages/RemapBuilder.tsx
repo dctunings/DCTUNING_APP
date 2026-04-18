@@ -2477,7 +2477,12 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                     Unknown Maps ({scanResult.unmatched.length})
                   </div>
                   <div style={{ display: 'grid', gap: 4 }}>
-                    {scanResult.unmatched.slice(0, 15).map((cc, idx) => (
+                    {scanResult.unmatched.slice(0, 15).map((cc, idx) => {
+                      // Surface the scanner's top hypothesis even though it was below
+                      // the assignment threshold — gives the user something to confirm
+                      // or reject instead of a blank "UNKNOWN".
+                      const topGuess = cc.hypotheses[0]
+                      return (
                       <div key={idx} style={{
                         padding: '6px 12px', borderRadius: 6,
                         background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.04)',
@@ -2488,6 +2493,12 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                         </span>
                         <span style={{ minWidth: 40 }}>{cc.candidate.rows}×{cc.candidate.cols}</span>
                         <span>Range: {cc.candidate.valueRange.min}–{cc.candidate.valueRange.max}</span>
+                        {topGuess ? (
+                          <span style={{ marginLeft: 8, color: 'var(--text-secondary)' }}>
+                            maybe {topGuess.mapDefName}
+                            <span style={{ color: 'var(--text-muted)', marginLeft: 4 }}>({topGuess.score}%)</span>
+                          </span>
+                        ) : null}
                         {cc.candidate.axisX && (
                           <span style={{ marginLeft: 'auto' }}>
                             RPM: {cc.candidate.axisX.min}–{cc.candidate.axisX.max}
@@ -2500,7 +2511,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                           UNKNOWN
                         </span>
                       </div>
-                    ))}
+                      )
+                    })}
                     {scanResult.unmatched.length > 15 && (
                       <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', textAlign: 'center', padding: 4 }}>
                         +{scanResult.unmatched.length - 15} more
