@@ -2287,6 +2287,54 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 CP44 Audi A8 D4 4.2 V8 TDI 4H0907409 (sw 511925/514636/522804) ─
+  //
+  // Audi A8 D4 4.2 V8 TDI 350ps EDC17 CP44. Bosch hardware code, VAG part
+  // number 4H0907409 (and 4H0907409B/D suffixes). Verified across 3 distinct
+  // SW versions in pair_analysis_log.md pairs #980-986:
+  //
+  //   sw511925, sw514636 (×3 confirmations), sw522804 — all share IDENTICAL
+  //   modification structure:
+  //
+  //   0x1DBE9C  16 B = 8 cells u16 BE — primary IQ ceiling (+218.7%, raw
+  //                                     8648 → 27561). Hero Stage 1 map.
+  //   0x1A5DFA + 7 sister regions in 0x1A5DEx-0x1A6302 range — emission
+  //   disable cluster (8 sub-regions all cleared to 0x32 / -99.9% raw).
+  //
+  // Offsets vary by ±0x80 between SW versions but cluster STRUCTURE is
+  // identical. Anchor offsets below are from sw514636 (most pairs in batch).
+  // sw511925 shifts by -4, sw522804 shifts by +0x4A8.
+  {
+    id: 'edc17_cp44_a8_42tdi_4h0907409',
+    name: 'Bosch EDC17 CP44 (4H0907409 — Audi A8 D4 4.2 V8 TDI 350ps 2010-2012)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['4H0907409', '511925', '514636', '522804', '522813'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['Audi A8 D4 4.2 V8 TDI 350ps (4H0907409 sw 511925/514636/522804/522813, 2010-2012)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_cp44_4h0907409_iq_ceiling',
+        name: 'IQ Ceiling (4H0907409)',
+        category: 'fuel',
+        desc: 'Primary IQ ceiling at 0x1DBE9C (8 uint16 BE cells). Verified across 3 SW versions (sw 511925/514636/522804) all sharing exact treatment — μ 8648 → 27561 raw (+219%). Pin near tuner consensus to release IQ. NOTE: sw511925 anchor shifts -4 to 0x1DBE98, sw522804 shifts +0x4A8 to 0x1DC340 — same map, slight version-rev shift.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1DBE9C,
+        rows: 1, cols: 8, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 27000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 30000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 33000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 CP44 Audi A6 2.7 V6 TDI 4F0907401C (sw 380xxx-391xxx cluster) ─
   //
   // Audi A6 C6 2.7 V6 TDI 132 kW (180 hp). Bosch hardware codes 0281012xxx

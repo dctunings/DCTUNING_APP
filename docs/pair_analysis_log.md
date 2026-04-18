@@ -64,6 +64,43 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #983–998 — A8 D4 4.2 V8 TDI 4H0907409 cluster wired
+
+**Strong wire candidate confirmed and wired**: A8 D4 4.2 V8 TDI
+EDC17 CP44 part **4H0907409** with SW 511925/514636/522804/522813.
+
+Cluster details from full pair analysis:
+- All SWs share `0x1DBE9C` 16B (8 cells u16 BE) IQ ceiling
+  modification — raw 8648 → 27561 (+219%)
+- All SWs share an `0x1A5DEx-0x1A6302` emission-disable cluster
+  with 8 sub-regions all cleared to 0x32 (-99.9%)
+- Offsets shift by ±0x80 between SW versions but cluster STRUCTURE
+  is identical:
+  - sw511925 → 0x1DBE98 (anchor -4)
+  - sw514636 → 0x1DBE9C (anchor)
+  - sw522804 → 0x1DC340 (anchor +0x4A8)
+- Pair #985 (524 KB) and #986 (2 MB) both sw514636 share IDENTICAL
+  4104-byte / 198-region modification pattern — confirms 524KB-vs-2MB
+  same SGO data
+
+**Wired** as `edc17_cp44_a8_42tdi_4h0907409` with 1 hero map (IQ
+ceiling at 0x1DBE9C anchor, sw514636 default offset). Other maps
+in cluster are mostly emission disable — not Stage 1 critical.
+
+Other A8 4.2 V8 TDI variants (older/different):
+- 4E1907409 sw383056 (#977) and 4E1907409A sw382247 (#978) — IDENTICAL
+  3981B / 87 regions (524 KB chiptool). Across 4E1907409 and
+  4E1907409A part suffixes. Wire candidate (older A8 D3 4.2 V8 TDI).
+- 4E1907409A sw392905 (#975 + #980) — different pattern
+- 4E1907409 sw377564 (#979) — 1860B / 100 regions
+
+A8 4.2 V8 petrol (#974) sw393273 308.9 kW — S8 V8.
+
+A8 6.0 W12 (#987) sw377855 331 kW — exotic. 1.5 KB / 25 regions tune.
+
+A8 V6 TDI 0281010160 4D2907401 (#988-989) sw354334/354666 — older
+A8 D2/D3 524KB EDC15P V6 TDI variant.
+
 ## Pairs #967–982 — A8 V8 TDI 3.3/4.0 + A8 4.2 V8 petrol catalog
 
 **A8 D2 3.3 V8 TDI (rare engine, EDC15)** — wire candidate:
