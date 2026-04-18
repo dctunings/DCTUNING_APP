@@ -64,6 +64,30 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #263–277 — A4 2.0 TDI PD/CR + EDC17 C46/C64 continued
+
+- Pair #263 · A4 2.0 TDI 2006 2MB EDC16 PD 03G906016LR sw386343, 3,576 B.
+- Pairs #264-265 · 512KB EDC16 PD 03G906016KN/KP (2007).
+- Pair #266 · A4 2.0 TDI 125kW Siemens (NO part#) SN100L4000000 2MB
+  PPD1.2 — 15,986 B / 62 regs. Part number missing from filename but
+  SN100L4000000 identifies as DH family.
+- Pairs #267-268 · A4 2.0 TDI 2007 PPD1.2 03G906018AQ — 250KB partial
+  and 2MB full. SN1R0M8 serial 15,508 B heavy tune.
+- Pair #269 · 2MB EDC16 PD 03G906016GN sw383292 — only 515 B tune.
+- Pair #270 · 512KB EDC16 PD 03G906021AB sw393514 2,682 B.
+- Pair #271 · A4 2.0 TDI 125kW PPD1.2 03G906018AQ SN100L4000000
+  16,159 B — consistent AQ heavy pattern.
+- Pairs #272-273 · A4 2.0 TDI CR 2008 512KB EDC17 C46 — 03L906022B
+  sw396484, 03L906022KC/B sw396477. 3-5K bytes.
+- Pair #274 · A4 2.0 TDI CR 2009 512KB EDC17 C46 03L906022DL sw518751.
+- Pairs #275-276 · A4 2.0 TDI CR 2010 2MB EDC17 C64 03L906019AL —
+  SW 504773 / 505903. ~6KB tunes / 180-200 regs. Same C64 family as
+  pairs 84 & 235 in earlier logs.
+- Pair #277 · A4 2.0 TDI CR 2010 2MB EDC17 C46 03L906022B sw396472.
+
+**Code: no change** — these all fall under our existing `edc15`,
+`edc16`, `edc17` (+ variant), and `vag_ppd1` (already wired).
+
 ## Pairs #248–262 — more A4 2.0 TDI PD + 3 new PPD1.2 SN serials
 
 15 more pairs:
