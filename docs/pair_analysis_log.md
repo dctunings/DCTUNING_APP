@@ -64,6 +64,20 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #338–352 — A4 2.0 TDI CR 2010 EDC17 C46/C64 more SWs
+
+15 more pairs. New SW bases this batch: 500116, 515572, 515518, 518002,
+518004, 397899, 515287, 516684, and 1037517518 (long Bosch numeric ID).
+New part number 03L906018JR seen. 03L906018DN also appears (the Q5
+2010 2.0 TDI 03L906018DN sw515568 from earlier batch data).
+
+**Outlier**: Pair #346 (03L906019AL sw518002) — 1,538,233 B changed
+(73.3%) — another full recal by the same tuner who did pair #305/308.
+
+**Code: no change**. The C64 03L906019AL catalog now has 15+ SW
+versions documented — solid target for future per-variant code
+wiring if/when we prioritise 2010-2011 A4/A5/Q5 2.0 TDI CR owners.
+
 ## Pairs #323–337 — A4 2.0 TDI CR 2009-2010 EDC17 C46/C64 continued
 
 15 more A4 2.0 TDI CR pairs. SW bases in this chunk:
