@@ -64,6 +64,30 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #158–172 — A4 1.8 20V NA + A4 1.8T ME7.5 1MB petrol catalogue
+
+More Audi A4 early petrol pairs:
+
+- Pairs #158–166 · 9 more 128KB and 512KB Audi A4 1.8 20V NA petrol
+  variants on Bosch ME7.0-7.5 (various 0261203xxx-0261206xxx + Bosch
+  524288 B ME7.5). Tiny to moderate tunes (300-2000 B).
+- Pair #167 · A4 1.8 20V 524288 B (512KB) 0261204873 sw 350722 —
+  third variant of this SW (pairs #159 and #167 both), same tune.
+- Pair #168 · 1.8 20V 131072 B 0261204183 sw 357479 917 B / 12 regs.
+- Pair #169 · Audi A4 1.8 T 1MB Bosch (no SW in filename) — only
+  56 bytes / 4 regions. Near-no-op tune.
+- Pairs #170–173 · A4 1.8 T 1MB ME7.5 variants — 0261207779
+  (sw 363467), 0261207934 (366381), 0261208228 (369311), 0261208230
+  (369307) — all with 8E0909018 VW part family. 833-1741 B / 47-65
+  regs. Classic 150/180ps 1.8T ME7.5 Stage 1 profiles.
+- Pair #174 · A4 1.8 T 132.4kW (180ps) 0261206790 / 8L0906018Q
+  sw 360287 1MB — **547,636 B changed (52%)** — FULL RE-CAL / not
+  a Stage 1 diff. Tuner swapped the whole cal block.
+
+**Code: deferred**. The ME7.5 1MB 1.8T 150/180ps variants (pairs
+170-173) are our existing `me7` def territory — signature-based
+detection should already catch these. No per-variant work needed.
+
 ## Pairs #143–157 — Audi A4 1.8 TFSI 256KB + ME7.1 128KB 1.6/1.8 NA petrol
 
 - Pairs #143–145 · A4 1.8 TFSI 256KB cal dumps — 0261201961 / 8K1907115D
