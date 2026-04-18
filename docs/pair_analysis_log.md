@@ -70,6 +70,61 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #161–400 — Bulk Golf catalog (1.6/1.9/2.0 TDI + 1.4/1.8/2.0 TFSI)
+
+**Bulk catalog covering 240 Golf pairs**:
+
+**Golf 1.6 TDI Siemens PCR21 cluster** (#161-165, #400+) — many more
+SM-serial variants (SM2E0DB/SM2F0L9500000/SM2G0LG/SM2G0M with
+03L906023A/AN/HM/MK/MM/MN/DR part suffixes). All ~19-26 KB changed
+EU5 SIMOS PCR21 family. Same family as Caddy 1.6 TDI cluster.
+
+**Golf 1.6 TDI 04L906021M / 04L906021FD** (#165-167) — NEW EU6 04L
+generation 2013-14, sw531313/533833/538358 — 10-13 KB EDC17 tunes.
+
+**Golf 1.6i Siemens 5WP4017 06A906019AK** (#168) — older Siemens VR4
+
+**Golf 1.8 T ME7.x** (#169-170) — sister of A3/TT/A4 1.8T family
+already documented.
+
+**Golf 1.8 TFSI MED17 1K0907115AA sw502936** (#171) — newer 1.8 TFSI
+EA888
+
+**Golf 1.9 SDI** (#172-175) — 50ps SDI variants Bosch 0281010644
+038906012ES sw360767 + 0281011316 — small EDC15 PD
+
+**Golf 1.9 TDI** (#176-208 range) — extensive 03G906021xx + 03G906016xx
+catalog continues (sister of Caddy 1.9 TDI work)
+
+**Golf 2.0 TDI CR** (#193+) — confirms `03L906018BB sw510943`
+(125 kW, multiple files including 0281016046 Bosch hardware) joins
+my wired Caddy 03L906018xx cluster (offset shifted by Δ=0x44).
+
+**Golf 2.0 TDI CR 03L906022 cluster** (#209-225+):
+- 03L906022LK / 03L906022G sw398791 — 524 KB chiptool
+- 03L906022G sw501921 — 2 MB
+
+**Golf 2.0 TDI CR 03L906018JL sw522924** (#241) — sister of A4/A6
+03L906018JL 522xxx cluster — confirmed cross-chassis EDC17 C46
+sharing.
+
+**Golf 2.0 TFSI MED17 1K0907115/A/B + 8P0907115B** (#288-385):
+- sw372620 1K0907115 — Golf GTI Mk5 first-gen FSI
+- sw375753 1K0907115A — Golf 5 GTI 2.0 TFSI 200 hp
+- sw386464 8P0907115B — Golf GTI MED17 (cross-chassis to A3/TT)
+- sw510589 1K8907115F — newer Golf 6 R 270 hp
+- All same 8P0907115 family from earlier Audi work
+
+**Golf 4 1.4i 16V** (#321) — Bosch ME7.5 0261207189 036906032L —
+older atmospheric petrol
+
+**Golf 5 1.9 TDI** (#337-353) — 03G906021PM / 03G906016FS — Caddy
+sister.
+
+**No new wires this batch** — most of the Golf clusters duplicate
+Audi/Caddy wired defs (cross-VAG-chassis). Existing wired defs cover
+Golf via SW-number identStrings.
+
 ## VW Pairs #129–160 — Eos + Golf 1.4 TSI MED17 + Golf 1.6 TDI Siemens PCR21
 
 **VW Eos 2.0 TDI CR + 2.0 TFSI catalog** (#129-134):
