@@ -70,6 +70,37 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #49–96 — Caddy 1.9 TDI PD + Caddy 2.0 TDI CR cluster wired
+
+**Caddy 1.9 TDI PD continued** (#49-78) — many 03G906021xx/03G906016xx
+part suffixes catalogued (AB/AN/AQ/AR/CG/CS/DM/DR/FF/HB/HS/MB/PD/PF
+× many SWs). All 524KB-2MB EDC15/EDC16 PD with small 1-3 KB tunes.
+Same family as Audi/Skoda 1.9 TDI PD work — no new wires.
+
+**STRONG WIRE: Caddy 2.0 TDI CR EDC17 C46 03L906018xx cluster**
+(#79-96) — 11 SW versions across 10 part-number suffixes
+(BT/CA/DC/LH/LK/NF/NG/NH/NJ/NL plus 03L906022JB) ALL share IDENTICAL
+offsets:
+- `0x06ADCA` 2 KB (1024 cells u16 LE) — main protection ceiling +170%
+- `0x06B80E` 512 B (256 cells u16 LE) — companion ceiling A +139%
+- `0x06B5EC` 512 B (256 cells u16 LE) — companion ceiling B +137%
+
+**Wired** as `edc17_c46_caddy_20tdi_03l906018xx` covering:
+SWs 513616/513617/515278/515282/518057/518077/521057/524632/524633/
+525549/536609
+
+This is the **same protection-ceiling structure** as the wired
+398757/03L906022FG/Q5 022B/Q5 018DN defs but anchored at 0x06ADCA
+for the Caddy variant. Confirms the **Bosch EDC17 C46 family-wide
+protection-ceiling pattern** is universal — just at different anchors
+per ECU SGO base.
+
+**10th wired ECU def in the project.**
+
+Pair #94 sw536609 stage1+++ (1.7 MB changed) preserves same SGO
+targets under noise. Pair #84 (sw513617) shows tuner variation
+(3905B vs other files' 8400-10700B same SW).
+
 ## VW Pairs #33–48 — Bora 1.9 TDI PD + Caddy 1.6 TDI CR Siemens PCR21
 
 **VW Bora 1.9 TDI PD variants** (#32-39):

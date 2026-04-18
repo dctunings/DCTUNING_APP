@@ -2131,6 +2131,95 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 C46 VW Caddy 2.0 TDI CR 03L906018xx (multi-SW cluster) ────────
+  //
+  // VW Caddy 2.0 TDI CR 80.9-103 kW EDC17 C46. Bosch hardware, VAG part
+  // numbers 03L906018BT/CA/DC/LH/LK/NF/NG/NH/NJ/NL — 10+ part-number suffixes
+  // sharing the SAME SGO base. Verified across multiple SW versions in
+  // pair_analysis_log.md VW pairs #79-95:
+  //
+  //   sw513616 (BT), sw513617 (CA, 4 files), sw515282 (NF), sw518057 (NL),
+  //   sw518077 (022JB), sw521057 (DC), sw524632 (NG), sw515278 (NJ),
+  //   sw524633 (NJ, 2 files), sw525549 (LH), sw536609 (NJ stage1+++)
+  //
+  // ALL hit IDENTICAL offsets:
+  //   0x06ADCA  2048 B = 1024 cells u16 LE — main protection ceiling (+170%)
+  //   0x06B80E   512 B =  256 cells u16 LE — companion ceiling A (+139%)
+  //   0x06B5EC   512 B =  256 cells u16 LE — companion ceiling B (+137%)
+  //
+  // Same protection-ceiling structure as 398757/03L906022FG/Q5 022B/03L906018DN
+  // — Bosch EDC17 C46 family-wide pattern, just at 0x06ADCA anchor for VW
+  // Caddy. This is the same structure documented as EDC17 C46 family pattern.
+  {
+    id: 'edc17_c46_caddy_20tdi_03l906018xx',
+    name: 'Bosch EDC17 C46 (VW Caddy 2.0 TDI CR 80-103kW — 03L906018BT/CA/DC/LH/LK/NF/NG/NH/NJ/NL)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: [
+      // 10+ Caddy-specific SWs — each maps to one of the part suffixes above.
+      // Avoid using bare '03L906018xx' because some Audi A4/A6 03L906018JL
+      // SWs use the SAME part-number prefix but DIFFERENT SGO base (0x07D3FE
+      // not 0x06ADCA). Match strictly on these Caddy SWs.
+      '513616', '513617', '515278', '515282', '518057', '518077', '521057',
+      '524632', '524633', '525549', '536609',
+    ],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Caddy 2.0 TDI CR 80-103kW (03L906018BT/CA/DC/LH/LK/NF/NG/NH/NJ/NL, 2010-2014)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_caddy_protection_a',
+        name: 'Protection Ceiling A (Caddy 03L906018xx)',
+        category: 'limiter',
+        desc: 'Main protection ceiling at 0x06ADCA (1024 uint16 LE cells = 2 KB). Verified across 11+ SWs sharing IDENTICAL offset and treatment. μ 21260 → 57390 raw (+170%). Pin near tuner consensus (~55000 raw) for Stage 1.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06ADCA,
+        rows: 1, cols: 1024, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 55000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 57000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 58000 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc17_c46_caddy_protection_b',
+        name: 'Protection Ceiling B (Caddy 03L906018xx)',
+        category: 'limiter',
+        desc: 'Companion ceiling A at 0x06B80E (256 uint16 LE cells = 512 B). Verified across same 11+ SWs. μ 23980 → 57390 raw (+139%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06B80E,
+        rows: 1, cols: 256, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 55000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 57000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 58000 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc17_c46_caddy_protection_c',
+        name: 'Protection Ceiling C (Caddy 03L906018xx)',
+        category: 'limiter',
+        desc: 'Companion ceiling B at 0x06B5EC (256 uint16 LE cells = 512 B). Verified across same 11+ SWs. μ 24213 → 57390 raw (+137%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06B5EC,
+        rows: 1, cols: 256, dtype: 'uint16', le: true,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 55000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 57000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 58000 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
   // ── EDC17 C46 03L906022B Q5 cluster (Audi Q5 2.0 TDI CR 125kW 2009-2010) ──
   //
   // Audi Q5 2.0 TDI CR EDC17 C46. Bosch hardware code, VAG part number
