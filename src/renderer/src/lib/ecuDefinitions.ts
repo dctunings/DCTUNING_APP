@@ -1469,6 +1469,13 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         // Toned down from 1.08 → 1.00 on Stage 1. Pro tune comparison showed pro does NOT
         // raise rail pressure on Stage 1 — stock 200-1050 bar is sufficient for +30% fuel.
         // Raising rail pressure too early accelerates injector wear. Stage 2/3 raise it.
+        //
+        // VERIFIED 2026-04-18 on 03L906022BQ sw 396412 (Audi A3 CR 140 BKD) — real Stage 1
+        // tune raised rail pressure from raw μ 8200-8400 → 10300-10400, i.e. 820 bar → 1040 bar
+        // (+27%). This means Stage 1 rail increase up to ~1.2x IS tuner-standard on C46,
+        // despite the comment above saying "pro does NOT raise rail on Stage 1" — that
+        // advice was from a different pro tune. Leaving Stage 1 mul at 1.00 as a
+        // conservative default, but Stage 2 mul of 1.06 is on the low side vs real tunes.
         stage1: { multiplier: 1.00 },
         stage2: { multiplier: 1.06 },
         stage3: { multiplier: 1.12, clampMax: 22000 },
