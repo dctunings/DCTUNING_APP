@@ -70,6 +70,38 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #545–560 — Golf 4 1.9 TDI 2002 catalog (massive variant set)
+
+16 more Golf 4 1.9 TDI 2002 pairs — many distinct hardware codes /
+part suffixes. EDC15V/EDC15P PD diesel mix.
+
+**EDC15V 256KB pre-PD** continuing:
+- 0281001613 038906018J (#545)
+- 0281001650 028906021GG (#548) — sister of #455 same hardware
+- 0281001855 038906018EB (#549) 90hp
+- 0281001846 038906018BM (#559) — sister of #531/#537
+- 0281001586 028906021FQ (#557, #558 — 2 sister files same hardware)
+
+**EDC15P 524KB PD**:
+- 0281010126 038906012AP sw352577 (#546) — sister of #522 same SW
+- 0281010744 038906019FE sw362684 (#547, **110.3 kW = 150hp PD150**)
+  — 2659B / 77 regions, sister of #577 (Golf 4 1.9 TDI PD 150hp)
+- 0281010111 038906012K sw352565 (#550) — sister of #543/#544 same
+  hardware, smaller normal tune
+- 0281010650 038906012FA sw360773 (#551) — sister of #325/#524
+- 0281010974 038906019AT sw366203 (#552) — sister of #180
+- 0281011191 038906019KP sw366912 (#553) — 74.3 kW
+- **0281011195 038906019KH sw366292** (#554) — `Siemens` label in
+  filename — ODD, 0281011195 is normally Bosch hardware code. Maybe
+  filename mislabel.
+- **5WS500 038906019DF sw360447** (#555) — actual SIEMENS PPD1 5WS5
+  hardware. NEW Siemens 1.9 TDI ECU family.
+- 0281011141 038906019JP sw366049 (#556) — only 15 bytes / 1
+  region = no real tune
+- 0281010651 038906012FB sw360774 (#560) — 80.9 kW PD
+
+**No new wires** — same Golf 4 1.9 TDI variant catalog continuation.
+
 ## VW Pairs #529–544 — Golf 4 1.9 TDI EDC15V early/PD continued
 
 16 more Golf 4 1.9 TDI EDC15V (256 KB pre-PD) and EDC15P PD (524KB)
