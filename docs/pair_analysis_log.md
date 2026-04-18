@@ -69,6 +69,71 @@ was code-changed, and what was left as a placeholder for future pairs.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #81–616 — E34/E36/E38/E39 + E46 330D EDC16 PD + 330i Siemens MS43
+
+**Bulk catalog (pairs #81-616)** — covering E34 525TDS / E36 various
+generations / E38 740i / E39 530D / E46 320D-330D + 330i petrol.
+Most pairs are small Bosch ME7.x petrol or Bosch EDC0/15 early diesel
+with 32-256 KB ROMs and tiny 100-2000 B tunes (5-30 regions).
+
+**Standout EDC16 PD cluster: E46 330D 150 kW (M57N) 1015 KB / 1 MB
+ROM** — wire candidate:
+- 0281011121 sw361876 (#600 + #602) — 2 files same SW, 1015 KB and
+  1 MB — `Δ size = 32768 = exactly 32 KB`. Format variation: one
+  file is "raw cal" (1015808 B = 992 KB), the other is "padded"
+  (1048576 B = 1 MB). Same actual cal data.
+- 0281011121 sw361891 (#603) — sister SW, 2694B / 130 regions
+- 0281011223 sw361842 (#604) — sister hardware, 2558B / 122 regions
+- 0281010565 sw361860 (#601) — different hardware code, 2220B
+  pattern
+
+**4 SWs across 0281010565/0281011121/0281011223 share similar
+~2.5 KB tune pattern in the 0x... range** — moderate wire candidate
+(would need offset extraction to wire properly).
+
+**E46 330i 169.9 kW Siemens MS43.x petrol** (#605-616+):
+- Siemens 5WK90007/5WK90008 + Bosch hardware variants (7511570,
+  7519308, 38603309, 11870070, 111430533703)
+- All sw430037 — **same SW across 7+ files with different ROM sizes**
+  (65 KB / 131 KB / 524 KB)
+- ROM size variation reflects different chiptool dump formats from
+  the same Siemens MS43 ECU
+- sw430055 (#616) and sw430066 (#613/614) — sister SWs
+- NEW Siemens MS43 family for BMW M54 6-cyl 231hp not in our defs
+
+**Other content covered in this range** (no new wires):
+- E36 318i 0261201159 sw377861 — **2.6 MB ROM** (#141) Bosch ME7.2
+- E36 320i / 325i / 325TDS / 328i M50/M52 ME7.x
+- E36 M3 0281010565 (1998 236kW) — uses same EDC15 PD as E46 320D!
+  Cross-model E36 M3 → E46 diesel hardware reuse.
+- E38 740i 0261204467 sw350406 (#280) — sister of E39 540i V8 file
+  (V8 ECU shared across 7-series and 5-series)
+- E39 3.0d 0281010314 sw351421 (#301) — 49 KB EDC15 (early M57)
+- E39 530D 0_090799_14 (#400) — 524 KB EDC16
+- E60-E61 2.5d 0281012190 sw374712 / sw390905 (#700) — 1015 KB EDC16
+- E60-E61 530D O_726S82 sw381343 (#800) — 2 MB DDE
+- E81-E87 118D 0281012880 sw376968 (#900) — 2 MB EDC16
+- E81-E87 EDC17 116D O_73MPIB605A sw396564 (#1001) — 270 KB EDC17
+  partial dump
+- E90-E91 320d 0281015043 / O_71MJIC341A sw394079 (#1101) — 270 KB
+  EDC17 partial dump
+- E90-E91-E92-E93 2.d X_71S4KC126A sw504298 (#1201) — 2 MB EDC17
+- x3 2.0d O_70MEHC206A sw391389 (#1301) — 2 MB EDC17
+
+**Wire decision**: most BMW pairs in this range fall into 4
+categories — all too varied across hardware codes and SW versions
+to wire individual ECU defs:
+1. Pre-OBD 32 KB Motronic 1.x (skip — legacy)
+2. Early diesel EDC0/EDC1.x 32 KB (skip — legacy)
+3. EDC16 PD 1 MB (potential wire if shared cluster found)
+4. DDE6/7/8 EDC17 2 MB (potential wire — Bosch tool block ID
+   identification needed)
+
+The BMW DDE / EDC17 family with `O_xxxxxxxxxx` Bosch tool block ID
+in the filename would benefit from a different identification scheme
+than VAG's part-number matching. **TODO**: extend ecuDef matching
+to support BMW DDE block ID strings as identStrings.
+
 ## BMW Pairs #33–80 — E30/E34 6-cyl petrol + early Diesel catalog
 
 **Tons of E30/E34 32 KB Motronic ROMs** (1986-1995). These are pre-OBD
