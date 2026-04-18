@@ -64,6 +64,52 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #759–774 — A6 2.5 V6 TDI EDC15P/P+ catalog + NEW +0x10000 mirror
+
+This batch is **dominated by A6 2.5 V6 TDI EDC15P / EDC15P+ pairs**
+(0281010xxx 524KB and 0281011xxx 1MB Allroad/A6/A4 generations).
+
+**NEW EDC15 MIRROR PATTERN: +0x10000 (64 KB)** — confirmed across
+6 V6 TDI 2.5L pairs:
+- Pair #751 0281010098 sw350321 (524 KB) — `0x04CF22 + 0x05CF22`
+  (Δ = 0x10000) — same 20B -74% mod
+- Pair #754 0281011387 sw367927 (1 MB) — `0x00ADA8 + 0x01ADA8`
+  (Δ = 0x10000) — same 13B +192% mod
+- Pair #760 0281010393 sw360718 (524 KB) — `0x057302 + 0x067302`
+  (Δ = 0x10000) — same 15B +106% mod
+- Pair #761 0281011388 sw367776 (1 MB) — `0x00ADA8 + 0x01ADA8`
+  (+0x10000 mirror)
+- Pair #762 0281011388 sw369442 (1 MB) — SAME OFFSETS — 2 SWs
+  same SGO
+
+**Master EDC15 mirror table (5 distinct offsets identified)**:
+
+| Mirror Δ | Hardware codes | ROM size |
+|---|---|---|
+| **+0x8000** (32 KB) | 0281001781, 0281001931 | 256 KB EDC15V V6 |
+| **+0x10000** (64 KB) | 0281010098, 0281010393, 0281011387, 0281011388 | 524 KB / 1 MB V6 |
+| **+0x18000** (96 KB) | 0281010xxx generic I4 (e.g. 0281010203/204) | 524 KB EDC15P |
+| **+0x20000** (128 KB) | 0281010492 (1MB), 0281011213 (524KB) | A2/A3/A4 EDC15P+ |
+| **+0x38000** (224 KB) | 0281001609/1808/1836 (256KB), 0281010148 (524KB) | I4 1.9 TDI EDC15V/P |
+
+Mirror selection requires **per-hardware-code lookup table** in the
+writeMap path — file size alone is insufficient (e.g. 524 KB ROMs
+have at least 4 different mirror offsets depending on hardware code).
+
+Other findings:
+- Pair #753 0281010395 sw354333 (524KB) and pair #752 0281010394
+  sw354332 — IDENTICAL offsets `0x04CF2E + 0x056DB2`. 2 SWs across
+  hw codes 0281010394/395 share SGO. **Wire candidate.**
+- Pair #757 0281001321 4A0907401P sw355498 — 65 KB ROM A6 2.5 TDI
+  103 kW (oddly small)
+- Pair #758 0281010095 4B1907401A sw354255 — 524 KB EDC15P, no
+  visible mirror (cal in upper region, mirror would be off-end)
+- Pairs #755-756 / #762-764 — A6 2.5 TDI 0281001271/0281001254/
+  0281001256 — **65 KB ROMs** with cal at `0x007xxx`. These are
+  the very-early "EDC1.4" generation Bosch ECUs from 1996-1998
+  (predates EDC15V proper). 12×4/12×5 maps in the only changed
+  region — primary IQ/boost.
+
 ## Pairs #743–758 — A6 2.5 V6 TDI EDC15V + NEW +0x8000 mirror pattern
 
 This batch is **mostly A6 2.5 V6 TDI EDC15V** (Allroad / A6 wagon

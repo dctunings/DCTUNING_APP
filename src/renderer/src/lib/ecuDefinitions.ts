@@ -680,21 +680,37 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     //   - '0281010' etc — Bosch hardware part number prefixes (may or may not be in ROM)
     // Also matches 'EDC15' for tuner-annotated files and filenames.
     //
-    // ⚠ EDC15 ROM/RAM MIRROR — CONFIRMED across Audi A2/A6 1.9 TDI pairs.
-    //   Three distinct mirror offset patterns identified by file-size + part-no:
+    // ⚠ EDC15 ROM/RAM MIRROR — CONFIRMED across many A2/A4/A6 TDI pairs.
+    //   FIVE distinct mirror offsets identified — selection depends on
+    //   hardware code (Bosch part number), NOT a simple file-size rule.
     //
-    //   • EDC15V pre-PD 0281001xxx (256 KB ROM) → mirror at +0x38000
-    //     Pairs #664 (0281001609 110hp) and #668 (0281001808 90hp 1998):
-    //     regions at 0x005850 AND 0x03D850 (Δ = 0x38000) get the SAME mod.
-    //     SUB-PATTERN: 0281001781 / 0281001931 (V6 TDI 2.5L) use +0x8000
-    //     mirror INSTEAD of +0x38000. Pairs #744/#745/#748 confirm.
+    //   • +0x8000 (32 KB) — 0281001781 / 0281001931 (EDC15V V6 TDI 2.5L
+    //     Allroad/A6, 256 KB ROM). Pairs #744/#745/#748.
     //
-    //   • EDC15P PD basic 0281010xxx (524 KB ROM) → mirror at +0x18000
-    //     Pairs #666 (0281010204) and #669 (0281010203 sw352258):
-    //     regions at 0x05B07x AND 0x07307x (Δ = 0x18000) get the SAME mod.
+    //   • +0x10000 (64 KB) — 0281010098, 0281010393, 0281011387, 0281011388
+    //     (V6 TDI 2.5L 524 KB and 1 MB ROMs). Pairs #751/#754/#760/#761/#762.
+    //     Note this crosses BOTH EDC15P (524 KB) and EDC15P+ (1 MB) sizes
+    //     for the V6 TDI hardware family.
     //
-    //   • EDC15P+ PD advanced (524 KB ROM, A2/A3/A4 1.4-1.9 TDI 0281011xxx)
-    //     → mirror at +0x20000. Pairs #28/29/30 from earlier batch.
+    //   • +0x18000 (96 KB) — 0281010xxx generic I4 1.9 TDI PD (524 KB ROM).
+    //     Pairs #666/#669.
+    //
+    //   • +0x20000 (128 KB) — 0281010492 (1 MB ROM) and 0281011213 (524 KB
+    //     ROM, A2/A3/A4 1.4-1.9 TDI EDC15P+). Pairs #28/29/30/#671/#750.
+    //
+    //   • +0x38000 (224 KB) — 0281001609 / 0281001808 / 0281001836 (I4 1.9
+    //     TDI EDC15V pre-PD 256 KB ROM) AND 0281010148 (524 KB EDC15P).
+    //     Pairs #664/#668/#743/#749.
+    //
+    //   Every Stage-1 cell modified at offset X is ALSO modified at offset
+    //   X + mirror by real tuners. The ECU boots with inconsistent cal and
+    //   derates if only one copy is written. Our writeMap() currently writes
+    //   only to mapDef's fixedOffset — we MUST add a mirror-write when the
+    //   ECU family is EDC15.
+    //
+    //   Selection rule (HARDWARE CODE based — file size alone is insufficient):
+    //     This requires a per-PN lookup table in the writeMap path.
+    //     Cannot be derived purely from fileSize.
     //
     //   Every Stage-1 cell modified at offset X is ALSO modified at offset
     //   X + mirror by real tuners. The ECU boots with inconsistent cal and
