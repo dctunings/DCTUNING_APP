@@ -2226,6 +2226,50 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── MED17 VW Golf R 2.0 TFSI 1K8907115F — 0x1CEE80 IQ release ────────────
+  //
+  // VW Golf R Mk6 2.0 TFSI 198-202 kW (270 hp) — high-power EA113 EVO/EA888
+  // Gen2. Bosch 0261S02782, VAG part 1K8907115F. 2 SW versions confirmed
+  // across 4 paired files in pair_analysis_log.md VW pairs #311 sw505204,
+  // #312/#313/#314 sw510589 (3 files of same SW).
+  //
+  // Common modifications:
+  //   0x1CEE80  120 B = 60 cells u16 BE — IQ release (raw 10750 → 65535,
+  //                                       +509%) — same map structure as
+  //                                       1K0907115J/K cluster but at
+  //                                       different anchor for R hardware
+  //   0x1CEF37   10 B (or 0x1C3386 8B in alt files) — companion small region
+  {
+    id: 'med17_golf_r_20tfsi_1k8907115f',
+    name: 'Bosch MED17 (VW Golf R Mk6 2.0 TFSI 270hp — 1K8907115F sw505204/510589)',
+    manufacturer: 'Bosch',
+    family: 'MED17',
+    identStrings: ['1K8907115F', '505204', '510589'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Golf R Mk6 2.0 TFSI 198-202kW (1K8907115F sw 505204/510589, 2009-2012)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'med17_golf_r_iq_release',
+        name: 'IQ Release (Golf R 1K8907115F 0x1CEE80)',
+        category: 'fuel',
+        desc: 'IQ release at 0x1CEE80 (60 uint16 BE cells = 120 B). Verified across 2 SWs (sw505204 + sw510589) and 4 confirmation pairs. μ 10750 → 65535 raw (+509%). Sister of 1K0907115J/K MED17 def at different anchor for the R-spec hardware.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1CEE80,
+        rows: 1, cols: 60, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 63000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 65000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── MED17 VW Golf 2.0 TFSI 1K0907115/8P0907115 — 0x1CE0C8 IQ release ─────
   //
   // VW Golf 2.0 TFSI 147 kW (200 hp) MED17. Bosch hardware multiple
@@ -2251,9 +2295,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch MED17 (VW Golf 2.0 TFSI 200hp — 1K0907115J/K + 8P0907115B 0x1CE0C8)',
     manufacturer: 'Bosch',
     family: 'MED17',
-    identStrings: ['381190', '381231', '386821', '387479'],
+    identStrings: ['381190', '381231', '386464', '386821', '387479'],
     fileSizeRange: [2097152, 2097152],
-    vehicles: ['VW Golf 2.0 TFSI 147kW (1K0907115J/K + 8P0907115B sw 381190/381231/386821/387479, 2005-2007)'],
+    vehicles: ['VW Golf 2.0 TFSI 147kW (1K0907115J/K + 8P0907115B sw 381190/381231/386464/386821/387479, 2005-2007)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFFC,
     checksumLength: 4,

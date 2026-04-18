@@ -70,6 +70,35 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #305–320 — Wire Golf R MED17 cluster + 0x1CE0C8 +1 SW
+
+**Wire actions taken**:
+- 0x1CE0C8 def +sw386464 (8P0907115B 6th confirmation file in cluster)
+- **NEW WIRE**: `med17_golf_r_20tfsi_1k8907115f` — Golf R Mk6 cluster
+  - sw505204 (#311) → `0x1CEE80 120B + 0x1CEF37 10B` (raw 10750→65535 +509%)
+  - sw510589 (#312, #313, #314 — 3 files of same SW) → IDENTICAL
+    `0x1CEE80 120B` + alt sister regions
+  - 2 SWs / 4 confirmation files share IDENTICAL `0x1CEE80` IQ release
+  - **15th wired ECU def**
+
+**Other Golf 2.0 TFSI MED17 sub-clusters identified** (not wired):
+- 1K0907115Q sw391082 (#308, #309 — 2 files) → `0x1CFB9D + 0x1CE6A8`
+- 8P0907115B sw386876 (#306) → `0x1CE6A8 + 0x1CF32B` (single pair)
+- 1K0907115AA sw501817 (#307) and 1K0907115AD sw396277 (#310) →
+  `0x05AC14 64B + 6B` cluster (newer AA/AD hardware, low-region)
+- 1K0907115AA sw539143 (#314, 1.54 MB) → `0x05A10E 66B + 0x052484
+  120B` (newer EU6 partial dump format)
+
+**Golf 2.0L TDI 0281011477 03G906016AN sw368925** (#316, #317 — 2
+files different stage1) — different mod sets per tuner. Pair #318
+sw9U8581 alt SW format = only 148 bytes / 1 region = no real tune.
+
+**Pair #319** Golf 2.8 V6 (no part listed, 524KB) — only 60 bytes /
+5 regions = light tune.
+
+**Pair #320** Golf 3.2 R32 0261207884 022906032CN sw366355 — VR6 R32
+ME7.x. `0x02946E 8B +13004% (raw 252→33022)` is dramatic IQ release.
+
 ## VW Pairs #289–304 — Golf 2.0 TFSI MED17 universal IQ release pattern
 
 **MAJOR Golf 2.0 TFSI MED17 cluster** — consistent IQ release pattern
