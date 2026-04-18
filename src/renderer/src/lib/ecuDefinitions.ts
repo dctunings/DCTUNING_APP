@@ -2592,9 +2592,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17 C46 (VW Scirocco/Golf 2.0 TDI CR 103-125kW — 03L906022G 0x1F007A)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['505989', '504872', '03L906022R', '507614', '505976', '505980', '505920', '03L906022RP', '03L906022QD'],
+    identStrings: ['505989', '504872', '03L906022R', '507614', '505976', '505980', '505920', '03L906022RP', '03L906022QD', '505913', '505914'],
     fileSizeRange: [2097152, 2097152],
-    vehicles: ['VW Scirocco/Sharan 2.0 TDI CR 100-125kW (03L906022G/R/RP/QD sw 505920/505976/505980/505989/504872/507614, 2009-2011)'],
+    vehicles: ['VW Scirocco/Sharan/Tiguan 2.0 TDI CR 100-125kW (03L906022G/R/RP/QD sw 505913/505914/505920/505976/505980/505989/504872/507614, 2009-2011)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFFC,
     checksumLength: 4,
@@ -2698,10 +2698,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
   // 03L906022FG defs — just at a different per-SGO anchor (0x06AD86).
   {
     id: 'edc17_c46_golf_20tdi_03l906018xx_06ad86',
-    name: 'Bosch EDC17 C46 (VW Golf/Sharan/Tiguan 2.0 TDI CR 80-125kW — 03L906018AR/BB/BC/GC/DQ/BD/HQ 0x06AD86)',
+    name: 'Bosch EDC17 C46 (VW Golf/Sharan/Tiguan 2.0 TDI CR 80-125kW — 03L906018AR/BB/BC/GC/DQ/BD/HQ/FA/FB 0x06AD86)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['508903', '509927', '509929', '510943', '510944', '510958', '510959', '513641', '524624', '525556', '525558', '509915', '513640', '509900', '03L906018DQ', '03L906018BD', '03L906018HQ'],
+    identStrings: ['508903', '509927', '509929', '510943', '510944', '510958', '510959', '513641', '524624', '525556', '525558', '509915', '513640', '509900', '509913', '511990', '03L906018DQ', '03L906018BD', '03L906018HQ', '03L906018FA', '03L906018FB'],
     fileSizeRange: [2097152, 2097152],
     vehicles: ['VW Golf + Passat 2.0 TDI CR 100-125kW (03L906018/AR/AT/BB/BC/BE/BF/BG/GC sw 508903/509927/509929/510943/510944/510958/510959/513641/524624/525556/525558, 2010-2012)'],
     checksumAlgo: 'bosch-crc32',
@@ -2751,9 +2751,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17 C46 (VW Scirocco 2.0 TDI CR 100-103kW — 03L906018AM/AN/AQ 0x069EB2)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['03L906018AM', '03L906018AN', '03L906018AQ', '508234', '508235', '508256'],
+    identStrings: ['03L906018AM', '03L906018AN', '03L906018AQ', '03L906018CD', '508222', '508234', '508235', '508256'],
     fileSizeRange: [2097152, 2097152],
-    vehicles: ['VW Scirocco 2.0 TDI CR 100-103kW (03L906018AM/AN/AQ sw 508234/508235/508256, 2011-2012)'],
+    vehicles: ['VW Scirocco/Tiguan 2.0 TDI CR 100-103kW (03L906018AM/AN/AQ/CD sw 508222/508234/508235/508256, 2010-2012)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFFC,
     checksumLength: 4,
@@ -2965,6 +2965,68 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { multiplier: 1.0, addend: 0, clampMin: 35000 },
         stage2: { multiplier: 1.0, addend: 0, clampMin: 40000 },
         stage3: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 C46 VW Tiguan 2.0 TDI CR 03L906022G — 0x1F276A cluster (2MB) ────
+  //
+  // VW Tiguan 2.0 TDI CR 100-103kW EDC17 C46 anchor-shifted sub-cluster.
+  // 3 SWs share EXACT anchors + tight raw signature. Verified in
+  // pair_analysis_log.md VW pairs:
+  //   #1121 sw391548 (100kW) · #1122 sw394106 (103kW) · #1149 sw394105 (103kW)
+  // + #1141 sw391506 at slightly shifted 0x1F273E anchor (Δ=-0x2C sub-variant)
+  //
+  // Map structure (EXACT match):
+  //   0x1F276A  512B u16 BE — protection ceiling A (raw 18989 → 57390, +202%)
+  //   0x1F29F2  512B u16 BE — protection ceiling B (raw 22036 → 57390, +160%)
+  //   0x1F7120  12B  u16 BE — torque lift (raw 20550 → 47175, +130%)
+  //
+  // Different anchor family from 398757 (0x1EF502) and 0x1F007A clusters —
+  // this is a THIRD protection-ceiling SW-revision variant.
+  {
+    id: 'edc17_c46_tiguan_20tdi_03l906022g_1f276a',
+    name: 'Bosch EDC17 C46 (VW Tiguan 2.0 TDI CR 100-103kW — 03L906022G 0x1F276A)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['391548', '394106', '394105'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Tiguan 2.0 TDI CR 100-103kW (03L906022G sw 391548/394105/394106, 2008-2010)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_tiguan_1f276a_ceiling_a',
+        name: 'Protection Ceiling A 512B (Tiguan 03L906022G sw 391548/394105/394106)',
+        category: 'limiter',
+        desc: 'Protection ceiling A at 0x1F276A (256 cells u16 BE = 512 B). Verified across 3 SWs sharing EXACT anchor + raw signature: stock 18989 → tuner consensus 57390 (+202%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1F276A,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 57000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_c46_tiguan_1f29f2_ceiling_b',
+        name: 'Protection Ceiling B 512B (Tiguan 03L906022G)',
+        category: 'limiter',
+        desc: 'Protection ceiling B at 0x1F29F2 (256 cells u16 BE = 512 B). Raw 22036 → 57390 (+160%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1F29F2,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 57000 },
         critical: true, showPreview: true,
       },
     ],

@@ -70,6 +70,69 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1137–1152 — 1 NEW def (Tiguan 0x1F276A) + 4 existing defs extended
+
+**NEW DEF WIRED — 0x1F276A 512B cluster** (3 SWs confirmed):
+
+`edc17_c46_tiguan_20tdi_03l906022g_1f276a` — Tiguan 2.0 TDI CR 100-103kW.
+
+- #1121 sw391548 100kW · #1122 sw394106 103kW · #1149 sw394105 103kW
+- All hit EXACT anchors + raw signature:
+  - `0x1F276A 512B` BE 18989 → 57390 +202% (protection ceiling A)
+  - `0x1F29F2 512B` BE 22036 → 57390 +160% (protection ceiling B)
+  - `0x1F7120 12B` BE 20550 → 47175 +130% (torque lift)
+- Sub-variant: #1141 sw391506 at `0x1F273E` (Δ=-0x2C anchor shift)
+
+Third protection-ceiling SW-revision variant for VAG EDC17 C46
+(beyond 398757 0x1EF502 and 0x1F007A clusters).
+
+**Existing defs EXTENDED**:
+
+0x1F007A def +2 NEW SWs:
+- +sw505913 (pair #1128 — also at 0x06625E 524KB, both dump formats)
+- +sw505914 (pair #1138 — exact 0x1F007A + 0x1F0ABE match)
+Now 8 SWs across 5 part suffixes (G/R/RP/QD).
+
+0x06AD86 def +2 NEW SWs + 2 part suffixes:
+- +sw509913 `03L906018FA` (pair #1140 exact match)
+- +sw511990 `03L906018FB` (pair #1150 exact match, 125kW)
+Now 9 part suffixes (AR/BB/BC/GC/DQ/BD/HQ/FA/FB), 16 SWs.
+
+0x069EB2 Scirocco def +1 NEW SW + CD suffix:
+- +sw508222 `03L906018CD` Tiguan (pair #1148 exact match)
+Now 4 part suffixes (AM/AN/AQ/CD).
+
+**Multi-tune on same ORI confirmed again**:
+
+sw396096 — both #1136 (398757 pattern) AND #1137 (0x1E513A + 0x1F9DB6
+alt pattern) on SAME ORI. Different tuner styles on same structural
+binary. Confirms map-region independence.
+
+**Observations (no wire)**:
+
+- #1139 sw501440 `03L906022RP` 2MB — hits 12×15 IQ ceiling pattern
+  at 0x1DBBE8 (Δ=-0x44 from wired 0x1DBC2C) + 0x1DE56E. 2nd SW at this
+  Δ=-0x44 anchor (sw501911 was first #1126). Sister sub-cluster.
+- #1142 sw394105 `03L906022G` — only 3 regions (high-address 0x1FFExx
+  area) — minimal tune, different tuner target.
+- #1143 sw396418 `03L906022G` 2MB — `0x1E22C2 15B` +247% + `0x1CC622
+  13B` +128% — different anchor cluster. Single observation.
+- #1144 sw397846 `03L906022G` alt tune (was already added to 398757
+  via #1125) — this pair hits `0x1F8690 16×12` +105% — different
+  tuner on same ORI.
+- #1145 sw501440 524KB `03L906022RP` — `0x06621A 6B` +2788% (Δ=-0x44
+  from wired 0x06625E anchor) + `0x07B0A6 200B`. Anchor shift too
+  large for fixedOffset — logged.
+- #1146 sw522905 `03L906018ES` — `0x06CC76 2047B` BE 21275 → 47483
+  +123% matches the 0x06B4FE Sharan def RAW signature but at Δ=+0x1778
+  shifted anchor. NEW ES suffix.
+- #1147 sw527083 ES — sister of #1146 different tune at `0x07C2E6 16×12`.
+- #1151 sw510943 BB — already in 0x06AD86 def. Confirms existing.
+- #1152 sw510951 `03L906018BR` — NEW BR suffix, `0x07C8E6 16×12`
+  unique pattern. Single.
+
+---
+
 ## VW Pairs #1121–1136 — Tiguan 2.0 TDI CR EDC17 C46 MASSIVE expansion
 
 **398757 def EXTENDED — 3 NEW SWs** (all 103kW `03L906022G` 2MB):
