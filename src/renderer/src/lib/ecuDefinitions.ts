@@ -2089,7 +2089,7 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // The 03L906022FG variant (sw 399349/399350/500141/503995/etc.) hits
     // offsets shifted to 0x1EE306/0x1EED4A — handled by sister def
     // edc17_c46_03l906022fg below.
-    identStrings: ['398757', '03L906022BQ', '397892', '398784', '398791', '399326', '399393', '399395', '501921', '501922', '501956'],
+    identStrings: ['398757', '03L906022BQ', '397892', '398784', '398791', '399326', '399393', '399395', '501921', '501922', '501956', '505975'],
     fileSizeRange: [2097152, 2097152],   // exactly 2 MB
     vehicles: ['Audi A3 2.0 TDI CR 140ps (03L906022BQ sw 398757)', 'VW Golf 2.0 TDI CR 80-103kW (03L906022G sw 397xxx-399xxx, 2008-2010)'],
     checksumAlgo: 'bosch-crc32',
@@ -2677,6 +2677,69 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage2: { multiplier: 1.30 },
         stage3: { multiplier: 1.40, clampMax: 50000 },
         critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 C46 VW Jetta 2.0 TDI CR 03L906022KT — 0x071EC0 IQ tweaks (524KB) ─
+  //
+  // VW Jetta 2.0 TDI CR 103 kW EDC17 C46. 2 SW versions of part 03L906022KT
+  // share IDENTICAL 8-region IQ tweak cluster anchored at 0x071EC0. Verified
+  // in pair_analysis_log.md VW pairs #664 sw396003 and #666 sw397863 — both
+  // hit ALL the same offsets/values: 0x071EC0/0x071EE8/0x071DB0/0x071DC4/
+  // 0x07200E/0x07204A/0x071990/0x072196.
+  //
+  // Common modifications (524 KB form):
+  //   0x071EC0  6 cells u16 BE — primary IQ tweak (raw 11325→44138, +290%)
+  //   0x071EE8  6 cells u16 BE — sister                (13548→47044, +247%)
+  //   0x071DC4 / 0x071DB0  6 cells u16 BE — IQ stage tweaks
+  //   0x07204A / 0x07200E / 0x071990 / 0x072196  5 cells u16 BE — small tweaks
+  //
+  // sw397837 (03L906022KS — sister part suffix) shares some offsets but at
+  // different anchor — separate sub-cluster.
+  {
+    id: 'edc17_c46_jetta_20tdi_03l906022kt',
+    name: 'Bosch EDC17 C46 (VW Jetta 2.0 TDI CR 103kW — 03L906022KT sw396003/397863)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['396003', '397863', '03L906022KT'],
+    fileSizeRange: [524288, 524288],
+    vehicles: ['VW Jetta 2.0 TDI CR 103kW (03L906022KT sw 396003/397863, 2008-2009)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_jetta_kt_iq_tweak_a',
+        name: 'IQ Tweak A (Jetta 03L906022KT 0x071EC0)',
+        category: 'fuel',
+        desc: 'Primary IQ tweak at 0x071EC0 (6 uint16 BE cells = 12 B). Verified across 2 SWs (sw396003 + sw397863) sharing IDENTICAL offset and treatment. μ 11325 → 44138 raw (+290%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x071EC0,
+        rows: 1, cols: 6, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 47000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_c46_jetta_kt_iq_tweak_b',
+        name: 'IQ Tweak B (Jetta 03L906022KT 0x071EE8)',
+        category: 'fuel',
+        desc: 'Companion IQ tweak at 0x071EE8 (6 uint16 BE cells = 12 B). Verified across same 2 SWs. μ 13548 → 47044 raw (+247%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x071EE8,
+        rows: 1, cols: 6, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 47000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        critical: false, showPreview: false,
       },
     ],
   },

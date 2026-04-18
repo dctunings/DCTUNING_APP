@@ -70,6 +70,60 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #657–672 — Golf 6 + Jetta 2.0 TDI CR + Jetta TFSI MED17
+
+**Golf 6 1.4 TSI 0261S04390 03C906016 sw502867** (#657, 256KB) —
+sister of #656 same hardware/SW. Newer 90hp.
+
+**Golf 6 2.0 TDI CR 03L906022G sw505933** (#658, **524KB! NEW dump
+format**) — 11136B / 112 regions, sw505933 already in iqrelease def
+(2MB form). 524KB version has different anchor.
+
+**Golf 6 2.0 TFSI 1K0907115AA sw501817** (#659, 2MB) — sister of
+#307 same hardware/SW. Light 568B / 25 regions tune.
+
+**Golf 6 2.0 TFSI 03C906016L sw515768** (#660) — only 412B / 7
+regions = light tune.
+
+**Golf 6 GTI 5K0907115 sw501817** (#661) — sister of #427 sw501817
+(across 1K0907115AA / 5K0907115 part suffixes — same SW).
+
+**VW i40 Hyundai i40 1.7 CRDi sw524288** (#662, 1.5MB Bosch) —
+non-VAG i40 Hyundai badge confusion in folder. 2596B / 46 regions.
+
+**Jetta 1.9 TDI 0281012614 03G906016JK sw375199** (#663, 1MB EDC15P).
+
+**STRONG WIRE: Jetta 03L906022KT sw396003 + sw397863** (#664 + #666):
+- Both 524KB hit IDENTICAL all 8 top regions:
+  - `0x071EC0` 12B (raw 11325→44138 +290%)
+  - `0x071EE8` 12B (13548→47044 +247%)
+  - `0x071DC4` 12B (212%)
+  - `0x071DB0` 12B (150%)
+  - `0x07204A` 10B + `0x07200E` 10B (148%/142%)
+  - `0x071990` 12B (120%)
+  - `0x072196` 10B (113%)
+
+Wired as `edc17_c46_jetta_20tdi_03l906022kt`. **17th wired ECU def.**
+
+**Jetta 03L906022KS sw397837** (#665) — sister sub-cluster (some
+overlapping offsets but different anchors for IQ ceiling).
+
+**Jetta 03L906022G sw505975** (#667 + #668 — 2 sister files) — 2MB
+EDC17, hits `0x1F007A 2KB + 0x1F0ABE 512B + 0x1F089C 512B + 0x1FB0EA
+200B + 0x1E625E 6B`. The 0x1F007A cluster = 398757-style sister at
+shifted anchor. Should add sw505975 to 398757 def's identStrings.
+
+**Jetta 2.0 TDI PD 03G906021KK sw500164** (#669) — newer KK suffix.
+
+**Jetta 2.0 TFSI 0261S02335 8P0907115B sw386818** (#670, MED17) —
+NEW SW for 8P0907115B family.
+
+**Jetta 2.8 VR6 0261203223 021906258EA sw358669** (#671) — older
+65KB ME7.x VR6.
+
+**Pair #672** Passat 0281001691 038906019A sw350100 — 524KB,
+**103928B changed (19.8%) = stage1+++ heavy recal** with 740 regions.
+
 ## VW Pairs #641–656 — Golf 5 2.0 TFSI MED17 + R32 + Golf 6 1.4 TSI
 
 **Golf 5 2.0 TFSI MED17** (#641-#646):
