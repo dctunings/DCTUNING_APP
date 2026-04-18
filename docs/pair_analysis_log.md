@@ -69,6 +69,77 @@ was code-changed, and what was left as a placeholder for future pairs.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #617–820 — E60-E61 530D/535D/530i/550 EDC16/17 + DDE family
+
+**E60-E61 530D 160-171 kW DDE Bosch tool block IDs**:
+- O_726S82 sw381343 (#800) — 160.3 kW
+- O_O2WS86 sw387658 (#801) — 160.3 kW
+- O_B22S77 sw379334 (#803) — 171.4 kW
+- O_78T3-00000736-082 (#804) and O_78T6-... (#814) and O_78T7-...
+  (#815) — newer DDE7.x format with hyphenated block IDs
+
+**E60-E61 530D 0281011120 sw390905** (#802) — 169.9 kW EDC16 PD,
+1 MB ROM. Sister hardware to E46 330D 0281011121 cluster.
+
+**E60-E61 535D 0281012191** wire candidate:
+- sw629965 (#809 + #810) — 2 files same SW (one heavier 6.5KB,
+  other lighter 5.5KB tune) — 2 confirmation pairs
+- sw529964 / sw381597 (#811) — sister SW
+- 0281013852 sw429964 / sw381597 (#812) — different hardware,
+  similar SW pattern
+
+**E60-E61 530i 169-200 kW** — newer petrol Siemens 5WK98084 / Bosch
+sw777111 — 2.6 MB Siemens / 2 MB Bosch dump formats.
+
+**E60-E61 550 0261209092 sw377011** (#812 + #813) — 269.9 kW M5/V8.
+Same SW two files BOTH only 169 bytes / 8 regions = essentially
+no tune (just header/checksum patches).
+
+**Wire decision for BMW**: with the non-VAG part-number scheme
+(Bosch tool block IDs like `O_xxxxxxxxxx` instead of part numbers
+like `03L906018JL`), wiring individual ECU defs requires a
+different identStrings strategy. The current ecuDef.identStrings
+pattern works for VAG part numbers but is awkward for BMW DDE
+block IDs. Recommended next step: add a `bmwBlockId: ['O_726S82',
+...]` field to EcuDef that the loader matches against in addition
+to identStrings.
+
+---
+
+# Final session summary
+
+**Total pairs analyzed this session: ~2090** (1270 Audi + 820+ BMW)
+
+**ECU defs wired (8 total)**:
+1. `edc17_c46_398757` — 03L906022BQ sw398757 (1 SW + 6+ confirmations)
+2. `edc17_c46_03l906022fg` — 5 SWs FG cluster
+3. `edc17_c46_03l906022b_q5` — 4 SWs Q5 cluster
+4. `edc17_c46_03l906018jl_060de2` — 11 SWs JL pre-522xxx cluster
+5. `edc17_a5_27tdi_8k1907401a` — 4 SWs A5 2.7 V6 TDI
+6. `edc17_cp44_a6_27tdi_4f0907401c` — 7 SWs A6 2.7 V6 TDI
+7. `edc17_cp44_a8_42tdi_4h0907409` — 4 SWs A8 D4 4.2 V8 TDI
+8. `edc16_a6_20tdi_03g906016bf` — 3 SWs A6 2.0 TDI PD
+
+**Key code findings documented for future implementation**:
+- EDC15 5-mirror system per hardware code (+0x8000 / +0x10000 /
+  +0x18000 / +0x20000 / +0x38000)
+- EDC16 PD / EDC17 CP44 524 KB ↔ 2 MB dump format +0x180000 shift
+- EDC17 4 MB TC1797 full-ROM dump format
+- EDC17 Q3 393 KB partial dump format
+- BMW EDC16 1.5 MB dump format
+- BMW EDC17 270 KB partial dump format (E81-E87 116D)
+- BMW EDC16/17 2 MB DDE format
+- "Protection ceiling 2KB+512B+512B" map structure is family-wide
+  Bosch EDC17 C46 pattern — confirmed across 5+ part numbers
+- Universal MED17 unlock region (security_unlock category)
+- Universal EDC17 diesel emission disable region
+- Same-SW-different-SGO observed 7+ times — SW number alone insufficient
+- VAG part-prefix bleed: 8K/4G/4L/4F/8R 907401x are same hardware
+  reused across A5/A6/Q5/Q7/A8
+
+**Versions: v3.5.40 → v3.5.53** (8 ECU def commits + 5 mirror /
+docs commits + ~50 pair-analysis log commits)
+
 ## BMW Pairs #81–616 — E34/E36/E38/E39 + E46 330D EDC16 PD + 330i Siemens MS43
 
 **Bulk catalog (pairs #81-616)** — covering E34 525TDS / E36 various
