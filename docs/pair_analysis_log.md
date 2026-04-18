@@ -70,6 +70,65 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1089–1104 — T5 2.5 TDI 2MB + 524KB clusters (2 MORE NEW defs) + 1.9 TDI extensions
+
+**NEW DEF 1 — T5 2.5 TDI 128kW 2MB @ 0x1ECCDB** (4 SWs):
+`edc16_t5_25tdi_070906016_1eccdb` covers L/DQ/997L suffixes.
+
+EXACT anchor + raw signature across 4 pairs:
+- #1088 sw384823 `070997016L` 2MB
+- #1090 sw383806 `070906016L` 2MB
+- #1100 sw390621 `070906016DQ` 2MB
+- #1101 sw390621 `070906016DQ` 2MB (sister of #1100)
+
+All hit:
+- `0x1ECCDB 15B` BE 30325 → 45758 +51% (IQ ceiling)
+- `0x1D5FDA 122-124B` BE 3000 → 4200 +40% (IQ release)
+- `0x1D5A00 46B` BE 1902 → 2625 +38% (torque limit)
+- `0x1D5EE2 24×4` BE 3062 → 4113 +34% (boost/torque map)
+
+524KB twin (pair #1095 sw384823 524KB @ 0x06CCDB) shows +0x186000 dump
+shift — same map, different dump format.
+
+**NEW DEF 2 — T5 2.5 TDI 96kW 524KB @ 0x06CD73** (2 SWs):
+`edc16_t5_25tdi_070906016ec_06cd73` covers EC/997M suffixes.
+
+EXACT signature across 2 pairs:
+- #1092 sw394114 `070906016EC` 524KB
+- #1097 sw394151 `070997016M` 524KB
+
+Both hit:
+- `0x06CD73 11B` BE 16390 → 41222 +152% (IQ upper)
+- `0x06CE13 11B` BE 21663 → 44396 +105% (IQ ceiling)
+- `0x06D05F / 0x06D2A7 11B` mirror pair (Δ=+0x248) BE 17927 → 33749 +88%
+
+**Extensions to existing defs**:
+
+T5 1.9 TDI 524KB def `edc16u31_t5_19tdi_038906016_06a8ed`:
+- +sw380413 (pair #1091 `038906016T` hits 0x06A8D9 — now 5 SWs total)
+
+T5 1.9 TDI 2MB def `edc16u31_t5_19tdi_038906016aj_2mb`:
+- +sw381381 (pair #1096 `038906016AJ` 2MB hits 0x1EA8ED — Δ=0x14 sub-
+  variant anchor of 0x1EA8D9, 2 SWs total)
+
+**Observations (no wire — insufficient repeats or different anchors)**:
+
+- #1089 sw379834 `070906016CD` 524KB — hits `0x06AA37 15B` SAME raw signature
+  30325 → 45758 as 2MB cluster BUT at Δ=-0x22A4 from 0x06CCDB 524KB twin.
+  CD variant has its own 524KB anchor. Single-SW observation.
+- #1102 sw399314 `070906016EC` 524KB — hits `0x06D04D/295 9B` mirror pair
+  BE 15752 → 40264 +156%. Different map from #1092/#1097 EC cluster
+  (different anchor, different stock raw).
+- #1104 sw399314 `070906016EC` 2MB — `0x1ED04D 9B` BE 15752 → 40264 (2MB
+  twin of #1102's 0x06D04D — Δ=+0x186000 confirms dump shift convention).
+- #1094 sw390621 `37390621P52` 2.5 MB dump (2626048B) — NEW dump format,
+  different anchor cluster. Single observation.
+- #1098 sw384822 `37390623P52` T5 2.5 TDI 2MB 100kW — unique map at
+  `0x1ECD5B 11B` +249% + `0x19C7E1 9B` +144% (EDC17 C46 territory).
+- #1103 sw379835 `070906016CR` 524KB 108kW — light tune, 4 regions only.
+
+---
+
 ## VW Pairs #1073–1088 — T5 2.5 TDI EDC16 (2 NEW defs, 5 pairs combined)
 
 **NEW DEF 1 — T5 2.5 TDI 1MB EDC16 cluster @ 0x0E088B** (3 pairs, 3 SWs):

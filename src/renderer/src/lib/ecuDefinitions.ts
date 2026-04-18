@@ -2909,9 +2909,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC16U31 (VW T5 1.9 TDI PD 77kW — 038906016T/AJ 0x06A8ED)',
     manufacturer: 'Bosch',
     family: 'EDC16',
-    identStrings: ['038906016T', '038906016AJ', '379728', '381381', '384631', '384633'],
+    identStrings: ['038906016T', '038906016AJ', '379728', '381381', '384631', '384633', '380413'],
     fileSizeRange: [524288, 524288],
-    vehicles: ['VW T5 Transporter 1.9 TDI PD 77kW (038906016T/AJ sw 379728/381381/384631/384633, 2005-2008)'],
+    vehicles: ['VW T5 Transporter 1.9 TDI PD 77kW (038906016T/AJ sw 379728/380413/381381/384631/384633, 2005-2008)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFFC,
     checksumLength: 4,
@@ -2944,9 +2944,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC16U31 (VW T5 1.9 TDI PD 77kW — 038906016AJ 2MB dump 0x1EA8D9)',
     manufacturer: 'Bosch',
     family: 'EDC16',
-    identStrings: ['380415'],
+    identStrings: ['380415', '381381'],
     fileSizeRange: [2097152, 2097152],
-    vehicles: ['VW T5 Transporter 1.9 TDI PD 77kW 2MB dump (038906016AJ sw 380415, 2005)'],
+    vehicles: ['VW T5 Transporter 1.9 TDI PD 77kW 2MB dump (038906016AJ sw 380415/381381, 2005-2006)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFFC,
     checksumLength: 4,
@@ -3102,6 +3102,128 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { multiplier: 1.0, addend: 0, clampMin: 35000 },
         stage2: { multiplier: 1.0, addend: 0, clampMin: 40000 },
         stage3: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC16 VW T5 2.5 TDI 070906016L/DQ + 070997016L — 0x1ECCDB 2MB cluster ─
+  //
+  // VW T5 Transporter 2.5 TDI 128 kW EDC16 2MB dump format.
+  // 4 SWs across 3 part suffixes (L/DQ/997L) share EXACT anchors + raw
+  // signature. Verified in pair_analysis_log.md VW pairs:
+  //   #1088 sw384823 070997016L · #1090 sw383806 070906016L ·
+  //   #1100 sw390621 070906016DQ · #1101 sw390621 070906016DQ (sister)
+  //
+  // Map structure (EXACT match across all SWs):
+  //   0x1ECCDB  15B u16 BE — IQ ceiling (raw 30325 → 45758, +51%)
+  //   0x1D5FDA/D8/DA  122-124B — IQ release (raw 3000 → 4200, +40%)
+  //   0x1D5A00  46B  — torque limit (raw 1902 → 2625, +38%)
+  //   0x1D5EE2  24×4 — boost/torque map (raw 3062 → 4113, +34%)
+  //
+  // 2MB twin of 524KB 0x06CCDB (Δ=+0x186000 dump shift) — pair #1095
+  // sw384823 524KB confirms 524KB counterpart.
+  {
+    id: 'edc16_t5_25tdi_070906016_1eccdb',
+    name: 'Bosch EDC16 (VW T5 2.5 TDI 128kW — 070906016L/DQ + 070997016L 2MB 0x1ECCDB)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['070906016L', '070906016DQ', '070997016L', '383806', '384823', '390621'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW T5 Transporter 2.5 TDI 128kW 2MB dump (070906016L/DQ + 070997016L sw 383806/384823/390621, 2005-2007)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_t5_25tdi_1eccdb_ceiling',
+        name: 'IQ Ceiling 15B (T5 2.5 TDI L/DQ/997L 2MB)',
+        category: 'fuel',
+        desc: 'IQ ceiling at 0x1ECCDB (7-8 cells u16 BE = 15 B). Verified across 4 SWs sharing EXACT anchor + raw signature: stock 30325 → tuner consensus 45758 (+51%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1ECCDB,
+        rows: 1, cols: 8, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 52000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_t5_25tdi_1d5fda_iq_release',
+        name: 'IQ Release 124B (T5 2.5 TDI L/DQ/997L 2MB)',
+        category: 'fuel',
+        desc: 'IQ release at 0x1D5FDA (~62 cells u16 BE = 124 B). Raw 3000 → 4200 (+40%). Anchor varies ±2 across SWs.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1D5FDA,
+        rows: 1, cols: 62, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 4000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 4500 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 5000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC16 VW T5 2.5 TDI 070906016EC + 070997016M — 0x06CD73 524KB cluster ─
+  //
+  // VW T5 Transporter 2.5 TDI 96 kW EDC16 524KB cal-strip dump.
+  // 2 SWs across 2 part suffixes (EC/997M) share EXACT anchors. Verified
+  // in pair_analysis_log.md VW pairs:
+  //   #1092 sw394114 070906016EC · #1097 sw394151 070997016M
+  //
+  // Map structure:
+  //   0x06CD73  11B u16 BE — IQ upper (raw 16390 → 41222, +152%)
+  //   0x06CE13  11B u16 BE — IQ ceiling (raw 21663 → 44396, +105%)
+  //   0x06D05F  11B u16 BE — boost/torque A (raw 17927 → 33749, +88%)
+  //   0x06D2A7  11B u16 BE — boost/torque B mirror (Δ=+0x248 mirror)
+  {
+    id: 'edc16_t5_25tdi_070906016ec_06cd73',
+    name: 'Bosch EDC16 (VW T5 2.5 TDI 96kW — 070906016EC + 070997016M 524KB 0x06CD73)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['070906016EC', '070997016M', '394114', '394151'],
+    fileSizeRange: [524288, 524288],
+    vehicles: ['VW T5 Transporter 2.5 TDI 96kW (070906016EC + 070997016M sw 394114/394151, 2006-2007)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_t5_25tdi_ec_iq_upper',
+        name: 'IQ Upper 11B (T5 2.5 TDI EC/997M)',
+        category: 'fuel',
+        desc: 'IQ upper at 0x06CD73 (5-6 cells u16 BE = 11 B). Verified 2 SWs + 2 part suffixes: stock 16390 → tuner consensus 41222 (+152%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06CD73,
+        rows: 1, cols: 6, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 38000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_t5_25tdi_ec_iq_ceiling',
+        name: 'IQ Ceiling 11B (T5 2.5 TDI EC/997M)',
+        category: 'fuel',
+        desc: 'IQ ceiling at 0x06CE13 (6 cells u16 BE = 11 B). Stock 21663 → tuner consensus 44396 (+105%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06CE13,
+        rows: 1, cols: 6, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 42000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 47000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 52000 },
         critical: true, showPreview: true,
       },
     ],
