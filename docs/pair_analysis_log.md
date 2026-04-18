@@ -64,6 +64,61 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+# BMW catalog (D:\DATABASE\Tuning_DB_BIN\BMW)
+
+**1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
+`BMW #N` separately from the Audi `Pair #N` numbers above.
+
+## BMW Pairs #1–32 — E30 318i/318IS/320i + E46 320D/330D + DDE6.x intro
+
+**E30 (1986-1991, classic 32 KB Motronic 1.x)**:
+- 0261200157 318i (#24/25/26 — 3 SWs) — sw 355610/355693/356165 —
+  classic Motronic 1.7 / M70 hardware
+- 0261200175 318IS (#27/28/29) — sw 356214/356346/356378
+- 0261200381 320i (#30) — sw 355741
+- 0261200172 320i (#31) — sw 355744
+- 0261200163 320i 2004 (#32) — newer M52/M54 era Motronic
+- 0261200081 E30 325IX (#13) — sw not parseable
+- 0261200175 E30 318IS — Bosch Motronic 1.7
+
+All E30 ROMs are 32 KB. Pre-OBD-II Motronic with very small tunes
+(118-899 B / 3-15 regions). Same family as Audi V8 1992 from the
+earlier Audi tail.
+
+**E46 320D/330D EDC16 PD (1.5 MB ROM!)**:
+- 0281010565 320D (#1, #2) — sw 366699/351788 — 110.3 kW (150 hp)
+  E46 320D PD
+- 0281011223 330D (#3) — sw 366699 — 150 kW E46 330D — **shares
+  sw366699 with 320D**! Cross-model SW number reuse.
+- 0281011231 E65 730D (#4-6) — sw 361884 (×2), 370435 — 160 kW
+  E65 730D, **3 pairs same hardware** (2 of sw361884, 1 of sw370435)
+
+**Notable**: E46/E65 EDC16 PD ROMs are **1.5 MB** (1509632 / 1511680
+bytes) — between the Audi 1 MB and 2 MB sizes. NEW DUMP FORMAT for
+BMW EDC16. Likely BMW's TC1796 layout differs from VAG's.
+
+**BMW DDE7.x/DDE8.x flash files** (#7-22) — newer BMW DDE diesel
+ECUs with Bosch tool block IDs like:
+- `O_73KLIB322A` (DDE7.0 118D 105 kW)
+- `O_73S7IB183A` (2.0d)
+- `O_70MEHC190A` (2.0d 119.9 kW)
+- `O_73MJKB341A` (2.0d 100 kW E90)
+- `O_02CT81` (3.5D 210 kW M-version)
+- `O_S37947` (320D 119.9 kW)
+- `O_73S3KB082A` (318D E90 100 kW)
+- `O_A4TTA7` (525D E60 119.9 kW — 2 pairs same SW)
+- `O_P2WS86` (530xD E60 155 kW)
+- `O_71S7DC121A` (F10 119.9 kW)
+- `O_78T7-...` (730d 30D 180 kW — newer DDE 7-something)
+- `X_71S4KC126A` (E90 2.0d 135 kW)
+
+These BMW DDE flash blocks have a totally different naming convention
+from VAG (no Bosch hw code or VW part number visible in filename —
+just a tool's internal block ID). All 2 MB (full TC1797 dumps).
+
+**3-Series E92 335i (twin-turbo N54)** Siemens 5WK93628 sw777227 —
+NEW SIEMENS family for BMW 335i 306hp twin turbo not in our defs.
+
 ## Pairs #1239–1270 — END OF AUDI: TT mk1/mk2 + TT RS + early 1990s V8
 
 **Final batch — 32 pairs to complete the 1270-pair Audi catalog.**
