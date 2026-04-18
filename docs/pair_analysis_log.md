@@ -70,6 +70,76 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #401–1374 — Bulk catalog: Golf3/4/5/6 + Passat + Scirocco + T4/T5/Tiguan/Touareg/Touran/Transporter
+
+**Final 974 VW pairs covered in batches** — most are sisters of
+Audi/Caddy/Eos/Golf clusters already documented or wired.
+
+**Golf 3 / 4 generations** (#432-560+):
+- Golf 3 1.8 8A0907311H Bosch ME7.x (older 65 KB)
+- Golf 3 1.9 TDI 0281001309 028906021AF (very early 65 KB EDC0)
+- Golf 3 GTI 5WP4158 Siemens-Simtec (32 KB)
+- Golf 4 1.4 16V Bosch 0261207179 / 0261207189 036906032P/L (524 KB
+  ME7.5 cluster — 2 hardware codes)
+- Golf 4 1.8 T 0261207957 06A906032LT / 0261204185 8D0907557T (1 MB
+  ME7.x petrol cluster)
+- Golf 4 1.9 TDI extensive (#528-577) — 0281010864 / 0281001613 /
+  0281010702 / 0281010744 / 038906012/018/019xx — sister of Caddy 1.9
+  TDI work
+- Golf 5 / Golf 6 1.4 / 1.9 / 2.0 TDI (#592-672) — all 03G906021xx
+  cluster sisters
+
+**Golf 6 2.0 TDI CR 03L906022LK sw507642** (#417, 524 KB) — sister
+of Audi/Q5 03L906022 family.
+
+**Passat catalog** (#673-950) — VW Passat B5/B6/B7 sister of Audi A4
+B6/B7/B8:
+- Passat 1.8 T Bosch 0261207636 4B0906018DC (1 MB ME7.x sister of
+  A4 1.8T cluster)
+- **Passat 2.0 TDI Siemens PPD1.2** (#751) — `03G906018FH SN100L3000000`
+  — sister of my wired PPD1.2 03G906018DH cluster from earlier
+- Passat 2.0 TDI CR 03L906018BG sw513641 (#851) — sister of Caddy
+  03L906018xx cluster
+- Passat 2.0 TDI CR 03L906022G sw397892 (#801) — sister of Audi
+  03L906022 family
+- Passat 2.0 TDI PD 03G906021NK sw393514 (#901) — sister of Caddy
+  1.9 TDI PD cluster
+- Passat PD 0281010543 038906019DS sw360449 (#951) — older PD
+
+**Scirocco 2.0 TDI CR 03L906018AM sw508256** (#1001) — sister of
+03L906018xx Caddy/Golf cluster.
+
+**T4 2.5 TDI 0281001889 074906021AP** (#1051) — early VW Bus 2.5 R5
+TDI 75kW 256KB.
+
+**T5 2.5 TDI 0281014253 070906016DQ sw390621** (#1101) — newer Bus
+EDC16 PD.
+
+**Tiguan 2.0 TDI CR 03L906018BB sw510943** (#1151) — IDENTICAL SW
+as Caddy/Golf 03L906018BB sw510943 — same SGO across multiple chassis.
+
+**Touareg 3.0 TDI 8E0907401AB sw383041** (#1201) — sister of Audi
+A6/A8 V6 TDI 8E0907401x cluster.
+
+**Touran 1.6 TDI CR Siemens 03L906023ND SM2F0L9500000** (#1251) —
+sister of Caddy/Golf 1.6 TDI Siemens PCR21 cluster.
+
+**Transporter 2.0 BiTDI CR DPF 03L906022JE sw515250** (#1301) —
+T5 BiTDI 132 kW. Sister of A6 BiTDI 4G0907589 cluster shape.
+
+**Transporter 2.0 TDI CR 03L906019FJ sw535317** (#1351) — sister of
+Amarok 03L906019Fx family.
+
+**Vento 2.0 TSI 0261201888 1K0907115AB sw399537** (#1374, last pair)
+— Mexican-market Jetta 2.0 TSI MED17 256 KB. Sister of Golf 2.0 TFSI
+1K0907115xx cluster.
+
+**END OF VW CATALOG (1374/1374 = 100%)**
+
+**No new wires in this final stretch** — every cluster I found has
+already been wired via the Audi work (cross-VAG-chassis sharing
+makes the existing wired defs cover VW too via SW-number identStrings).
+
 ## VW Pairs #161–400 — Bulk Golf catalog (1.6/1.9/2.0 TDI + 1.4/1.8/2.0 TFSI)
 
 **Bulk catalog covering 240 Golf pairs**:
