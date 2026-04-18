@@ -64,6 +64,20 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #353–367 — A4 2.0 TDI CR 2011-2012 EDC17 C46/C64
+
+15 more A4 2.0 TDI CR pairs. Part numbers: 03L906019AL, 03L906018DN,
+03L906018JL, 03L906022NP, 03L906022RM. SW bases: 502340, 505903 (×2),
+515516, 515572 (×3), 517518, 517561, 517566, 518003, 522922, 522924,
+522942 (×2). Tunes 2,300-10,500 B.
+
+03L906018DN sw515572 showing up on multiple 100kW variants — stable
+pattern. 03L906018JL SW 522922 / 522924 / 522942 (3 consecutive SW
+versions) all 8,500-9,500 B tunes — same tuning depth, different SW.
+
+**Code: no change**. Another set of consistent SW versions to
+consider for per-variant code wiring later.
+
 ## Pairs #338–352 — A4 2.0 TDI CR 2010 EDC17 C46/C64 more SWs
 
 15 more pairs. New SW bases this batch: 500116, 515572, 515518, 518002,
