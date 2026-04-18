@@ -64,6 +64,24 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #188–202 — A4 1.8T/1.8 TFSI ME7.5 + MED17 catalogue continued
+
+More A4 1.8T ME7.5 1MB + A4 1.8 TFSI 256KB/2MB MED17.1.1 variants:
+
+- Pairs #188–192 · A4 1.8 T 2004-2005 ME7.5 1MB (0261208228 family),
+  SW versions 368069 / (various). 1200-3000 B.
+- Pairs #193–197 · A4 1.8 TFSI 256KB cal dumps (EA888 Gen1) —
+  0261201672 / 8K1907115D / 8K1907115H etc. SW 389460, 398628, 398674,
+  398138, 394389. 248-2931 B light-to-moderate tunes.
+- Pair #198 · A4 1.8 TFSI 256KB size-mismatch — skipped.
+- Pairs #199–202 · A4 1.8 TFSI 2MB full binaries. SW 503660, 503655,
+  502174, 523728 — MED17.1.1 newer-gen binaries. 222-1686 B tunes.
+- Pair #203 · A4 1.8i 1999 524288 B ME7 (pre-turbo) 0261204873.
+- Pair #204 · A4 1.8T 2002 524288 B (same 4B0906018K / 0261204897 as
+  my pair #5 original) — 864 B / 20 regs. Different tune of same file.
+
+**Code: no change** — me7/med17 defs cover these.
+
 ## Pairs #173–187 — 15 more Audi A4 1.8T ME7.5 1MB SW variants
 
 All 1MB ME7.5 Audi A4 1.8T (150/180/225ps). Bosch 0261206xxx /
