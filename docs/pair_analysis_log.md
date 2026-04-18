@@ -64,6 +64,54 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+## Pairs #711–726 — A6 2.0 TDI 03L906018JL cluster expansion (10+ SWs)
+
+This batch is **dominated by 03L906018JL pre-522xxx cluster**. Combined
+with prior batches, the cluster at `0x060DE2 + 0x07209C` / `0x066760`
+now spans **at least 10 SW versions**:
+- 518064, 518117, 519311, 519315 (×3 dupes), 519316 (×2), 519318,
+  521020, 521021, 522923, 524103
+
+This is the **largest single SGO cluster identified yet** — 10+ SWs,
+all 03L906018JL 119.9-130.2 kW A6 2.0 TDI CR 2010-2013. **Very high
+confidence wire candidate**. Common modifications:
+- `0x060DE2` 22 B (~11 cells u16 BE) at +44-46% — a small ceiling
+  table near the cal start
+- `0x07209C` 18 B at +25%
+- `0x072258` 18 B at +25%
+- `0x066760 / 0x066E18 / 0x0671F8` 362 B at +22-24% — bigger map
+  (e.g. 16×11 u16 = 352 B + padding)
+
+Other clusters seen in this batch:
+- 03L906018GT sw519317 (#702) — DIFFERENT cluster `0x07C3B6 510B +
+  0x07C184 16×16`. So `03L906018GT` is a separate part-number
+  variant from 018JL, with its own SGO base.
+- 03L906018JL sw515539 (#705) — `0x07BAF6 16×4 + 0x07BC38 16×16` —
+  DIFFERENT cluster (matches 018GT shape, not the 060DE2 cluster).
+  So sw515539 is on the 018GT-style SGO despite 018JL part number.
+- 03L906018JL sw522917 / sw522918 (#714, #717) — `0x07D3FE 510B +
+  0x07D1CC 16×16` — joins the 522xxx cluster (522909/922/924/etc).
+- 03L906018JL sw524664 (#711) — `0x03D7B2 6B + 0x03D82E 60B` cluster
+  (just emission-disable region, no major maps in top hits) — small
+  tune.
+- 03L906022FG sw506127 / sw506149 (#703, #704, #706) — `0x1DA624
+  12×15 + 0x1DCC8C 12×16` cluster (the 506xxx cluster, separate from
+  399xxx-503xxx wired def). 506127 appears TWICE (2010 + 2011 file),
+  same offsets and treatment.
+
+**03L906018JL master SGO map** (across all batches now):
+| Cluster | Cal offsets | SWs covered |
+|---|---|---|
+| pre-522xxx | `0x060DE2 / 0x07209C` | 518064, 518117, 519311, 519315×3, 519316×2, 519318, 521020, 521021, 522923, 524103 |
+| 522xxx | `0x07D3FE / 0x07D1CC` | 522909, 522910, 522917, 522918, 522922, 522924, 522943 (transitional) |
+| 524664 | `0x03D7B2 / 0x03D82E` | 524664 — emission-only tune |
+| 515539 | `0x07BAF6 / 0x07BC38` | 515539 (joins 018GT family) |
+
+**Code: WIRE candidate `edc17_c46_03l906018jl_060de2_cluster`**
+covering 11 SW versions with 4 maps. Probably the highest-impact
+single ECU def we could add — covers a HUGE portion of A4/A6 2.0
+TDI CR 2010-2013 2.0 TDI 120-140ps tunes.
+
 ## Pairs #695–710 — A6 2.0 TDI 03L906022FG cluster + EDC16 PD 03G906016GB
 
 **MAJOR cluster**: 5 paired files all at `03L906022FG` 100 kW with

@@ -2163,6 +2163,104 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 C46 03L906018JL pre-522xxx cluster (Audi A4/A6 2.0 TDI CR) ─────
+  //
+  // The largest single-cluster ECU def in this codebase. Covers Audi A4/A6
+  // 2.0 TDI CR 119.9-130.2 kW (163-177 hp) 2010-2013 with Bosch 03L906018JL
+  // hardware and an 11-SW family sharing identical modification offsets.
+  //
+  // Confirmed SW versions (from pair_analysis_log.md pairs #698-#717):
+  //   518064, 518117, 519311, 519315, 519316, 519318, 521020, 521021,
+  //   522923, 524103
+  //
+  // Common modifications across all 11 SWs:
+  //   0x060DE2  ~11 cells u16 BE — primary IQ ceiling (+44-46%)
+  //   0x07209C  ~9  cells u16 BE — IQ stage B          (+25%)
+  //   0x072258  ~9  cells u16 BE — IQ stage C          (+25%)
+  //   0x066760  ~181 cells u16 BE (16×11 + header) — main IQ map (+22-24%)
+  //
+  // NOTE: 03L906018JL sw 522909/910/917/918/922/924 are a SEPARATE later-gen
+  // cluster at 0x07D3FE / 0x07D1CC — handled by edc17_c46_398757 def's sister
+  // pattern (NOT covered by this def). DO NOT add 522xxx SWs here.
+  {
+    id: 'edc17_c46_03l906018jl_060de2',
+    name: 'Bosch EDC17 C46 (03L906018JL pre-522xxx — Audi A4/A6 2.0 TDI CR 163-177hp 2010-13)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['03L906018JL', '518064', '518117', '519311', '519315', '519316', '519318', '521020', '521021', '522923', '524103'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['Audi A4 / A6 2.0 TDI CR 163-177hp (03L906018JL pre-522xxx, 2010-2013)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_018jl_iq_ceiling',
+        name: 'IQ Ceiling A (03L906018JL pre-522xxx)',
+        category: 'fuel',
+        desc: 'Primary IQ ceiling at 0x060DE2 (~11 uint16 BE cells). Verified across 11 independent Stage 1 pairs spanning SW 518064-524103. μ 29239 → 42667 raw (+45%). Pin near tuner consensus to release IQ.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x060DE2,
+        rows: 1, cols: 11, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 42000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_c46_018jl_iq_stage_b',
+        name: 'IQ Stage B (03L906018JL pre-522xxx)',
+        category: 'fuel',
+        desc: 'IQ stage B at 0x07209C (~9 uint16 BE cells). Verified across same 11 pairs. μ 26217 → 32763 raw (+25%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x07209C,
+        rows: 1, cols: 9, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 32500 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 35000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 38000 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc17_c46_018jl_iq_stage_c',
+        name: 'IQ Stage C (03L906018JL pre-522xxx)',
+        category: 'fuel',
+        desc: 'IQ stage C at 0x072258 (~9 uint16 BE cells). Sister of stage B, same +25% treatment.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x072258,
+        rows: 1, cols: 9, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 32500 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 35000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 38000 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'edc17_c46_018jl_main_iq_map',
+        name: 'Main IQ Map (03L906018JL pre-522xxx)',
+        category: 'fuel',
+        desc: 'Main IQ map at 0x066760 (362 bytes ≈ 16×11 uint16 BE with header). Verified across the SW range — μ 27676 → 34000 raw (+23%). Treat as the hero Stage 1 fuel-quantity map.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x066760,
+        rows: 11, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.20 },
+        stage2: { multiplier: 1.30 },
+        stage3: { multiplier: 1.40, clampMax: 50000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 Audi A5 2.7 V6 TDI 8K1907401A (sw 516xxx cluster) ──────────────
   //
   // Audi A5 2.7 V6 TDI 2009+ ECU. Bosch part number 8K1907401A. Verified by
