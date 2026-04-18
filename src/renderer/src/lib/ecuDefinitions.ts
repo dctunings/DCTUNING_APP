@@ -405,6 +405,26 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         },
         critical: false, showPreview: false,
       },
+      // ── VERIFIED FROM D: DRIVE v2 STUDY — MED17 shared 8×8 BE ceiling ──
+      // 98 MED17 files (37%) +14.6% avg — SAME signature also hits ME7 (81) and MED9.1 (56).
+      // VAG-wide petrol boost load ceiling — 235 total file matches across 3 ECUs.
+      {
+        id: 'med17_kfldrl_8x8_be',
+        name: 'MED17 Boost Load Ceiling 8×8 BE (KFLDRL)',
+        category: 'boost',
+        desc: 'MED17 boost load ceiling shared with ME7/MED9.1 — 98 real MED17 tunes verified, avg +14.6%. 8×8 BE Kf_ with Y axis 4000-12000 mbar. Cross-family VAG petrol boost ceiling.',
+        signatures: [
+          [0x00,0x08,0x00,0x08,0x0f,0xa0,0x17,0xc0,0x1f,0x40,0x2e,0xe0],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 8, dtype: 'uint16', le: false,
+        factor: 0.1, offsetVal: 0, unit: 'mbar',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.10 },
+        stage2: { multiplier: 1.22 },
+        stage3: { multiplier: 1.40, clampMax: 65000 },
+        critical: false, showPreview: true,
+      },
       // ── VERIFIED FROM D: DRIVE v2 STUDY — MED17.5 (281 real tune pairs) ──
       // 6×5 LE Y=100,300,500,700 — 37 files (13.2%!) with +96.4% avg change!
       // Tuners roughly DOUBLE — strong signal for a boost/torque ceiling on MED17.5 TFSI.
@@ -607,6 +627,26 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage2: { multiplier: 1.15 },
         stage3: { multiplier: 1.22 },
         critical: true, showPreview: true,
+      },
+      // ── VERIFIED FROM D: DRIVE v2 STUDY — shared VAG petrol 8×8 BE boost ceiling ──
+      // 56 MED9.1 files (31.5% of all MED9.1 pairs) +15.7% avg. Same 12-byte sig also hits
+      // 81 ME7 files +16.5% and 98 MED17 files +14.6% — cross-family VAG 8×8 BE KFLDRL-like.
+      {
+        id: 'med91_kfldrl_8x8_be',
+        name: 'MED9.1 Boost Load Ceiling 8×8 BE (KFLDRL)',
+        category: 'boost',
+        desc: 'MED9.1 boost load ceiling shared with ME7/MED17 — 56 real MED9.1 tunes verified, avg +15.7%. 8×8 BE Kf_ with Y axis 4000-12000 mbar range. Primary cross-family VAG petrol boost ceiling for Golf V/VI GTI/R, Audi S3 8P, TTS.',
+        signatures: [
+          [0x00,0x08,0x00,0x08,0x0F,0xA0,0x17,0xC0,0x1F,0x40,0x2E,0xE0],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 8, dtype: 'uint16', le: false,
+        factor: 0.1, offsetVal: 0, unit: 'mbar',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.10 },
+        stage2: { multiplier: 1.22 },
+        stage3: { multiplier: 1.40, clampMax: 65000 },
+        critical: false, showPreview: true,
       },
       // ── FUELING / LAMBDA ──────────────────────────────────────────────────────
       {
@@ -3044,6 +3084,28 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { multiplier: 1.20 },
         stage2: { multiplier: 1.60 },
         stage3: { multiplier: 2.20, clampMax: 65000 },
+        critical: false, showPreview: true,
+      },
+      // ME7 8×8 BE KFLDRL — v2 study: 81 files +16.5% avg. Y axis 4000,6080,8000,12000 (mbar range).
+      // CROSS-FAMILY: identical sig hits MED17 (98 files +14.6%) and MED9.1 (56 files +15.7%) —
+      // this is a VAG-wide 8×8 BE boost load ceiling. Primary ME7.5 load ceiling target.
+      {
+        id: 'me7_kfldrl_8x8_be',
+        name: 'ME7 Boost Load Ceiling 8×8 BE (KFLDRL)',
+        category: 'boost',
+        desc: 'ME7.x boost load ceiling (likely KFLDRL) — 81 real ME7 tunes verified, avg +16.5%. The SAME 12-byte Kf_ signature also appears in 98 MED17 and 56 MED9.1 files. 8×8 BE Kf_ with Y axis 4000-12000 mbar range. VAG-wide petrol boost load ceiling.',
+        signatures: [
+          [0x00,0x08,0x00,0x08,0x0f,0xa0,0x17,0xc0,0x1f,0x40,0x2e,0xe0],
+          // Narrower Y variant (0xfa0, 0x1770=6000, 0x1f40=8000, 0x2710=10000) — 19 files
+          [0x00,0x08,0x00,0x08,0x0f,0xa0,0x17,0x70,0x1f,0x40,0x27,0x10],
+        ],
+        sigOffset: 0,
+        rows: 8, cols: 8, dtype: 'uint16', le: false,
+        factor: 0.1, offsetVal: 0, unit: 'mbar',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.10 },
+        stage2: { multiplier: 1.25 },
+        stage3: { multiplier: 1.45, clampMax: 65000 },
         critical: false, showPreview: true,
       },
       {
