@@ -70,6 +70,69 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1233–1248 — 3 NEW Touareg defs (4G + 4.2 TDI V8) + 3.2 V6 ME7 catalog
+
+**NEW DEF 1 — Touareg 3.0 V6 TDI CR 4G0907401 @ 0x16B9F4** (2 SWs, 5 pairs):
+
+`edc17_touareg_30tdi_4g0907401_16b9f4` covers 4G chassis (Audi Q7 derived).
+
+- #1231/#1232/#1233 sw518187 (3 pairs — 150kW, #1232 alt tune)
+- #1234 sw518184 (176.5kW) · #1235 sw518184 (180.2kW — same SW different
+  filename power rating)
+
+All hit EXACT anchors:
+- `0x16B9F4 16B` BE 12322 → 32324 (+162% IQ upper A)
+- `0x16BE7C 16B` mirror (Δ=+0x488)
+- `0x16B518 16B` BE 18272 → 41985 (+130% IQ upper B)
+- `0x16B75C 16B` mirror (Δ=+0x244)
+
+**NEW DEF 2 — Touareg 3.0 V6 TDI CR 4G0907401 2013 @ 0x1CE226** (2 SWs):
+
+`edc17_touareg_30tdi_4g0907401_1ce226` covers 4G 2013 180kW revision.
+
+- #1237/#1238 sw525584 — 2 sisters both at EXACT 0x1CE226 16×16
+- #1239 sw535387 — same EXACT anchor + raw signature
+
+Stock 22060 → 47675 (+116%) at `0x1CE226` + mirror at `0x1CE46A`
+(Δ=+0x244). Emission-cuts at `0x1823D6/0x18231C` 80B across all 3.
+
+**NEW DEF 3 — Touareg 4.2 TDI CR V8 7P0907409 @ 0x1ACE30** (1 SW, 2 pairs):
+
+`edc17_touareg_42tdi_7p0907409_1ace30` — flagship 4.2 TDI V8 250kW.
+
+- #1246 sw511931 · #1247 sw511931 (sister pair — same SW, different tuners)
+
+Both hit EXACT anchors:
+- `0x1ACE30 16B` BE 8648 → 26665 (+208% IQ upper A)
+- `0x1ACE5C 15B` BE 21913 → 44149 (+101% IQ upper B, Δ=+0x2C)
+- `0x1B8520 8B` BE 14747 → 34651 (+135% torque limit)
+- `0x171F42 8B` BE 49949 → 32 (-99.9% emission cut)
+
+Single SW but 2 confirmation pairs — reliable fixedOffset wire.
+
+**Touareg 3.2 V6 ME7 cluster observations** (no wire — anchor drift):
+
+5 SWs 1MB dumps share SAME raw 12102 → 12692 (+4.9%) signature on
+`0x011xxx` 1408B map + `0x011234/0x0114F4/0x0115A4` 143B triplet
+(BE 12100/12151/12329 → +12.7%):
+- #1241 sw367551 `022906032BE` @ 0x0110C5 1408B
+- #1242 sw371633 `022906032GB` @ 0x011234 triplet
+- #1243 sw382817 `022906032A` @ 0x01120F triplet (Δ=-0x25 from #1242)
+- #1244 sw387682 `022906032BF` @ 0x0113E1 1408B
+- #1245 sw378728 `022906032FT` @ 0x0111FF 1408B
+
+Per-SW anchor drift 0x100-0x330 — too wide for fixedOffset. Signature
+wire candidate. 5 SGO suffixes spans 2002-2007.
+
+**Pair #1240** sw? `4G0907401E` DPF BlueMotion 2004 4MB — only 37 bytes
+changed, 2 regions. Almost-null tune.
+
+**Pair #1248** sw374349 `03C906056CE` Touran 1.6 FSI MED17 2MB —
+hits `0x1D5230 38B` + `0x1C6118 83B` — same anchors as Passat 1.6 FSI
+`03C906056T` pair #959. 03C906056 family confirmed cross-Passat/Touran.
+
+---
+
 ## VW Pairs #1217–1232 — 1 NEW Touareg 3.0 V6 TDI CR 7P0907401 def + major cluster
 
 **NEW DEF — Touareg 3.0 V6 TDI CR 7P0907401 @ 0x166F64** (2 SWs, 4 pairs):

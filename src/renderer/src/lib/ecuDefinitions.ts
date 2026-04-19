@@ -2970,6 +2970,182 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 VW Touareg 4.2 TDI CR V8 7P0907409 — 0x1ACE30 2MB cluster ──────
+  //
+  // VW Touareg 4.2 TDI CR V8 250 kW (340 hp) flagship diesel EDC17.
+  // Single SW with 2 confirmation pairs (different tuners, same tune
+  // targets). Verified in pair_analysis_log.md VW pairs:
+  //   #1246 sw511931 · #1247 sw511931 (sister pair)
+  //
+  // Map structure:
+  //   0x1ACE30  16B u16 BE — IQ upper A (8648 → 26665, +208%)
+  //   0x1ACE5C  15B u16 BE — IQ upper B (21913 → 44149, +101% Δ=+0x2C)
+  //   0x1B8520  8B  u16 BE — torque limit (14747 → 34651, +135%)
+  //   0x171F42  8B  u16 BE — emission cut (49949 → 32, -99.9%)
+  {
+    id: 'edc17_touareg_42tdi_7p0907409_1ace30',
+    name: 'Bosch EDC17 (VW Touareg 4.2 TDI CR V8 250kW — 7P0907409 0x1ACE30)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['7P0907409', '511931'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Touareg 4.2 TDI CR V8 250.1kW (7P0907409 sw 511931, 2011)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_touareg_1ace30_iq_upper_a',
+        name: 'IQ Upper A 16B (Touareg 4.2 TDI 7P0907409)',
+        category: 'fuel',
+        desc: 'IQ upper A at 0x1ACE30 (8 cells u16 BE = 16 B). sw511931 confirmed 2 pairs: stock 8648 → 26665 (+208%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1ACE30,
+        rows: 1, cols: 8, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 25000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 30000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 35000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_touareg_1ace5c_iq_upper_b',
+        name: 'IQ Upper B 15B (Touareg 4.2 TDI 7P0907409 Δ=+0x2C)',
+        category: 'fuel',
+        desc: 'IQ upper B at 0x1ACE5C (Δ=+0x2C from A). Stock 21913 → 44149 (+101%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1ACE5C,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 42000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 46000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 VW Touareg 3.0 V6 TDI CR 4G0907401 — 0x16B9F4 2MB cluster ──────
+  //
+  // VW Touareg 3.0 V6 TDI CR 4G chassis (Audi Q7 derivative) 2012-2013.
+  // 2 SWs share EXACT anchors + raw signature. Verified in
+  // pair_analysis_log.md VW pairs:
+  //   #1231/#1232/#1233 sw518187 · #1234/#1235 sw518184
+  //
+  // Map structure (EXACT match across 5 pairs):
+  //   0x16B9F4  16B u16 BE — IQ upper A (12322 → 32324, +162%)
+  //   0x16BE7C  16B u16 BE — IQ upper A mirror (Δ=+0x488 same raw)
+  //   0x16B518  16B u16 BE — IQ upper B (18272 → 41985, +130%)
+  //   0x16B75C  16B u16 BE — IQ upper B mirror (Δ=+0x244)
+  {
+    id: 'edc17_touareg_30tdi_4g0907401_16b9f4',
+    name: 'Bosch EDC17 (VW Touareg 3.0 V6 TDI CR 4G 150-180kW — 4G0907401 0x16B9F4)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['4G0907401', '518184', '518187'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Touareg 3.0 V6 TDI CR 4G 150-180.2kW (4G0907401 sw 518184/518187, 2012)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_touareg_16b9f4_iq_upper_a',
+        name: 'IQ Upper A 16B (Touareg 4G0907401)',
+        category: 'fuel',
+        desc: 'IQ upper A at 0x16B9F4 (8 cells u16 BE = 16 B). 2 SWs + 5 pairs EXACT anchor: stock 12322 → tuner consensus 32324 (+162%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x16B9F4,
+        rows: 1, cols: 8, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 30000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 35000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_touareg_16be7c_iq_upper_a_mirror',
+        name: 'IQ Upper A Mirror 16B (Touareg 4G0907401 Δ=+0x488)',
+        category: 'fuel',
+        desc: 'IQ upper A mirror at 0x16BE7C (Δ=+0x488 from 0x16B9F4). Same raw signature 12322 → 32324.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x16BE7C,
+        rows: 1, cols: 8, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 30000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 35000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_touareg_16b518_iq_upper_b',
+        name: 'IQ Upper B 16B (Touareg 4G0907401)',
+        category: 'fuel',
+        desc: 'IQ upper B at 0x16B518 (8 cells u16 BE = 16 B). Stock 18272 → 41985 (+130%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x16B518,
+        rows: 1, cols: 8, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 38000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 43000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 VW Touareg 3.0 V6 TDI CR 4G0907401 2013 — 0x1CE226 16×16 cluster ─
+  //
+  // VW Touareg 3.0 V6 TDI CR 4G chassis 2013 180kW revision.
+  // 2 SWs share EXACT anchor + raw signature. Verified in
+  // pair_analysis_log.md VW pairs:
+  //   #1237/#1238 sw525584 · #1239 sw535387
+  //
+  // Map structure:
+  //   0x1CE226  16×16 = 512 B u16 BE — torque ceiling A (22060 → 47675)
+  //   0x1CE46A  16×16 = 512 B u16 BE — torque ceiling A mirror (Δ=+0x244)
+  //   0x1823D6 / 0x18231C  80B — emission cuts (stock 37813/36955 → 32)
+  {
+    id: 'edc17_touareg_30tdi_4g0907401_1ce226',
+    name: 'Bosch EDC17 (VW Touareg 3.0 V6 TDI CR 4G 2013 180kW — 4G0907401 0x1CE226)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['4G0907401', '525584', '535387'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Touareg 3.0 V6 TDI CR 4G 180.2kW (4G0907401 sw 525584/535387, 2013)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_touareg_1ce226_torque_ceiling',
+        name: 'Torque Ceiling 16×16 (Touareg 4G0907401 2013)',
+        category: 'limiter',
+        desc: 'Torque ceiling at 0x1CE226 (16×16 = 256 cells u16 BE = 512 B). 2 SWs EXACT anchor: stock 22060 → 47675 (+116%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1CE226,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 52000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 VW Touareg 3.0 V6 TDI CR 7P0907401 — 0x166F64 2MB cluster ──────
   //
   // VW Touareg 3.0 V6 TDI CR 176.5-180.2 kW EDC17 7P chassis (Mk2 2010+).
