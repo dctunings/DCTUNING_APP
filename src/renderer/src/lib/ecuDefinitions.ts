@@ -11981,6 +11981,87 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── MSD80 BMW E90-E93 3.0i N54 Siemens 5WK93608 — 0x05F47C 2MB cluster ───
+  //
+  // BMW E90-E91-E92-E93 3.0i N54 225.1 kW Siemens MSD80 5WK93608. 3 pairs
+  // across 2 SWs (772227 + 777227) same Bosch-Siemens chip. Verified in
+  // pair_analysis_log.md BMW pairs:
+  //   #1222 sw777227 · #1223 sw772227 · #1224 sw777227
+  //
+  // Map structure:
+  //   0x05F47C  6 B u16 BE — emission cut A (stock 48166 → 128, -99.7%)
+  //   0x05F49C  6 B u16 BE — emission cut B (stock 20947 → 128, -99.4%)
+  {
+    id: 'msd80_bmw_e90_30i_n54_5wk93608_05f47c',
+    name: 'Siemens MSD80 (BMW E90-E93 3.0i N54 225kW — 5WK93608 0x05F47C)',
+    manufacturer: 'Siemens',
+    family: 'MSD8x',
+    identStrings: ['5WK93608', '772227', '777227'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E91-E92-E93 3.0i N54 225.1kW Siemens MSD80 (5WK93608 sw 772227/777227, 2007-2012)'],
+    maps: [
+      {
+        id: 'msd80_bmw_e90_30i_05f47c_emission_a',
+        name: 'Emission Cut A 6B (E90-E93 3.0i N54 Siemens 5WK93608)',
+        category: 'limiter',
+        desc: 'Emission cut A at 0x05F47C (3 cells u16 BE = 6 B). 3 pairs cross-SW EXACT anchor: stock 48166 → 128 (-99.7%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x05F47C,
+        rows: 1, cols: 3, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 1000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 200 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 100 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ── EDC17 BMW E90-E93 3.0d sw504248 — 0x072618 524KB cross-format ────────
+  //
+  // BMW E90-E91-E92-E93 3.0d 180.2 kW sw504248 EDC17 524288B (512KB) dump
+  // format — 2MB↔512KB twin of wired 2MB 0x1F2618 def (Δ=-0x180000 shift
+  // matches VAG 524KB↔2MB convention). 2 pairs verified in
+  // pair_analysis_log.md BMW pairs:
+  //   #1216 sw504248 `08510221 08507165` · #1218 sw504248 `0281015285
+  //   08510221 08511253 08511275`
+  //
+  // Map structure:
+  //   0x072618  16×16 = 512 B u16 BE — torque ceiling (22259 → 47875, +115%)
+  //   0x03F86A  10 B u16 BE — emission cut (41503 → 32, -99.9%)
+  //
+  // Cross-manufacturer universal 22181/22259 → 47797/47875 cell confirmed
+  // in 524KB format now (was wired at VAG 0x077DBA 2MB + BMW 2MB 0x1F2618).
+  {
+    id: 'edc17_bmw_e90_3_0d_sw504248_072618_524k',
+    name: 'Bosch EDC17 (BMW E90-E93 3.0d 180.2kW — sw504248 0x072618 524KB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281015285'],
+    fileSizeRange: [524288, 524288],
+    vehicles: ['BMW E90-E91-E92-E93 3.0d 180.2kW 512KB dump (sw 504248, 2009-2011)'],
+    maps: [
+      {
+        id: 'edc17_bmw_e90_3_0d_072618_torque_ceiling',
+        name: 'Torque Ceiling 16×16 (E90-E93 3.0d sw504248 524KB)',
+        category: 'limiter',
+        desc: 'Torque ceiling at 0x072618 (16×16 = 256 cells u16 BE = 512 B). 2 pairs EXACT anchor: stock 22259 → tuner consensus 47875 (+115%). 512KB↔2MB Δ=-0x180000 twin of wired 0x1F2618 2MB def.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x072618,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 47000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 BMW E90-E93 2.0d sw517682 — 0x155D18 2MB high-anchor ──────────
   //
   // BMW E90-E93 2.0d N47 84.6-100 kW sw517682 EDC17 2MB DDE 2011-era.

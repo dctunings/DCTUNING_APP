@@ -3814,6 +3814,57 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #1209–1224 — 2 NEW defs (504248 524KB + 3.0i MSD80 5WK93608)
+
+**NEW DEF 1 — BMW E90-E93 3.0d sw504248 @ 0x072618 524KB** (2 pairs):
+
+`edc17_bmw_e90_3_0d_sw504248_072618_524k` — 512KB twin of wired 2MB def.
+
+- #1216 sw504248 `08510221 08507165` 524288B
+- #1218 sw504248 `0281015285 08510221 08511253 08511275` 524288B
+
+Both hit EXACT `0x072618 16×16` BE 22259 → 47875 (+115%). 524KB↔2MB
+Δ=-0x180000 dump shift (matches VAG convention). Confirms cross-manufacturer
+universal 22181/22259 → 47797/47875 cell in BMW 524KB format too.
+
+**NEW DEF 2 — BMW E90-E93 3.0i N54 Siemens MSD80 @ 0x05F47C 2MB** (3 pairs):
+
+`msd80_bmw_e90_30i_n54_5wk93608_05f47c` — E90 N54 3.0i.
+
+- #1222 sw777227 Siemens
+- #1223 sw772227 `5WK93608`
+- #1224 sw777227 `5WK93608`
+
+All 3 hit EXACT `0x05F47C 6B` + `0x05F49C 6B` emission cut.
+
+**Wired def confirmations**:
+- #1213 sw504248 `0281016838 O_76SLKN803A` 2MB — wired 0x1F2618 def
+  (3rd pair confirming).
+
+**Observations (no wire)**:
+- #1209 sw504248 `O_76SLKN802A` 2MB alt-tune at 0x1E1B0A/0x1E0D5C 11B
+  BE 7485→27351 +265% (different tune style on same SW, different anchor
+  from wired 0x1F2618 def).
+- #1210 sw383494 `O_52BT47` 2MB — 0x0ED969 19B + 0x0ED939 9B. Same SW
+  as #1124 2031616B at 0x0DD969 (Δ=+0x10000 format shift confirmation).
+- #1211 sw383494 sister heavy tune — 0x0CF044/0x0CF0C2 20B BE 1760→10000
+  +468%.
+- #1212 sw500776 `O_64BT87` 2MB — 0x0D996C 26B +251% (multi-tune on same
+  SW as earlier 500776 pairs).
+- #1214 sw500774 `O_32JAE5` 2MB — 0x0CF09C/0x0CF1D2 266B/200B +30%.
+- #1215 sw? `X_78KBMN022A` — only 16B changed (near-null).
+- #1217 sw397454 E90-E93 3.0d 524288B `0281015` — 0x063A06 11B BE
+  7485→26839 +259% + 0x062C0E 11B +139%. Same stock 7485 as sw504248
+  #1209 at different anchor — related 180kW family.
+- #1219 sw501603 `0281016037` 524288B — 0x06193A 11B + 0x060B8C 11B
+  BE 7485→27351 +265%. Same 7485 signature at Δ=-0x2F4 from sw397454.
+- #1220 sw501603 `O_76SGKN754A` 2MB — 0x1F2148/0x1F238C 16×16 BE
+  22181/22259 → 47797/47875. Same universal cross-manufacturer cell.
+- #1221 sw333711 E90-E93 3.0i 2MB — 0x04FD5C 157B -28% (different
+  tune style from main 333711 0x070F3E cluster from pair #929).
+
+---
+
 ## BMW Pairs #1193–1208 — 3 NEW late-SW defs + cross-chassis 22181→47797 again
 
 **NEW DEF 1 — BMW E90-E93 2.0d sw399762 @ 0x057D1A cross-format** (2 pairs):
