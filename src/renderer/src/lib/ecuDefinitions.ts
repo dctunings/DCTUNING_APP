@@ -2970,6 +2970,133 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 C46 VW Tiguan 2.0 TDI CR 03L906018LG/LK/LE/LH — 0x06B512 2KB ────
+  //
+  // VW Tiguan 2.0 TDI CR 81-125 kW EDC17 C46 late-gen LX-suffix family.
+  // 4 SWs across 4 part suffixes (LG/LK/LE/LH) share EXACT anchors + raw
+  // signature. Verified in pair_analysis_log.md VW pairs:
+  //   #1156 sw519357 LG · #1157 sw519354 LK 80kW · #1158 sw519351 LE ·
+  //   #1167 sw519356 LH 125kW · #1168 sw525549 LH 125kW (sister of #1167)
+  //
+  // Map structure (EXACT match across all 4 SWs):
+  //   0x06B512  2 KB (1024 cells u16 BE) — protection ceiling (21260 → 57390)
+  //   0x06BF46  512 B u16 BE — companion A (23980 → 57390, +139%)
+  //   0x06BD34  512 B u16 BE — companion B (24383 → 57390, +135%)
+  //   0x07DADA  200-202 B u16 BE — IQ release (4135 → 63359, +1432%)
+  //
+  // Anchor Δ=+0x78C from 0x06AD86 def — same raw signature (21260 stock),
+  // different cal-block location. Later-SW 519xxx family migrated the
+  // protection ceiling map to higher address.
+  {
+    id: 'edc17_c46_tiguan_03l906018lxx_06b512',
+    name: 'Bosch EDC17 C46 (VW Tiguan 2.0 TDI CR 81-125kW — 03L906018LG/LK/LE/LH 0x06B512)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['03L906018LG', '03L906018LK', '03L906018LE', '03L906018LH', '519351', '519354', '519356', '519357', '525549'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Tiguan 2.0 TDI CR 81-125kW (03L906018LG/LK/LE/LH sw 519351/519354/519356/519357/525549, 2011-2012)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_tiguan_06b512_protection',
+        name: 'Protection Ceiling 2KB (Tiguan 03L906018LG/LK/LE/LH)',
+        category: 'limiter',
+        desc: 'Protection ceiling at 0x06B512 (1024 cells u16 BE = 2 KB). Verified across 4 SWs + 4 part suffixes: stock 21260 → tuner consensus 57390 (+170%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06B512,
+        rows: 32, cols: 32, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 57000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_c46_tiguan_06bf46_companion_a',
+        name: 'Companion Ceiling A 512B (Tiguan LG/LK/LE/LH)',
+        category: 'limiter',
+        desc: 'Companion ceiling A at 0x06BF46 (256 cells u16 BE = 512 B). Raw 23980 → 57390 (+139%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06BF46,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 57000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 C46 VW Tiguan 2.0 TDI CR 03L906018LK/LL/LE/FQ — 0x06CC76 2KB ────
+  //
+  // VW Tiguan 2.0 TDI CR 100-103 kW EDC17 C46 ANCHOR-SHIFTED variant of
+  // the 0x06B512 cluster (Δ=+0x1764 shift). Same raw signature 21260 →
+  // 57390 but at different anchor — yet-later SW revision 524xxx/528xxx.
+  //
+  // 4 SWs across 4 part suffixes share EXACT anchors. Verified in
+  // pair_analysis_log.md VW pairs:
+  //   #1160 sw528324 LK · #1161 sw524133 LL · #1164 sw524646 FQ ·
+  //   #1165 sw524113 LE · #1166 sw528319 LE (sister of #1165)
+  //
+  // Map structure (EXACT match):
+  //   0x06CC76  2 KB u16 BE — protection ceiling (21260 → 57390)
+  //   0x06D6AA  512 B u16 BE — companion A (23980 → 57390, +139%)
+  //   0x06D490  512 B u16 BE — companion B (24213 → 57390, +137%)
+  //   0x07DC2E  200-202 B u16 BE — IQ release (4135 → 63359, +1432%)
+  {
+    id: 'edc17_c46_tiguan_03l906018lxx_06cc76',
+    name: 'Bosch EDC17 C46 (VW Tiguan 2.0 TDI CR 100-103kW — 03L906018LK/LL/LE/FQ 0x06CC76)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['03L906018LL', '03L906018FQ', '524113', '524133', '524646', '528319', '528324'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Tiguan 2.0 TDI CR 100-103kW (03L906018LK/LL/LE/FQ sw 524113/524133/524646/528319/528324, 2012)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_tiguan_06cc76_protection',
+        name: 'Protection Ceiling 2KB (Tiguan 03L906018LK/LL/LE/FQ)',
+        category: 'limiter',
+        desc: 'Protection ceiling at 0x06CC76 (1024 cells u16 BE = 2 KB). Verified across 4 SWs + 4 part suffixes: stock 21260 → tuner consensus 57390 (+170%). Anchor-shifted (Δ=+0x1764) variant of 0x06B512 cluster.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06CC76,
+        rows: 32, cols: 32, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 57000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_c46_tiguan_06d6aa_companion_a',
+        name: 'Companion Ceiling A 512B (Tiguan LK/LL/LE/FQ)',
+        category: 'limiter',
+        desc: 'Companion ceiling A at 0x06D6AA (256 cells u16 BE = 512 B). Raw 23980 → 57390 (+139%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06D6AA,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 57000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 C46 VW Tiguan 2.0 TDI CR 03L906022G — 0x1F276A cluster (2MB) ────
   //
   // VW Tiguan 2.0 TDI CR 100-103kW EDC17 C46 anchor-shifted sub-cluster.

@@ -70,6 +70,64 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1153–1168 — 2 NEW Tiguan defs (0x06B512 + 0x06CC76) — huge LXX family
+
+**NEW DEF 1 — Tiguan LG/LK/LE/LH @ 0x06B512 2KB** (4 SWs, 5 pairs):
+
+`edc17_c46_tiguan_03l906018lxx_06b512` — Tiguan 2.0 TDI CR 81-125kW.
+
+- #1156 sw519357 `03L906018LG` 103kW — 0x06B512 + 0x06BF46 + 0x06BD34
+- #1157 sw519354 `03L906018LK` 80.9kW — EXACT same anchors
+- #1158 sw519351 `03L906018LE` 103kW — EXACT same anchors
+- #1167 sw519356 `03L906018LH` 125kW — EXACT same anchors
+- #1168 sw525549 `03L906018LH` 125kW — EXACT same anchors (sister of #1167)
+
+Raw signature: stock 21260 → 57390 (+170%), 23980 → 57390 (+139%),
+24383 → 57390 (+135%), 4135 → 63359 (+1432%). Same raw signature as
+0x06AD86 def but at Δ=+0x78C shifted anchor — later-SW 519xxx family.
+
+**NEW DEF 2 — Tiguan LK/LL/LE/FQ @ 0x06CC76 2KB** (4 SWs, 5 pairs):
+
+`edc17_c46_tiguan_03l906018lxx_06cc76` — Tiguan 2.0 TDI CR 100-103kW.
+
+- #1160 sw528324 `03L906018LK`
+- #1161 sw524133 `03L906018LL` — NEW LL suffix
+- #1164 sw524646 `03L906018FQ`
+- #1165 sw524113 `03L906018LE`
+- #1166 sw528319 `03L906018LE` (sister of #1165)
+
+SAME raw signature as 0x06B512 def (21260 → 57390) but Δ=+0x1764
+anchor-shifted. 2012 revision moved cal-block further.
+
+Map structure:
+  0x06CC76  2 KB (protection ceiling)
+  0x06D6AA  512 B (companion A)
+  0x06D490  512 B (companion B, stock 24213 vs 0x06B512's 24383)
+  0x07DC2E  200-202 B (IQ release)
+
+**CRITICAL OBSERVATION**: sw528324 LK appears in BOTH 0x06B4FE (#1117)
+AND 0x06CC76 (#1160) — but those pairs have DIFFERENT ORIs! Same SW
+number but different physical dumps/revisions. Logged.
+
+**Existing def confirmations**:
+
+- Pair #1162 sw508222 CD Tiguan — already in 0x069EB2 def. Confirms.
+- Pair #1154 sw509913 FA Tiguan — already in 0x06AD86 def. Confirms
+  hitting 2KB + 200B + companion anchors.
+
+**Observations (no wire)**:
+
+- Pair #1153 sw511991 `03L906018ET` — NEW ET suffix — small edits at
+  0x0608F8 12B + 0x0276xx cluster. Single observation.
+- Pair #1155 sw508222 CD 393KB compact — 0x0307B6 144B BE 3970 → 33056
+  +733%. Compact-format twin of 2MB 0x069EB2 def. Logged.
+- Pair #1159 sw511990 FB 393KB — 0x036AB2 144B +726%. Compact-format
+  twin of 2MB 0x06AD86 def. Logged.
+- Pair #1163 sw519350 `03L906018FQ` — NO 2KB anchor hit, only 0x071B80
+  10B +130% and emission cuts. Different tuner style.
+
+---
+
 ## VW Pairs #1137–1152 — 1 NEW def (Tiguan 0x1F276A) + 4 existing defs extended
 
 **NEW DEF WIRED — 0x1F276A 512B cluster** (3 SWs confirmed):
