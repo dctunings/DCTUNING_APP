@@ -3814,6 +3814,57 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #937–952 — E87 2.0d N47 DDE family (observation-only)
+
+**E87 2.0d 150kW 3326→65535 pattern** (3 pairs, same raw signature):
+
+3 SWs share distinctive stock 3326 → 65535 (+1870%) IQ release signature
+at slightly drifting anchors (Δ≤0x60):
+- #940 sw504299 `O_71S4ID081A` 1572864B @ 0x0436D8 16B + 0x0770A0 16B
+- #943 sw509479 `O_71S7ID101A` 2097152B @ 0x0436D8 16B + 0x077108 16B
+- #948 sw394080 `O_71MJID301C` 2097152B @ 0x043678 16B (Δ=-0x60)
+
+Cross-format confirmation (1.5MB vs 2MB) — 0x0436D8 works in both.
+Per-SW anchor drift of Δ=0x60 marginal. Signature wire candidate after
+more pairs confirm tight anchor.
+
+**E87 2.0d emission-cut pattern 0x057Dxx** (widespread across SWs):
+
+Common `0x057Dxx 6B/52B` BE 48074→32 / 38152→32 emission-cut pattern
+across multiple sws — logged as signature wire candidate:
+- #944 sw396564 @ 0x057DE0
+- #949 sw395779 @ 0x05851E
+- #951 sw390654 @ 0x057DDA
+- #952 sw507452 @ 0x057DF0
+Per-SW anchor drift 0x0 to 0x700.
+
+**E87 2.0d 100kW sw507452 + sw396564 cluster** (2 pairs):
+- #944 sw396564 2MB — 0x07490C 16B BE 21269 → 54486 +156%
+- #952 sw507452 2MB — 0x07491C 16B BE 21269 → 53238 +150% (Δ=+0x10)
+- 2 SWs close anchor + same stock raw 21269 — potential cluster.
+  Anchor drift 0x10 marginal — log for now.
+
+**E87 2.0d sw509479 2 dump formats** (pairs #942 + #943):
+- #942 sw509479 `0281017552 O_71S7ID101A` 1540096B (EDC17)
+- #943 sw509479 `O_71S7ID101A` 2097152B (EDC17 different dump)
+- Same SW, 2 formats — dump shift confirmed.
+
+**E87 2.0d 105kW sw507453 2 SWs sister** (pairs #937 + #950):
+- #937 `O_73S7IB181A` 1572864B — 0x06B77E/0x06B9C2 11B mirror (Δ=+0x244)
+  BE 14855 → 35079 +136%
+- #950 `0281017551 O_73S7IB183A` 1540096B — different anchor 0x057DD4
+  179B + 0x06703C 23B
+- Same SW different part & tuner styles on each.
+
+**E87 2.0d single-SW observations**:
+- #938 sw395778 `O_71MMIC461A` 2MB — 0x06F0B6 14B + 0x06A6B4 28B +230-263%
+- #939 sw509478 `0281017550 O_71S7IC181A` 1572864B — 0x071B16 312B +58%
+- #941 sw396563 `0281015044 O_71MPID571A` 1540096B — 0x072AC0 8×10 zeroed
+- #945/#946/#947 sw389229 — 3 different BlockIDs (KLIC321A, KLKC321A),
+  different tuner styles on same ORI cluster.
+
+---
+
 ## BMW Pairs #921–936 — 2 NEW defs (E87 130i MSV70 + 135i MSD80)
 
 **NEW DEF 1 — BMW E87 130i N54 Siemens MSV70 @ 0x0423CA 2.5MB** (2 pairs):
