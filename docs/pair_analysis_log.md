@@ -70,6 +70,64 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1265–1280 — 2 NEW Touran EDC16 PD defs (KB/KC + AB clusters)
+
+**NEW DEF 1 — Touran 1.9 TDI 03G906021KB/KC @ 0x064963** (3 SWs, 3 pairs):
+
+`edc16_pd_touran_19tdi_03g906021kb_064963` — Touran 1.9 TDI PD 524KB.
+
+- #1267 sw379714 KB — 0x064963 13B BE 12850 → 39005 +203% (heavy tune)
+- #1268 sw382091 KB — SAME anchor BE 12850 → 30130 +134% (mild tune)
+- #1269 sw382090 KC — SAME anchor BE 12850 → 30130 +134% (sister of #1268)
+
+Pairs #1268 and #1269 share IDENTICAL 4-anchor pattern:
+- 0x064963 / 0x064977 / 0x06498B / 0x06484F 13B
+- Stock 12850/19933/22621/21424 → tuned value
+
+KB and KC suffixes tuned identically by same tuner — confirms KB/KC
+share code path (minor variant).
+
+**NEW DEF 2 — Touran 1.9 TDI 03G906021AB @ 0x05AA99 triple-mirror** (2 pairs):
+
+`edc16_pd_touran_19tdi_03g906021ab_05aa99` — single SW sw389840.
+
+- #1259 sw389840 AB (2007) — 0x05AA99/0x05AC99/0x05AE99 (Δ=+0x200 stride)
+- #1273 sw389840 AB (2007 sister) — SAME triple-mirror
+
+Stock 7470 → 21081-21124 (+182%) across all 3 mirrors. Different tuner
+styles but both confirm the triple-mirror structure.
+
+**03G906021 family observations (no wire — single SWs)**:
+
+- #1265 sw378973 `03G906021DM` — `0x0647BF 11B` -51% (economy tune style)
+- #1266 sw379846 `03G906021FE` — `0x067771 11B` BE 16801→34056 +103%
+  (universal 16801 stock value!) + companion 0x067579 -64%
+- #1270 sw383719 `03G906021MF` — `0x0597C1 13B` +327% torque lift
+- #1271 sw389299 `03G906021RM` — `0x066233 9B` +100%
+- #1272 sw394900 `03G906021MG` 2MB — `0x1EB261 11B` BE 16801→28731 +71%
+  (universal 16801 again, at 2MB anchor)
+- #1274 sw396444 `03G906021ND` — `0x06AF69 11B` BE 16801→28731 +71%
+  (universal 16801 at 524KB anchor)
+
+Universal 16801 → 28731-37845 pattern confirmed across 03G906021 FE/MG/ND
+variants (matches T5 1.9 TDI 038906016 wired def signature).
+
+**Touran 2.0 TDI 1MB observations (same SWs as earlier Passat/T5)**:
+
+- #1275 sw372498 `03G906016HK` 1MB — `0x0EDD1B 9B` BE 13639→50184 +268%
+- #1276 sw371097 `03G906016CD` 1MB — `0x0EDD43 9B` BE 14728→31176 +112%
+  (SAME SW sw371097 as Touran #1258 prior pair — different part CD in
+  both, 2 different Stage1 tune targets on same ORI)
+- #1277 sw370229 `03G906016DR` — almost-null tune (4 bytes, 0 regions)
+- #1278 sw381020 `03G906021KF` 524KB — `0x064799/064927/0647C1/0647E9
+  13B` cluster BE 9135/15921/18991/30298 → tuned. Similar structure
+  to KB/KC cluster but different raw stocks.
+- #1279 sw371266 `03G906016BQ` — light tune at 0x0CFFxx region (4 regions)
+- #1280 sw SN100K5300000 `03G906018DB` PPD1.2 262KB — already covered
+  by PPD1.2 def. 0x016A6C 16×12 emission zeroing to 0 (DPF delete style).
+
+---
+
 ## VW Pairs #1249–1264 — NEW Touran PCR21 def + 1.9 TDI EDC15/16 PD observations
 
 **NEW DEF — SIMOS PCR21 Touran 1.6 TDI CR @ 0x18CE5A** (2 pairs, 2 parts):

@@ -2970,6 +2970,145 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC16 PD VW Touran 1.9 TDI 03G906021KB/KC — 0x064963 524KB cluster ───
+  //
+  // VW Touran 1.9 TDI PD 77 kW EDC16 PD. 2 part suffixes KB/KC share
+  // EXACT anchor + stock signature across 3 SWs. Verified in
+  // pair_analysis_log.md VW pairs:
+  //   #1267 sw379714 KB · #1268 sw382091 KB · #1269 sw382090 KC
+  //
+  // Map structure:
+  //   0x064963  13B u16 BE — IQ upper A (stock 12850)
+  //   0x064977  13B u16 BE — IQ upper B (stock 19933)
+  //   0x06498B  13B u16 BE — IQ upper C (stock 22621)
+  //   0x06484F  13B u16 BE — IQ upper D (stock 21424)
+  //
+  // Target per tune intensity varies: heavy tune 12850 → 39005 (+203%),
+  // mild tune 12850 → 30130 (+134%). Both #1268 and #1269 share identical
+  // mild tune data at all 4 anchors — tuner applied same settings to KB
+  // and KC parts.
+  {
+    id: 'edc16_pd_touran_19tdi_03g906021kb_064963',
+    name: 'Bosch EDC16 PD (VW Touran 1.9 TDI PD 77kW — 03G906021KB/KC 0x064963)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['03G906021KB', '03G906021KC', '379714', '382090', '382091'],
+    fileSizeRange: [524288, 524288],
+    vehicles: ['VW Touran 1.9 TDI PD 77kW (03G906021KB/KC sw 379714/382090/382091, 2006)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_pd_touran_064963_iq_upper_a',
+        name: 'IQ Upper A 13B (Touran 03G906021KB/KC)',
+        category: 'fuel',
+        desc: 'IQ upper A at 0x064963 (6-7 cells u16 BE = 13 B). 3 SWs EXACT anchor: stock 12850 → tuner consensus 30130-39005 (+134-203% varies by tune intensity).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x064963,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 28000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 33000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 38000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_pd_touran_064977_iq_upper_b',
+        name: 'IQ Upper B 13B (Touran 03G906021KB/KC)',
+        category: 'fuel',
+        desc: 'IQ upper B at 0x064977 (Δ=+0x14 from A). Stock 19933 → 37426 (+88%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x064977,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 35000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC16 PD VW Touran 1.9 TDI 03G906021AB — 0x05AA99 triple-mirror 524KB ─
+  //
+  // VW Touran 1.9 TDI PD 77 kW EDC16 PD early SW 03G906021AB.
+  // Single SW with 2 pairs (2 different tuner styles). Verified in
+  // pair_analysis_log.md VW pairs:
+  //   #1259 sw389840 (2007) · #1273 sw389840 (2007 sister)
+  //
+  // Map structure — triple mirror at stride +0x200:
+  //   0x05AA99  13B u16 BE — IQ mirror A (stock 7470)
+  //   0x05AC99  13B u16 BE — IQ mirror B (Δ=+0x200)
+  //   0x05AE99  13B u16 BE — IQ mirror C (Δ=+0x400)
+  //   Stock 7470 → 21081-21124 (+182%) across all 3 mirrors
+  {
+    id: 'edc16_pd_touran_19tdi_03g906021ab_05aa99',
+    name: 'Bosch EDC16 PD (VW Touran 1.9 TDI PD 77kW — 03G906021AB 0x05AA99 triple-mirror)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['03G906021AB', '389840'],
+    fileSizeRange: [524288, 524288],
+    vehicles: ['VW Touran 1.9 TDI PD 77kW (03G906021AB sw 389840, 2002-2007)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_pd_touran_05aa99_iq_mirror_a',
+        name: 'IQ Mirror A 13B (Touran 03G906021AB)',
+        category: 'fuel',
+        desc: 'IQ mirror A at 0x05AA99 (6-7 cells u16 BE = 13 B). 2 pairs same SW confirm: stock 7470 → tuner consensus 21081-21124 (+182%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x05AA99,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 19000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 22000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 25000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_pd_touran_05ac99_iq_mirror_b',
+        name: 'IQ Mirror B 13B (Touran 03G906021AB Δ=+0x200)',
+        category: 'fuel',
+        desc: 'IQ mirror B at 0x05AC99 (Δ=+0x200 from A). Same raw signature.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x05AC99,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 19000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 22000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 25000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_pd_touran_05ae99_iq_mirror_c',
+        name: 'IQ Mirror C 13B (Touran 03G906021AB Δ=+0x400)',
+        category: 'fuel',
+        desc: 'IQ mirror C at 0x05AE99 (Δ=+0x400 from A). Same raw signature.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x05AE99,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 19000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 22000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 25000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── SIMOS PCR21 VW Touran 1.6 TDI CR SM2F0L9500000 — 0x18CE5A 2MB cluster ─
   //
   // VW Touran 1.6 TDI CR (CAYC engine) 77 kW Siemens SIMOS PCR21.
