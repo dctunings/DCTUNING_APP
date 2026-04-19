@@ -2970,6 +2970,69 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 C64 VW Transporter 2.0 TDI CR 03L906019GH/GJ/FK/FL — 0x067494 ──
+  //
+  // VW Transporter T5 2.0 TDI CR 103 kW EDC17 C64 late-gen LX family.
+  // 4 SWs across 4 part suffixes (GH/GJ/FK/FL) share EXACT 12×15 IQ
+  // ceiling + 12×15 companion at 0x067494. Verified in pair_analysis_log.md
+  // VW pairs:
+  //   #1310 sw525525 GH · #1345 sw524688 GJ · #1348 sw525529 FK ·
+  //   #1349 sw524684 FL
+  //
+  // Map structure (EXACT match across 4 SWs):
+  //   0x067494  12×15 = 180 cells u16 BE — IQ ceiling (15 → 27232, +179584%)
+  //   0x067CD0  12×15 = 180 cells u16 BE — IQ companion (649 → 24771, +3715%)
+  //
+  // SAME 12×15 + 12×15 IQ ceiling pattern shape as wired Amarok 0x0623F0
+  // and Golf 0x1DBC2C defs — at THIRD anchor 0x067494 for Transporter
+  // C64 late-gen family. Confirms universal Bosch EDC17 IQ ceiling shape.
+  {
+    id: 'edc17_c64_transporter_20tdi_03l906019gh_067494',
+    name: 'Bosch EDC17 C64 (VW Transporter 2.0 TDI CR 103kW — 03L906019GH/GJ/FK/FL 0x067494)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['03L906019GH', '03L906019GJ', '03L906019FK', '03L906019FL', '524684', '524688', '525525', '525529'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Transporter T5 2.0 TDI CR 103kW (03L906019GH/GJ/FK/FL sw 524684/524688/525525/525529, 2012-2013)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c64_t5_067494_iq_ceiling_a',
+        name: 'IQ Ceiling A 12×15 (Transporter 03L906019GH/GJ/FK/FL)',
+        category: 'fuel',
+        desc: 'IQ ceiling A at 0x067494 (12×15 = 180 cells u16 BE). 4 SWs + 4 suffixes EXACT anchor: stock 15 → tuner consensus 27232 (+179584% — near-zero release).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x067494,
+        rows: 15, cols: 12, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 25000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 28000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 32000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_c64_t5_067cd0_iq_ceiling_b',
+        name: 'IQ Ceiling B 12×15 (Transporter 03L906019GH/GJ/FK/FL)',
+        category: 'fuel',
+        desc: 'IQ ceiling B at 0x067CD0 (12×15 = 180 cells u16 BE). Stock 649 → 24771 (+3715%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x067CD0,
+        rows: 15, cols: 12, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 22000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 25000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 29000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 C46 VW Transporter 2.0 BiTDI/TDI CR 03L906022JD/JE — 0x077DBA ──
   //
   // VW Transporter T5 2.0 BiTDI CR / 2.0 TDI CR 132 kW EDC17 C46.

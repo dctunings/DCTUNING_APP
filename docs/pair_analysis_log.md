@@ -70,6 +70,93 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1345–1374 — FINAL BATCH — NEW 0x067494 C64 def + Vento + 100% COMPLETE
+
+**NEW DEF — Transporter EDC17 C64 12×15 @ 0x067494** (4 SWs, 4 suffixes):
+
+`edc17_c64_transporter_20tdi_03l906019gh_067494` — T5 103kW 2012-2013.
+
+All 4 pairs EXACT same anchors + raw signature:
+- #1310 sw525525 `03L906019GH` (from earlier batch)
+- #1345 sw524688 `03L906019GJ`
+- #1348 sw525529 `03L906019FK`
+- #1349 sw524684 `03L906019FL`
+
+Map structure:
+- `0x067494 12×15` BE 15 → 27232 (+179584%) IQ ceiling A
+- `0x067CD0 12×15` BE 649 → 24771 (+3715%) IQ ceiling B
+
+**4th anchor variant of Universal 12×15 IQ ceiling pattern** (now known at
+4 anchors across VAG EDC17 C46/C64):
+- Amarok 03L906019FA + Transporter JD @ 0x0623F0 (wired)
+- Golf 03L906022G @ 0x1DBC2C (wired)
+- Transporter C64 GH/GJ/FK/FL @ 0x067494 (NEW wired)
+- Transporter sw522861 FH @ 0x067020 (Δ=-0x474 shifted variant — single)
+- Transporter sw524689 GM + sw525513 GN @ 0x06B8AC (Δ=+0x4418 shifted
+  sub-variant — 2 SWs)
+
+**Vento observations** (pairs #1373, #1374):
+
+- #1373 sw391083 `8P0907115B` Vento 2.0 TFSI MED17 EA113 2MB:
+  - `0x1CE6A8 120B` BE 10604 → 65535 (+518%) — **4th anchor of universal
+    MED17 EA113 IQ unlock!**
+  - Anchor variants now documented across 4 cars:
+    - Golf 1K0907115J/K @ 0x1CE0C8 (wired)
+    - Passat 8P0907115B 2006 @ 0x1CE884 (wired)
+    - Passat 3C0907115Q @ 0x1CE2A4 (wired)
+    - Vento 8P0907115B @ 0x1CE6A8 (single SW)
+  - Same stock 10604 → 65535 target across all 4 anchors
+
+- #1374 sw399537 `1K0907115AB` Vento 2.0 TSI 262KB:
+  - `0x016E46/F36 8B` BE 5096 → 38063 (+647%) — mirror pair (Δ=+0xF0)
+  - NEW 1K0907115AB SGO catalogued. Single SW.
+
+**Transporter T6 2.0 TDI CR misc observations**:
+- #1367 sw506113 JE 132kW — emission cut at 0x038A86 (already in 0x077DBA
+  def via JE ident).
+- #1368/#1369 sw504908 JF — 78.8% file rewrite (full cal replacement,
+  not useful for pair-diff).
+- #1370 sw518079 JF 2228224B (2.12 MB — slight dump-size variant!) —
+  `0x067374 22B` BE 18766→39596 +111% (different anchor, logged).
+- #1371 sw518079 JF 2MB normal — hits 0x037C7A emission (in 0x077DBA def).
+- #1372 sw525512 `03L906019GK` (03L907309L alt part) — NEW GK suffix
+  C64 emission cut only. Logged.
+
+**T5 1.9 TDI PD observations**:
+- #1363 sw390620 `038906016AL` — `0x06C969 11B` BE 16801→33800 (universal
+  16801 pattern)
+- #1364 sw393512 `038906016AJ` — `0x06C969 11B` BE 16801→28731 (same SW
+  already in T5 1.9 TDI 0x06A8ED def — but here at Δ=0x20C8 different
+  anchor, different tuner style on same ORI)
+
+**T4/T5 2.5 TDI EDC15 PD catalog** — various single-SW observations:
+- #1359 sw? `074906018C` 524KB — 0x05CCD0/0x068CD0 mirror pair +0xC000
+  stride BE 10275→59940 +483%
+- #1360/#1361 sw350892 `074906021AG` 262KB Transporter 2.5 TDI 75kW —
+  2 pairs SAME signature at 0x03D875 199B -50% + 0x03D66D 13B +37%.
+  **2-SW 2-pair cluster but same SW different model years** — logged.
+- #1362 sw368187 `070906016F` 1511680B (1.44MB DPF dump) — minimal
+  (5 regions). Single.
+- #1365/#1366 sw390622 `070906016DR` T5 2.5 TDI pd R5 128kW — 2 sister
+  pairs at `0x014B26 8×16` +296% + `0x00E80D 7B` -62%. NEW DR R5 variant.
+
+**EDC17 C46 DPF-delete observations**:
+- #1353/#1355/#1356/#1357/#1358 — all hit 0x02DBC0 / 0x027E64 / 0x027E66
+  emission-cut pattern at slightly different anchors across SWs
+  (515505 DK / 518130 CC / 518155 CB / 518131 CD / 518139 CH). Per-SW
+  drift. Logged for future DPF-delete signature wire.
+- Pair #1350 sw525570 FH · #1351 sw535317 FJ · #1352 sw532892 FL —
+  more emission-cut variants.
+
+**1354 sw504908 JF DPF 136kW** — `0x038A82 104B` emission cut + 0x038D32
+54B. JF higher-power DPF variant.
+
+---
+
+## VW CATALOG COMPLETE — 1374/1374 pairs (100%)
+
+---
+
 ## VW Pairs #1329–1344 — 3 EXISTING defs extended + Amarok def gets Transporter JD
 
 **0x070292 def EXTENDED +3 NEW SWs + 1 NEW suffix + 1 SGO variant**:
