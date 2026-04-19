@@ -11886,6 +11886,105 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC16 BMW E90-E91 320d sw376967 — 0x0C41E0 2031616B cluster ──────────
+  //
+  // BMW E90-E91 320d (M47D20) 119.9 kW EDC16 2031616B. 2 sister pairs same
+  // SW + Bosch part. Verified in pair_analysis_log.md BMW pairs:
+  //   #1084 sw376967 `0281012754 07800835` · #1085 sw376967 same ORI sister
+  //
+  // Map structure (EXACT across 2 sister pairs):
+  //   0x0C41E0  85 B u16 BE — IQ release (stock 3593 → 8192, +128%)
+  //
+  // Stock 3593 → 8192 is sister signature to wired sw381341 (stock 3538)
+  // and sw389882 (stock 3538) — sw376967 has marginally different stock.
+  {
+    id: 'edc16_bmw_e90_320d_sw376967_0c41e0',
+    name: 'Bosch EDC16 (BMW E90-E91 320d M47D20 119.9kW — 0281012754 sw376967 0x0C41E0)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281012754', '376967'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E90-E91 320d M47D20 119.9kW (0281012754 sw 376967, 2006)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x1F7FFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_e90_320d_0c41e0_iq_release',
+        name: 'IQ Release 85B (E90-E91 320d sw376967)',
+        category: 'fuel',
+        desc: 'IQ release at 0x0C41E0 (42 cells u16 BE = 85 B). 2 sister pairs EXACT anchor: stock 3593 → tuner consensus 8192 (+128%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0C41E0,
+        rows: 1, cols: 42, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 7600 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 8500 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 9500 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC16 BMW E90-E91 320d sw372963 — 0x0DD281 2031616B cluster ──────────
+  //
+  // BMW E90-E91 320d sw372963 EDC16 2031616B. 2 sister pairs. Verified in
+  // pair_analysis_log.md BMW pairs:
+  //   #1083 sw372963 `0281012334 07798209` · #1091 sw372963 same SW different
+  //   BlockID (07898207)
+  //
+  // Map structure:
+  //   0x0DD281  13 B u16 BE — IQ upper (stock 25866 → 42677, +65%)
+  //   0x0C37FC  66 B u16 BE — IQ release (stock 6007 → ~9700-9829, +62%)
+  {
+    id: 'edc16_bmw_e90_320d_sw372963_0dd281',
+    name: 'Bosch EDC16 (BMW E90-E91 320d M47D20 119.9kW — 0281012334 sw372963 0x0DD281)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['372963'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E90-E91 320d M47D20 119.9kW (0281012334 sw 372963, 2006-2007)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x1F7FFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_e90_320d_0dd281_iq_upper',
+        name: 'IQ Upper 13B (E90-E91 320d sw372963)',
+        category: 'fuel',
+        desc: 'IQ upper at 0x0DD281 (6-7 cells u16 BE = 13 B). 2 sister pairs EXACT anchor: stock 25866 → tuner consensus 42677 (+65%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0DD281,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 43000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 46000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_bmw_e90_320d_0c37fc_iq_release',
+        name: 'IQ Release 66B (E90-E91 320d sw372963)',
+        category: 'fuel',
+        desc: 'IQ release at 0x0C37FC (33 cells u16 BE = 66 B). Stock 6007 → ~9700-9829 (+62%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0C37FC,
+        rows: 1, cols: 33, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 9400 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 10000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 11000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC16 BMW E90-E91 318D 2MB twins of E87 120D 0x0C3E60/0x0C3C10 defs ──
   //
   // BMW E90-E91 318D sw381342 / sw389883 EDC16 2MB dump (vs 2031616B
@@ -12100,9 +12199,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC16 (BMW E81-E87 120D M47D20 120kW — 0281011416 sw381341 0x0C3E60)',
     manufacturer: 'Bosch',
     family: 'EDC16',
-    identStrings: ['0281011416', '0281013502', '0281012501', '381341', '381342'],
+    identStrings: ['0281011416', '0281013502', '0281012501', '0281013251', '0281013501', '381341', '381342'],
     fileSizeRange: [2031616, 2031616],
-    vehicles: ['BMW E81-E87 120D / E90-E91 318D/320D M47D20 89.7-120kW (0281011416/0281013502/0281012501 sw 381341/381342, 2004-2007)'],
+    vehicles: ['BMW E81-E87 120D / E90-E91 318D/320D M47D20 89.7-120kW (0281011416/0281013502/0281012501/0281013251/0281013501 sw 381341/381342, 2004-2007)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x1F7FFC,
     checksumLength: 4,
@@ -12161,9 +12260,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC16 (BMW E81-E87 120D 120kW — 0281012334/0281013501 sw389882 0x0C3C10)',
     manufacturer: 'Bosch',
     family: 'EDC16',
-    identStrings: ['0281012334', '0281013501', '0281013251', '389882'],
+    identStrings: ['0281012334', '0281013501', '0281013251', '0281012501', '389882'],
     fileSizeRange: [2031616, 2031616],
-    vehicles: ['BMW E81-E87 120D M47D20 / E83 X3 2.0d 119.9kW (0281012334/0281013501/0281013251 sw 389882, 2005-2007)'],
+    vehicles: ['BMW E81-E87 120D / E83 X3 2.0d / E90-E91 320D M47D20 119.9kW (0281012334/0281013501/0281013251/0281012501 sw 389882, 2005-2007)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x1F7FFC,
     checksumLength: 4,

@@ -3814,6 +3814,59 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #1081–1096 — 2 NEW defs (sw376967 + sw372963) + 2 extensions
+
+**NEW DEF 1 — BMW E90-E91 320d sw376967 @ 0x0C41E0 2031616B** (2 sister pairs):
+
+`edc16_bmw_e90_320d_sw376967_0c41e0` — 2031616B EDC16.
+
+- #1084 sw376967 `0281012754 07800835` 
+- #1085 sw376967 same ORI sister
+
+Both EXACT 0x0C41E0 85B BE 3593 → 8192 (+128%).
+
+**NEW DEF 2 — BMW E90-E91 320d sw372963 @ 0x0DD281 2031616B** (2 sister pairs):
+
+`edc16_bmw_e90_320d_sw372963_0dd281` — 2031616B EDC16.
+
+- #1083 sw372963 `0281012334 07798209`
+- #1091 sw372963 `0281012334 07898207` (different BlockID, same SW/part)
+
+Both hit EXACT anchors:
+- `0x0DD281 13B` BE 25866 → 42677 (+65% IQ upper)
+- `0x0C37FC 66B` BE 6007 → 9723-9829 (+62% IQ release)
+
+**Extensions to existing defs**:
+
+`edc16_bmw_e87_120d_0c3e60` +2 Bosch parts:
+- +0281013251 (pair #1086 sw381341 E90-E91 320d)
+- +0281013501 (pair #1095 sw381341 E90-E91 320d)
+Now 5 Bosch parts across E81/E87/E90/E91 chassis for sw381341.
+
+`edc16_bmw_e87_120d_sw389882_0c3c10` +1 Bosch part:
+- +0281012501 (pair #1082 sw389882 E90-E91 320D) — cross-chassis.
+Now 4 Bosch parts for sw389882 across E81-E87 + E83 X3 + E90-E91.
+
+**Observations (no wire)**:
+- #1081 sw381341 E90-E91 320d 2MB — hits 0x0F0063 197B -53% emission cut
+  (different tuner target on same SW).
+- #1087/#1088 sw381341 E90-E91 320D 2MB sister pairs — 0x0F00B9 11B
+  (same as #1054 sw381341 with `O_41R942` BlockID). 2 sister pairs
+  with different tune styles.
+- #1089/#1090 sw396565 E90-E91 320D 2MB 130kW — 2 BlockID variants
+  (KC112A + KC118A), different tune styles.
+- #1092 sw379332 `0281013251` 2031616B — 0x0CCD8D 15B -46% different
+  tune from wired sw379332 def (hits alt-anchor 0x0C3B94 28B).
+- #1093 sw390655 E90-E91 320D `0281CKBCM1 37390655558` — 0x06E0D4 15B
+  +181% + 0x077A46 8B -60%. Similar to #895 sw390654 but different SW
+  and pattern.
+- #1094 sw396562 E90-E91 320d 270336B — 0x02A6BA 22B +663% + 0x02F09A
+  13B +152%.
+- #1096 sw509475 E90-E91 320d 270336B — 0x02F0AA 13B +152% + 0x01839E
+  14B. Similar compact-format pattern.
+
+---
+
 ## BMW Pairs #1065–1080 — 2 NEW defs (E90 318D 2MB + 118D/318D 264KB) + 3 extensions
 
 **NEW DEF 1 — BMW E90-E91 318D 2MB @ 0x0D3E60** (2 pairs):
