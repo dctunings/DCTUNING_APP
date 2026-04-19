@@ -71,6 +71,63 @@ discovered via `build_mb_pairs.js`). Numbering as `MB #N` separately.
 Mercedes uses a mix of Bosch (EDC15/EDC16/EDC17 CRAx/CR40/MSB), Delphi
 (CRD3), Temic (Actros OM501/OM906), and Siemens-Continental petrol.
 
+## MB Pairs #41–128 — OM646 SIG-UPGRADE + NEW Delphi CRD-646 def (v3.9.2)
+
+**UPGRADE — mb_edc16_om646 promoted to signature-based detection**:
+
+Extracted byte content at the wired anchors across multiple SWs revealed
+that the OM646 torque_demand, smoke_limiter, fuel_qty, and boost_target
+maps have **BYTE-IDENTICAL 16-byte axis signatures** across 524KB, 1MB,
+AND 1.5MB dump formats:
+
+- mb_om646_torque_demand — 16B preceding axis sig: `86 1b 1c 12 7a 13 74
+  14 6e 15 7c 16 76 17 34 18` (axis values 7046/4636/4986/5236/5486/
+  5756/6006/6196 — IQ/RPM axis). Confirmed across sw366670/sw370739
+  (1.5MB @ 0x140B99), sw376834 524KB @ 0x006C65+0x050B45 mirror.
+- mb_om646_boost_target — 16B axis sig `aa 09 bf 0a d4 0b e9 0c fe 03
+  16 04 1d 05 24 06`. Confirmed across sw366670 (1.5MB), sw372417/
+  sw376896 (1MB @ 0x08C6CD), sw376834 (524KB @ 0x011963).
+- mb_om646_smoke_limiter — first 20 bytes of the 60-byte map are
+  byte-identical across sw366670/sw368504/sw369843/sw372417/sw376896.
+- mb_om646_fuel_qty — offset +0x508 from smoke limiter (CONSTANT across
+  all variants). Uses same signature + sigOffset=0x508.
+
+File size range extended from [1511680, 1572864] to [524288, 1572864]
+to cover 1MB strip and 524KB variant dumps. Identifier strings extended
+with CR30-646-C5D4/C5D7/C5DA/C6D3/C2DD/12E1 hardware variants.
+
+**NEW DEF — mb_delphi_crd646 (Mercedes Delphi CRD-646 W203/W204)**:
+
+`mb_delphi_crd646` — 3 maps (fuel_qty, torque, boost_target). Confirmed
+across FOUR pairs at 0x0709CD with 16-byte axis signature `78 05 78 05
+78 03 0c 02 a8 02 a8 03 a2 04 7e 04`:
+- Pair #62 sw unknown NMA9J (524288B)
+- Pair #88 sw unknown NMA9J (2626048B)
+- Pair #89 sw unknown NMA9M (528384B)
+- Pair #90 sw unknown NMA9J (528896B)
+
+All 4 pairs have IDENTICAL bytes at anchor + IDENTICAL Stage1 target raw
+values. Pair #87 NMA9D variant has +8 byte shifted anchor — handled as
+variant not yet wired.
+
+Other observations from #41-128:
+- **CR40 EDC17 2MB B-class v2** (pairs #43+#44 sw503501/sw510890) — same
+  cluster layout as wired mb_cr40_edc17_w176 but at shifted anchors.
+  EXACT raw 30261 at 448B tables across both SWs — future variant wire.
+- **OM646 1.5MB sw368500** (pair #1 earlier) — hits 0x13D00F with raw
+  19822 (matches torque sig) at Δ=-0x3B8A from the main def anchor.
+- **EDC15 C220 CDI 1MB sw351403** — shared between pair #65 (C_200_CDI)
+  and pair #103 (C_220_CDI) showing cross-model SW sharing on OM611/OM646.
+- **Delphi CRD3 C220 CDI 125kW 4MB** (pairs #112/#113 sw6519024200/
+  sw6519025000 WMA4AD1/WMA46D3) — share EXACT raw signatures 1142/2055/
+  9425/24589 at shifted anchors. Future wire candidate — need 1 more SW.
+- **C320 CDI 164.8kW 458752B** (pairs #119-#123) — 5 pairs 390812/393830
+  (×2)/375193/393829 all 458752B/446464B file sizes with similar 0x04xxx
+  anchor region. Pair #120+#121 EXACT same sw393830 bytes — wire-worthy
+  with 1-2 more confirming SWs.
+
+---
+
 ## MB Pairs #1–40 — OPENING CATALOG — 3 NEW defs wired (v3.9.1)
 
 **NEW DEF — Mercedes EDC16 OM646 2.2 CDI (W211 C/E-class) 1511680B**:

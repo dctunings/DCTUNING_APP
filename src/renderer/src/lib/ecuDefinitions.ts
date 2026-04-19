@@ -9491,15 +9491,17 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Mercedes EDC16 OM646 2.2 CDI (W211 C/E-class)',
     manufacturer: 'Bosch',
     family: 'EDC16',
-    identStrings: ['OM646', 'EDC16C31', 'EDC16C32', '0281011', '0281012', '0281013'],
-    fileSizeRange: [1511680, 1572864],
+    identStrings: ['OM646', 'EDC16C31', 'EDC16C32', 'CR30-646', 'CR30-646-C5D4', 'CR30-646-C5D7', 'CR30-646-C5DA', 'CR30-646-C6D3', 'CR30-646-C2DD', 'CR30-646-12E1', '0281011', '0281012', '0281013'],
+    fileSizeRange: [524288, 1572864],
     vehicles: [
-      'Mercedes C200 CDI W203 (OM646 2.2)',
-      'Mercedes C220 CDI W203 (OM646 2.2)',
-      'Mercedes E200 CDI W211 (OM646 2.2)',
-      'Mercedes E220 CDI W211 (OM646 2.2)',
+      'Mercedes C200 CDI W203 (OM646 2.2, EDC16, 75/85kW)',
+      'Mercedes C220 CDI W203 (OM646 2.2, EDC16, 110kW)',
+      'Mercedes E200 CDI W211 (OM646 2.2, EDC16, 100kW)',
+      'Mercedes E220 CDI W211 (OM646 2.2, EDC16, 110kW)',
       'Mercedes Sprinter 215/315 CDI (OM646)',
       'Mercedes Vito 111/115 CDI (OM646)',
+      'Mercedes C200 CDI CR30-646-C5D4 (1MB strip dump)',
+      'Mercedes C200 CDI CR30-646-C5DA (1MB strip dump)',
     ],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0,
@@ -9509,10 +9511,14 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'mb_om646_torque_demand',
         name: 'Torque Demand Ceiling',
         category: 'torque',
-        desc: 'Mercedes OM646 torque demand ceiling. Pair study confirmed EXACT anchor 0x140B99 with raw signature 19822 → 55495 (+180%) in 2 sister SWs (sw366670, sw370739). Stock torque limit ~340 Nm; ECU caps at 19822 raw. Raising this unlocks full engine potential — OM646 bottom-end comfortable to 400 Nm on standard 6-speed manual.',
-        signatures: [],
-        sigOffset: 0,
-        fixedOffset: 0x140B99,
+        desc: 'Mercedes OM646 torque demand ceiling. 16-byte axis signature + 20-byte map content BYTE-IDENTICAL across 1.5MB full dump (sw366670, sw370739 @ 0x140B99), 524KB strip (sw376834 @ 0x006C65 + mirror 0x050B45). Raw signature 19822 → 55495 (+180%). Stock torque ~340 Nm ceiling; raise unlocks full OM646 potential.',
+        signatures: [
+          // 16 preceding axis bytes: universal across all dump formats
+          // Axis values: 0x1B86=7046, 0x121C=4636, 0x137A=4986, 0x1474=5236, 0x156E=5486, 0x167C=5756, 0x1776=6006, 0x1834=6196
+          [0x86, 0x1b, 0x1c, 0x12, 0x7a, 0x13, 0x74, 0x14, 0x6e, 0x15, 0x7c, 0x16, 0x76, 0x17, 0x34, 0x18],
+        ],
+        sigOffset: 16,
+        fixedOffset: 0x140B99,  // 1.5MB fallback
         rows: 1, cols: 7, dtype: 'uint16', le: false,
         factor: 0.02, offsetVal: 0, unit: 'Nm',
         stage1: { multiplier: 1.35, clampMax: 50000 },
@@ -9524,10 +9530,14 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'mb_om646_smoke_limiter',
         name: 'Smoke Limiter (Fuel-vs-Air)',
         category: 'smoke',
-        desc: 'Mercedes OM646 smoke limiter. Fixed offset 0x13F992 60 bytes confirmed EXACT across sw366670/sw370739 pairs — raw 4430 stock, Stage1 raises to 10000 (+126%). OM646 airflow comfortable for +25% fuel without visible smoke on clean DPF.',
-        signatures: [],
+        desc: 'Mercedes OM646 smoke limiter. 60-byte raw-table signature CONFIRMED byte-identical across FIVE SW variants: sw366670 @ 0x13F992 (1.5MB), sw368504 @ 0x0CF27E (1MB), sw369843 @ 0x0CF942 (1MB strip), sw372417 @ 0x0CF172 (1MB), sw376896 @ 0x0CF172 (1MB). Stock raw 4430 → Stage1 raw 10000 (+126%). OM646 airflow comfortable for +25% fuel without visible smoke on clean DPF.',
+        signatures: [
+          // First 20 bytes of the 60-byte smoke table — IDENTICAL across 5 SWs
+          // (physical values 8300,7700,7100,7000,6900,6500 mg/st sentinel row etc.)
+          [0x20, 0x6c, 0x1e, 0x14, 0x1b, 0xbc, 0x1b, 0x58, 0x1a, 0xf4, 0x19, 0x64, 0x27, 0x10, 0x1b, 0xbc, 0x1e, 0x78, 0x1a, 0x2c],
+        ],
         sigOffset: 0,
-        fixedOffset: 0x13F992,
+        fixedOffset: 0x13F992,  // 1.5MB fallback
         rows: 5, cols: 6, dtype: 'uint16', le: false,
         factor: 0.01, offsetVal: 0, unit: 'mg/st',
         stage1: { multiplier: 1.20 },
@@ -9539,10 +9549,13 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'mb_om646_fuel_qty',
         name: 'Fuel Injection Quantity',
         category: 'fuel',
-        desc: 'Mercedes OM646 fuel injection quantity. Paired with smoke limiter (0x13F992) — both saturated to 10000 at Stage1 in study data. Anchor 0x13FE9A 60 bytes confirmed across sister SWs (4430→10000 and 5013→10000 raw signatures).',
-        signatures: [],
-        sigOffset: 0,
-        fixedOffset: 0x13FE9A,
+        desc: 'Mercedes OM646 fuel injection quantity. CONSTANT +0x508 byte offset from smoke limiter across all OM646 variants (1MB strip and 1.5MB full dump). Raw 5013 → 10000 Stage1 target. Paired with smoke limiter — both saturate at 10000 in study data.',
+        signatures: [
+          // Signature is the smoke map header; sigOffset=0x508 jumps to fuel map
+          [0x20, 0x6c, 0x1e, 0x14, 0x1b, 0xbc, 0x1b, 0x58, 0x1a, 0xf4, 0x19, 0x64, 0x27, 0x10, 0x1b, 0xbc, 0x1e, 0x78, 0x1a, 0x2c],
+        ],
+        sigOffset: 0x508,
+        fixedOffset: 0x13FE9A,  // 1.5MB fallback
         rows: 5, cols: 6, dtype: 'uint16', le: false,
         factor: 0.01, offsetVal: 0, unit: 'mg/st',
         stage1: { multiplier: 1.18 },
@@ -9554,9 +9567,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         id: 'mb_om646_boost_target',
         name: 'Boost Pressure Target',
         category: 'boost',
-        desc: 'Mercedes OM646 boost pressure target. Anchor 0x15C5E7 13 bytes confirmed across sw366670/sw370739 (BE:15668→32053 +105%). OM646 Garrett GT1749V VNT has significant headroom — stock peak 1.9 bar absolute, safe to 2.2 bar absolute.',
-        signatures: [],
-        sigOffset: 0,
+        desc: 'Mercedes OM646 boost pressure target. 16-byte axis signature BYTE-IDENTICAL across 1.5MB (sw366670 @ 0x15C5E7), 1MB strip (sw372417 @ 0x08C6CD, many others), 524KB strip (sw376834 @ 0x011963). Raw 15668 stock → 32053 Stage1 (+105%). OM646 Garrett GT1749V VNT — stock 1.9 bar peak, safe to 2.2 bar absolute.',
+        signatures: [
+          // 16 preceding axis bytes: 0x09AA=2474, 0x0ABF=2751, 0x0BD4=3028, 0x0CE9=3305, 0x03FE=1022, 0x0416=1046, 0x051D=1309, 0x0624=1572
+          [0xaa, 0x09, 0xbf, 0x0a, 0xd4, 0x0b, 0xe9, 0x0c, 0xfe, 0x03, 0x16, 0x04, 0x1d, 0x05, 0x24, 0x06],
+        ],
+        sigOffset: 16,
         fixedOffset: 0x15C5E7,
         rows: 1, cols: 13, dtype: 'uint16', le: false,
         factor: 0.1, offsetVal: 0, unit: 'mbar',
@@ -9700,6 +9716,84 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage2: { multiplier: 1.38 },
         stage3: { multiplier: 1.50 },
         critical: false, showPreview: true,
+      },
+    ],
+  },
+
+  // ── Mercedes Delphi CRD-646 C200/C220 CDI 2.2 (W203/W204) ──────────────
+  // Confirmed via per-pair analysis — FOUR pairs (C200 CDI 100kW 2007-2009
+  // NMA9D/NMA9J/NMA9M) share BYTE-IDENTICAL 16-byte signature at map start:
+  //   Pair #62 (NMA9J 2008) 524288B
+  //   Pair #88 (NMA9J 2008) 2626048B
+  //   Pair #89 (NMA9M 2009) 528384B
+  //   Pair #90 (NMA9J) 528896B
+  // All hit anchor 0x0709CD with identical 24-byte map content. The pair
+  // #87 NMA9D variant is shifted +8 bytes relative — requires separate
+  // signature or variant handling.
+  {
+    id: 'mb_delphi_crd646',
+    name: 'Mercedes Delphi CRD-646 C200/C220 CDI (W203/W204)',
+    manufacturer: 'Delphi',
+    family: 'CRD-646',
+    identStrings: ['CRD-646', 'CRD-646-NMA9D', 'CRD-646-NMA9J', 'CRD-646-NMA9M', 'NMA9J', 'NMA9M', 'NMA9D', 'OM646-Delphi'],
+    fileSizeRange: [524288, 2626048],
+    vehicles: [
+      'Mercedes C200 CDI W204 (Delphi 2008-2010, 100kW)',
+      'Mercedes C220 CDI W204 (Delphi 2008-2010, 125kW)',
+      'Mercedes E200 CDI W212 (Delphi 2009-2010)',
+      'Mercedes Vito 2.2 CDI Delphi (2008+)',
+    ],
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [
+      {
+        id: 'mb_delphi_crd646_fuel_qty',
+        name: 'Fuel Injection Quantity',
+        category: 'fuel',
+        desc: 'Mercedes Delphi CRD-646 fuel quantity. 16-byte axis signature BYTE-IDENTICAL across FOUR pairs (NMA9J 524288B + 2626048B + 528896B, NMA9M 528384B). Raw 22954→35754 (+55.8%) in consistent Stage1 template.',
+        signatures: [
+          // 16 preceding axis bytes: 0x0578=1400, 0x0578, 0x0378=888, 0x020C=524, 0x02A8=680, 0x02A8, 0x03A2=930, 0x047E=1150
+          [0x78, 0x05, 0x78, 0x05, 0x78, 0x03, 0x0c, 0x02, 0xa8, 0x02, 0xa8, 0x03, 0xa2, 0x04, 0x7e, 0x04],
+        ],
+        sigOffset: 16,
+        fixedOffset: 0x0709CD,
+        rows: 1, cols: 14, dtype: 'uint16', le: false,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.30 },
+        stage2: { multiplier: 1.45 },
+        stage3: { multiplier: 1.60, clampMax: 62000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'mb_delphi_crd646_torque',
+        name: 'Torque Demand',
+        category: 'torque',
+        desc: 'Mercedes Delphi CRD-646 torque demand table. 16×11 at 0x04B295 and 0x04B4D5 (paired mirrors). Raw 28813/28623 → 33480/33656 (+16%) in Stage1 template.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x04B4D5,
+        rows: 11, cols: 16, dtype: 'uint16', le: false,
+        factor: 0.01, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.25 },
+        stage2: { multiplier: 1.38 },
+        stage3: { multiplier: 1.50, clampMax: 55000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'mb_delphi_crd646_boost',
+        name: 'Boost Target',
+        category: 'boost',
+        desc: 'Mercedes Delphi CRD-646 boost target — paired 32B loose region at 0x0457A8 / 0x045858. Raw 4744→5930 (+25%) across Stage1 template.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0457A8,
+        rows: 2, cols: 8, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'mbar',
+        stage1: { multiplier: 1.20, clampMax: 22000 },
+        stage2: { multiplier: 1.28, clampMax: 24000 },
+        stage3: { multiplier: 1.35, clampMax: 26000 },
+        critical: true, showPreview: true,
       },
     ],
   },
