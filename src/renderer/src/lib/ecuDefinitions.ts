@@ -11325,6 +11325,102 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 BMW E81-E87 2.0d N47 84.6kW sw507453 — 0x0584B6 2MB DDE ────────
+  //
+  // BMW E81-E87 2.0d N47 84.6 kW EDC17 2MB DDE emission-cut cluster.
+  // Single SW sw507453 with 3 pairs across 3 DDE BlockIDs. Verified in
+  // pair_analysis_log.md BMW pairs:
+  //   #991 sw507453 (no BlockID) · #995 `O_73S7IB163A` · #996 `O_73S7IB183A`
+  //
+  // Map structure:
+  //   0x0584B6  6 B u16 BE — emission cut A (stock 55071 → 32, -99.9%)
+  //   0x0584A2  8 B u16 BE — emission cut B (stock 47646 → 32, -99.9%)
+  {
+    id: 'edc17_bmw_e87_20d_n47_846kw_0584b6',
+    name: 'Bosch EDC17 (BMW E81-E87 2.0d N47 84.6kW — sw507453 0x0584B6 2MB DDE)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['507453'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E81-E87 2.0d N47D20 84.6kW DDE 2MB (sw 507453, 2011)'],
+    maps: [
+      {
+        id: 'edc17_bmw_e87_20d_0584b6_emission_cut_a',
+        name: 'Emission Cut A 6B (E87 2.0d sw507453)',
+        category: 'limiter',
+        desc: 'Emission cut A at 0x0584B6 (3 cells u16 BE = 6 B). 3 pairs EXACT anchor: stock 55071 → 32 (-99.9% — DPF/EGR delete).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0584B6,
+        rows: 1, cols: 3, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 1000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 100 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 50 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ── EDC17 BMW E81-E87 2.0d 270336B compact — 0x0299AC cluster ────────────
+  //
+  // BMW E81-E87 2.0d N47 270336B (264KB) compact dump. 2 pairs across 2 SWs
+  // hit close anchors (Δ=0x10) with SAME raw signature. Verified in
+  // pair_analysis_log.md BMW pairs:
+  //   #987 sw507452 `08512588 08508640` @ 0x0299BC · #1000 sw396564
+  //   `0281016068` @ 0x0299AC (Δ=-0x10 sub-variant)
+  //
+  // Map structure (anchor drifts ≤0x10 per SW):
+  //   0x0299AC  28 B u16 BE — IQ cut (stock 30800 → 2387, -92%)
+  //   0x02E392  13 B u16 BE — IQ lift (stock 24671 → 40074, +62%)
+  //
+  // Primary wire at sw396564 anchor (0x0299AC) — sw507452 pairs hit Δ=+0x10
+  // sister cell but same code structure.
+  {
+    id: 'edc17_bmw_e87_20d_compact_0299ac',
+    name: 'Bosch EDC17 (BMW E81-E87 2.0d 270336B compact — sw396564 0x0299AC)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281016068', '396564'],
+    fileSizeRange: [270336, 270336],
+    vehicles: ['BMW E81-E87 2.0d N47 84-85kW 270336B compact (0281016068 sw 396564, 2008-2010)'],
+    maps: [
+      {
+        id: 'edc17_bmw_e87_20d_compact_0299ac_iq_cut',
+        name: 'IQ Cut 28B (E87 2.0d 270336B sw396564)',
+        category: 'limiter',
+        desc: 'IQ cut at 0x0299AC (14 cells u16 BE = 28 B). 2 pairs close anchor (Δ=0x10): stock 30800 → 2387 (-92% torque cut for emission compliance).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0299AC,
+        rows: 1, cols: 14, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 2500 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 2000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 1500 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_bmw_e87_20d_compact_02e392_iq_lift',
+        name: 'IQ Lift 13B (E87 2.0d 270336B sw396564)',
+        category: 'fuel',
+        desc: 'IQ lift at 0x02E392 (6-7 cells u16 BE = 13 B). Stock 24671 → 40074 (+62%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x02E392,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 38000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 42000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 46000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 BMW E81-E87 2.0d N47 150kW sw395779 — 0x074104 2MB 512B IQ ────
   //
   // BMW E81-E87 2.0d N47 150 kW EDC17 2MB DDE higher-power variant.

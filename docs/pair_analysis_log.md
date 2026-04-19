@@ -3814,6 +3814,70 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #985–1000 — 2 NEW E87 2.0d defs (sw507453 emission + 270336B compact)
+
+**NEW DEF 1 — BMW E81-E87 2.0d N47 sw507453 84.6kW @ 0x0584B6 2MB** (3 pairs):
+
+`edc17_bmw_e87_20d_n47_846kw_0584b6` — DDE 2MB emission-cut cluster.
+
+- #991 sw507453 (no BlockID)
+- #995 sw507453 `O_73S7IB163A`
+- #996 sw507453 `O_73S7IB183A`
+
+All 3 hit EXACT `0x0584B6 6B` BE 55071 → 32 + `0x0584A2 8B` BE 47646 → 32
+(emission-cut for DPF/EGR delete).
+
+**NEW DEF 2 — BMW E81-E87 2.0d 270336B compact @ 0x0299AC** (2 pairs, 2 SWs):
+
+`edc17_bmw_e87_20d_compact_0299ac` — 264KB compact EDC17.
+
+- #987 sw507452 `08512588 08508640` @ 0x0299BC (Δ=+0x10 sister)
+- #1000 sw396564 `0281016068` @ 0x0299AC
+
+Raw signature:
+- `0x0299AC 28B` BE 30800 → 2387 (-92% IQ cut for emission)
+- `0x02E392 13B` BE 24671 → 40074 (+62% IQ lift)
+
+2 SWs confirm the pattern at close anchors (Δ=0x10).
+
+**sw509479 cross-format observations** (pairs #942/#985/#999):
+- #942 sw509479 1540096B (1.47MB) @ 0x071614 20B
+- #985 sw509479 262144B (256KB) @ 0x031614 20B (Δ=-0x40000)
+- #999 sw509479 1572864B (1.5MB) @ 0x071614 20B
+
+Same SW 3 dump formats. Anchor shifts:
+- 262KB vs 1.47MB: Δ=+0x40000
+- 1.47MB vs 1.5MB: same anchor 0x071614
+
+**sw396564 alt-BlockID** (pair #988 `O_73MPIB605A`) — 2MB hits 0x057D16/
+0x057DE0 6B emission pattern. Same SW as #944 from prior batch.
+
+**sw399764 150kW** (pair #986 `0281016071 O_71RWID211A`) — 1540096B
+hits 0x075750 36B + 0x0710B0 200B. Similar to #821 sw399763 pattern.
+
+**sw513573 100kW** (pair #992 `O_7CP9KE142A`) — 2MB hits `0x1543E0 6B` +
+`0x1544BE 6B` BE 44575 → 32 emission cut at HIGH anchor (0x1500000 region).
+Different anchor layout from 0x057Dxx pattern — late-SW variant.
+
+**sw507447 105kW** (pair #993 `O_7CLBKE121B`) — 2MB hits `0x1A570C 8B`
++ `0x1A572E 8B` BE 7180 → 40975 +471%. High-anchor region, single SW.
+
+**sw504298 130kW** (pair #994 `0281016924 X_71S4IC122A`) — 1540096B hits
+0x0589FA 14B + 0x0589A0 10B emission cut. NEW X-prefix BlockID.
+
+**sw504297 105kW** (pair #998 `O_73S4IB121A`) — 2MB hits 0x05847E 6B +
+0x05846A 8B (Δ=-0x38 from wired sw507453 def) — same emission pattern
+at shifted anchor.
+
+**sw507453 1540096B variant** (pair #997 `0281017551 O_73S7IB183A`) —
+1540096B hits 0x06703C 23B + 0x077B02 16×6 — different cluster from
+2MB sw507453 def.
+
+**sw389230 105kW 1540096B** (pair #990 `0281013537 O_73KLIB321A`) —
+0x058942 6B + 0x058A94 52B emission cut, same as prior sw389230 pair #970.
+
+---
+
 ## BMW Pairs #969–984 — 2 NEW E87 2.0d N47 defs (150kW + 130kW) + 2009/2010 catalog
 
 **NEW DEF 1 — BMW E87 2.0d N47 150kW sw395779 @ 0x074104** (2 pairs, 2 BlockIDs):
