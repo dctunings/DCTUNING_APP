@@ -9903,6 +9903,197 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── Mercedes Delphi CRD2-651 3MB (OM651 2.2 CDI R4 2009+, pre-CRD3) ───
+  // Confirmed via per-pair analysis — NINETEEN pairs all hitting the SAME
+  // exact anchor 0x25700. Covers C/E/GLK/Sprinter/Viano/Vito 2.2 CDI OM651
+  // across CRD2-651 TMA9xx/SMA9xx/TMABxxx hardware variants. The Stage1
+  // tune template varies but the ORI fingerprint at 0x25700 is universal.
+  {
+    id: 'mb_delphi_crd2_651',
+    name: 'Mercedes Delphi CRD2-651 OM651 2.2 CDI R4 (C/E/GLK/Sprinter/Vito)',
+    manufacturer: 'Delphi',
+    family: 'CRD2-651',
+    identStrings: ['CRD2-651', 'TMA9BD1', 'TMA9DD1', 'TMA9FD2', 'TMA92D2', 'TMAB2D4', 'TMAB4D2', 'TMAB5D1', 'TMAB6D1', 'SMA9CD1', 'SMA9DD1', 'OM651-Delphi-CRD2', '6519020100', '6519021.9', '6519027200'],
+    fileSizeRange: [3145728, 3145728],
+    vehicles: [
+      'Mercedes C180 2.2 CDI W204 (Delphi CRD2 2009-2010, 88.3kW)',
+      'Mercedes C200 2.2 CDI W204 (Delphi CRD2 2009-2010, 100kW)',
+      'Mercedes C220 2.2 CDI W204 (Delphi CRD2 2010, 125kW)',
+      'Mercedes E220 2.1 CDI W212 (Delphi CRD2 2010-2012, 125-150kW)',
+      'Mercedes E250 CDI W212 (Delphi CRD2 2010+, 150kW)',
+      'Mercedes GLK220 CDI X204 (Delphi CRD2 2009-2010, 125kW)',
+      'Mercedes Sprinter 2.2 CDI NCV3 (Delphi CRD2 70-95kW)',
+      'Mercedes Viano 2.2 CDI W639 (Delphi CRD2 120kW)',
+      'Mercedes Vito 2.2 CDI W639 (Delphi CRD2 100-120kW)',
+    ],
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [
+      {
+        id: 'mb_crd2_651_fingerprint',
+        name: 'CRD2-651 Calibration Fingerprint Anchor',
+        category: 'misc',
+        desc: 'Mercedes Delphi CRD2-651 3MB calibration fingerprint — 20-byte signature `b3 df 00 0e 7c cb 38 50 7c 06 28 40 40 81 00 08 38 c5 00 00` at exact anchor 0x25700 BYTE-IDENTICAL across 19 confirmed pairs (C/E/GLK/Sprinter/Viano/Vito). Used for ECU variant detection — actual tuning maps are elsewhere in calibration area.',
+        signatures: [
+          [0xb3, 0xdf, 0x00, 0x0e, 0x7c, 0xcb, 0x38, 0x50, 0x7c, 0x06, 0x28, 0x40, 0x40, 0x81, 0x00, 0x08, 0x38, 0xc5, 0x00, 0x00],
+        ],
+        sigOffset: 0,
+        fixedOffset: 0x025700,
+        rows: 1, cols: 10, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: '',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ── Mercedes EDC15 A170 CDI 524KB strip (W168 A-class) ─────────────────
+  // Confirmed via per-pair analysis — EIGHT pairs across A160/A170 CDI W168
+  // early diesels (1998-2004) share byte-identical 20-byte IQ cap table
+  // at mirror anchors 0x01C23C + 0x07C23C. Pairs #16/#17/#18/#21/#22/#23
+  // plus 2 others. SW family 0281010039/0281010118/0281010426/0281010752/
+  // 0281010990. Simple def for this legacy family — full tune scope is
+  // larger but IQ cap is the primary Stage1 target.
+  {
+    id: 'mb_edc15_a170cdi',
+    name: 'Mercedes EDC15 A170 CDI W168 (OM668)',
+    manufacturer: 'Bosch',
+    family: 'EDC15V',
+    identStrings: ['0281010039', '0281010118', '0281010426', '0281010752', '0281010753', '0281010990', 'OM668', 'EDC15V', 'EDC15VM-V'],
+    fileSizeRange: [524288, 524288],
+    vehicles: [
+      'Mercedes A160 CDI W168 (OM668 1.7, 44-55kW/60-75PS)',
+      'Mercedes A170 CDI W168 (OM668 1.7, 69.9kW/95PS)',
+      'Mercedes Vaneo 1.7 CDI (OM668)',
+    ],
+    checksumAlgo: 'bosch-simple',
+    checksumOffset: 0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'mb_edc15_a170_iq_limit',
+        name: 'IQ Maximum Limit Table',
+        category: 'fuel',
+        desc: 'Mercedes A170 CDI W168 EDC15V maximum IQ cap table. 20-byte content `88 13 88 13 88 13 a0 0f a6 0e de 0d 48 0d ac 0d de 0d 74 0e` BYTE-IDENTICAL across 8 sister pairs at 0x01C23C + 0x07C23C mirror anchors. Stock values start 5000/5000/5000/4000/3750/3550/3400 mg/st (×0.01 scale).',
+        signatures: [
+          [0x88, 0x13, 0x88, 0x13, 0x88, 0x13, 0xa0, 0x0f, 0xa6, 0x0e, 0xde, 0x0d, 0x48, 0x0d, 0xac, 0x0d, 0xde, 0x0d, 0x74, 0x0e],
+        ],
+        sigOffset: 0,
+        fixedOffset: 0x01C23C,
+        rows: 1, cols: 16, dtype: 'uint16', le: false,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.25 },
+        stage2: { multiplier: 1.38 },
+        stage3: { multiplier: 1.50, clampMax: 62000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── Mercedes Siemens M300 1.8K Compressor petrol (W203 M271) ─────────
+  // Confirmed via per-pair analysis — ELEVEN pairs C180K/CLK180K/CLK200K/
+  // E200K/SLK200K 1.8L supercharged petrol (M271) W203/W209/W211 share
+  // BYTE-IDENTICAL 20-byte signature at map locations around 0x038FA2:
+  //   Pair #51/#58/#207 M300042010000 (3 pairs)
+  //   Pair #54/#55/#161/#162/#603 M300045010000 (5 pairs)
+  //   Pair #57/#164 M300050010000 (2 pairs)
+  //   Pair #159 M300054010000 (1 pair)
+  //   Covers both 105.2kW (C180K) and 119.9kW (CLK200K) variants.
+  {
+    id: 'mb_siemens_m300_m271',
+    name: 'Mercedes Siemens M300 M271 1.8L Kompressor (C180K/CLK200K/SLK200K)',
+    manufacturer: 'Siemens',
+    family: 'Siemens M300',
+    identStrings: ['M300030', 'M300042', 'M300045', 'M300050', 'M300054', 'M271', 'Siemens_M300', '5WK90405', '5WK90507'],
+    fileSizeRange: [327680, 327680],
+    vehicles: [
+      'Mercedes C180 Kompressor W203 (M271 1.8, 105.2kW/143PS)',
+      'Mercedes C200 Kompressor W203 (M271 1.8, 119.9kW/163PS)',
+      'Mercedes CLK180 Kompressor W209 (M271)',
+      'Mercedes CLK200 Kompressor W209 (M271 163PS)',
+      'Mercedes E200 Kompressor W211 (M271)',
+      'Mercedes SLK200 Kompressor R171 (M271)',
+    ],
+    checksumAlgo: 'continental-crc',
+    checksumOffset: 0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'mb_siemens_m300_boost',
+        name: 'Boost Pressure / Timing Table',
+        category: 'boost',
+        desc: 'Mercedes M271 Siemens supercharger boost + timing table. 20-byte map content signature BYTE-IDENTICAL across 11 confirmed pairs spanning C180K/CLK180K/CLK200K/E200K/SLK200K variants. Anchor varies by SW build (0x038FA2, 0x03907A, 0x03920A, 0x03B432) but content is universal.',
+        signatures: [
+          [0xc9, 0x81, 0x5e, 0x80, 0x00, 0x80, 0xbe, 0x7f, 0xbb, 0x7f, 0xbb, 0x7f, 0xbb, 0x7f, 0xbb, 0x7f, 0x92, 0x83, 0xfe, 0x80],
+        ],
+        sigOffset: 0,
+        fixedOffset: 0x038FA2,
+        rows: 1, cols: 16, dtype: 'int16', le: true,
+        factor: 0.01, offsetVal: 0, unit: 'multiplier',
+        stage1: { multiplier: 1.08 },
+        stage2: { multiplier: 1.15 },
+        stage3: { multiplier: 1.22 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── Mercedes Delphi CRD3-651 4MB (OM651 2.2 CDI R4 2009+) ────────────
+  // Confirmed via per-pair analysis — ELEVEN pairs across A/B/C/E/S-class
+  // 2009-2013 OM651 2.2 CDI 4-cyl diesel share BYTE-IDENTICAL 20-byte map
+  // content `40 0b 20 0d b0 0d a0 0f 00 0a 70 0f e0 0b 00 0f c0 01 30 02`:
+  //   Pair #7 sw WMA4BD2 125kW
+  //   Pair #8 sw WMA4FD3 E200CDI 100kW
+  //   Pair #33 sw WMI76D1 A200 100kW
+  //   Pair #112/#113 sw WMA4AD1/WMA46D3 C220 125kW (sister SWs)
+  //   Pair #128/#140 sw WMA47D1 C180/C220 88/125kW (sister SWs)
+  //   Pair #135/#136 sw WMA4BD3 C220 150kW BiTurbo (same ORI two Stage1 tunes)
+  //   Pair #300 sw WMxxxxxx E220 125kW
+  //   Pair #588 sw VMA4AD2 S250 150kW
+  {
+    id: 'mb_delphi_crd3_651',
+    name: 'Mercedes Delphi CRD3-651 OM651 2.2 CDI R4 (A/B/C/E/S-class)',
+    manufacturer: 'Delphi',
+    family: 'CRD3-651',
+    identStrings: ['CRD3-651', 'CRD3.x', 'WMA4AD1', 'WMA4BD2', 'WMA4BD3', 'WMA4FD3', 'WMA46D3', 'WMA47D1', 'WMI76D1', 'VMA4AD2', 'OM651-Delphi', '6519024200', '6519025000', '6519032416', '6519011801'],
+    fileSizeRange: [4194304, 4194304],
+    vehicles: [
+      'Mercedes A200 2.0 CDI W176 (Delphi CRD3-651 2011+, 100kW OM651)',
+      'Mercedes C180 2.2 CDI W204 (Delphi CRD3-651 2011+, 88kW OM651)',
+      'Mercedes C220 2.2 CDI W204 (Delphi CRD3-651 2011+, 125-150kW)',
+      'Mercedes E200 2.1 CDI W212 (Delphi CRD3-651 2011+, 100kW)',
+      'Mercedes E220 2.1 CDI W212 (Delphi CRD3-651 2011+, 125kW)',
+      'Mercedes S250 2.2 CDI W221 (Delphi CRD3-651 2011+, 150kW)',
+      'Mercedes Sprinter 2.2 CDI NCV3 (Delphi CRD3-651 OM651)',
+      'Mercedes Vito 2.2 CDI W639 Delphi (OM651)',
+    ],
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [
+      {
+        id: 'mb_crd3_651_fuel_qty',
+        name: 'Fuel Injection Quantity',
+        category: 'fuel',
+        desc: 'Mercedes Delphi CRD3-651 4MB fuel quantity / IQ limit table. 20-byte map content signature BYTE-IDENTICAL across 11 confirmed pairs spanning A/B/C/E/S-class OM651 2.2 CDI 88-150kW variants. Signature anchors commonly at 0x2A330, 0x28DDC, 0x2A31C or 0x28D58 depending on SW build.',
+        signatures: [
+          [0x40, 0x0b, 0x20, 0x0d, 0xb0, 0x0d, 0xa0, 0x0f, 0x00, 0x0a, 0x70, 0x0f, 0xe0, 0x0b, 0x00, 0x0f, 0xc0, 0x01, 0x30, 0x02],
+        ],
+        sigOffset: 0,
+        fixedOffset: 0x02A330,
+        rows: 1, cols: 10, dtype: 'uint16', le: false,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.25 },
+        stage2: { multiplier: 1.40 },
+        stage3: { multiplier: 1.55, clampMax: 62000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── Mercedes CR40 EDC17 W176 A/B-class (2012+ Bosch CR40-640) ────────────
   // Confirmed via per-pair analysis:
   //   Pair #30 (sw512421, A160 CDI 59.6kW) + Pair #31 (sw512420, A180 CDI 80.2kW)

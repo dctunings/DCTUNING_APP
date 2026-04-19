@@ -71,6 +71,60 @@ discovered via `build_mb_pairs.js`). Numbering as `MB #N` separately.
 Mercedes uses a mix of Bosch (EDC15/EDC16/EDC17 CRAx/CR40/MSB), Delphi
 (CRD3), Temic (Actros OM501/OM906), and Siemens-Continental petrol.
 
+## MB 4 NEW defs — CRD2-651 3MB + CRD3-651 4MB + Siemens M300 + EDC15 A170 (v3.9.5)
+
+Added FOUR new Mercedes defs via bulk byte-sig analysis across all
+779 pairs. Coverage jumped 180 -> 229 pairs (23% -> 29%).
+
+**NEW DEF — mb_delphi_crd2_651 (Delphi CRD2-651 3MB OM651 2.2 CDI)**:
+- Anchor 0x25700 signature `b3 df 00 0e 7c cb 38 50 7c 06 28 40 40 81
+  00 08 38 c5 00 00` BYTE-IDENTICAL across 19 pairs:
+  - C180/C200/C220 CDI W204 (2009-2010)
+  - E220/E250 CDI W212 (2010-2012)
+  - GLK220 CDI X204 (2009-2010)
+  - Sprinter 215/315 CDI NCV3 (2011-2012)
+  - Viano 220 CDI W639 (2010)
+  - Vito 110/220 CDI W639 (2010-2011)
+- identStrings cover TMA9BD1/TMA9DD1/TMA9FD2/TMAB2D4/TMAB4D2/TMAB5D1/
+  TMAB6D1/SMA9CD1/SMA9DD1 hardware variants.
+
+**NEW DEF — mb_delphi_crd3_651 (Delphi CRD3-651 4MB OM651 2.2 CDI)**:
+- Anchor varies by SW build (0x2A330, 0x28DDC, 0x2A31C, 0x28D58)
+  but 20-byte content `40 0b 20 0d b0 0d a0 0f 00 0a 70 0f e0 0b 00
+  0f c0 01 30 02` is BYTE-IDENTICAL across 11 pairs (A200/C180/C220/
+  E200/E220/S250 CDI 88-150kW).
+
+**NEW DEF — mb_siemens_m300_m271 (Siemens M271 1.8K Kompressor 327KB)**:
+- Anchor varies (0x38FA2, 0x3907A, 0x3920A, 0x3B432) but 20-byte
+  content `c9 81 5e 80 00 80 be 7f bb 7f bb 7f bb 7f bb 7f 92 83
+  fe 80` is BYTE-IDENTICAL across 11 pairs C180K/CLK180K/CLK200K/
+  E200K/SLK200K covering M300042/M300045/M300050/M300054 hardware.
+
+**NEW DEF — mb_edc15_a170cdi (Mercedes EDC15V A170 CDI W168 524KB)**:
+- Anchor 0x01C23C + 0x07C23C mirror, 20-byte content `88 13 88 13
+  88 13 a0 0f a6 0e de 0d 48 0d ac 0d de 0d 74 0e` (IQ cap table
+  5000/5000/5000/4000/3750/3550/3400 mg/st) BYTE-IDENTICAL across
+  8 sister pairs covering A160/A170 CDI W168 1998-2004 (OM668 1.7).
+
+Coverage by sig:
+- OM646: 43/50/55 (torque/boost/smoke)
+- CRAx W169: 18
+- Delphi CRD-646: 6
+- OM642 torque/emission: 5 each
+- OM642 CLS 20B map: 96
+- **CRD3-651 4MB: 11 (NEW)**
+- **Siemens M300: 11 (NEW)**
+- **EDC15 A170: 8 (NEW)**
+- **CRD2-651 3MB: 19 (NEW)**
+
+Unmatched pool (550 pairs remaining):
+- 270 × 524KB (A-class / early C-class EDC15V)
+- 118 × 1048576B (EDC15 PD C-class 2000-2005)
+- 50 × 2MB
+- remainder distributed across 12+ file sizes
+
+---
+
 ## MB Pairs #1-779 BULK COVERAGE ANALYSIS + CRAx sig upgrade (v3.9.4)
 
 Bulk signature-scan across all 779 Mercedes ORI files using each wired
