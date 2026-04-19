@@ -11943,6 +11943,85 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 BMW E90-E93 2.0d sw396565 0281014572 — 0x0282DA cross-format ───
+  //
+  // BMW E90-E93 2.0d N47 130.2 kW sw396565 `0281014572` compact format
+  // (262144B + 270336B variants). 2 pairs cross-format with EXACT anchors.
+  // Verified in pair_analysis_log.md BMW pairs:
+  //   #1165 sw396565 `0281014572` 270336B · #1173 sw396565 262144B
+  //
+  // Map structure:
+  //   0x0282DA  22 B u16 BE — IQ release (stock 7255 → 43105, +494%)
+  //   0x02C924  11 B u16 BE — IQ upper (stock 13322 → 46756, +251%)
+  {
+    id: 'edc17_bmw_e90_2_0d_sw396565_0281014572_0282da',
+    name: 'Bosch EDC17 (BMW E90-E93 2.0d N47 130.2kW — 0281014572 sw396565 0x0282DA)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281014572'],
+    fileSizeRange: [262144, 270336],
+    vehicles: ['BMW E90-E93 2.0d N47D20 130.2kW 256-264KB compact (0281014572 sw 396565, 2008-2009)'],
+    maps: [
+      {
+        id: 'edc17_bmw_e90_2_0d_0282da_iq_release',
+        name: 'IQ Release 22B (E90-E93 2.0d sw396565 compact)',
+        category: 'fuel',
+        desc: 'IQ release at 0x0282DA (11 cells u16 BE = 22 B). 2 pairs cross-format EXACT anchor: stock 7255 → tuner consensus 43105 (+494%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0282DA,
+        rows: 1, cols: 11, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 BMW E90-E93 2.0d sw509478 — 0x068720 cross-BlockID+format ──────
+  //
+  // BMW E90-E93 2.0d N47 119.9 kW sw509478 EDC17. 2 pairs across 2 DDE
+  // BlockIDs AND 2 dump formats. Verified in pair_analysis_log.md BMW
+  // pairs:
+  //   #1175 sw509478 `O_71S7KC196A` 2MB · #1176 sw509478 `0281016067
+  //   O_71S7KC181A` 1540096B
+  //
+  // Map structure (EXACT across both formats):
+  //   0x068720  30 B u16 BE — IQ release (stock 15039 → 30825, +105%)
+  //   0x058A62  14 B u16 BE — emission cut (stock 39452 → 32, -99.9%)
+  //
+  // Same universal 15039→30825 N47 cell as wired sw396565 0x0682D4 def.
+  {
+    id: 'edc17_bmw_e90_2_0d_sw509478_068720',
+    name: 'Bosch EDC17 (BMW E90-E93 2.0d N47 119.9kW — sw509478 0x068720)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281016067', '509478'],
+    fileSizeRange: [1540096, 2097152],
+    vehicles: ['BMW E90-E93 2.0d N47D20 119.9kW DDE (0281016067 sw 509478, 2009)'],
+    maps: [
+      {
+        id: 'edc17_bmw_e90_2_0d_068720_iq_release',
+        name: 'IQ Release 30B (E90-E93 2.0d sw509478)',
+        category: 'fuel',
+        desc: 'IQ release at 0x068720 (15 cells u16 BE = 30 B). 2 pairs cross-format + cross-BlockID EXACT anchor: stock 15039 → tuner consensus 30825 (+105%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x068720,
+        rows: 1, cols: 15, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 28000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 32000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 36000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 BMW E90-E93 2.0d sw507452 — 0x07340A 2MB DDE cluster ───────────
   //
   // BMW E90-E91-E92-E93 2.0d N47 105.2 kW sw507452 EDC17 2MB DDE. 2 sister
@@ -12152,9 +12231,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17 (BMW E90-E91 320d sw394079 N47D20 130.2kW — 0281015043 0x02EED6 264KB)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['0281015043', '394079'],
+    identStrings: ['0281015043', '394079', '396562'],
     fileSizeRange: [270336, 270336],
-    vehicles: ['BMW E90-E91 320d N47D20 130.2kW 264KB compact (0281015043 sw 394079, 2008)'],
+    vehicles: ['BMW E90-E91-E92-E93 2.0d N47D20 130.2kW 264KB compact (0281015043 sw 394079/396562, 2007-2008)'],
     maps: [
       {
         id: 'edc17_bmw_e90_320d_02eed6_iq_upper',

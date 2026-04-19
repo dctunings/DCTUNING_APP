@@ -3814,6 +3814,55 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #1161–1176 — 2 NEW defs + 270KB compact def extension
+
+**NEW DEF 1 — BMW E90-E93 2.0d sw396565 0281014572 @ 0x0282DA cross-format**:
+
+`edc17_bmw_e90_2_0d_sw396565_0281014572_0282da` — 256-264KB compact format.
+
+- #1165 sw396565 `0281014572` 270336B (264KB)
+- #1173 sw396565 `0281014572` 262144B (256KB)
+
+Both hit EXACT `0x0282DA 22B` + `0x02C924 11B` cross-format.
+Stock 7255 → 43105 (+494%), 13322 → 46756 (+251%).
+
+**NEW DEF 2 — BMW E90-E93 2.0d sw509478 @ 0x068720 cross-BlockID+format**:
+
+`edc17_bmw_e90_2_0d_sw509478_068720` — supports 1540096B + 2MB formats.
+
+- #1175 sw509478 `O_71S7KC196A` 2MB
+- #1176 sw509478 `0281016067 O_71S7KC181A` 1540096B
+
+Both hit EXACT `0x068720 30B` BE 15039 → 30825 (+105%) + `0x058A62 14B`
+emission cut. Same universal 15039→30825 N47 cell.
+
+**sw394079 270KB def EXTENDED** — +sw396562:
+- Pair #1166 sw396562 `08506199 08506238` 270336B hits EXACT 0x02A6BA
+  22B + 0x02F09A 13B — same cell as sw394079. 2 SWs now.
+
+**Already-wired cross-chassis confirmations**:
+- #1161 sw391386 `O_73MDKB221A` E90-E93 2MB — 0x057C8C emission cut
+  (same as #971 sw391386 E81-E87 `O_73MDIB221A`).
+- #1162 sw389229 `O_71KLKC321A` E92-E93 2MB — 0x058F12/0x058FDC emission
+  cut (already covered in prior batches).
+- #1163 sw391387 `0281015075 O_71MDKC221A` 1540096B — 0x069B38 30B +105%
+  (related to #920 sw391387 E87 2MB pattern at different anchor).
+- #1164 sw394078 E90-E93 270KB — hits 0x017E10/0x017F62 (matches wired
+  sw394078 270KB emission-cut sub-cluster from prior observations).
+- #1167/#1168 sw394079 `0281015043` E90-E93 270KB sister pairs — EXACT
+  wired def anchors 0x02EED6 + 0x02A4F6. Cross-chassis confirm.
+- #1169 sw395778 `O_71MMKC482A` 2MB — 0x06A6B4 30B + 0x05838E 14B
+  (same family as wired 0x0682D4 def at shifted anchor).
+- #1170 sw396565 `O_71R6KC112A` 2MB — EXACT wired 0x0682D4 def match
+  (3rd pair confirming def across chassis: E87 #974 + #979, E90-E93 now).
+- #1171 sw396562 `0281015043 O_71MPKC562A` 1540096B — 0x06A6B4 30B
+  different format same anchor as #1169 sw395778. 2 SWs 1540K cluster
+  candidate.
+- #1174 sw501613 `O_71S3KC082A` E90-E93 2MB — 0x0589C6 + 0x05896C
+  emission cut. Related to sw501612.
+
+---
+
 ## BMW Pairs #1145–1160 — 1 NEW def (sw507452 0x07340A) + sw396567 3rd pair
 
 **NEW DEF — BMW E90-E93 2.0d sw507452 @ 0x07340A 2MB** (2 sister pairs):
