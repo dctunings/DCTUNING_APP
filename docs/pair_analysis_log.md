@@ -71,6 +71,57 @@ discovered via `build_mb_pairs.js`). Numbering as `MB #N` separately.
 Mercedes uses a mix of Bosch (EDC15/EDC16/EDC17 CRAx/CR40/MSB), Delphi
 (CRD3), Temic (Actros OM501/OM906), and Siemens-Continental petrol.
 
+## MB FULL-PASS #1-779 COMPLETE (v3.9.9)
+
+Full pass through all 779 Mercedes pairs complete. Individual per-pair
+analysis of pairs #1-#330 + rapid summary scans of pairs #331-#779.
+
+**Truck pool identified** — pairs #335-#492 (approximately 158 pairs)
+are mostly Temic truck ECUs (Econic 1828/2628/2629/2633, Actros 1836/
+440, OM501/OM457/OM904/OM906/OM926 engines). These are heavy-duty
+truck applications outside the DCTuning road-car tuning scope.
+
+**Remaining unmatched pairs** are distributed across:
+- ~130 × petrol (AMG ME7/ME9, Siemens-Continental W220/W211)
+- ~50 × legacy Vito CDI 524KB pre-CDI EDC1.x variants
+- ~40 × SW-fragmented late EDC15/EDC16 PD where each SW family has
+  only 1-2 pairs sharing anchor content
+
+**Final Mercedes catalog state**:
+
+| # | Def                       | Maps | Pairs | File sizes            |
+|---|---------------------------|------|-------|------------------------|
+| 1 | mercedes_crd3             |  8   | -     | 1-4MB baseline         |
+| 2 | mb_edc16_om646            |  6   |  55+  | 524KB / 1MB / 1.5MB   |
+| 3 | mb_om642_v6_30cdi         |  4   |  96+  | 458KB/524KB/1.5M/2M/4M|
+| 4 | mb_edc15_pd_cclass_1mb    |  1   |  73   | 1MB                    |
+| 5 | mb_edc15v_cdi_524kb       |  2   |  32   | 524KB                  |
+| 6 | mb_delphi_crd2_651        |  1   |  19   | 3MB                    |
+| 7 | mb_crax_edc16_w169        |  5   |  18   | 253KB/262KB            |
+| 8 | mb_delphi_crd3_651        |  1   |  11   | 4MB                    |
+| 9 | mb_siemens_m300_m271      |  1   |  11   | 327KB                  |
+|10 | mb_delphi_crd646          |  3   |  6    | 524KB/528KB/2.6MB      |
+|11 | mb_cr40_edc17_w176        |  3   |  2    | 2MB                    |
+
+**Total: 11 Mercedes defs, 35 maps, 328+/779 pairs auto-matched (42%)**
+
+Cross-signature pairs (those matching multiple sigs) are counted once
+in coverage tally. Signatures have been verified BYTE-IDENTICAL across
+all SWs in each cluster via byte extraction and anchor confirmation.
+
+Approach summary:
+1. Individual per-pair analysis for pairs #1-#330 — deep inspection of
+   changed bytes, raw stock values, Stage1 targets, cluster candidates.
+2. Bulk byte-signature scan of all 779 ORIs against extracted sigs to
+   measure coverage and find additional cluster candidates.
+3. Iterative refinement — each new cluster gets bytes extracted across
+   3+ sister SWs and verified byte-identical before wiring as def.
+4. File-size-specific and anchor-specific sub-clusters identified and
+   wired as separate defs where per-SW raw values differ (e.g. W169
+   CRAx has different raw 6003 mean but universal 20B content).
+
+---
+
 ## MB Pairs #285-330 continued per-pair analysis (v3.9.8)
 
 Per-pair analysis from #285-#330 covering E320 CDI + E55 AMG +
