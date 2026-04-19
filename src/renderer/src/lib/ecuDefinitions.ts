@@ -11648,6 +11648,148 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC16 BMW E90 325D 144.9kW sw383498 — 0x0D9286 cross-format ──────────
+  //
+  // BMW E90 325D M57D30TU (6-cyl 2.5d) 144.9 kW EDC16. 2 pairs across 2
+  // dump formats (2MB + 2031616B) with matching raw signature. Verified in
+  // pair_analysis_log.md BMW pairs:
+  //   #1056 sw383498 2097152B · #1057 sw383498 2031616B
+  //
+  // Map structure (per-format anchor shifts Δ=+0x10000):
+  //   2MB format:    0x0D9286 52B + 0x0D9308 52B
+  //   2031616B:      0x0C9286 52B + 0x0C9308 52B
+  //   Both BE 4783 → 8074 (+69% IQ release)
+  //
+  // Wired for 2MB variant at 0x0D9286 — 2031616B is +0x10000 shifted.
+  {
+    id: 'edc16_bmw_e90_325d_0d9286',
+    name: 'Bosch EDC16 (BMW E90 325D M57D30TU 144.9kW — 0281012994 sw383498 0x0D9286)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281012994', '383498'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90 325D M57D30TU 144.9kW 2MB (0281012994 sw 383498, 2006-2007)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x1FFFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_e90_325d_0d9286_iq_a',
+        name: 'IQ Release A 52B (E90 325D sw383498)',
+        category: 'fuel',
+        desc: 'IQ release A at 0x0D9286 (26 cells u16 BE = 52 B). Stock 4783 → tuner consensus 8074 (+69%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0D9286,
+        rows: 1, cols: 26, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 7600 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 8200 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 9000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_bmw_e90_325d_0d9308_iq_b',
+        name: 'IQ Release B 52B (E90 325D sw383498 Δ=+0x82)',
+        category: 'fuel',
+        desc: 'IQ release B at 0x0D9308 (Δ=+0x82 from A). Same raw signature.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0D9308,
+        rows: 1, cols: 26, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 7600 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 8200 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 9000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 BMW E81-E87 + E90-E91 2.0d sw394079 — 0x06A4F0 2MB cross-chassis ─
+  //
+  // BMW 2.0d N47 sw394079 EDC17 2MB DDE. 3 pairs across 2 chassis (E81-E87
+  // + E90-E91) and 2 DDE BlockIDs share EXACT anchor. Verified in
+  // pair_analysis_log.md BMW pairs:
+  //   #956 E81-E87 `O_71MJIC352A` · #1061 E90-E91 `O_71MJKC341A` ·
+  //   #1062 E90-E91 `O_71MJKC341A` sister
+  //
+  // Map structure:
+  //   0x06A4F0  30 B u16 BE — IQ release (stock 15039 → 30825, +105%)
+  //   0x0583BE  14 B u16 BE — emission cut (stock 39452 → 32, -99.9%)
+  {
+    id: 'edc17_bmw_n47_20d_sw394079_06a4f0',
+    name: 'Bosch EDC17 (BMW E81-E87 / E90-E91 2.0d N47 — sw394079 0x06A4F0 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['394079'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E81-E87 / E90-E91 2.0d N47D20 130kW DDE 2MB (sw 394079, 2007-2009)'],
+    maps: [
+      {
+        id: 'edc17_bmw_n47_20d_06a4f0_iq_release',
+        name: 'IQ Release 30B (2.0d N47 sw394079 cross-chassis)',
+        category: 'fuel',
+        desc: 'IQ release at 0x06A4F0 (15 cells u16 BE = 30 B). 3 pairs across 2 chassis EXACT anchor: stock 15039 → tuner consensus 30825 (+105%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06A4F0,
+        rows: 1, cols: 15, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 28000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 32000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 36000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 BMW E90 325d sw504248 — 0x1F2618 2MB 16×16 ──────────────────────
+  //
+  // BMW E90-E91 325d / 3.0d sw504248 EDC17 2MB. 2 pairs across 2 DDE
+  // BlockIDs + 2 power labels (150kW + 180kW) hit EXACT 16×16 anchor.
+  // Verified in pair_analysis_log.md BMW pairs:
+  //   #1058 sw504248 `O_76SLKM882A` 150kW · #1063 sw504248 `0281016838
+  //   X_76SLKN931A` 180kW
+  //
+  // Map structure:
+  //   0x1F2618  16×16 = 512 B u16 BE — torque ceiling (stock 22259 → 47875, +115%)
+  //
+  // Same universal 22181/22259 → 47797/47875 raw signature seen across
+  // VAG Transporter JD 0x077DBA, Touareg DPF 0x1DDB3E, E70 3.0d 4MB
+  // 0x3A575C — shared Bosch EDC17 C46/C64 16×16 torque ceiling shape
+  // across VAG + BMW families.
+  {
+    id: 'edc17_bmw_e90_325d_sw504248_1f2618',
+    name: 'Bosch EDC17 (BMW E90-E91 325d / 3.0d 150-180kW — sw504248 0x1F2618)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281016838', '504248'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E91 325d / 3.0d 150-180.2kW (0281016838 sw 504248, 2011)'],
+    maps: [
+      {
+        id: 'edc17_bmw_e90_325d_1f2618_torque_ceiling',
+        name: 'Torque Ceiling 16×16 (E90 325d/3.0d sw504248)',
+        category: 'limiter',
+        desc: 'Torque ceiling at 0x1F2618 (16×16 = 256 cells u16 BE = 512 B). 2 pairs EXACT anchor: stock 22259 → tuner consensus 47875 (+115%). Same signature as wired VAG 0x077DBA + 0x1DDB3E defs — universal Bosch EDC17 C46/C64 16×16 pattern.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1F2618,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 47000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC16 BMW E87/E90 2.0D sw379333 — 0x0D4208 2MB cluster ───────────────
   //
   // BMW E87/E90 2.0D sw379333 `0281012502` 119.9 kW EDC16 2MB. Cross-chassis
