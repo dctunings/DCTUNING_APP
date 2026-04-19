@@ -11981,6 +11981,47 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── MSD80 BMW E90-E93 3.0i N54 alt-hardware — 0x05F3C0 2MB cluster ───────
+  //
+  // BMW E90-E91-E92-E93 3.0i N54 225.1 kW MSD80 alternate Siemens chips
+  // (5WK93614 / 5WK93642 / 07598594). sw333711 cross-hardware cluster.
+  // Verified in pair_analysis_log.md BMW pairs:
+  //   #1241 sw333711 `5WK93614` · #1244 no-SW `0044DC0I890SIFC1S` ·
+  //   #1245 sw333711 `07598594 07596017` · #1248 sw333711 `5WK93642`
+  //
+  // Map structure (EXACT across 4 pairs):
+  //   0x05F3C0  6 B u16 BE — emission cut A (stock 48166 → 128, -99.7%)
+  //   0x05F3E0  6 B u16 BE — emission cut B (stock 20947 → 128, -99.4%)
+  //
+  // Δ=-0xBC from wired 5WK93608 0x05F47C def — alt Siemens chip variant.
+  {
+    id: 'msd80_bmw_e90_30i_alt_05f3c0',
+    name: 'Siemens MSD80 (BMW E90-E93 3.0i N54 — 5WK93614/5WK93642/07598594 0x05F3C0)',
+    manufacturer: 'Siemens',
+    family: 'MSD8x',
+    identStrings: ['5WK93614', '5WK93642', '07598594', '07596017'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E91-E92-E93 3.0i N54 225.1kW Siemens MSD80 alt-hardware (5WK93614/5WK93642/07598594 sw 333711, 2007-2008)'],
+    maps: [
+      {
+        id: 'msd80_bmw_e90_30i_05f3c0_emission_a',
+        name: 'Emission Cut A 6B (E90-E93 3.0i N54 alt 5WK93xx)',
+        category: 'limiter',
+        desc: 'Emission cut A at 0x05F3C0 (3 cells u16 BE = 6 B). 4 pairs cross-chip EXACT anchor: stock 48166 → 128 (-99.7%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x05F3C0,
+        rows: 1, cols: 3, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 1000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 200 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 100 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
   // ── MSD80 BMW E90-E93 3.0i N54 Siemens 5WK93608 — 0x05F47C 2MB cluster ───
   //
   // BMW E90-E91-E92-E93 3.0i N54 225.1 kW Siemens MSD80 5WK93608. 3 pairs

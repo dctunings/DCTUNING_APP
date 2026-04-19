@@ -3814,6 +3814,40 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #1241–1260 — NEW MSD80 alt-hardware def + more confirmations
+
+**NEW DEF — MSD80 BMW E90-E93 3.0i alt-hardware @ 0x05F3C0 2MB** (4 pairs):
+
+`msd80_bmw_e90_30i_alt_05f3c0` — alternate Siemens chip variants.
+
+- #1241 sw333711 `5WK93614`
+- #1244 no-SW `07598594 07596017 0044DC0I890SIFC1S`
+- #1245 sw333711 `07598594 07596017`
+- #1248 sw333711 `5WK93642`
+
+All 4 hit EXACT `0x05F3C0 6B` + `0x05F3E0 6B` emission cut.
+Δ=-0xBC from wired 0x05F47C def — alt Siemens chip MSD80 variant.
+
+**Wired def confirmations**:
+- #1242 sw333711 `5WK93628` — wired 5WK93608 0x05F47C def (with sw333711
+  already added in prior batch).
+- #1246 sw777227 `5WK93714` — 0x05F3EC 6B (Δ=-0x90 variant).
+- #1249/#1250 sw777227 `5WK93628` — wired 0x05F47C def confirmations.
+
+**Observations**:
+- #1243 sw333711 `5WK93628 Siemens-Continental` — 0x06BBEE 16B BE 250→
+  65279 +26012% (extreme stock 250 → near-max). Multi-tune on same SW.
+- #1247 sw333711 `5WK93748` — 0x072A74 26B +113% + 0x0584E0 emission
+  (different tune anchor, sw333711 multi-hardware).
+- #1251 sw333711 no-chip 2MB — minimal tune.
+- #1252 sw772227 no-chip 2MB — minimal tune.
+- #1253/#1254 sw333711 sister pair 2MB — emission cuts.
+- #1255 sw777227 2MB — emission cut pattern.
+- #1256 sw507191 `00879809690BQFM5S` 2MB — 2010 E90 3.0i late-MSD80
+  variant with different anchor pattern. Single SW.
+
+---
+
 ## BMW Pairs #1225–1240 — MSD80 3.0i def +sw333711 + cross-BlockID catalog
 
 **MSD80 5WK93608 def EXTENDED** — +sw333711 (pair #1233):
