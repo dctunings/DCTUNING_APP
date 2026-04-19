@@ -11551,9 +11551,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Siemens MSV70 (BMW E81-E87 130i 195kW — 5WK98084 0x0423CA 2.5MB)',
     manufacturer: 'Siemens',
     family: 'MSVx',
-    identStrings: ['5WK98084'],
-    fileSizeRange: [2625536, 2625536],
-    vehicles: ['BMW E81-E87 130i N54 194.9kW Siemens MSV70 (5WK98084, 2009)'],
+    identStrings: ['5WK98084', '5WK98086'],
+    fileSizeRange: [2097152, 2625536],
+    vehicles: ['BMW E81-E87 130i / E85 Z4 3.0i / E63 630i Siemens MSV70 (5WK98084/5WK98086, 2005-2009)'],
     maps: [
       {
         id: 'msv70_bmw_130i_0423ca_torque_lift',
@@ -11976,6 +11976,157 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage1: { multiplier: 1.0, addend: 0, clampMin: 40000 },
         stage2: { multiplier: 1.0, addend: 0, clampMin: 44000 },
         stage3: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 BMW X5 40D E70 N57 225kW — 0x1A575C 2MB 16×16 ──────────────────
+  //
+  // BMW X5 40D E70 N57 225.1 kW EDC17 2MB DDE. 2 pairs 2 SWs share EXACT
+  // 16×16 anchors. Verified in pair_analysis_log.md BMW pairs:
+  //   #1305 sw515070 `O_7ALJGN122A` X5 3.0xd · #1308 sw515071 `O_7ALJGO092A` X5 40D
+  //
+  // Map structure:
+  //   0x1A575C  16×16 = 512 B u16 BE — torque ceiling A (22181 → 47797/47961)
+  //   0x1A59A0  16×16 = 512 B u16 BE — torque ceiling B (22259 → 47875/47961)
+  {
+    id: 'edc17_bmw_x5_40d_e70_n57_1a575c',
+    name: 'Bosch EDC17 (BMW X5 40D E70 N57 225.1kW — 0x1A575C 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['515070', '515071'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW X5 E70 40D N57 180-225.1kW DDE 2MB (sw 515070/515071, 2010-2011)'],
+    maps: [
+      {
+        id: 'edc17_bmw_x5_40d_1a575c_torque_a',
+        name: 'Torque Ceiling A 16×16 (X5 40D N57 sw515070/515071)',
+        category: 'limiter',
+        desc: 'Torque ceiling A at 0x1A575C (16×16 = 256 cells u16 BE = 512 B). 2 pairs EXACT anchor: stock 22181 → tuner consensus 47797-47961 (+115%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1A575C,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 47000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 BMW F07 GT 530d N57 180kW — 0x1F3424 2MB 16×16 cluster ─────────
+  //
+  // BMW F07 GT 530d (N57D30) 180.2 kW EDC17 2MB DDE. 2 pairs same SW +
+  // same BlockID hit EXACT 16×16 anchors. Verified in pair_analysis_log.md
+  // BMW pairs:
+  //   #1287 GT 530 `O_78SH-00000736-042` · #1288 GT 530d 0281016728
+  //   sw502660 `O_78SH-00000736-042`
+  //
+  // Map structure:
+  //   0x1F3424  16×16 = 512 B u16 BE — torque ceiling A (22084 → 47863)
+  //   0x1F31E0  16×16 = 512 B u16 BE — torque ceiling B (22181 → 47961, +116%)
+  //
+  // Same universal 22181 signature family (5th BMW location for this cell).
+  {
+    id: 'edc17_bmw_f07_gt530d_1f3424',
+    name: 'Bosch EDC17 (BMW F07 GT 530d N57 180.2kW — 0281016728 sw502660 0x1F3424)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281016728', '502660'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW F07 GT 530d N57 180.2kW DDE 2MB (0281016728 sw 502660, 2010)'],
+    maps: [
+      {
+        id: 'edc17_bmw_f07_gt530d_1f3424_torque_a',
+        name: 'Torque Ceiling A 16×16 (F07 GT 530d sw502660)',
+        category: 'limiter',
+        desc: 'Torque ceiling A at 0x1F3424 (16×16 = 256 cells u16 BE = 512 B). 2 pairs EXACT anchor: stock 22084 → tuner consensus 47863 (+117%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1F3424,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 47000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_bmw_f07_gt530d_1f31e0_torque_b',
+        name: 'Torque Ceiling B 16×16 (F07 GT 530d sw502660)',
+        category: 'limiter',
+        desc: 'Torque ceiling B at 0x1F31E0 (Δ=-0x244 from A). Stock 22181 → 47961 (+116%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1F31E0,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 47000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 BMW F01 740d N57 225kW — 0x1F3EDC 2MB 16×16 cluster ────────────
+  //
+  // BMW F01 740d (N57 3.0d) 225.1 kW EDC17 2MB DDE. 2 pairs 2 BlockIDs
+  // share EXACT 16×16 cluster. Verified in pair_analysis_log.md BMW pairs:
+  //   #1274 F01 740d 2010 `O_78T7-00000642-012` · #1275 F01 740d 2011
+  //   `O_78T8-00000971-014`
+  //
+  // Map structure (EXACT across 2 pairs):
+  //   0x1F3EDC  16×16 = 512 B u16 BE — torque ceiling A (22181 → 47961)
+  //   0x1F4120  16×16 = 512 B u16 BE — torque ceiling B (22259 → 48039)
+  //
+  // Same universal 22181/22259 signature cluster — BMW F01/F10/E90/E70 +
+  // VAG Touareg/Transporter cross-manufacturer Bosch EDC17 16×16 cell.
+  {
+    id: 'edc17_bmw_f01_740d_n57_1f3edc',
+    name: 'Bosch EDC17 (BMW F01 740d N57 225.1kW — 0x1F3EDC 2MB DDE)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['78T7-00000642', '78T8-00000971'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW F01 740d N57D30T0 225.1kW DDE 2MB (2010-2011)'],
+    maps: [
+      {
+        id: 'edc17_bmw_f01_740d_1f3edc_torque_a',
+        name: 'Torque Ceiling A 16×16 (F01 740d N57)',
+        category: 'limiter',
+        desc: 'Torque ceiling A at 0x1F3EDC (16×16 = 256 cells u16 BE = 512 B). 2 pairs EXACT anchor: stock 22181 → tuner consensus 47961 (+116%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1F3EDC,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 47000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_bmw_f01_740d_1f4120_torque_b',
+        name: 'Torque Ceiling B 16×16 (F01 740d N57 Δ=+0x244)',
+        category: 'limiter',
+        desc: 'Torque ceiling B at 0x1F4120 (Δ=+0x244 from A). Stock 22259 → 48039 (+115%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1F4120,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 47000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 50000 },
         critical: true, showPreview: true,
       },
     ],
