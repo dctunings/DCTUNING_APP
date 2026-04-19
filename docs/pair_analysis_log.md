@@ -3814,6 +3814,69 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #853–872 — E70 3.0d/X5-3.0SD + 1 NEW def (X5-3.0SD bi-turbo)
+
+**NEW DEF WIRED — BMW E70/E71 X5-3.0SD M57D30TU2 210kW EDC16 @ 0x0E9C72**:
+
+`edc16_bmw_e70_x5_30sd_0e9c72` — 2031616B (1984KB) EDC16 dump.
+
+- #870 sw500776 `0281015128 08509191` (2007) — 0x0E9C72 8B + 0x0C99D4 38B
+- #871 sw397536 `0281015128 07823820` (2008) — EXACT same anchors + raw
+
+Raw signature:
+- `0x0E9C72 8B` BE 15000 → 20625 (+37.5% IQ upper)
+- `0x0C99D4 38B` BE 6003 → 8192 (+36.5% torque lift)
+
+2 SWs on same Bosch part 0281015128 share EXACT anchor + raw signature.
+
+**E70 3.0d 169kW sw377372 `O_785AC4` 1MB** (pairs #853/#854 sisters):
+- Both hit `0x0E02C5/0x0E043D 7B` mirror pair (Δ=+0x178) BE 29624 → 55398
+  +87%. 2 confirmations same SW. Single-SW wire candidate (2 sisters).
+
+**E70 3.0d sw397537 pairs** (multiple tuners on same SW):
+- #858 `O_B4NT86` 2MB — 0x0D8FE8 288B + 0x0D9E0C 30B (+35-37%)
+- #859 `O_B6NT86` 2MB — 0x0D9709 13B + 0x0D97FD 7B (+143%/+124%)
+- #860 `0281015851 07823811` 2031616B — 0x0E304F 13B +57%
+- #866 `O_B6NT86` 2MB — 0x0D9E06 36B +132%
+- Same SW (397537) across 4 pairs, 4 different tuner approaches,
+  different anchor signatures. Multi-tune on same ORI.
+
+**E70 3.0d sw500776 `O_D2UT87`** (multiple tuners on same SW):
+- #862 2MB — 0x0D9DC6 18B + 0x0D9FF8 126B +120-129%
+- #863 2MB — 0x0D996C/0x0D99EE 26B (+178% mirror pair)
+- #864 2MB — 0x0ED9C7 49B -53% + 0x0D8FD8 304B +51%
+- 3 pairs same SW, all target 0x0D9xxx region variably.
+
+**E70 3.0d 172.8kW sw500775** (#855 `O_D2NT87` 2MB) — 0x0F2FD5/0x0F304D
+15B pair BE 23195/20964 → 37312/33215 +60%.
+
+**E70 3.0d 180.2kW sw513581** (#856 `O_7ALGGN252A` 2MB) — 0x17802E/
+0x17900A 13B (Δ=+0xFDC mirror) BE 24158 → 49844 +106%.
+
+**E70 3.0d 225.1kW sw515071** (#857 `O_7ALJGO122A` 4MB) —
+0x383B6C 239B + 0x3A575C 16×16 BE 22181 → 47797 +116% — SAME raw
+signature as wired Transporter JD 0x077DBA (22134→47749) but different
+chassis. High-power variant.
+
+**E70 X5-3.0D variants**:
+- #865 sw387340 `0281014437 O_56NT67` 2630144B (2.5MB) — 0x25E91A/A2
+  64B (mirror Δ=+0x488) BE 65535 → 2238/2508 emission cut. NEW 2.5MB
+  format variant.
+- #867 sw377599 `0281012993 O_505993` 2MB — 0x0EFC5F 13B BE 7430 → 35334
+  +376%. Heavy tune.
+- #868 sw390903 `O_62NT85` 251904B (246KB NEW format!) — compact EDC16
+  dump with 0x019BF8/0x019E06 anchor.
+
+**E70-E71 3.0d 2004 early** (#869 sw361863 `0281011121 O_442AB2` 1511680B):
+- 1.44MB DPF-era EDC16 dump. 0x15854C/0x15855E 8B BE 500 → 7000 +1300%
+  extreme IQ release (stock near-zero).
+
+**E70-E71 X6 petrol** (#872 sw333711 `07626378 07616431` 2MB):
+- 0x0616F5 6B +117% + 0x072B3A 52B emission cut (-99.6%). MSD80-era
+  N54/N55 — already covered by bmw_msd signature def.
+
+---
+
 ## BMW Pairs #821–852 — E65 730D EDC16 cluster (1 NEW def) + E63 petrol + X3
 
 **NEW DEF WIRED — E65 730D M57D30 160kW EDC16 @ 0x0F244F** (4 pairs, 2 parts):

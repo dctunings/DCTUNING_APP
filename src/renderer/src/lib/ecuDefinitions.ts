@@ -11325,6 +11325,63 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC16 BMW E70/E71 X5-3.0SD 210kW — 0x0E9C72 2031616B cluster ─────────
+  //
+  // BMW E70/E71 X5 3.0sd (M57D30TU2 bi-turbo) 210 kW EDC16. 2031616B
+  // (1984KB) dump format. 1 Bosch part (0281015128) across 2 SWs.
+  // Verified in pair_analysis_log.md BMW pairs:
+  //   #870 sw500776 0281015128 08509191 · #871 sw397536 0281015128 07823820
+  //
+  // Map structure (EXACT match across 2 pairs):
+  //   0x0E9C72  8 B u16 BE — IQ upper (stock 15000 → 20625, +37.5%)
+  //   0x0C99D4  38 B u16 BE — torque lift (stock 6003 → 8192, +36.5%)
+  {
+    id: 'edc16_bmw_e70_x5_30sd_0e9c72',
+    name: 'Bosch EDC16 (BMW E70/E71 X5-3.0SD M57D30TU2 210kW — 0281015128 0x0E9C72 1984KB)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281015128', '500776', '397536'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E70/E71 X5-3.0SD M57D30TU2 210.4kW bi-turbo (0281015128 sw 397536/500776, 2007-2008)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x1F7FFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_x5_30sd_iq_upper',
+        name: 'IQ Upper 8B (X5-3.0SD 0281015128)',
+        category: 'fuel',
+        desc: 'IQ upper at 0x0E9C72 (4 cells u16 BE = 8 B). 2 SWs EXACT anchor: stock 15000 → tuner consensus 20625 (+37.5%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0E9C72,
+        rows: 1, cols: 4, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 19500 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 21500 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 24000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_bmw_x5_30sd_torque_lift',
+        name: 'Torque Lift 38B (X5-3.0SD 0281015128)',
+        category: 'limiter',
+        desc: 'Torque lift at 0x0C99D4 (19 cells u16 BE = 38 B). 2 SWs EXACT anchor: stock 6003 → 8192 (+36.5%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0C99D4,
+        rows: 1, cols: 19, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 7600 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 8500 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 9500 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC16 BMW E65 730D sw361884 — 0x0F244F 1015808B cluster ──────────────
   //
   // BMW E65 730D (M57D30 6-cyl diesel) 160kW EDC16. 1015808B = 992KB
