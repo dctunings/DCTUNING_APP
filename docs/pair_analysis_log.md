@@ -3814,6 +3814,67 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #1193–1208 — 3 NEW late-SW defs + cross-chassis 22181→47797 again
+
+**NEW DEF 1 — BMW E90-E93 2.0d sw399762 @ 0x057D1A cross-format** (2 pairs):
+
+`edc17_bmw_e90_2_0d_sw399762_057d1a` — 1540K + 2MB formats.
+
+- #1197 sw399762 `0281016069 O_73RWKB201A` 1540096B
+- #1198 sw399762 `O_73RWKB201A` 2097152B
+
+Both hit EXACT `0x057D1A 6B` + `0x057D06 8B` emission cut.
+
+**NEW DEF 2 — BMW E90-E93 2.0d sw504978 @ 0x151890 2MB** (2 pairs cross-BlockID):
+
+`edc17_bmw_e90_2_0d_sw504978_151890` — HIGH-anchor 0x15 region.
+
+- #1183 sw504978 `X_7CK5KE079A` 85.3kW
+- #1199 sw504978 `X_7CK5KE071A` 100kW
+
+Both hit EXACT `0x151890/0x15196E 6B` BE 44575→32 emission cut.
+
+**NEW DEF 3 — BMW E90-E93 2.0d sw517682 @ 0x155D18 2MB** (2 pairs cross-BlockID):
+
+`edc17_bmw_e90_2_0d_sw517682_155d18` — late-SW HIGH-anchor.
+
+- #1206 sw517682 `O_7CPAKE202A`
+- #1207 sw517682 `O_7CPAKE205A`
+
+Both hit EXACT `0x155D18/0x155DF6 6B` BE 44575→32 emission cut.
+
+**Wired def confirmations**:
+- #1193 sw396567 0281014573 1540096B — 0x071C48 16B (6th pair for def)
+- #1194 sw394078 `O_73MJKB341A` 1540K — 0x057E10 (E92-E93 variant)
+- #1196/#1200 sw507453 2MB — 0x0584B6 (wired def, cross-year)
+
+**Observations (no wire)**:
+- #1195 sw500770 `O_73MQKB611A` 2MB — EXACT 0x07491C wired def anchor
+  + sw500770 already in wired sw396564/sw500770/sw507452 def.
+- #1201 sw504978 `X_7CK5KE072A` — 0x17F47C 336B +2329% + 0x151648 152B
+  — different tuner style (heavy, +2300% first cell!) on same SW.
+- #1202 sw517685 `O_7CPAKE215A` — 0x155CE0 8×3 pattern (related to
+  sw517682 HIGH-anchor family).
+- #1203 sw522661 `O_7CPBKE235A` — 0x1560A0/0x15617E 6B (same HIGH-anchor
+  family).
+- #1204 sw507447 `O_7CLBKE121B` — 0x151F0C/0x151FEA 6B (HIGH-anchor).
+- #1205 sw513573 `O_7CP9KE141A` — 0x1543E0/0x1544BE 6B (HIGH-anchor).
+
+**22181→47797 cross-chassis/cross-brand signature AGAIN** (pair #1208):
+sw397454 E90-E93 3.0 D `O_76RCKN384A` 2MB hits `0x1FC256 16×16` BE
+22181 → 47797 +115% — SAME raw signature as wired VAG Transporter
+0x077DBA + Touareg DPF 0x1DDB3E + BMW E90 sw504248 0x1F2618 + BMW E70
+4MB 0x3A575C. Confirmed cross-manufacturer universal Bosch EDC17 C46/C64
+16×16 torque ceiling shape.
+
+**HIGH-anchor N47 cal-block family** observed:
+Late-SW N47 (2010-2012) family uses HIGH-anchor (0x15-0x18 region):
+sw504977/sw504978/sw507434/sw507446/sw507447/sw513573/sw517682/sw517685/
+sw522661. Different from early-SW 0x057Dxx / 0x0584xx region. BMW migrated
+cal-block layout for late-gen DDE files.
+
+---
+
 ## BMW Pairs #1177–1192 — NEW sw507446 0x16A754 def + multiple confirmations
 
 **NEW DEF — BMW E90-E93 2.0d sw507446 @ 0x16A754 2MB** (3 pairs, 3 BlockIDs):

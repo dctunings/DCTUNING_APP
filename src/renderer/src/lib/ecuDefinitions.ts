@@ -11981,6 +11981,128 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 BMW E90-E93 2.0d sw517682 — 0x155D18 2MB high-anchor ──────────
+  //
+  // BMW E90-E93 2.0d N47 84.6-100 kW sw517682 EDC17 2MB DDE 2011-era.
+  // 2 pairs across 2 DDE BlockIDs. Verified in pair_analysis_log.md BMW
+  // pairs: #1206 sw517682 `O_7CPAKE202A` · #1207 sw517682 `O_7CPAKE205A`
+  //
+  // Map structure:
+  //   0x155D18  6 B u16 BE — emission cut A (stock 44575 → 32, -99.9%)
+  //   0x155DF6  6 B u16 BE — emission cut B (stock 44575 → 32, -99.9%)
+  //
+  // HIGH-anchor 0x155Dxx region — late N47 SW 2011.
+  {
+    id: 'edc17_bmw_e90_2_0d_sw517682_155d18',
+    name: 'Bosch EDC17 (BMW E90-E93 2.0d N47 84-100kW — sw517682 0x155D18 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['517682'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E93 2.0d N47D20 84.6-100kW DDE 2MB (sw 517682, 2011)'],
+    maps: [
+      {
+        id: 'edc17_bmw_e90_2_0d_155d18_emission_a',
+        name: 'Emission Cut A 6B (E90-E93 2.0d sw517682)',
+        category: 'limiter',
+        desc: 'Emission cut A at 0x155D18 (3 cells u16 BE = 6 B). 2 pairs cross-BlockID EXACT anchor: stock 44575 → 32 (-99.9%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x155D18,
+        rows: 1, cols: 3, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 1000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 100 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 50 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ── EDC17 BMW E90-E93 2.0d sw399762 — 0x057D1A cross-format DDE ──────────
+  //
+  // BMW E90-E93 2.0d N47 100-105 kW sw399762 EDC17 cross-format emission
+  // cut. 2 pairs across 2 dump formats (1540K + 2MB) with EXACT anchors.
+  // Verified in pair_analysis_log.md BMW pairs:
+  //   #1197 sw399762 `0281016069 O_73RWKB201A` 1540096B ·
+  //   #1198 sw399762 `O_73RWKB201A` 2097152B
+  //
+  // Map structure:
+  //   0x057D1A  6 B u16 BE — emission cut A (stock 55071 → 32, -99.9%)
+  //   0x057D06  8 B u16 BE — emission cut B (stock 47646 → 32, -99.9%)
+  //
+  // Same 55071/47646 raw signatures as wired sw507453 def at Δ=-0x79C
+  // from 0x0584B6 — sister anchor within same emission cut family.
+  {
+    id: 'edc17_bmw_e90_2_0d_sw399762_057d1a',
+    name: 'Bosch EDC17 (BMW E90-E93 2.0d N47 100-105kW — sw399762 0x057D1A)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281016069', '399762'],
+    fileSizeRange: [1540096, 2097152],
+    vehicles: ['BMW E90-E93 2.0d N47D20 100-105kW DDE (0281016069 sw 399762, 2009)'],
+    maps: [
+      {
+        id: 'edc17_bmw_e90_2_0d_057d1a_emission_a',
+        name: 'Emission Cut A 6B (E90-E93 2.0d sw399762)',
+        category: 'limiter',
+        desc: 'Emission cut A at 0x057D1A (3 cells u16 BE = 6 B). 2 pairs cross-format EXACT anchor: stock 55071 → 32 (-99.9%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x057D1A,
+        rows: 1, cols: 3, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 1000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 100 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 50 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ── EDC17 BMW E90-E93 2.0d sw504978 — 0x151890 2MB high-anchor ───────────
+  //
+  // BMW E90-E93 2.0d N47 85.3-107.4 kW sw504978 EDC17 2MB. 2 pairs across
+  // 2 DDE BlockIDs. Verified in pair_analysis_log.md BMW pairs:
+  //   #1183 sw504978 `X_7CK5KE079A` 85.3kW · #1199 sw504978 `X_7CK5KE071A`
+  //   100kW
+  //
+  // Map structure:
+  //   0x151890  6 B u16 BE — emission cut A (stock 44575 → 32, -99.9%)
+  //   0x15196E  6 B u16 BE — emission cut B (stock 44575 → 32, -99.9%)
+  //
+  // HIGH-anchor 0x15 region (similar to sw507446 / sw517685 / sw522661
+  // late-SW family layout).
+  {
+    id: 'edc17_bmw_e90_2_0d_sw504978_151890',
+    name: 'Bosch EDC17 (BMW E90-E93 2.0d N47 85-107kW — sw504978 0x151890 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['504978'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E93 2.0d N47D20 85.3-107.4kW DDE 2MB (sw 504978, 2010)'],
+    maps: [
+      {
+        id: 'edc17_bmw_e90_2_0d_151890_emission_a',
+        name: 'Emission Cut A 6B (E90-E93 2.0d sw504978)',
+        category: 'limiter',
+        desc: 'Emission cut A at 0x151890 (3 cells u16 BE = 6 B). 2 pairs cross-BlockID EXACT anchor: stock 44575 → 32 (-99.9%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x151890,
+        rows: 1, cols: 3, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 1000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 100 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 50 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
   // ── EDC17 BMW E90-E93 2.0d sw507446 — 0x16A754 2MB high-anchor ───────────
   //
   // BMW E90-E93 2.0d N47 119.9 kW sw507446 EDC17 2MB DDE. 3 pairs across
