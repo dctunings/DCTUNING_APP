@@ -3814,6 +3814,52 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #1145–1160 — 1 NEW def (sw507452 0x07340A) + sw396567 3rd pair
+
+**NEW DEF — BMW E90-E93 2.0d sw507452 @ 0x07340A 2MB** (2 sister pairs):
+
+`edc17_bmw_e90_2_0d_sw507452_07340a` — 2MB EDC17 N47.
+
+- #1151 sw507452 `O_73MTIB661A`
+- #1152 sw507452 `O_73MTKB641A`
+
+Both hit EXACT `0x07340A 480B` BE 25786 → 43974 (+70%).
+
+**Cross-chassis sw396567 3rd pair confirmation** (#1149):
+- E90-E93 2.0d `37390655558` sw396567 @ 0x071C48 16B + 0x057C52 6B
+- Matches wired sw396567 0x07491C def (was sw396567 E87 #977 + E90
+  #1048 + now E90-E93 #1149). 3 pairs cross-chassis same cell.
+
+**sw396567 multi-tune catalog on same ORI**:
+- #1147 `37390655558` 2MB — 0x0707E8 199B + 0x06BCA6 14B (style A)
+- #1148 sister of #1147 — + 0x07FF26 46B (style A variant)
+- #1149 sister — different tuner targets 0x071C48 (matches wired)
+- 3 different tuner approaches on same sw396567 ORI.
+
+**Observations (no wire)**:
+- #1145 sw396562 `O_71MPKC561A` — 0x0580CE 14B +150% + 0x0582C4 emission
+- #1146 sw509478 `0281CIB7S1 O_71S7IC182A` — 0x0587B6 18B + 0x000000
+  first-block modification.
+- #1150 sw399763 `37390655558` — 0x06C4FA/0x06C516 13B mirror BE 17333→
+  49461 +185%. Same 17333 as wired sw394079 270KB def at 2MB anchor.
+- #1153 sw507453 `O_73S7KB191A` 2MB — 0x06E486 17B BE 2055→25095 +1121%
+  (different anchor from wired 0x0584B6 for sw507453 2MB — multi-tune).
+- #1154 sw511402 `O_7CP9KE131A` — 0x154128 29B -62% high-anchor emission
+- #1155 sw513573 `O_7CP9KE141A` — 0x15412A 27B -65% + 0x17F0B8 447B +55%
+  Same pattern as #1154 with sister SW.
+- #1156 sw501612 `37390655558` — 0x070D96 312B + 0x0582DA 29B. SW501612
+  appears at both `37390655558` (here) AND `O_73S3IB/KB` BlockIDs (wired
+  def). Multi-BlockID same SW.
+- #1157 sw501613 `O_71S3KC081A` — 0x071A7A 312B + 0x076F2C 288B. Single.
+- #1158 sw396564 `O_73MPIB585A` — 0x057D16/0x057DE0 emission already
+  covered by 0x07491C def.
+- #1159 sw507453 `0281_016_110 O_73S7UB123A` — 0x06B650 25B +56% (different
+  anchor from wired sw507453 def).
+- #1160 sw517685 `O_7CPAKE215A` — 0x180AA6/0x180AC2 13B high-anchor mirror
+  BE 4105→37726 +819%. NEW high-region E93 N47 pattern.
+
+---
+
 ## BMW Pairs #1129–1144 — 2 NEW defs (sw501612 0x06AE0A + sw507453 1572864B)
 
 **NEW DEF 1 — BMW E90-E91 318D sw501612 @ 0x06AE0A 2MB** (2 pairs cross-BlockID):

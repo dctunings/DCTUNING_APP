@@ -11943,6 +11943,43 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 BMW E90-E93 2.0d sw507452 — 0x07340A 2MB DDE cluster ───────────
+  //
+  // BMW E90-E91-E92-E93 2.0d N47 105.2 kW sw507452 EDC17 2MB DDE. 2 sister
+  // pairs across 2 BlockIDs. Verified in pair_analysis_log.md BMW pairs:
+  //   #1151 `O_73MTIB661A` · #1152 `O_73MTKB641A`
+  //
+  // Map structure (EXACT across 2 sister pairs):
+  //   0x07340A  480 B u16 BE — IQ release (stock 25786 → 43974, +70%)
+  //   #1151 also hits 0x07E990 16×5 map +114% (additional tune target).
+  {
+    id: 'edc17_bmw_e90_2_0d_sw507452_07340a',
+    name: 'Bosch EDC17 (BMW E90-E93 2.0d N47 105.2kW — sw507452 0x07340A 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['507452'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E93 2.0d N47D20 105.2kW DDE 2MB (sw 507452, 2007-2010)'],
+    maps: [
+      {
+        id: 'edc17_bmw_e90_2_0d_07340a_iq_release',
+        name: 'IQ Release 480B (E90-E93 2.0d sw507452)',
+        category: 'fuel',
+        desc: 'IQ release at 0x07340A (240 cells u16 BE = 480 B). 2 sister pairs EXACT anchor: stock 25786 → tuner consensus 43974 (+70%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x07340A,
+        rows: 1, cols: 240, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 41000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 BMW E81-E87 + E90-E93 2.0d sw507453 — 0x06B77E 1572864B ────────
   //
   // BMW 2.0d N47 sw507453 EDC17 1572864B (1.5MB) compact dump format.
