@@ -3814,6 +3814,42 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #1225–1240 — MSD80 3.0i def +sw333711 + cross-BlockID catalog
+
+**MSD80 5WK93608 def EXTENDED** — +sw333711 (pair #1233):
+- sw333711 `5WK93608` hits EXACT wired 0x05F47C/0x05F49C anchors
+- Now covers 3 SWs (333711/772227/777227) on 5WK93608 across 4+ pairs
+
+**Wired def confirmations**:
+- #1229/#1231/#1232 sw777227 5WK93608 — wired def (5+ pairs total)
+- #1226 sw777111 `4F0907401B` — 0x06EEC4 22B same as #1117 sw777111
+  (already observed).
+
+**sw333711 MSD80 0x0664FE cluster** (3 pairs cross-BlockID, observation):
+- #1228 no-SW `044CC0IGD0SIEQ5S` — 0x066C1E 72B (Δ=+0x720 from 0x0664FE)
+- #1237 `07628410 07611397 0044DC0I8A0SITC2S` — 0x0664FE 72B + 0x0719AF 58B
+- #1238 sw333711 `07628410 07611397` — EXACT same anchors as #1237
+- All share raw 13067 → 59404 (+355%) + 27002 → 55919 (+107%) cluster
+  — SAME as wired MSD80 135i 0x070F3E def at different anchor.
+
+**Other observations**:
+- #1225 sw333711 `5WK93748` — 0x072A74 26B +113% + 0x0584E0 emission
+  (different MSD80 Siemens chip variant).
+- #1227 sw? 3.0i 160.3kW `5WK98081` (probably MSV70) — 9 regions, mild
+  tune (0x059D0E 20B +18%).
+- #1230 no-SW `07611778 07611358 0044CC0IJC0SITC1S` — 0x073504/0x073514
+  6B emission cut at Δ=+0x14080 from wired 0x05F47C.
+- #1234/#1235 no-SW + sw333711 `07598594 07596017` — 0x066442 72B
+  BE 13067→59404 (Δ=-0xBC from #1237's 0x0664FE) same raw signature.
+- #1236 no-SW `07590954 07586938 0044DC0I880SITC2S` — 0x05F3BC 6B +6B
+  (Δ=-0xC0 from wired 0x05F47C).
+- #1239 no-SW `07628528 07616431` — 0x070622 72B + 0x061893 58B (same
+  raw signature at different anchor — unique among multi-anchor variants).
+- #1240 sw777227 `5WK93617` — 0x05F3BC/0x05F3DC 6B (Δ=-0xC0 shifted
+  variant, different Siemens chip).
+
+---
+
 ## BMW Pairs #1209–1224 — 2 NEW defs (504248 524KB + 3.0i MSD80 5WK93608)
 
 **NEW DEF 1 — BMW E90-E93 3.0d sw504248 @ 0x072618 524KB** (2 pairs):

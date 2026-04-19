@@ -11996,9 +11996,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Siemens MSD80 (BMW E90-E93 3.0i N54 225kW — 5WK93608 0x05F47C)',
     manufacturer: 'Siemens',
     family: 'MSD8x',
-    identStrings: ['5WK93608', '772227', '777227'],
+    identStrings: ['5WK93608', '772227', '777227', '333711'],
     fileSizeRange: [2097152, 2097152],
-    vehicles: ['BMW E90-E91-E92-E93 3.0i N54 225.1kW Siemens MSD80 (5WK93608 sw 772227/777227, 2007-2012)'],
+    vehicles: ['BMW E90-E91-E92-E93 3.0i N54 225.1kW Siemens MSD80 (5WK93608 sw 333711/772227/777227, 2006-2012)'],
     maps: [
       {
         id: 'msd80_bmw_e90_30i_05f47c_emission_a',
