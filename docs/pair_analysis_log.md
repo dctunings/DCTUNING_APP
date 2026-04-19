@@ -3814,6 +3814,63 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #873–888 — 2 NEW defs + X5-3.0SD ext + BMW E70/E71 EDC16 cluster
+
+**NEW DEF 1 — BMW E71 3.0d 210kW @ 0x0C9DC6 EDC16** (3 pairs, 2 parts, 2 SWs):
+
+`edc16_bmw_e71_30d_0c9dc6` — 2031616B (1984KB) EDC16 dump.
+
+- #883 sw500776 `0281015852` — 0x0C9DC6 18B + 0x0C9FF8 126B
+- #884 sw397536 `0281015852` — EXACT same anchors
+- #887 sw397536 `0281015128` — DIFFERENT Bosch part, SAME anchors + raw sig
+
+Raw signature:
+- `0x0C9DC6 18B` BE 3057 → 7000 (+129% IQ upper A)
+- `0x0C9FF8 126B` BE 4539 → 10000 (+120% IQ upper B)
+
+**NEW DEF 2 — BMW E70/E71 3.0d 170-173kW @ 0x0E304F** (3 pairs, 2 parts, 2 SWs):
+
+`edc16_bmw_e70_30d_0e304f` — 2031616B EDC16.
+
+- #860 sw397537 `0281015851`
+- #881 sw397537 `0281014437` — NEW Bosch part
+- #886 sw500775 `0281015851`
+
+Raw signature:
+- `0x0E304F 13B` BE 21129 → 33246 (+57% IQ upper)
+- `0x0E2FC3 13B` BE 57693 → 26676 (-54% torque limit/IQ cut)
+
+**X5-3.0SD 0x0E9C72 def EXTENDED** — +sw390902 + 0281015241 part:
+- #888 sw390902 `0281015241` — hits EXACT 0x0E9C72 8B + 0x0C99D4 38B
+  with stock 15000 (same as wired cluster) but target 22500 (Δ from
+  wired 20625). Same anchor structure, slightly different tuner target.
+
+**E71 3.0d 225-265kW EDC17 cluster** (observations — signature wire
+candidate):
+
+4 SWs share raw 18340 → 44762 (239B) + 22181 → 47797 (16×16) signatures
+at DIFFERENT anchors per SW:
+- #857 sw515071 4MB @ 0x383B6C + 0x3A575C
+- #878 sw513582 2MB @ 0x1809E0
+- #879 sw507451 2MB @ 0x18084C + 0x1A243C
+- #880 sw515071 2MB @ 0x183B6C + 0x1A575C
+
+4MB↔2MB dump shift of 0x200000 confirmed between #857 and #880 (same
+SW sw515071). Anchor drift across other SWs too wide for fixedOffset.
+
+**E71 3.0d 180kW DDE @ 0x17BE74** (pair #876 sw515070) — 2MB single SW.
+**E71 3.0d 170kW sw513581** (pair #875 sw513581 4MB) — 2MB→4MB twin of
+#856.
+
+**E71 3.0d sw390001 `0281015128` 2MB** (#877) — 0x0F26B7 15B +79% +
+0x0F2B61 17B -69%. Different anchor from wired 2031616B variant.
+
+**E70-E71 X6 35i petrol** (#873/#874 sw333711 sisters) — already covered
+by bmw_msd sig def. #874 has unusual 2.75% file change (heavy tune or
+cal replacement partial).
+
+---
+
 ## BMW Pairs #853–872 — E70 3.0d/X5-3.0SD + 1 NEW def (X5-3.0SD bi-turbo)
 
 **NEW DEF WIRED — BMW E70/E71 X5-3.0SD M57D30TU2 210kW EDC16 @ 0x0E9C72**:

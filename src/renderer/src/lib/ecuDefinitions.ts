@@ -11325,6 +11325,123 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC16 BMW E71 3.0d 210kW — 0x0C9DC6 2031616B alt-cluster ─────────────
+  //
+  // BMW E71 X6 3.0d 210 kW EDC16 sister cluster at different anchor (higher
+  // stock raw, more aggressive target). 2 Bosch parts (0281015852 +
+  // 0281015128) across 2 SWs share EXACT signature. Verified in
+  // pair_analysis_log.md BMW pairs:
+  //   #883 sw500776 0281015852 · #884 sw397536 0281015852 ·
+  //   #887 sw397536 0281015128
+  //
+  // Map structure (EXACT match across 3 pairs, 2 parts, 2 SWs):
+  //   0x0C9DC6  18 B u16 BE — IQ upper A (stock 3057 → 7000, +129%)
+  //   0x0C9FF8  126 B u16 BE — IQ upper B (stock 4539 → 10000, +120%)
+  {
+    id: 'edc16_bmw_e71_30d_0c9dc6',
+    name: 'Bosch EDC16 (BMW E71 3.0d 210kW — 0281015852/0281015128 0x0C9DC6)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281015852'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E71 3.0d 210.4kW (0281015852 sw 397536/500776, 2007-2008)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x1F7FFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_e71_30d_0c9dc6_iq_a',
+        name: 'IQ Upper A 18B (E71 3.0d 0281015852/0281015128)',
+        category: 'fuel',
+        desc: 'IQ upper A at 0x0C9DC6 (9 cells u16 BE = 18 B). 3 pairs across 2 parts + 2 SWs EXACT anchor: stock 3057 → tuner consensus 7000 (+129%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0C9DC6,
+        rows: 1, cols: 9, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 6500 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 7500 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 8500 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_bmw_e71_30d_0c9ff8_iq_b',
+        name: 'IQ Upper B 126B (E71 3.0d 0281015852/0281015128)',
+        category: 'fuel',
+        desc: 'IQ upper B at 0x0C9FF8 (63 cells u16 BE = 126 B). Stock 4539 → 10000 (+120%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0C9FF8,
+        rows: 1, cols: 63, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 9500 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 11000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 13000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC16 BMW E70/E71 3.0d 172-170kW — 0x0E304F 2031616B cluster ─────────
+  //
+  // BMW E70/E71 3.0d (non-bi-turbo) 170-172.8 kW EDC16. 2 Bosch parts
+  // (0281015851 + 0281014437) across 2 SWs share EXACT anchor. Verified in
+  // pair_analysis_log.md BMW pairs:
+  //   #860 sw397537 0281015851 · #881 sw397537 0281014437 ·
+  //   #886 sw500775 0281015851
+  //
+  // Map structure (EXACT match):
+  //   0x0E304F  13 B u16 BE — IQ upper (stock 21129 → 33246, +57%)
+  //   0x0E2FC3  13 B u16 BE — torque limit (stock 57693 → 26676, -54%)
+  {
+    id: 'edc16_bmw_e70_30d_0e304f',
+    name: 'Bosch EDC16 (BMW E70/E71 3.0d 170-173kW — 0281015851/0281014437 0x0E304F)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281015851', '0281014437', '397537', '500775'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E70/E71 3.0d 170-172.8kW (0281015851/0281014437 sw 397537/500775, 2007-2008)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x1F7FFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_e70_30d_0e304f_iq_upper',
+        name: 'IQ Upper 13B (E70/E71 3.0d 0281015851/0281014437)',
+        category: 'fuel',
+        desc: 'IQ upper at 0x0E304F (6-7 cells u16 BE = 13 B). 3 pairs across 2 parts + 2 SWs EXACT anchor: stock 21129 → tuner consensus 33246 (+57%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0E304F,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 31000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 34000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 38000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_bmw_e70_30d_0e2fc3_torque_limit',
+        name: 'Torque Limit 13B (E70/E71 3.0d 0281015851/0281014437)',
+        category: 'limiter',
+        desc: 'Torque limit at 0x0E2FC3 (6-7 cells u16 BE = 13 B). Stock 57693 → tuner consensus 26676 (-54% — IQ torque cut for sharper ramp).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0E2FC3,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 28000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 25000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMax: 22000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC16 BMW E70/E71 X5-3.0SD 210kW — 0x0E9C72 2031616B cluster ─────────
   //
   // BMW E70/E71 X5 3.0sd (M57D30TU2 bi-turbo) 210 kW EDC16. 2031616B
@@ -11340,9 +11457,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC16 (BMW E70/E71 X5-3.0SD M57D30TU2 210kW — 0281015128 0x0E9C72 1984KB)',
     manufacturer: 'Bosch',
     family: 'EDC16',
-    identStrings: ['0281015128', '500776', '397536'],
+    identStrings: ['0281015128', '0281015241', '500776', '397536', '390902'],
     fileSizeRange: [2031616, 2031616],
-    vehicles: ['BMW E70/E71 X5-3.0SD M57D30TU2 210.4kW bi-turbo (0281015128 sw 397536/500776, 2007-2008)'],
+    vehicles: ['BMW E70/E71 X5-3.0SD M57D30TU2 210.4kW bi-turbo (0281015128/0281015241 sw 390902/397536/500776, 2007-2008)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x1F7FFC,
     checksumLength: 4,
