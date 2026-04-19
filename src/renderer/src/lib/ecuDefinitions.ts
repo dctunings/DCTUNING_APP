@@ -10973,6 +10973,136 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── Opel Astra H 1.7 CDTi EDC15 PD (Y17DT / Z17DTL) ────────────────────
+  // Confirmed via per-pair analysis — 6 pairs share 20-byte axis signature
+  // at anchors 0xDC3BF / 0xDC3C7 across part numbers 0281011380/0281011943/
+  // 0281012694 and SWs sw370433/374424/371443/374425/376412. Isuzu-derived
+  // Y17DT / Z17DTL 1.7 CDTi in Astra H/Corsa C/Combo C 2005-2007.
+  {
+    id: 'opel_astra_17cdti_edc15',
+    name: 'Opel Astra H 1.7 CDTi EDC15 (Y17DT/Z17DTL)',
+    manufacturer: 'Bosch',
+    family: 'EDC15 Opel',
+    identStrings: ['0281011380', '0281011943', '0281012694', 'Y17DT', 'Z17DTL', 'EDC15C7'],
+    fileSizeRange: [1048576, 1048576],
+    vehicles: [
+      'Opel/Vauxhall Astra H 1.7 CDTi (2005-2007, 58.8-74.3kW)',
+      'Opel/Vauxhall Corsa C 1.7 CDTi (Y17DT)',
+      'Opel/Vauxhall Combo C 1.7 CDTi',
+    ],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'opel_17cdti_iq_smoke',
+        name: 'IQ Smoke Limit Table',
+        category: 'smoke',
+        desc: 'Opel Astra H 1.7 CDTi EDC15 IQ smoke limit — 20-byte axis signature BYTE-IDENTICAL across 6 pairs (sw370433, sw374424, sw371443, sw374425, sw376412). Stage1 pattern raises raw 23791 → 53572 (+125%) at 19-byte anchor 0xDC3CF/0xDC3D7.',
+        signatures: [
+          [0x86, 0x01, 0xb8, 0x02, 0x0b, 0x02, 0x8c, 0x03, 0x1b, 0x03, 0x7a, 0x03, 0xe5, 0x04, 0x60, 0x05, 0x88, 0x06, 0x80, 0x07],
+        ],
+        sigOffset: 16,
+        fixedOffset: 0x0DC3CF,
+        rows: 1, cols: 9, dtype: 'uint16', le: false,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.30 },
+        stage2: { multiplier: 1.50 },
+        stage3: { multiplier: 1.70, clampMax: 62000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── Opel 1.9 CDTi EDC16 Z19DT/Z19DTH (Astra H / Vectra C / Zafira B) ──
+  // Confirmed via per-pair analysis — 21+ pairs across Astra H and Vectra C
+  // 1.9 CDTi (Fiat-derived Z19DT/Z19DTH/Z19DTL) 2003-2008 share 20-byte
+  // axis signature. Multiple part numbers (0281011448/0281011449/
+  // 0281011668/0281011914/0281012122/0281012123/0281012533/0281012534/
+  // 0281012549/0281012656/0281012867/0281013409).
+  {
+    id: 'opel_19cdti_edc16',
+    name: 'Opel 1.9 CDTi EDC16 (Z19DT/Z19DTH Astra H/Vectra C)',
+    manufacturer: 'Bosch',
+    family: 'EDC16 Opel',
+    identStrings: ['Z19DT', 'Z19DTH', 'Z19DTL', 'Z19DTJ', 'EDC16C39', 'EDC16C9', '0281011448', '0281011449', '0281011668', '0281011914', '0281012122', '0281012123', '0281012533', '0281012534', '0281012549', '0281012656', '0281012867', '0281013409'],
+    fileSizeRange: [262144, 2097152],
+    vehicles: [
+      'Opel/Vauxhall Astra H 1.9 CDTi (2004-2008, 74.3-110.3kW)',
+      'Opel/Vauxhall Vectra C 1.9 CDTi (2004-2008, 88.3-110.3kW)',
+      'Opel/Vauxhall Zafira B 1.9 CDTi (2005-2010)',
+      'Opel/Vauxhall Signum 1.9 CDTi',
+      'Fiat Croma II 1.9 Multijet (8V/16V)',
+      'Saab 9-3 II 1.9 TiD',
+    ],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'opel_19cdti_iq_smoke',
+        name: 'IQ Smoke Limit Table',
+        category: 'smoke',
+        desc: 'Opel 1.9 CDTi Z19DTH/Z19DT EDC16 IQ smoke limit. 20-byte axis+map signature BYTE-IDENTICAL across 21+ pairs spanning Astra H / Vectra C / Zafira B. Stage1 raises raw 2038→4400 (+116%) at 40B region. Anchor varies: 0xE1B9E (1MB), 0x21BB2 (262KB), 0x78322 / 0x7CEBA (alt SW layouts).',
+        signatures: [
+          [0x15, 0x7c, 0x15, 0xe0, 0x16, 0x44, 0x1b, 0x58, 0x1b, 0x58, 0x1b, 0x58, 0x1b, 0x58, 0x11, 0x62, 0x0f, 0xd2, 0x0e, 0xd8],
+        ],
+        sigOffset: 16,
+        fixedOffset: 0x0E1BAE,
+        rows: 1, cols: 20, dtype: 'uint16', le: false,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.30 },
+        stage2: { multiplier: 1.45 },
+        stage3: { multiplier: 1.60, clampMax: 60000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── Opel 2.0 CDTi EDC17 (Insignia/Astra A20DTH/A20DTJ/A20DTR) ──────────
+  // Confirmed via per-pair analysis — 51+ pairs across Insignia/Astra 2.0
+  // CDTi 2009-2012 with Bosch EDC17C18/EDC17C59 hardware share 20-byte
+  // axis signature `9a 09 cd 0c 00 10 33 13 66 16 9a 19 cd 1c 00 20 48 0d
+  // 48 0d`. Covers part numbers 0281015149/0281015774/0281017105/
+  // 0281017452/0281017453/0281018081 and file sizes 524KB/1540KB/2MB.
+  {
+    id: 'opel_cdti_edc17',
+    name: 'Opel 2.0 CDTi EDC17 (Insignia/Astra A20DT)',
+    manufacturer: 'Bosch',
+    family: 'EDC17 Opel',
+    identStrings: ['A20DT', 'A20DTH', 'A20DTJ', 'A20DTR', 'EDC17C18', 'EDC17C59', '0281015149', '0281015774', '0281017105', '0281017452', '0281017453', '0281018081'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: [
+      'Opel/Vauxhall Insignia 2.0 CDTi (2009-2014, 95.6-117.7kW)',
+      'Opel/Vauxhall Astra J 2.0 CDTi (2010-2014, 117.7kW)',
+      'Opel/Vauxhall Zafira Tourer 2.0 CDTi (2011+)',
+      'Chevrolet Cruze 2.0 VCDi',
+      'Saab 9-5 NG 2.0 TTiD',
+    ],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'opel_cdti_edc17_torque',
+        name: 'Torque Demand Limit',
+        category: 'torque',
+        desc: 'Opel 2.0 CDTi EDC17 torque demand — 16-byte axis + 4-byte map prefix signature BYTE-IDENTICAL across 51+ pairs spanning Insignia/Astra/Zafira A20DT family. Stage1 pattern raises raw 20302→52240 (+157%) on 128-byte table.',
+        signatures: [
+          [0x9a, 0x09, 0xcd, 0x0c, 0x00, 0x10, 0x33, 0x13, 0x66, 0x16, 0x9a, 0x19, 0xcd, 0x1c, 0x00, 0x20, 0x48, 0x0d, 0x48, 0x0d],
+        ],
+        sigOffset: 16,
+        fixedOffset: 0x1A8A50,
+        rows: 16, cols: 4, dtype: 'uint16', le: false,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.30, clampMax: 55000 },
+        stage2: { multiplier: 1.50, clampMax: 60000 },
+        stage3: { multiplier: 1.70, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── Magneti Marelli MJD (Alfa Romeo / Fiat / Jeep diesel) ───────────────────
   {
     id: 'marelli_mjd',

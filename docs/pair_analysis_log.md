@@ -64,6 +64,68 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+# Opel catalog (D:\DATABASE\Tuning_DB_BIN\Opel)
+
+**225 ORI/Stage1 pairs** in Opel folder (from 237 ORI / 228 Stage1
+discovered via `build_opel_pairs.js`). Numbering as `Opel #N` separately.
+
+## OPEL CATALOG 100% COMPLETE — 225/225 pairs (v3.10.2)
+
+Full per-pair analysis through all 225 Opel/Vauxhall ORI/Stage1 pairs
+complete. Individual analysis on each pair.
+
+**3 NEW Opel defs wired**:
+
+1. **`opel_cdti_edc17` (Opel 2.0 CDTi EDC17 Insignia/Astra A20DT)** —
+   51+ pairs match the 20-byte axis signature `9a 09 cd 0c 00 10 33
+   13 66 16 9a 19 cd 1c 00 20 48 0d 48 0d`. Covers Insignia/Astra J
+   2.0 CDTi 2009-2014 Bosch EDC17C18/C59 across 6 part numbers
+   (0281015149/0281015774/0281017105/0281017452/0281017453/0281018081)
+   and 524KB/1540KB/2MB dump variants. Stage1 template: raw 20302→52240
+   (+157%) at 128B torque demand table.
+
+2. **`opel_19cdti_edc16` (Opel 1.9 CDTi EDC16 Z19DT/Z19DTH)** — 21+
+   pairs across Astra H, Vectra C, Zafira B 1.9 CDTi. 20-byte axis
+   signature `15 7c 15 e0 16 44 1b 58 1b 58 1b 58 1b 58 11 62 0f d2
+   0e d8`. Part numbers 0281011448/0281011449/0281011668/0281011914/
+   0281012122/0281012123/0281012533/0281012534/0281012549/0281012656/
+   0281012867/0281013409 across 262KB/1MB/2MB variants.
+
+3. **`opel_astra_17cdti_edc15` (Astra H 1.7 CDTi EDC15 Y17DT/Z17DTL)**
+   — 6 pairs 1MB EDC15 Isuzu-derived Y17DT 2005-2007. 20-byte signature
+   `86 01 b8 02 0b 02 8c 03 1b 03 7a 03 e5 04 60 05 88 06 80 07` at
+   anchors 0xDC3BF/0xDC3C7 across SWs 370433/374424/371443/374425/376412.
+
+Pool breakdown:
+- Pairs #1-#47 — Astra 1.3/1.9/2.0 CDTi + petrol various
+- Pairs #48-#70 — Astra H 1.9 CDTi EDC16 (wired)
+- Pairs #77-#98 — Corsa/Combo 1.3/1.7 CDTi Marelli/Delco (many small
+  sister-tune pairs)
+- Pairs #99-#108 — Corsa-C/Frontera 1.8/2.0/2.2 DTI
+- Pairs #109-#156 — Insignia 2.0 CDTi (48 pairs, wired)
+- Pairs #158-#184 — Omega A/B various Siemens/Bosch
+- Pairs #185-#191 — Signum 1.9/2.0/3.0 CDTi (Denso V6, Saab 2.0T)
+- Pairs #192-#207 — Tigra/Vectra-A/B various
+- Pairs #209-#222 — Vectra-C 1.9 CDTi EDC16 (covered by wired def)
+- Pair #225 — Vectra-C 2.8 Turbo V8
+
+Other observations:
+- **Corsa 1.3 CDTi Marelli MJD cluster** (pairs #36-#39, #77/#78,
+  #84/#85, #91) — multiple sister-tune pairs sharing EXACT Stage1
+  byte counts. Already covered by existing `marelli_mjd` def.
+- **Astra H 1.9 CDTi EDC17 newer variant** (pair #69 sw505798
+  0281017064 262KB) — not in the 1.9 CDTi EDC16 cluster. Separate SW.
+- **Frontera 2.2 DTI EDC15** (pairs #101-#108) — many small change
+  counts (<500 bytes), SW-fragmented.
+- **Corsa-C 1.7d Delco** (pairs #94-#98) — Isuzu-derived DTI engine,
+  Delco ECU variants.
+- **Omega-B 2.5 TDI Bosch EDC15 524KB** (pairs #178/#179 sw351778/
+  sw351734, 0281010870/0281010869) — sister pair cluster.
+- **Signum/Vectra 3.0 CDTi Denso V6 524KB** (pairs #189/#190/#191) —
+  sw897319 Denso Y30DT.
+
+---
+
 # Volvo catalog (D:\DATABASE\Tuning_DB_BIN\Volvo)
 
 **238 ORI/Stage1 pairs** in Volvo folder (from 253 ORI / 242 Stage1
