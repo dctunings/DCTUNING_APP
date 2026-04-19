@@ -11886,6 +11886,101 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 BMW E90-E91 318D sw501612 — 0x06AE0A 2MB cross-BlockID ─────────
+  //
+  // BMW E90-E91 318D N47 105.2 kW sw501612 EDC17 2MB. 2 pairs across 2 DDE
+  // BlockIDs. Verified in pair_analysis_log.md BMW pairs:
+  //   #1064 E90-E91 318D `O_73S3KB081A` · #1138 E90-E91-E92-E93 2.0d
+  //   `O_73S3IB082A`
+  //
+  // Map structure:
+  //   0x06AE0A  11 B u16 BE — IQ upper A (stock 13831 → 33389, +141%)
+  //   0x06B716  11 B u16 BE — IQ upper B (stock 14855 → 35591, +140%)
+  //
+  // Note: sw501612 also appears at `0x066FD4 23B` in pair #1003/#973 with
+  // different BlockIDs — multi-anchor pattern on same SW.
+  {
+    id: 'edc17_bmw_e90_318d_sw501612_06ae0a',
+    name: 'Bosch EDC17 (BMW E90-E91 318D N47 105.2kW — sw501612 0x06AE0A 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['501612'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E91 318D N47D20 105.2kW DDE 2MB (sw 501612, 2009-2010)'],
+    maps: [
+      {
+        id: 'edc17_bmw_e90_318d_06ae0a_iq_a',
+        name: 'IQ Upper A 11B (E90-E91 318D sw501612)',
+        category: 'fuel',
+        desc: 'IQ upper A at 0x06AE0A (5-6 cells u16 BE = 11 B). 2 pairs cross-BlockID EXACT anchor: stock 13831 → tuner consensus 33389 (+141%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06AE0A,
+        rows: 1, cols: 6, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 31000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 34000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 38000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_bmw_e90_318d_06b716_iq_b',
+        name: 'IQ Upper B 11B (E90-E91 318D sw501612)',
+        category: 'fuel',
+        desc: 'IQ upper B at 0x06B716 (6 cells u16 BE = 11 B). Stock 14855 → 35591 (+140%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06B716,
+        rows: 1, cols: 6, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 33000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 36000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 BMW E81-E87 + E90-E93 2.0d sw507453 — 0x06B77E 1572864B ────────
+  //
+  // BMW 2.0d N47 sw507453 EDC17 1572864B (1.5MB) compact dump format.
+  // 2 pairs cross-chassis. Verified in pair_analysis_log.md BMW pairs:
+  //   #937 E81-E87 2.0d 105.2kW `O_73S7IB181A` · #1135 E90-E91-E92-E93 2.0d
+  //   105.2kW `0281BKB7S3 O_73S7KB182A`
+  //
+  // Map structure:
+  //   0x06B77E  11 B u16 BE — IQ upper A (stock 14855 → 35079-35591, +136%)
+  //   0x06B9C2  11 B u16 BE — IQ upper B mirror (Δ=+0x244)
+  {
+    id: 'edc17_bmw_n47_20d_sw507453_06b77e_1572k',
+    name: 'Bosch EDC17 (BMW 2.0d N47 105.2kW — sw507453 0x06B77E 1572864B)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281BKB7S3'],
+    fileSizeRange: [1572864, 1572864],
+    vehicles: ['BMW E81-E87 / E90-E93 2.0d N47D20 105.2kW 1572864B compact (sw 507453, 2007-2010)'],
+    maps: [
+      {
+        id: 'edc17_bmw_n47_20d_06b77e_iq_upper_a',
+        name: 'IQ Upper A 11B (2.0d sw507453 1572864B)',
+        category: 'fuel',
+        desc: 'IQ upper A at 0x06B77E (5-6 cells u16 BE = 11 B). 2 pairs cross-chassis EXACT anchor: stock 14855 → tuner consensus 35079-35591 (+136-140%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x06B77E,
+        rows: 1, cols: 6, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 33000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 36000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC16 BMW E90-E91 325D 144.9kW 0281015130 — 0x0E2337 2031616B ────────
   //
   // BMW E90-E91 325D M57D30TU 144.9 kW EDC16 2031616B. 2 SWs same Bosch
@@ -12372,9 +12467,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC16 (BMW E81-E87 120D M47D20 120kW — 0281011416 sw381341 0x0C3E60)',
     manufacturer: 'Bosch',
     family: 'EDC16',
-    identStrings: ['0281011416', '0281013502', '0281012501', '0281013251', '0281013501', '381341', '381342'],
+    identStrings: ['0281011416', '0281013502', '0281012501', '0281013251', '0281013501', '0281012754', '381341', '381342'],
     fileSizeRange: [2031616, 2031616],
-    vehicles: ['BMW E81-E87 120D / E90-E91 318D/320D M47D20 89.7-120kW (0281011416/0281013502/0281012501/0281013251/0281013501 sw 381341/381342, 2004-2007)'],
+    vehicles: ['BMW E81-E87 120D / E90-E91 318D/320D M47D20 89.7-120kW (0281011416/0281013502/0281012501/0281013251/0281013501/0281012754 sw 381341/381342, 2004-2007)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x1F7FFC,
     checksumLength: 4,

@@ -3814,6 +3814,63 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #1129–1144 — 2 NEW defs (sw501612 0x06AE0A + sw507453 1572864B)
+
+**NEW DEF 1 — BMW E90-E91 318D sw501612 @ 0x06AE0A 2MB** (2 pairs cross-BlockID):
+
+`edc17_bmw_e90_318d_sw501612_06ae0a` — 2MB EDC17 N47.
+
+- #1064 E90-E91 318D `O_73S3KB081A`
+- #1138 E90-E91-E92-E93 2.0d `O_73S3IB082A`
+
+Both hit EXACT `0x06AE0A 11B` BE 13831 → 33389 (+141%) + `0x06B716 11B`
+BE 14855 → 35591 (+140%).
+
+**NEW DEF 2 — BMW 2.0d sw507453 @ 0x06B77E 1572864B** (2 pairs cross-chassis):
+
+`edc17_bmw_n47_20d_sw507453_06b77e_1572k` — 1.5MB EDC17 N47.
+
+- #937 E81-E87 2.0d `O_73S7IB181A` (prior batch)
+- #1135 E90-E91-E92-E93 2.0d `0281BKB7S3 O_73S7KB182A`
+
+Both hit EXACT `0x06B77E 11B` BE 14855 → 35079-35591 (+136-140% IQ upper)
++ 0x06B9C2 11B mirror (Δ=+0x244).
+
+**Extensions**:
+
+`edc16_bmw_e87_120d_0c3e60` +0281012754 Bosch part (pair #1132 + #1143):
+- sw381341 E90-E91 320d `0281012754 07804427` 2031616B EXACT 0x0C3E60 match
+- Now covers 6 Bosch parts across E81-E87/E90-E91 chassis for sw381341.
+
+`edc16_bmw_e90_320d_sw376967_0c41e0` def already covers pair #1143
+sw376967 `0281012754` — confirms EXACT wired anchor.
+
+**Observations**:
+
+- #1129/#1130 sw433322 E90-E91 335i Siemens MSD80 5WK93608 — 2 sister
+  pairs EXACT 0x06AC0E 6B BE 6739→22515 +234% + 0x05C0E4 emission cut.
+  Wire candidate after 2nd SW.
+- #1131 sw333711 E90-E91 335i — emission cut style at 0x05F47C.
+- #1133 M3 V8 sw? 6291456B (6MB!) — 2009 E90 M3 MSS60 with 9 regions.
+  Logged as NEW 6MB format.
+- #1134 sw501613 `O_71S3KC086A` E90-E91 2.0d 135kW 2MB — 0x05871A 18B
+  + 0x071A7A 312B +66%.
+- #1136 sw389229 `O_71KLKC321A` E92-E93 2.0d 2MB — emission cut.
+- #1137 sw389882 `O_Q47947` E92-E93 2MB — 0x0E9F2F 19B + 0x0D35A0 24B
+  (different anchor from wired 2031616B def, 2MB variant).
+- #1139 sw504977 `X_7CK5KF121A` 4MB E90-E93 2.0d 135.3kW — 0x3514A5 13B
+  BE 2048→8192 + 0x36A184 30B +209%. 4MB format variant.
+- #1140 sw507447 `O_7CLBKE125B` E90-E93 2MB — 0x179460 447B + 0x1773EC
+  16×14 (high-anchor region).
+- #1141 sw504978 `0281016496 X_7CK5KE079A` 4MB — 0x378850 447B + 0x3515DA
+  27B -52% (similar 4MB pattern to #1139).
+- #1142 sw384361 `0281013924 X_70L4HC041A` — only 41B changed (near-null).
+- #1144 sw396562 E90-E93 2.0d 120kW 2MB — 0x06A6BA 22B + 0x06F09A 13B
+  BE 17333→43658 — SAME raw signature as wired sw394079 270336B def but
+  at 2MB format (Δ=+0x401C4 format shift).
+
+---
+
 ## BMW Pairs #1113–1128 — 2 NEW defs (E90 325D 0281015130 + sw390904) + X5-3.0SD ext
 
 **NEW DEF 1 — BMW E90-E91 325D 0281015130 @ 0x0E2337 2031616B** (2 SWs):
