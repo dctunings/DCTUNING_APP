@@ -11325,6 +11325,47 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 BMW E81-E87 2.0d N47 100-105kW — 0x07491C 2MB DDE cluster ──────
+  //
+  // BMW E81-E87 2.0d (N47D20) 100-105 kW EDC17 DDE BlockID-labelled.
+  // 3 SWs across 3 DDE BlockIDs share EXACT anchor. Verified in
+  // pair_analysis_log.md BMW pairs:
+  //   #944 sw396564 `O_73MPIB581A` · #952 sw507452 `O_73MTIB661A` ·
+  //   #953 sw507452 (sister) · #958 sw500770 `O_73MQIB621A`
+  //
+  // Map structure (EXACT match across 3 SWs):
+  //   0x07491C  16 B u16 BE — IQ upper (stock 21269 → 53238-54486, +150-156%)
+  //   0x057Dxx  6 B u16 BE — emission cut (stock 48074 → 32, -99.9%)
+  //   Anchor varies per SW (0x057DE0/0x057DF0/0x057F42) — main 0x07491C
+  //   is the stable 3-SW fixed-anchor.
+  {
+    id: 'edc17_bmw_e87_20d_n47_07491c',
+    name: 'Bosch EDC17 (BMW E81-E87 2.0d N47 100-105kW — 0x07491C 2MB DDE)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['396564', '500770', '507452'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E81-E87 2.0d N47D20 100-105kW DDE 2MB (sw 396564/500770/507452, 2007-2008)'],
+    maps: [
+      {
+        id: 'edc17_bmw_e87_20d_07491c_iq_upper',
+        name: 'IQ Upper 16B (E87 2.0d N47 DDE)',
+        category: 'fuel',
+        desc: 'IQ upper at 0x07491C (8 cells u16 BE = 16 B). 3 SWs + 4 pairs EXACT anchor: stock 21269 → tuner consensus 53238-54486 (+150-156%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x07491C,
+        rows: 1, cols: 8, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 54000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 58000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── MSV70 BMW E81-E87 130i — 0x0423CA 2625536B (2.5MB) Siemens cluster ───
   //
   // BMW E81-E87 130i 195 kW Siemens MSV70 2625536B (2.5MB) dump.

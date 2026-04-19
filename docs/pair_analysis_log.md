@@ -3814,6 +3814,50 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #953–968 — 1 NEW def (E87 2.0d N47 0x07491C) + emission-cut catalog
+
+**NEW DEF WIRED — BMW E81-E87 2.0d N47 100-105kW @ 0x07491C 2MB** (4 pairs, 3 SWs):
+
+`edc17_bmw_e87_20d_n47_07491c` — DDE 2MB.
+
+Cross-SW tight anchor match:
+- #944 sw396564 `O_73MPIB581A` (prior batch)
+- #952 sw507452 `O_73MTIB661A` (prior batch)
+- #953 sw507452 (sister of #952) — EXACT anchor confirmed
+- #958 sw500770 `O_73MQIB621A` — 3rd SW EXACT match
+
+All hit `0x07491C 16B` BE 21269 → 53238-54486 (+150-156%). Stable across
+3 SWs / 4 pairs with varying BlockIDs.
+
+**E87 2.0d 105kW sw507452 alt-anchor** (#954/#955 sisters):
+- Both `O_73MTIB671A` 2MB — EXACT anchor 0x0691C0 23B + 0x068F40 23B
+  BE 33755→22375 and 23265→30596. 2 sister pairs same ORI.
+- Different BlockID variant from main 0x07491C cluster (671A vs 661A).
+
+**sw509475 `O_71MTIC641A/651A`** (pairs #957/#963) — 2 pairs same SW,
+2 BlockID variants, both hit EXACT `0x06A6C4 30B` BE 15039→30825 +105%.
+Plus pair #956 sw394079 at `0x06A4F0 30B` (Δ=-0x1D4) — same raw signature
+on different SW. 3 pairs hit 30B signature.
+
+**sw394078 sw394078 270336B compact** (pairs #959/#961 sisters):
+- Both hit EXACT 0x017E10 6B + 0x017F62 52B emission cut
+- Compact 270KB format — 2 sister pairs confirm anchor.
+
+**Other observations**:
+- #960 sw507453 `0281016069` 1540096B — 0x06703C 23B + 0x0581BC 16B.
+  Same SW as #937 + #950 (prior batch) with different anchor patterns —
+  multi-tune on same ORI.
+- #962 sw395777 2MB emission-cut pattern at 0x057DE0
+- #964 sw394078 `O_73MJIB341A` 2MB — different emission cluster
+- #965 sw394078 `O_73MJKB341A` — 12872B heavy tune, 0x0736D2 14B BE
+  32→36784 (zero → max). Same SW different tune.
+- #966 sw395779 `O_71MLID381A` 2MB — 0x079C88 16B BE 3326→65535 (SAME
+  stock as wider 150kW cluster but yet another anchor)
+- #967 sw396563 `O_71MPID571A` 2MB — 0x078C14 36B +280%
+- #968 sw501614 `O_71S3ID042A` 2MB — 0x000000 16B + 0x058A4A 8B
+
+---
+
 ## BMW Pairs #937–952 — E87 2.0d N47 DDE family (observation-only)
 
 **E87 2.0d 150kW 3326→65535 pattern** (3 pairs, same raw signature):
