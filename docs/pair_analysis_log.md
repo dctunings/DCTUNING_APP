@@ -70,6 +70,56 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1329–1344 — 3 EXISTING defs extended + Amarok def gets Transporter JD
+
+**0x070292 def EXTENDED +3 NEW SWs + 1 NEW suffix + 1 SGO variant**:
+- +sw518155 `03L906022CB` 61.8kW (pair #1342) — NEW CB suffix
+- +sw518153 `03L906019DG` (pair #1330) — NEW DG 03L906019 suffix
+- Also confirms sw518139 CH sister (pair #1337) at 0x070292
+
+Now covers 7 part suffixes (CD/CH/CK/CB + DH/DK/DG) and 7 SWs (518131/
+518139/518140/518152/518153/518154/518155). Cross-family protection
+ceiling anchor EXPANDED.
+
+**0x077DBA def EXTENDED +1 SGO** — JF suffix:
+- +sw518079 `03L906022JF` (pair #1341) — NEW JF Transporter BiTDI variant
+- Pair #1333 sw518073 JD + #1334 sw518078 JE — sister pair confirmations
+
+Now covers 4 part suffixes (JD/JE/JF + 03L907309L).
+
+**Amarok 03L906019FA def EXTENDED** — NEW cross-chassis ident:
+- +sw518073 (pair #1339 `03L906022JD` Transporter 132kW) hits EXACT
+  0x0623F0 12×15 IQ ceiling anchor as Amarok def!
+- Added `03L906022JD` + sw518073 to identStrings
+- 12×15 IQ ceiling pattern confirmed universal across Amarok BiTDI and
+  Transporter BiTDI at SAME physical anchor.
+
+**12×15 IQ ceiling at shifted anchors** (no wire — per-SW drift):
+- #1338/#1344 sw515247 JD @ 0x062230 12×15 (Δ=-0x1C0 from Amarok anchor)
+  — 2 pairs same SW, potential cluster.
+- #1329 sw505971 `03L906022GF` @ 0x05F784 12×15 (BE 15→9914 softer
+  target). Single.
+
+**03L906022JF 2KB protection cluster** (pair #1340):
+- sw518079 JF @ `0x06F586 2048B` BE 21527→57390 + `0x070252 2048B`
+  BE 22340→57390. Two 2KB anchors close together — unique pattern.
+  Single SW, NEW JF cluster.
+
+**EDC17 C64 emission-cut confirmations**:
+- #1331 sw514232 `03L906019DM` — NEW DM suffix emission cut
+- #1343 sw535317 `03L906019FJ` — FJ variant at yet-later SW (525574 was
+  FJ earlier pair, #1325 522862 FJ)
+
+**Other observations**:
+- #1332 sw518139 CH alt-tune (emission cut only) — sister of #1337 wired
+  0x070292 hit. Same ORI different tuner.
+- #1335 sw518155 `03L906022CB` alt-tune (emission cut only, no 0x070292
+  hit). Same SW as #1342 wired target — multi-tune on same ORI.
+- #1336 sw505941 + Upd sw518131 CD 75kW (chiptuner-updated file) —
+  emission cut pattern only.
+
+---
+
 ## VW Pairs #1313–1328 — 0x070292 def MAJOR extension + EDC17 C64 emission pattern catalog
 
 **0x070292 def MASSIVELY expanded** — 3 NEW SWs + 3 NEW suffixes:
