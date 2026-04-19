@@ -3814,6 +3814,63 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #1033–1048 — 2 NEW defs (E87/E90 2.0D sw379333 + E87 sw379332)
+
+**NEW DEF 1 — BMW E87/E90 2.0D sw379333 @ 0x0D4208 2MB** (2 pairs cross-chassis):
+
+`edc16_bmw_e87_e90_20d_0d4208` — 2MB EDC16.
+
+- #1041 E87 sw379333 `0281012502 O_U1M938`
+- #1045 E90 sw379333 `0281012502`
+
+Both hit EXACT `0x0D4208 52B` BE 4783 → 8074 (+69% IQ release) +
+`0x0F0455 11B` BE 51720 → 17673 (-66% rail pressure cut).
+
+Cross-chassis (E87 + E90) match with EXACT anchor/raw signature confirmed.
+
+**NEW DEF 2 — BMW E87 120D sw379332 @ 0x0C4208 2031616B** (2 sister pairs):
+
+`edc16_bmw_e87_120d_sw379332_0c4208` — 1984KB EDC16.
+
+- #1036 sw379332 `0281011416 07802436`
+- #1037 sw379332 sister same ORI
+
+Both hit EXACT `0x0C4208 38B` BE 6108 → 8192 (+34%) + `0x0DA79F 19B`
+BE 26428 → 34279 (+30%).
+
+**Already-wired cross-chassis observations**:
+- #1042 E87 2.0d sw504297 @ 0x05847E — SAME anchor as noted in #998 ✓
+- #1048 E90 2.0d sw396567 `0281014573` 1540096B @ 0x071C48 16B —
+  SAME anchor + raw as E87 #977 sw396567 2MB. Cross-chassis + cross-
+  format confirmation for this cell (cell 0x071C48 is universal 0x07491C
+  sub-variant for sw396567).
+
+**sw371269 cross-dump-format observation** (pairs #1035 + #1040):
+- #1035 E87 118D 2031616B @ 0x0BFFE9 93B + 0x0BF940 32B
+- #1040 E87 2.0D 2105344B @ 0x0CFFE9 93B + ? (Δ=+0x10000 shift)
+Same SW across 2 dump formats with anchor +0x10000 shift.
+
+**sw371269 E88 variant** (pair #1043) — 2MB hits 0x0D01FA 40B + 0x0D0010
+52B. Different anchor from #1035/#1040 (sw371269 on `0281011631` but
+different tune style).
+
+**Observations**:
+- #1033 E85 Z4-3.0si `5WK93022` 1MB — 268B +6% pattern (cross-Siemens
+  5WK93xxx family).
+- #1034 sw374554 `0281012335` 2105344B E87 118D — 0x0E86EB/0x0E878B 13B
+  mirror BE 16699/21729 → 44219/44513 +165%/+105%.
+- #1038 sw371268 `0281011416` 2MB — 0x0D0010/0x0D0152 52B/42B.
+- #1039 sw372719 `0281011416 O_71A535` 2MB — 0x0FDF20 emission cut (end-
+  of-file pattern). Same SW as #908 from prior batch.
+- #1044 E89 3.0i sw333711 2MB — 0x066C1E 72B + 0x07214B 58B BE 13067 →
+  59404 +355% — SAME raw as wired 135i MSD80 def but different anchor
+  (Δ=-0x9D20 from wired 0x070F3E). Multi-chassis N54 signature.
+- #1046/#1047 sw377875/sw379333 E90 118D `0281013252` 2105344B/2MB —
+  different dump format variants. sw379333 appears at both Bosch parts
+  (0281012502 in wired def + 0281013252 in #1047) — could extend def.
+
+---
+
 ## BMW Pairs #1017–1032 — 2 NEW defs (E83 X3 2.0D sw370435 + E85 Z4 3.0i MSV70)
 
 **NEW DEF 1 — BMW E83 X3 2.0D sw370435 @ 0x15F029 1511680B** (2 sister pairs):

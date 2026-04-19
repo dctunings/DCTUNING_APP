@@ -11648,6 +11648,102 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC16 BMW E87/E90 2.0D sw379333 — 0x0D4208 2MB cluster ───────────────
+  //
+  // BMW E87/E90 2.0D sw379333 `0281012502` 119.9 kW EDC16 2MB. Cross-chassis
+  // match across 2 pairs. Verified in pair_analysis_log.md BMW pairs:
+  //   #1041 E87 sw379333 · #1045 E90 sw379333
+  //
+  // Map structure (EXACT match across E87 + E90 chassis):
+  //   0x0D4208  52 B u16 BE — IQ release (stock 4783 → 8074, +69%)
+  //   0x0F0455  11 B u16 BE — rail pressure cut (stock 51720 → 17673, -66%)
+  {
+    id: 'edc16_bmw_e87_e90_20d_0d4208',
+    name: 'Bosch EDC16 (BMW E87/E90 2.0D 119.9kW — 0281012502 sw379333 0x0D4208)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281012502', '379333'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E87/E90 2.0D 119.9kW (0281012502 sw 379333, 2004-2005)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x1FFFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_e87_e90_20d_0d4208_iq_release',
+        name: 'IQ Release 52B (E87/E90 2.0D sw379333)',
+        category: 'fuel',
+        desc: 'IQ release at 0x0D4208 (26 cells u16 BE = 52 B). 2 pairs cross-chassis EXACT anchor: stock 4783 → tuner consensus 8074 (+69%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0D4208,
+        rows: 1, cols: 26, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 7600 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 8200 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 9000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC16 BMW E87 120D sw379332 — 0x0C4208 2031616B cluster ──────────────
+  //
+  // BMW E87 120D sw379332 `0281011416` 119.9 kW EDC16 2031616B (1984KB).
+  // Single SW with 2 sister pairs. Verified in pair_analysis_log.md BMW
+  // pairs: #1036 · #1037 (sister pair same ORI).
+  //
+  // Map structure (EXACT across 2 sisters):
+  //   0x0C4208  38 B u16 BE — IQ release (stock 6108 → 8192, +34%)
+  //   0x0DA79F  19 B u16 BE — torque lift (stock 26428 → 34279, +30%)
+  {
+    id: 'edc16_bmw_e87_120d_sw379332_0c4208',
+    name: 'Bosch EDC16 (BMW E87 120D sw379332 — 0281011416 0x0C4208 2031616B)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['379332'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E87 120D M47D20 119.9kW (0281011416 sw 379332, 2004)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x1F7FFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_e87_120d_sw379332_0c4208_iq_release',
+        name: 'IQ Release 38B (E87 120D sw379332)',
+        category: 'fuel',
+        desc: 'IQ release at 0x0C4208 (19 cells u16 BE = 38 B). 2 sister pairs EXACT anchor: stock 6108 → tuner consensus 8192 (+34%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0C4208,
+        rows: 1, cols: 19, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 7700 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 8300 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 9200 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_bmw_e87_120d_sw379332_0da79f_torque_lift',
+        name: 'Torque Lift 19B (E87 120D sw379332)',
+        category: 'limiter',
+        desc: 'Torque lift at 0x0DA79F (9-10 cells u16 BE = 19 B). Stock 26428 → 34279 (+30%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0DA79F,
+        rows: 1, cols: 10, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 33000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 35000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 37000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC16 BMW E83 X3 2.0D sw370435 — 0x15F029 1511680B cluster ───────────
   //
   // BMW E83 X3 2.0D (M47TU2) 110.3 kW EDC16 1511680B dump format.
