@@ -70,6 +70,52 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1217–1232 — 1 NEW Touareg 3.0 V6 TDI CR 7P0907401 def + major cluster
+
+**NEW DEF — Touareg 3.0 V6 TDI CR 7P0907401 @ 0x166F64** (2 SWs, 4 pairs):
+
+`edc17_touareg_30tdi_7p0907401_166f64` — 7P chassis (Mk2 2010+) 176.5-180kW.
+
+- #1222/#1228 sw516683 — 2 pairs both at 0x166F64 + 0x16740A
+- #1229/#1230 sw526380 — 2 pairs at SAME EXACT anchors
+
+Raw signature:
+- `0x166F64 10B` BE 20550 → 54345 (+164% IQ upper)
+- `0x16740A 10B` mirror at Δ=+0x4A6 (same raw)
+- `0x166F48 10B` BE 21164 → 53679 (+154%)
+
+Per-SW anchor drift variants (logged, not in def):
+- sw510363 (#1219/#1220/#1225) @ 0x166F18 (Δ=-0x4C)
+- sw515254 (#1221/#1226) @ 0x166F4E (Δ=-0x16)
+
+**Cross-def observation — sw515255 + sw515254 = 7L0907401H twin**:
+- #1223 sw515255 7P0907401 150kW @ `0x1D0F94 512B` BE 5125→45060 +779%
+- #1224 sw515254 7P0907401 175.8kW @ SAME `0x1D0F94 512B` SAME signature
+- This is the SAME raw 5125→45060 as wired 7L0907401H def's 0x1DD8C6 128B
+  but at 7P chassis Δ=-0xC932 anchor shift. Same map, different cal-block.
+- Also `0x1D18B8 16×16` + `0x1D1674 16×16` in #1227 sw515254 alt-tune
+  matches the 7L0907401H 0x1DDB3E/0x1DD954 pattern at 7P anchor.
+
+**7L0907401N 2MB cluster** (pairs #1217/#1218) — sw500172 + sw509943:
+- 0x1DEF4F 13B BE 4119 → 8000 (same pattern as pair #1216 4.25MB
+  format) — light tune style at torque limit
+- 0x1D0Cxx / 0x1D02xx emission-cuts
+- Both 2MB dumps. Sister of 7L0907401H (N vs H — same cal block layout
+  different SGO). Not wired — different raw sigs from main cluster.
+
+**4G0907401 2MB cluster** (pairs #1231/#1232 — sw518187, same ORI, 2 tunes):
+- #1231 tune style A @ 0x16B9F4/0x16BE7C 16B BE 12322→32324 +162%
+- #1232 tune style B @ 0x16C0AA/0x16B556/0x16B79A 10B BE 7141→40576 +468%
+- Same raw 7141 as pair #1207 sw518184 `7P0907401F` — NEW 4G chassis (Q7?)
+- Single SW, 2 tuner styles on same ORI. Logged for future.
+
+**Multi-tune on same ORI** (recurring pattern):
+- sw515254 appears 4 times (#1221, #1224, #1226, #1227) with 4 different
+  tune approaches: main 0x166F4E cluster, 0x1D0F94 IQ release, alt
+  0x1D18B8 16×16, and combinations. Confirms ORI structural completeness.
+
+---
+
 ## VW Pairs #1201–1216 — 1 NEW Touareg 3.0 TDI CR DPF EDC17 def (2 SWs) + tail catalog
 
 **NEW DEF — Touareg 3.0 TDI CR DPF V6 EDC17 7L0907401H @ 0x1DD8C6** (2 SWs):

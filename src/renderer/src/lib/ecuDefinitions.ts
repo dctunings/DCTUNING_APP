@@ -2970,6 +2970,69 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 VW Touareg 3.0 V6 TDI CR 7P0907401 — 0x166F64 2MB cluster ──────
+  //
+  // VW Touareg 3.0 V6 TDI CR 176.5-180.2 kW EDC17 7P chassis (Mk2 2010+).
+  // 2 SWs share EXACT anchor + raw signature. Verified in
+  // pair_analysis_log.md VW pairs:
+  //   #1222/#1228 sw516683 · #1229/#1230 sw526380 (each has 2 sister pairs)
+  //
+  // Map structure (EXACT match across 4 pairs):
+  //   0x166F64  10B u16 BE — IQ upper A (20550 → 54345, +164%)
+  //   0x16740A  10B u16 BE — IQ upper B mirror (Δ=+0x4A6)
+  //   0x166F48  10B u16 BE — IQ mirror (21164 → 53679, +154%)
+  //
+  // Note: sw515254 uses Δ=-0x16 shifted anchor (0x166F4E) — close but
+  // non-exact. sw510363 uses Δ=-0x4C shifted anchor (0x166F18). Logged
+  // as separate per-SW variants — only 516683/526380 at 0x166F64 qualify
+  // for fixedOffset wire.
+  {
+    id: 'edc17_touareg_30tdi_7p0907401_166f64',
+    name: 'Bosch EDC17 (VW Touareg 3.0 V6 TDI CR 176.5-180kW — 7P0907401 0x166F64)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['7P0907401', '516683', '526380'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Touareg 3.0 V6 TDI CR 176.5-180.2kW (7P0907401 sw 516683/526380, 2010-2011)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_touareg_166f64_iq_upper_a',
+        name: 'IQ Upper A 10B (Touareg 7P0907401)',
+        category: 'fuel',
+        desc: 'IQ upper A at 0x166F64 (5 cells u16 BE = 10 B). 2 SWs + 4 pairs EXACT anchor: stock 20550 → tuner consensus 54345 (+164%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x166F64,
+        rows: 1, cols: 5, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_touareg_16740a_iq_upper_b',
+        name: 'IQ Upper B 10B mirror (Touareg 7P0907401 Δ=+0x4A6)',
+        category: 'fuel',
+        desc: 'IQ upper B at 0x16740A (5 cells u16 BE = 10 B, Δ=+0x4A6 mirror of 0x166F64). Same raw signature 20550 → 54345.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x16740A,
+        rows: 1, cols: 5, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 VW Touareg 3.0 TDI CR DPF V6 7L0907401H — 0x1DD8C6 2MB cluster ──
   //
   // VW Touareg 3.0 TDI CR DPF V6 155-176.5 kW EDC17 2MB dump format.
