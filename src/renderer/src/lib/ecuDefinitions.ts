@@ -2970,6 +2970,67 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── SIMOS PCR21 VW Touran 1.6 TDI CR SM2F0L9500000 — 0x18CE5A 2MB cluster ─
+  //
+  // VW Touran 1.6 TDI CR (CAYC engine) 77 kW Siemens SIMOS PCR21.
+  // 2 pairs across 2 part-number suffixes (ND/PJ) share EXACT anchor +
+  // raw signature. Verified in pair_analysis_log.md VW pairs:
+  //   #1250 SM2F0L9500000 03L906023PJ 2012 · #1251 SM2F0L9500000 03L906023ND
+  //   2010 (CAYC engine stamp)
+  //
+  // Map structure:
+  //   0x18CE5A  14B u16 BE — IQ unlock A (stock 382 → 45218, +11737%)
+  //   0x18D27A  14B u16 BE — IQ unlock B (stock 2651 → 47487, +1691%)
+  //   0x18D25A / 0x18D87A  14B — mirrors of B (stock 4699 → 49535, +954%)
+  //   0x18C87A  14B — ceiling limit (stock 6489 → 41963, +547%)
+  //
+  // Note: SM2G0LG000000 (pair #1252 same 03L906023PJ part) hits shifted
+  // anchor 0x18D412 (Δ=+0x5B8) with SAME raw signature — different serial
+  // family (SM2G vs SM2F), separate sub-variant.
+  {
+    id: 'pcr21_touran_16tdi_sm2f0l_18ce5a',
+    name: 'Siemens SIMOS PCR21 (VW Touran 1.6 TDI CR 77kW — SM2F0L9500000 0x18CE5A)',
+    manufacturer: 'Siemens',
+    family: 'SIMOS_PCR21',
+    identStrings: ['SM2F0L9500000', '03L906023PJ', '03L906023ND', 'CAYC'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Touran 1.6 TDI CR 77kW (03L906023ND/PJ CAYC engine, 2010-2012)'],
+    maps: [
+      {
+        id: 'pcr21_touran_18ce5a_iq_unlock_a',
+        name: 'IQ Unlock A 14B (Touran SM2F0L9500000)',
+        category: 'fuel',
+        desc: 'IQ unlock A at 0x18CE5A (7 cells u16 BE = 14 B). 2 pairs across 2 part suffixes EXACT anchor: stock 382 → tuner consensus 45218 (+11737% — massive IQ release).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x18CE5A,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 42000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'pcr21_touran_18d27a_iq_unlock_b',
+        name: 'IQ Unlock B 14B (Touran SM2F0L9500000)',
+        category: 'fuel',
+        desc: 'IQ unlock B at 0x18D27A (7 cells u16 BE = 14 B). Stock 2651 → 47487 (+1691%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x18D27A,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 VW Touareg 4.2 TDI CR V8 7P0907409 — 0x1ACE30 2MB cluster ──────
   //
   // VW Touareg 4.2 TDI CR V8 250 kW (340 hp) flagship diesel EDC17.

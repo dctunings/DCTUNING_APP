@@ -70,6 +70,68 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1249–1264 — NEW Touran PCR21 def + 1.9 TDI EDC15/16 PD observations
+
+**NEW DEF — SIMOS PCR21 Touran 1.6 TDI CR @ 0x18CE5A** (2 pairs, 2 parts):
+
+`pcr21_touran_16tdi_sm2f0l_18ce5a` — Touran 1.6 TDI CR CAYC 77kW.
+
+- #1250 SM2F0L9500000 `03L906023PJ` 2012 — 0x18CE5A 14B BE 382→45218 +11737%
+- #1251 SM2F0L9500000 `03L906023ND` 2010 CAYC — EXACT same anchor + raw
+
+Raw signatures (across both pairs):
+- `0x18CE5A 14B` BE 382 → 45218 (+11737% — massive IQ unlock)
+- `0x18D27A 14B` BE 2651 → 47487 (+1691% IQ unlock B)
+- `0x18D25A/0x18D87A 14B` mirror pairs of B
+- `0x18C87A 14B` BE 6489 → 41963 (+547% ceiling limit)
+
+**Pair #1252 SM2G0LG000000** — different serial family:
+- `03L906023PJ` same part but SM2G serial — hits anchor 0x18D412
+  (Δ=+0x5B8 from SM2F anchor). Same raw 382 → 45218 signature.
+- Sub-variant for SM2G serial — logged, not wired (Δ too large).
+
+**Touran 1.9 TDI EDC15/EDC16 PD family observations**:
+
+03G906016 family (1MB EDC16 PD):
+- #1256 sw368159 A @ 0x0F859B 13B BE 10162→49586 +388%
+- #1257 sw369568 BT @ 0x0E2D51 13B BE 2649→15364 +480%
+- #1258 sw371097 CD @ 0x0EDD53 13B BE 10162→44082 +334%
+- #1264 sw371250 DK @ 0x0E2BD1 13B BE 2649→15364 +480% (Δ=-0x180 from BT)
+
+#1257 + #1264 share EXACT raw signature 2649→15364/2820→15535 but at
+Δ=-0x180 shifted anchor. 2 SWs 2 suffixes — potential cluster after
+more confirmations.
+
+03G906021 family (524KB / 2MB EDC16 PD):
+- #1255 sw389840 `03G906021AB` 524KB Touran 2002 — minimal tune
+- #1259 sw389840 `03G906021AB` 524KB Touran 2007 — SAME SW different
+  tuner, `0x05AA99/0x05AC99/0x05AE99 13B` triple mirror Δ=+0x200 stride
+  BE 7470→21124 +183%
+- #1260 sw392951 `03G906021AB` 2MB Touran 2006 — `0x1D42D0 44B` +51%
+  + `0x1EB003/0x1EAFDB` 13B cluster
+- #1261 sw397876 `03G906021AB` 524KB — `0x012373/0x06B1F7 11B` mirror
+  pair Δ=+0x69E84 BE 23968→47060 +96%
+- #1262 sw381006 HK 524KB — own anchors
+- #1263 sw394990 HK 524KB — `0x06B261/06B2D9 11B` BE 16801→28731
+  (same raw as wired T5 1.9 TDI 038906016 0x06A8ED def!)
+
+**Cross-chassis observation** (Pair #1263):
+sw394990 HK hits `0x06B261 11B` BE 16801→28731 — SAME raw signature
+as wired T5 1.9 TDI 038906016T/AJ def at 0x06A8ED (raw 16801→37845).
+Different target (28731 vs 37845) but same stock raw — 16801 is a
+universal EDC16U31 IQ cell value across PD 1.9 TDI variants.
+
+**Other observations**:
+- #1248 (from prev batch) already logged Touran 1.6 FSI.
+- #1249 sw381630 `03C906056DM` Touran 1.6 FSI MED17 — `0x1D5230 38B` +16%
+  matches Passat 1.6 FSI 03C906056T/AA/DC pattern.
+- #1253 sw? `06A906033ET S713117000000` Touran 1.6i Siemens 524KB —
+  3 regions only, light tune.
+- #1254 sw396316 `03C906032C` Touran 1.8 TSI 2MB — 5 regions only,
+  very light tune. Light target anchors.
+
+---
+
 ## VW Pairs #1233–1248 — 3 NEW Touareg defs (4G + 4.2 TDI V8) + 3.2 V6 ME7 catalog
 
 **NEW DEF 1 — Touareg 3.0 V6 TDI CR 4G0907401 @ 0x16B9F4** (2 SWs, 5 pairs):
