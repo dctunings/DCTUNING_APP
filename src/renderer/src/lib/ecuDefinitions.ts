@@ -11886,6 +11886,62 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 BMW E90-E91 320d sw394079 — 0x02EED6 270336B compact ───────────
+  //
+  // BMW E90-E91 320d sw394079 N47D20 130.2 kW EDC17 270336B compact format.
+  // 3 pairs across 2 part strings (`0281015043` + no-label) and multiple
+  // BlockIDs. Verified in pair_analysis_log.md BMW pairs:
+  //   #1079 sw394079 `O_71MJKC342A` · #1098 sw394079 `0281015043 07811700`
+  //   · #1100 sw394079 `07811700` · #1101 sw394079 `0281015043 O_71MJIC341A`
+  //
+  // Map structure:
+  //   0x02EED6  13 B u16 BE — IQ upper (stock 17333 → 43658, +152%)
+  //   0x02A4F6  22 B u16 BE — IQ release (Δ=-0x49E0, stock 7255 → 55385, +663%)
+  //   Note: sister anchor 0x02A4F2 (Δ=-4) at same raw stock in some pairs.
+  {
+    id: 'edc17_bmw_e90_320d_sw394079_compact_02eed6',
+    name: 'Bosch EDC17 (BMW E90-E91 320d sw394079 N47D20 130.2kW — 0281015043 0x02EED6 264KB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281015043', '394079'],
+    fileSizeRange: [270336, 270336],
+    vehicles: ['BMW E90-E91 320d N47D20 130.2kW 264KB compact (0281015043 sw 394079, 2008)'],
+    maps: [
+      {
+        id: 'edc17_bmw_e90_320d_02eed6_iq_upper',
+        name: 'IQ Upper 13B (E90-E91 320d sw394079 compact)',
+        category: 'fuel',
+        desc: 'IQ upper at 0x02EED6 (6-7 cells u16 BE = 13 B). 4 pairs EXACT anchor: stock 17333 → tuner consensus 43658 (+152%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x02EED6,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_bmw_e90_320d_02a4f6_iq_release',
+        name: 'IQ Release 22B (E90-E91 320d sw394079 compact)',
+        category: 'fuel',
+        desc: 'IQ release at 0x02A4F6 (11 cells u16 BE = 22 B). Stock 7255 → tuner consensus 55385 (+663% — extreme release).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x02A4F6,
+        rows: 1, cols: 11, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC16 BMW E90-E91 320d sw376967 — 0x0C41E0 2031616B cluster ──────────
   //
   // BMW E90-E91 320d (M47D20) 119.9 kW EDC16 2031616B. 2 sister pairs same

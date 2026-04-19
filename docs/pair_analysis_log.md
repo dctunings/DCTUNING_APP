@@ -3814,6 +3814,52 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #1097–1112 — NEW sw394079 270336B + E90 325D 144.9kW cluster catalog
+
+**NEW DEF — BMW E90-E91 320d sw394079 @ 0x02EED6 270336B** (4 pairs):
+
+`edc17_bmw_e90_320d_sw394079_compact_02eed6` — 270336B (264KB) compact EDC17.
+
+- #1079 sw394079 `O_71MJKC342A`
+- #1098 sw394079 `0281015043 07811700`
+- #1100 sw394079 `07811700` (no part prefix)
+- #1101 sw394079 `0281015043 O_71MJIC341A`
+
+All hit EXACT `0x02EED6 13B` BE 17333 → 43658 (+152% IQ upper).
+3 of 4 also hit `0x02A4F6 22B` BE 7255 → 55385 (+663%). Cross-BlockID
+confirmation across 4 pairs same SW.
+
+**E90-E91 325D 144.9kW 0x0E23xx cluster** (3+ pairs, 3 SWs, ~0xA4 drift):
+
+All 2031616B EDC16 sharing raw 26377 → 45150 (+71%) signature at
+drifting anchors:
+- #1109 sw390114 `0281014543` @ 0x0E230B + 0x0E231F
+- #1110 sw500774 `0281015130` @ 0x0E2337 + 0x0E234B (Δ=+0x2C)
+- #1111 sw383498 `0281012994` @ 0x0E23AF + 0x0E23C3 (Δ=+0xA4)
+Too wide for fixedOffset. Signature wire candidate.
+
+**Observations (no wire)**:
+- #1096/#1097 sw509475 E90 320d 270336B — 0x02F0AA 13B same family but
+  different SW from 0x02EED6 def.
+- #1099 sw391387 E90 320D 270336B `07810000 O_71MDKC221A` — 0x02E51E 13B
+  + 0x029B3A 26B (different anchors).
+- #1102 sw399763 E90 320d 2009 262144B — 0x027EB2 22B +494% + 0x02C4FC
+  11B +251%. NEW 256KB format for E90 320d.
+- #1103 sw513572 E90 320D 2011 `0281017520 O_7CP9KF321A` 2MB — 0x153FF5
+  13B BE 2048→8192 + 0x16F854 30B +209%. NEW 2MB high-anchor pattern.
+- #1104 sw377861 E90 320i `0261201159` 2625440B (2.5MB ME7) — 2 regions
+  only, 3% tune. Light petrol tune.
+- #1105 sw390114 `O_11JAD4` E90 325D 2MB — 0x0F3BA1 11B BE 17673→51720
+  +193% + 0x0F2337 9B +146%. Single 2MB variant.
+- #1106 sw376968 `O_81M934` E90 325D 2MB — 0x0F0425 11B -67% rail pressure
+  cut (already seen for sw376968 pair #901).
+- #1107 sw500774 `O_31JAE5` 2MB — heavy tune (0x0C3B29 27B stock 0 → 40447).
+- #1108 sw390904 `O_12JAE3` 2MB — 0x0D85E8 304B + 0x0F3963 16×13 torque map.
+- #1112 sw390904 `0281014543` 2031616B — 0x0E2281 11B stock 13320 different
+  from 325D main cluster stock 26377.
+
+---
+
 ## BMW Pairs #1081–1096 — 2 NEW defs (sw376967 + sw372963) + 2 extensions
 
 **NEW DEF 1 — BMW E90-E91 320d sw376967 @ 0x0C41E0 2031616B** (2 sister pairs):
