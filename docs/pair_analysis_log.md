@@ -70,6 +70,61 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1313–1328 — 0x070292 def MAJOR extension + EDC17 C64 emission pattern catalog
+
+**0x070292 def MASSIVELY expanded** — 3 NEW SWs + 3 NEW suffixes:
+- +sw518140 `03L906022CK` (pair #1328) — NEW CK suffix
+- +sw518152 `03L906019DK` (pair #1327) — NEW DK suffix (C64 family)
+- +sw518154 `03L906019DH` (pair #1326) — NEW DH suffix (C64 family)
+
+Now covers 5 part suffixes (CD/CH/CK + DH/DK) and 5 SWs (518131/518139/
+518140/518152/518154). Interesting: 0x070292 2KB anchor works for BOTH
+EDC17 C46 (03L906022xx) AND EDC17 C64 (03L906019xx) variants — cross-
+family protection ceiling location.
+
+Raw signature stable across all 5 SWs:
+- 0x070292 2KB BE 20108 → 57390 (+185%)
+- 0x07000A 512B BE 30474 → 57390 (+88%)
+- 0x037AC6 66B emission cut
+
+**0x07C9F2 def confirmed with +1 pair** (pair #1317):
+- sw508906 `508906P755W` sister of #1299 confirms JE alt-anchor cluster.
+
+**0x077DBA def confirmed with +2 pairs** (pairs #1313 CH-sister, #1315 CJ):
+- Pair #1313 sw518139 CH (alt-tune, emission cut only) — same SW already
+  in def.
+- Pair #1315 sw521023 `03L906022CJ` — NEW CJ suffix! Emission cut pattern
+  matches but 16×16 not confirmed in this pair. Logged for future.
+
+**EDC17 C64 12×15 IQ ceiling cluster** (pair #1316):
+- sw525513 `03L906019GN` @ 0x06B8AC 12×15 BE 15→27232 +179584% + mirror
+  at 0x06C0E8 12×15 BE 649→24771 — SAME pattern shape as wired Amarok
+  0x0623F0 + Golf 0x1DBC2C 12×15 IQ ceiling defs at THIRD anchor.
+- Confirms 12×15 + 12×16 IQ ceiling is C46 + C64 UNIVERSAL Bosch shape.
+
+**EDC17 C64 emission-cut pattern 03L906019xx family** (observations):
+
+All have 2MB · hit 0x0379xx / 0x0433xx emission region with cut to 32:
+- #1318 sw518152 DK 103kW — 0x027E66 / 0x02DBC2 / 0x07FE74 cluster
+- #1321 sw519393 DC 84.6kW — 0x0348F4 / 0x0347F8 / 0x033EE2
+- #1322 sw519394 DD 84.6kW — 0x0346FE / 0x0354C8 / 0x033EE6
+- #1323 sw525574 FJ 84.6kW — 0x0433A2 / 0x0435B6 / 0x04349A
+- #1324 sw518153 DG `03L907309M` — 0x0379CE pattern
+- #1325 sw522862 FJ 84.6kW — 0x0430EA / 0x0432FE (Δ=-0x2B8 from #1323
+  sw525574 FJ — same FJ suffix, different SW, shifted anchor)
+
+Anchor drift Δ=0x200-0x700 per SW within same suffix. Too wide for
+fixedOffset. Signature wire candidate for emission-cut pattern.
+
+**Pair #1319 sw505971 `03L906022GF`** — emission cut at 0x028612/0x02E7DE.
+GF suffix EDC17 C46. Single.
+
+**Pair #1320 sw507671 CD** — SAME CD suffix as wired 0x070292 def but
+different SW. Only emission cut hit here, not the 0x070292 2KB anchor.
+Alt-tuner style — ORI includes both maps. Logged.
+
+---
+
 ## VW Pairs #1297–1312 — 3 NEW Transporter 2.0 TDI CR EDC17 C46 defs
 
 **NEW DEF 1 — Transporter 2.0 BiTDI CR 03L906022JD/JE @ 0x077DBA** (6 pairs, 3 SWs):
