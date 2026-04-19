@@ -71,6 +71,42 @@ discovered via `build_mb_pairs.js`). Numbering as `MB #N` separately.
 Mercedes uses a mix of Bosch (EDC15/EDC16/EDC17 CRAx/CR40/MSB), Delphi
 (CRD3), Temic (Actros OM501/OM906), and Siemens-Continental petrol.
 
+## MB Pairs #285-330 continued per-pair analysis (v3.9.8)
+
+Per-pair analysis from #285-#330 covering E320 CDI + E55 AMG +
+CLS350 CDI V6 + various.
+
+**E55 AMG V8 524KB ME7.1 cluster** — 12+ pairs (#315-#330) share the
+0x014Bxx/0x01CBxx/0x074Bxx triple-mirror anchor pattern but each SW
+has unique raw values at slightly shifted anchors:
+- sw377816 (pairs #318, #325): 0x014BAA BE:17568→40978
+- sw375766 (pair #319): 0x014B9A BE:30222→40978
+- sw365235 (pair #326): 0x014B96 BE:30222→20 (emission kill)
+- sw365261 (pairs #329, #330): 0x014BCA BE:21518 (E55 AMG sister tunes)
+- sw371578 (pair #315): 0x0158FA BE:23791 (different anchor)
+- sw351516 (pair #321): 0x01513E BE:32270→20 emission
+- sw351630 (pair #322): 0x01513E BE:32270→20 emission (same as #321)
+- sw365088 (pair #320): 0x01CB96 BE:49170→20 emission
+
+Anchor 0x01513E pattern shared between pairs #321/#322 (sw351516/sw351630)
+suggests sister SW family. Anchor 0x014B96 pattern shared between #319
+(sw375766) and #326 (sw365235). Each sub-cluster has 2 pairs max —
+not worth wiring as individual defs given SW fragmentation.
+
+**CLS 350 CDI 3MB** (pairs #304-#306, #559, #570 CR60-642LS-7AL9/7BL0)
+ — 194.9kW V6 Blue Efficiency diesels. Different from the 2MB OM642
+variants but share the CR60-642LS ME04/ME05/ME07 hardware family.
+Already partially covered by mb_om642_v6_30cdi identStrings.
+
+Current session totals:
+- 10 Mercedes defs wired
+- 27 Mercedes maps
+- 328/779 pairs matched by signatures (42%)
+- Individual per-pair analysis of 330 pairs (42% of total)
+- 7 commits (v3.9.1 through v3.9.7, now v3.9.8)
+
+---
+
 ## MB Pairs #221-284 continued per-pair analysis (v3.9.7)
 
 Continued individual per-pair analysis of Mercedes pairs #221-#284 to
