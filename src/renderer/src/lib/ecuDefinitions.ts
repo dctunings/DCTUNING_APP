@@ -11325,6 +11325,124 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC16 BMW E81-E87 120D 120kW sw381341 — 0x0C3E60 2031616B cluster ───
+  //
+  // BMW E81-E87 120D (M47D20 2.0 TDI) 119.9 kW EDC16 2031616B (1984KB).
+  // 1 SW across 2 sister pairs same Bosch part 0281011416. Verified in
+  // pair_analysis_log.md BMW pairs:
+  //   #907 sw381341 0281011416 07804457 · #909 sw381341 0281011416 07804463
+  //
+  // Map structure (EXACT match across 2 sister pairs):
+  //   0x0C3E60  85 B u16 BE — IQ release A (stock 3538 → 8192, +132%)
+  //   0x0C37F0  24 B u16 BE — IQ release B (stock 2980 → 4113, +38%)
+  {
+    id: 'edc16_bmw_e87_120d_0c3e60',
+    name: 'Bosch EDC16 (BMW E81-E87 120D M47D20 120kW — 0281011416 sw381341 0x0C3E60)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281011416', '381341'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E81-E87 120D M47D20 119.9kW (0281011416 sw 381341, 2004-2005)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x1F7FFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_e87_120d_0c3e60_iq_a',
+        name: 'IQ Release A 85B (E87 120D sw381341)',
+        category: 'fuel',
+        desc: 'IQ release A at 0x0C3E60 (42 cells u16 BE = 85 B). 2 sister pairs EXACT anchor: stock 3538 → tuner consensus 8192 (+132%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0C3E60,
+        rows: 1, cols: 42, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 7600 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 8500 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 9500 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_bmw_e87_120d_0c37f0_iq_b',
+        name: 'IQ Release B 24B (E87 120D sw381341)',
+        category: 'fuel',
+        desc: 'IQ release B at 0x0C37F0 (12 cells u16 BE = 24 B). Stock 2980 → 4113 (+38%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0C37F0,
+        rows: 1, cols: 12, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 3900 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 4300 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 4800 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC16 BMW E81-E87 120D sw389882 — 0x0C3C10 cross-part cluster ────────
+  //
+  // BMW E81-E87 120D 119.9 kW sw389882 EDC16 2031616B shared between 2
+  // different Bosch part numbers (0281012334 + 0281013501). 2 pairs EXACT
+  // anchors. Verified in pair_analysis_log.md BMW pairs:
+  //   #912 sw389882 0281012334 07808786 · #919 sw389882 0281013501 07809393
+  //
+  // Map structure (EXACT match across 2 parts):
+  //   0x0C3C10  85 B u16 BE — IQ release (stock 3538 → 8192, +132%)
+  //   0x0DA23B  39 B u16 BE — torque lift (stock 27691 → 35331-36503, +28-32%)
+  //
+  // Same 3538 → 8192 signature as 0x0C3E60 def (sw381341) — shared code
+  // at Δ=-0x250 shifted anchor per SW. Similar stock on 24B secondary
+  // at different offsets per SW.
+  {
+    id: 'edc16_bmw_e87_120d_sw389882_0c3c10',
+    name: 'Bosch EDC16 (BMW E81-E87 120D 120kW — 0281012334/0281013501 sw389882 0x0C3C10)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281012334', '0281013501', '389882'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E81-E87 120D M47D20 119.9kW (0281012334/0281013501 sw 389882, 2005-2007)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x1F7FFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_e87_120d_0c3c10_iq_release',
+        name: 'IQ Release 85B (E87 120D sw389882)',
+        category: 'fuel',
+        desc: 'IQ release at 0x0C3C10 (42 cells u16 BE = 85 B). 2 pairs across 2 Bosch parts EXACT anchor: stock 3538 → tuner consensus 8192 (+132%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0C3C10,
+        rows: 1, cols: 42, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 7600 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 8500 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 9500 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_bmw_e87_120d_0da23b_torque_lift',
+        name: 'Torque Lift 39B (E87 120D sw389882)',
+        category: 'limiter',
+        desc: 'Torque lift at 0x0DA23B (19 cells u16 BE = 39 B). Stock 27691 → 35331-36503 (+28-32% varies by tune).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0DA23B,
+        rows: 1, cols: 19, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 33000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 36000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC16 BMW E81-E87 116D 85kW — 0x0151BC 270336B compact cluster ──────
   //
   // BMW E81-E87 116D (N47D20 1.6 TDI) 84-85 kW EDC16 compact 270336B

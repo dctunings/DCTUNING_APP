@@ -3814,6 +3814,63 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #905–920 — 2 NEW E87 120D EDC16 defs + single-SW observations
+
+**NEW DEF 1 — BMW E81-E87 120D sw381341 @ 0x0C3E60** (2 sister pairs):
+
+`edc16_bmw_e87_120d_0c3e60` — 2031616B EDC16.
+
+- #907 sw381341 `0281011416 07804457`
+- #909 sw381341 `0281011416 07804463`
+
+Both hit EXACT anchors:
+- `0x0C3E60 85B` BE 3538 → 8192 (+132% IQ release A)
+- `0x0C37F0 24B` BE 2980 → 4113 (+38% IQ release B)
+
+**NEW DEF 2 — BMW E81-E87 120D sw389882 @ 0x0C3C10** (2 pairs, 2 parts):
+
+`edc16_bmw_e87_120d_sw389882_0c3c10` — cross-part cluster.
+
+- #912 sw389882 `0281012334 07808786`
+- #919 sw389882 `0281013501 07809393`
+
+Both hit EXACT anchors (Δ=-0x250 from sw381341 variant):
+- `0x0C3C10 85B` BE 3538 → 8192 (+132%)
+- `0x0DA23B 39B` BE 27691 → 35331-36503 (+28-32% torque lift)
+
+**Cross-SW universal cell observation**: stock 3538 → 8192 +132% appears
+across sw381341 (0x0C3E60), sw389882 (0x0C3C10), and sw376967 (0x0C41E0
+#913, 0x0D41E0 #914 2MB twin). Same BMW 120D EDC16 85B IQ release code
+at per-SW drifted anchors.
+
+**sw376967 single-SW**: pairs #913 + #914 — sw376967 2031616B and 2MB
+same SW but different Bosch parts (0281011416 + 0281012334). Hits
+`0x0C41E0 / 0x0D41E0 85B` (+0x10000 shift between dump formats) with
+SAME raw 3593 → 8192 +128% + 0x0E03CD/0x0F03CD 199B -46%. Per-format wire
+candidate after more pairs.
+
+**BMW E81/E87 120D 125kW + 130kW** (higher-power variants):
+- #915 sw396562 2MB — 0x06F0B2/0x06F0EA 17B mirror pair +149%
+- #916 sw396562 `O_71MPIC571A` 2MB — 0x0580CE 14B +150% emission
+- #917 sw399763 `O_71RWKC205A` 2MB — hits 0x000000 16B first-block change
+- #918 sw395778 `0281013536` 270336B compact — 0x02A6BA 22B +663%
+- #920 sw391387 `O_71MDIC221A` 2MB — 0x06E500 15B +181%
+
+**sw504297 0281016925 compact** (pair #905 118D 105.2kW 262144B):
+- 0x01847E/0x01846A 6/8B emission cuts. NEW compact format for E87 N47.
+
+**sw? 118i Siemens petrol** (pair #906) — 0x065DAA/0x065DC2 12B BE 16→
+50276/39055 +244k/+314k%. Massive IQ release with stock near-zero.
+
+**E87 118D single observations**:
+- #901 sw376968 `0281012880` 2MB
+- #902 sw374483 `0281012502` 2105344B (2MB+8KB)
+- #903 sw389883 `0281011964` 2031616B
+- #904 sw394078 270336B compact
+- Each has own anchor pattern — per-SW wire needed after more confirmations.
+
+---
+
 ## BMW Pairs #889–904 — 2 NEW defs (116D + E71 3.0d sw500775) + E81 catalog
 
 **NEW DEF 1 — BMW E81-E87 116D N47D20 @ 0x0151BC 270336B** (2 pairs):
