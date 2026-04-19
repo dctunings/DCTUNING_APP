@@ -11981,6 +11981,47 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 BMW E90-E93 2.0d sw507446 — 0x16A754 2MB high-anchor ───────────
+  //
+  // BMW E90-E93 2.0d N47 119.9 kW sw507446 EDC17 2MB DDE. 3 pairs across
+  // 3 DDE BlockIDs. Verified in pair_analysis_log.md BMW pairs:
+  //   #1180 sw507446 `O_7CLBKF222A` · #1185 `O_7CLBKF221A` ·
+  //   #1186 `O_7CLBKF223A`
+  //
+  // Map structure (EXACT across all 3 pairs):
+  //   0x16A754  30 B u16 BE — IQ release (stock 9988 → 43369, +334%)
+  //   0x15200A  10 B u16 BE — emission cut (stock 43653 → 32, -99.9%)
+  //
+  // HIGH-ANCHOR pattern (0x150xxx region) — late N47 SW 507446 cal-block
+  // layout moved to higher address vs early SWs (0x057Dxx / 0x0584xx).
+  {
+    id: 'edc17_bmw_e90_2_0d_sw507446_16a754',
+    name: 'Bosch EDC17 (BMW E90-E93 2.0d N47 119.9kW — sw507446 0x16A754 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['507446'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E93 2.0d N47D20 119.9kW DDE 2MB (sw 507446, 2010-2011)'],
+    maps: [
+      {
+        id: 'edc17_bmw_e90_2_0d_16a754_iq_release',
+        name: 'IQ Release 30B (E90-E93 2.0d sw507446 high-anchor)',
+        category: 'fuel',
+        desc: 'IQ release at 0x16A754 (15 cells u16 BE = 30 B). 3 pairs cross-BlockID EXACT anchor: stock 9988 → tuner consensus 43369 (+334%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x16A754,
+        rows: 1, cols: 15, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 43000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 46000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 BMW E90-E93 2.0d sw509478 — 0x068720 cross-BlockID+format ──────
   //
   // BMW E90-E93 2.0d N47 119.9 kW sw509478 EDC17. 2 pairs across 2 DDE

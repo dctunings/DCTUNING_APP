@@ -3814,6 +3814,47 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #1177–1192 — NEW sw507446 0x16A754 def + multiple confirmations
+
+**NEW DEF — BMW E90-E93 2.0d sw507446 @ 0x16A754 2MB** (3 pairs, 3 BlockIDs):
+
+`edc17_bmw_e90_2_0d_sw507446_16a754` — HIGH-ANCHOR late-SW variant.
+
+- #1180 sw507446 `O_7CLBKF222A`
+- #1185 sw507446 `O_7CLBKF221A`
+- #1186 sw507446 `O_7CLBKF223A`
+
+All 3 hit EXACT `0x16A754 30B` BE 9988 → 43369 (+334%) + `0x15200A 10B`
+emission cut. Late-SW N47 (2010-2011) moved cal-block to higher address
+0x15-0x16 region vs early SWs 0x057Dxx / 0x0584xx.
+
+**Wired def confirmations**:
+- #1177 sw394079 `O_71MJKC341A` — 0x06A4F0 30B (wired def, 4th pair).
+- #1179 sw509478 `O_71S7KC185A` — 0x068720 30B (wired def, 3rd pair,
+  extends to 2MB + 1540K formats).
+- #1184 sw507453 `O_73S7IB161A` — 0x0584B6/0x0584A2 (wired def).
+- #1188 sw394078 1540096B — 0x057E10 + 0x057F62 emission cut (same
+  pattern as 2MB def but at 1540K shifted anchor).
+- #1190 sw390654 `0281014239` 1540096B — 0x057C88/0x057DDA emission
+  (same SW as #895/#1069 at 1540K format).
+- #1191 sw394078 E92-E93 2MB — 0x057E10 emission cut.
+- #1192 sw396567 `O_73R5KB101A` — 0x071C48 16B (wired def, 5th pair!).
+
+**Observations (no wire)**:
+- #1178 sw399763 `O_71RWKC202A` — 0x067EAC 30B (Δ=-0x23C4 from wired
+  0x06A4F0 sw394079 def). Same raw 15039→30825 signature.
+- #1181 sw504977 `X_7CK5KF123A` — 0x18C8D0 47B +105% + 0x15198E emission.
+  Single-SW 2MB at high-anchor 0x18-0x15 region.
+- #1182 sw507434 `O_7CK6KF152A` 135.3kW — 0x16A184 30B same raw as
+  sw507446 cluster at Δ=-0x5D0 shifted anchor. Single SW.
+- #1183 sw504978 `X_7CK5KE079A` 85.3kW 2MB — 0x151890/0x15196E emission
+  cut pattern (different raw stock 44575 vs 43653).
+- #1187 sw517681 `O_7CPAKF487A` 2012 2MB — 0x155E16/0x155D4A 10B emission
+  cut. Late-SW HIGH-anchor variant.
+- #1189 sw? 2.5i Siemens 5WK90078 2.5MB petrol — 2×256B +20-23%.
+
+---
+
 ## BMW Pairs #1161–1176 — 2 NEW defs + 270KB compact def extension
 
 **NEW DEF 1 — BMW E90-E93 2.0d sw396565 0281014572 @ 0x0282DA cross-format**:
