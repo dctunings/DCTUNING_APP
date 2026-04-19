@@ -9720,6 +9720,109 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── Mercedes OM642 V6 3.0 CDI (W204 C320/E320, X164 ML/GL 320 CDI) ────
+  // Confirmed via per-pair analysis — THREE sister SWs (CR6-642 hardware)
+  // share BYTE-IDENTICAL 16-byte axis signatures at two distinct anchors:
+  //   Pair #141 sw389349 (CR6-642-45S8, 524288B, EDC16)
+  //   Pair #142 sw389347 (CR6-642-50S1, 2097152B, EDC17 full dump)
+  //   Pair #143 sw396521 (CR6-642-55S2, 524288B, EDC17 strip)
+  // Cross-variant signatures enable one def to serve all dump formats.
+  {
+    id: 'mb_om642_v6_30cdi',
+    name: 'Mercedes OM642 V6 3.0 CDI (W204 C320, W212 E320)',
+    manufacturer: 'Bosch',
+    family: 'EDC16/EDC17 OM642',
+    identStrings: ['OM642', 'CR6-642', 'CR6-642-45S8', 'CR6-642-50S1', 'CR6-642-55S2', 'CR6-642-56S0', 'CR6EU5-642', 'CR60-642', 'CR60-642LS', '0281014428', '0281014429', '0281015985', '0281016383', '0281016656', '642-'],
+    fileSizeRange: [458752, 4194304],
+    vehicles: [
+      'Mercedes C320 CDI V6 W204 (OM642 3.0, 164.8kW/224PS)',
+      'Mercedes CLS320 CDI V6 W219 (OM642 3.0, 164.8kW — 2005-2008 sister SWs)',
+      'Mercedes CLS350 CDI V6 W219 (OM642 3.0, 194.9kW)',
+      'Mercedes E320 CDI V6 W212 (OM642 3.0)',
+      'Mercedes E350 CDI V6 W212 (OM642 3.0, 169.9/194.9kW)',
+      'Mercedes ML320 CDI V6 X164 (OM642)',
+      'Mercedes GL320 CDI V6 X164 (OM642)',
+      'Mercedes R320 CDI V6 W251 (OM642)',
+      'Mercedes S320 CDI V6 W221 (OM642)',
+      'Mercedes Sprinter 319 CDI V6 (OM642)',
+      'Mercedes Vito 120 CDI V6 (OM642)',
+      'Mercedes Viano 3.0 CDI V6 (OM642)',
+    ],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'mb_om642_torque_demand',
+        name: 'Torque Demand Ceiling',
+        category: 'torque',
+        desc: 'Mercedes OM642 V6 3.0 CDI torque demand. 16-byte axis signature BYTE-IDENTICAL across THREE sister SWs (sw389349 @ 0x06B4CE 524KB, sw389347 @ 0x1EB142 2MB, sw396521 @ 0x06B24A 524KB). Raw 18205 stock → 45597 Stage1 (+150%). OM642 V6 has huge headroom — stock 165kW, safe to 220kW on factory turbos.',
+        signatures: [
+          [0x8c, 0x05, 0xcc, 0x06, 0x56, 0x09, 0xb8, 0x0b, 0x2e, 0x0e, 0xcc, 0x10, 0x24, 0x13, 0xe0, 0x15],
+        ],
+        sigOffset: 16,
+        fixedOffset: 0x06B4CE,
+        rows: 1, cols: 12, dtype: 'uint16', le: false,
+        factor: 0.05, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.50, clampMax: 55000 },
+        stage2: { multiplier: 1.75, clampMax: 60000 },
+        stage3: { multiplier: 2.00, clampMax: 64000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'mb_om642_emission_cut',
+        name: 'Emission / Monitoring Cut',
+        category: 'emission',
+        desc: 'Mercedes OM642 V6 emission / monitoring disable. 16-byte signature BYTE-IDENTICAL across same THREE SWs (sw389349 @ 0x05DA96, sw389347 @ 0x1DD70A, sw396521 @ 0x05D80E). Raw 43271 → 7688 (-82%) in Stage1 template (emission threshold reduction).',
+        signatures: [
+          [0xfc, 0x01, 0x1c, 0x02, 0x65, 0x02, 0x97, 0x02, 0x55, 0x03, 0x1f, 0x04, 0xf1, 0x04, 0xdc, 0x05],
+        ],
+        sigOffset: 16,
+        fixedOffset: 0x05DA96,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 0.1, offsetVal: 0, unit: '%',
+        stage1: { multiplier: 0.20 },
+        stage2: { multiplier: 0.15 },
+        stage3: { multiplier: 0.10 },
+        critical: false, showPreview: false,
+      },
+      {
+        id: 'mb_om642_cls_torque_outer',
+        name: 'Torque Demand Outer (CLS 320 CDI 458KB variant)',
+        category: 'torque',
+        desc: 'Mercedes CLS 320 CDI V6 458752B strip-dump torque outer table. 16-byte axis signature BYTE-IDENTICAL across THREE sister SWs (sw379864, sw381077, sw381094) at 0x042F5B. Raw 27881 → 37020 (+33%) in Stage1 template. W219 CLS Coupe OM642 3.0 CDI factory SW family 2005-2006.',
+        signatures: [
+          [0x89, 0x00, 0x99, 0x00, 0xa9, 0x00, 0xb6, 0x00, 0xc0, 0x00, 0xcb, 0x00, 0xd5, 0x00, 0xdf, 0x00],
+        ],
+        sigOffset: 16,
+        fixedOffset: 0x042F5B,
+        rows: 1, cols: 21, dtype: 'uint16', le: false,
+        factor: 0.01, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.30, clampMax: 52000 },
+        stage2: { multiplier: 1.45, clampMax: 58000 },
+        stage3: { multiplier: 1.60, clampMax: 64000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'mb_om642_cls_torque_inner',
+        name: 'Torque Demand Inner (CLS 320 CDI 458KB variant)',
+        category: 'torque',
+        desc: 'Mercedes CLS 320 CDI V6 458752B strip-dump torque inner table (paired with outer above). 16-byte axis signature BYTE-IDENTICAL across same 3 SWs at 0x042E6B. Raw 37841 → 48517 (+28%) in Stage1 template.',
+        signatures: [
+          [0x92, 0x00, 0xb6, 0x00, 0xdd, 0x00, 0xff, 0x01, 0x14, 0x01, 0x29, 0x01, 0x37, 0x01, 0x45, 0x01],
+        ],
+        sigOffset: 16,
+        fixedOffset: 0x042E6B,
+        rows: 1, cols: 21, dtype: 'uint16', le: false,
+        factor: 0.01, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.25, clampMax: 56000 },
+        stage2: { multiplier: 1.40, clampMax: 60000 },
+        stage3: { multiplier: 1.55, clampMax: 64000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── Mercedes Delphi CRD-646 C200/C220 CDI 2.2 (W203/W204) ──────────────
   // Confirmed via per-pair analysis — FOUR pairs (C200 CDI 100kW 2007-2009
   // NMA9D/NMA9J/NMA9M) share BYTE-IDENTICAL 16-byte signature at map start:

@@ -71,6 +71,45 @@ discovered via `build_mb_pairs.js`). Numbering as `MB #N` separately.
 Mercedes uses a mix of Bosch (EDC15/EDC16/EDC17 CRAx/CR40/MSB), Delphi
 (CRD3), Temic (Actros OM501/OM906), and Siemens-Continental petrol.
 
+## MB Pairs #129–220 — NEW OM642 V6 def + CLS 320 CDI extension (v3.9.3)
+
+**NEW DEF — mb_om642_v6_30cdi (Mercedes OM642 V6 3.0 CDI)**:
+
+4 maps wired via 16-byte axis signatures BYTE-IDENTICAL across sister
+SWs. Covers C/CLS/E/ML/GL/R/S-class with OM642 3.0 V6 diesel.
+
+Torque demand (0x06B4CE) + emission cut (0x05DA96) — confirmed across:
+- Pair #141 sw389349 (CR6-642-45S8 524KB EDC16)
+- Pair #142 sw389347 (CR6-642-50S1 2MB EDC17 full dump)
+- Pair #143 sw396521 (CR6-642-55S2 524KB EDC17 strip)
+
+CLS 320 CDI 458752B variant torque maps at 0x042F5B + 0x042E6B —
+confirmed across THREE W219 SWs:
+- Pair #175 sw379864
+- Pair #176 sw381077
+- Pair #177 sw381094
+All share byte-identical 16-byte axis signatures and Stage1 raw targets.
+
+**OM646 sig robustness confirmed** — Pair #209 (E220 CDI sw376896) hit
+all 4 signature-based maps (torque 0x0866E9/0x0D0481, boost 0x08C71D +
+3 mirrors, smoke 0x0CF172, fuel 0x0CF67A). The signature upgrade in
+v3.9.2 is working correctly on 1MB strip dumps.
+
+Other observations from #129-220:
+- **C63 AMG ME9 2MB petrol** (pairs #144-148, #153, #155) — raw 3700
+  torque cut shared across 4+ SWs (sw394899, sw400897, sw392156,
+  sw381959, sw506908). Anchors shift (0x1E2BBA vs 0x1E4D1C vs 0x1E2634)
+  — needs signature approach. Future wire.
+- **CLS 350 CDI 194.9kW** (pairs #181-184) — sw525430 vs sw512495
+  sister CR60-642LS-7AL9/7BL0 2MB/4MB. Future def candidate.
+- **C350 CDI 169.9kW CR6EU5-642** (pair #125 sw510865 + pair #157
+  sw501658) — share raw 22028 216B (+114%) + raw 34835 288B (-88%)
+  emission cut across 524KB and 2MB variants. Future def.
+- **CLK 220 CDI 110.3kW** (pair #166 sw389322 CR30-646-C6D5) — matches
+  OM646 family but at shifted anchors. Existing def may cover via sig.
+
+---
+
 ## MB Pairs #41–128 — OM646 SIG-UPGRADE + NEW Delphi CRD-646 def (v3.9.2)
 
 **UPGRADE — mb_edc16_om646 promoted to signature-based detection**:
