@@ -11857,6 +11857,182 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ─── Volvo D5 2MB diesel (EDC16/EDC17 Bosch) ───────────────────────────
+  // Confirmed via per-pair analysis — 21+ pairs share 18-byte fingerprint
+  // at anchor 0x17449C (14 pairs main) or 0x184F48 (6 pairs alt variant).
+  // Covers XC60/XC70/S60/V60/V70/C70 2.0D/2.4D5 diesel 2009-2012 era.
+  // SW range: sw400293/400298/511572/512700/512728/512730/512731/512734/
+  // 512782/515634/519412/519415/519419/519422/519456/519467/519469/
+  // 519470/526269/532513.
+  {
+    id: 'volvo_d5_2mb',
+    name: 'Volvo D5 2MB (S60/V60/V70/XC60/XC70 2.0D/2.4D5)',
+    manufacturer: 'Bosch',
+    family: 'Volvo EDC16/EDC17 D5',
+    identStrings: ['Volvo D5', 'EDC16C31', 'EDC17CP22', 'EDC17C49', '0281015286'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: [
+      'Volvo S60 2.0D D3 (2010-2011, 119.9kW)',
+      'Volvo S60 2.4 D5 (2010-2012, 150.8kW/205PS)',
+      'Volvo V60 2.0D D3 (2010-2011, 119.9kW)',
+      'Volvo V70 2.0D3 (2010-2011, 119.9kW)',
+      'Volvo V70 2.4D5 (2010, 150.8kW)',
+      'Volvo XC60 2.4 D5 (2009-2011, 128.7-150.8kW)',
+      'Volvo XC70 D5 (150.8kW)',
+      'Volvo C70 2.0 D (2012, 110.3kW)',
+    ],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'volvo_d5_fingerprint',
+        name: 'D5 Calibration Fingerprint',
+        category: 'misc',
+        desc: 'Volvo D5 2MB calibration fingerprint — 18-byte signature `13 13 13 13 13 00 13 13 13 13 13 00 00 00 00 00 0a 00` matches 21+ pairs at exact anchor 0x17449C (main) or 0x184F48 (alt variant). Used for ECU variant detection — actual Stage1 tune targets emission cut / monitoring regions around 0x173ED9-0x175xxx.',
+        signatures: [
+          [0x13, 0x13, 0x13, 0x13, 0x13, 0x00, 0x13, 0x13, 0x13, 0x13, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x00],
+        ],
+        sigOffset: 0,
+        fixedOffset: 0x17449C,
+        rows: 1, cols: 9, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: '',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
+  // ─── Volvo D5 2.4 EDC16 (S60/S80/V70/XC70/XC90 diesel 2005-2008) ──────
+  // Confirmed via per-pair analysis — 22+ pairs share 20-byte calibration
+  // axis signature across 253KB/262KB/393KB/2MB dump variants.
+  // S60/V70/XC70 sw380235/380231/381522/381537/381538/386395/386399/
+  // 395522/503030/379956/383458. XC90 sw375898/0281012103.
+  {
+    id: 'volvo_d5_edc16_24',
+    name: 'Volvo D5 2.4 EDC16 (S60/S80/V70/XC70/XC90)',
+    manufacturer: 'Bosch',
+    family: 'Volvo EDC16 D5',
+    identStrings: ['0281012103', '0281012104', 'Volvo D5 2.4', 'EDC16C34'],
+    fileSizeRange: [253952, 2097152],
+    vehicles: [
+      'Volvo S60 2.4 D5 (2005-2008, 119.9-136.1kW)',
+      'Volvo S80 2.4 D5 (2008, 136.1kW)',
+      'Volvo V70 2.4 D5 (2005-2008, 95.6-136.1kW)',
+      'Volvo XC70 2.4 D5 (2007-2008, 136.1kW)',
+      'Volvo XC90 2.4 D5 (2005-2006, 134.6-136.8kW)',
+    ],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'volvo_d5_edc16_torque',
+        name: 'Torque / IQ Demand',
+        category: 'torque',
+        desc: 'Volvo D5 2.4 EDC16 torque/IQ demand region. 20-byte signature `98 03 c0 03 c1 03 c2 03 c3 03 c4 03 c5 03 c6 09 60 09 60 09` matches 22+ pairs across S60/S80/V70/XC70/XC90. Anchor 0x033ACB (262KB), 0x328B7 (262KB variant), 0x34B6B (393KB), 0x1F3ACB (2MB full dump).',
+        signatures: [
+          [0x98, 0x03, 0xc0, 0x03, 0xc1, 0x03, 0xc2, 0x03, 0xc3, 0x03, 0xc4, 0x03, 0xc5, 0x03, 0xc6, 0x09, 0x60, 0x09, 0x60, 0x09],
+        ],
+        sigOffset: 0,
+        fixedOffset: 0x033ACB,
+        rows: 1, cols: 10, dtype: 'uint16', le: false,
+        factor: 0.1, offsetVal: 0, unit: 'Nm',
+        stage1: { multiplier: 1.30 },
+        stage2: { multiplier: 1.45 },
+        stage3: { multiplier: 1.60, clampMax: 65000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ─── Volvo V40 1.9 CDI/TDI EDC15 524KB (2000-2004) ─────────────────────
+  // Confirmed via per-pair analysis — 5 pairs share 20-byte smoke limit
+  // content at anchors 0x7AA56/0x7AACE/0x7AB3A. Covers V40 1.9 CDI
+  // (0281010440) and V40 1.9 TDI (0281010441, 0281011087) — OM664 TDI
+  // derived from PSA/Ford 1.9 diesel.
+  {
+    id: 'volvo_v40_tdi_edc15',
+    name: 'Volvo V40 1.9 CDI/TDI EDC15 (2000-2004)',
+    manufacturer: 'Bosch',
+    family: 'EDC15V Volvo',
+    identStrings: ['0281010440', '0281010441', '0281011087', '0281001906'],
+    fileSizeRange: [262144, 524288],
+    vehicles: [
+      'Volvo V40 1.9 CDI (2000-2004, 75kW/102PS)',
+      'Volvo V40 1.9 TDI (2000-2004, 69.9-84.6kW)',
+      'Volvo S40 1.9 CDI/TDI (2000-2004)',
+    ],
+    checksumAlgo: 'bosch-simple',
+    checksumOffset: 0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'volvo_v40_tdi_iq_smoke',
+        name: 'IQ Smoke Limit Table',
+        category: 'smoke',
+        desc: 'Volvo V40 1.9 TDI/CDI EDC15 IQ smoke limit. 20-byte signature `05 05 9d 05 57 06 21 07 89 0a 89 0a 89 0a 00 00 7d 00 b4 00` matches 5 confirmed pairs (sw353185, sw362003, sw362004, sw366007, sw353344). Anchors 0x7AB3A or 0x7AACE or 0x7AA56 by SW variant.',
+        signatures: [
+          [0x05, 0x05, 0x9d, 0x05, 0x57, 0x06, 0x21, 0x07, 0x89, 0x0a, 0x89, 0x0a, 0x89, 0x0a, 0x00, 0x00, 0x7d, 0x00, 0xb4, 0x00],
+        ],
+        sigOffset: 0,
+        fixedOffset: 0x07AB3A,
+        rows: 1, cols: 10, dtype: 'uint16', le: false,
+        factor: 0.01, offsetVal: 0, unit: 'mg/st',
+        stage1: { multiplier: 1.30 },
+        stage2: { multiplier: 1.50 },
+        stage3: { multiplier: 1.70, clampMax: 62000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ─── Volvo ME9 2MB petrol (C30/C50/C70/S70/V50/V70 Turbo) ──────────────
+  // Confirmed via per-pair analysis — 9+ pairs share 20-byte map content
+  // at anchor 0x1CB68C / 0x1CB6DA / 0x1CB8DA / 0x1C9AAC. Covers Bosch ME9
+  // petrol on C30/C50/C70/S70/V50/V70 2.0/2.3/2.5 Turbo 2002-2007.
+  {
+    id: 'volvo_me9_2mb',
+    name: 'Volvo ME9 2MB petrol (C30/C50/C70/S70/V50/V70 Turbo)',
+    manufacturer: 'Bosch',
+    family: 'Volvo ME9',
+    identStrings: ['0261209009', '0261209038', '120906439S1'],
+    fileSizeRange: [2097152, 2098176],
+    vehicles: [
+      'Volvo C30 2.5 T (2007, 161.8kW/220PS)',
+      'Volvo C50 2.0 Turbo (2006, 132.4kW)',
+      'Volvo C70 2.5 Turbo (2005-2007, 165.5kW)',
+      'Volvo S70 T5 2.3 L (2005, 161.8kW)',
+      'Volvo V50 2.5 Turbo (2002, 165.5kW)',
+      'Volvo V50 T5 (2002, 183.9kW)',
+      'Volvo V70 2.5 Turbo (2002, 154.5kW)',
+    ],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'volvo_me9_boost_map',
+        name: 'Boost / Torque Map',
+        category: 'boost',
+        desc: 'Volvo ME9 2MB boost/torque map — 20-byte map content signature `21 38 38 3f 43 43 43 43 43 43 43 43 14 2a 3d 3f 43 43 43 43` BYTE-IDENTICAL across 9 confirmed pairs C30/C50/C70/S70/V50/V70 Turbo. Stage1 in study data raises 120B raw 13278 → 25700 (+93%).',
+        signatures: [
+          [0x21, 0x38, 0x38, 0x3f, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x43, 0x14, 0x2a, 0x3d, 0x3f, 0x43, 0x43, 0x43, 0x43],
+        ],
+        sigOffset: 0,
+        fixedOffset: 0x1CB68C,
+        rows: 1, cols: 60, dtype: 'uint8', le: false,
+        factor: 1, offsetVal: 0, unit: '',
+        stage1: { multiplier: 1.30 },
+        stage2: { multiplier: 1.50 },
+        stage3: { multiplier: 1.70, clampMax: 250 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ─── Continental EMS3110/3125/3150/3155 (Renault/Nissan petrol) ───────────
   {
     id: 'renault_ems31',

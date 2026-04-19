@@ -64,6 +64,48 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+# Volvo catalog (D:\DATABASE\Tuning_DB_BIN\Volvo)
+
+**238 ORI/Stage1 pairs** in Volvo folder (from 253 ORI / 242 Stage1
+discovered via `build_volvo_pairs.js`). Numbering as `Volvo #N` separately.
+
+## VOLVO CATALOG 100% COMPLETE — 238/238 pairs (v3.10.1)
+
+Full per-pair analysis through all 238 Volvo pairs complete. Pool
+breakdown:
+- Pairs #1-#14 — Road car Volvo C30/C50/C70/XC60 D5/Turbo
+- Pairs #15-#127 — Volvo Truck pool (FH12/FH13/FH16/FL/FM TRW/LUCAS
+  8-65KB small ECUs, ~110 pairs — outside road-car tuning scope)
+- Pairs #128-#238 — Road car V40/S40/V50/S60/V60/V70/S70/S80/XC60/
+  XC70/XC90
+
+**4 NEW Volvo defs wired**:
+
+1. **`volvo_d5_2mb` (Volvo D5 2MB EDC16/EDC17)** — 21+ pairs confirmed
+   across XC60/XC70/S60/V60/V70/C70 2.0D/2.4D5 diesel. 18-byte
+   calibration fingerprint at 0x17449C (14 pairs) or 0x184F48 (6 pairs).
+2. **`volvo_me9_2mb` (Volvo ME9 2MB petrol)** — 9+ pairs C30/C50/C70/
+   S70/V50/V70 Turbo 2MB Bosch ME9. 20-byte boost/torque sig at 0x1CB68C.
+3. **`volvo_d5_edc16_24` (Volvo D5 2.4 EDC16)** — 22+ pairs across
+   S60/S80/V70/XC70/XC90 2.4 D5 diesel 253KB/262KB/393KB/2MB variants.
+   20-byte signature at 0x033ACB / 0x328B7 / 0x34B6B / 0x1F3ACB.
+4. **`volvo_v40_tdi_edc15` (V40 1.9 CDI/TDI 524KB EDC15)** — 5 pairs
+   sw353185/362003/362004/366007/353344. 20-byte smoke limit sig.
+
+Other observations:
+- Volvo ME7.x petrol 1MB sw359462 Bosch 0261204559 — MANY pairs
+  (S60/V70/S80/XC90/C70 2.0/2.4/2.5 Turbo 1MB). Per-pair Stage1
+  targets are fragmented (different tune styles) so no universal
+  sig emerged.
+- Volvo S40 1.6 L Diesel sw372468 0281011775 2MB EDC15 — pair #37
+  was 34% changed (anti-tune/obfuscated).
+- Volvo S60/V70 2.4 D5 524KB EDC15 (pairs #42-#51, #155, #164/#165,
+  #221-#224, #236/#237) — various sw360036/351417/0281010319/
+  0281011078/0281011441/0281011411 — legacy EDC15 524KB cluster
+  with mixed raw signatures.
+
+---
+
 # Mercedes catalog (D:\DATABASE\Tuning_DB_BIN\Mercedes Benz)
 
 **779 ORI/Stage1 pairs** in Mercedes folder (from 832 ORI / 783 Stage1
