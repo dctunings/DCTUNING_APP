@@ -70,6 +70,59 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1169–1184 — 2 NEW MED17 Tiguan 2.0 TSI defs + Touareg + 0x06CC76 ext
+
+**NEW DEF 1 — Tiguan 2.0 TSI 125kW MED17 @ 0x00F617** (3 SWs, 3 pairs):
+
+`med17_tiguan_20tsi_06j906026_00f617` covers S/T/AB suffixes in 262KB.
+
+- #1173 sw396752 `06J906026S` 125kW — 0x00F617 120B + 0x016AB2 64B
+- #1174 sw396755 `06J906026AB` 125kW — EXACT same anchors
+- #1175 sw396753 `06J906026T` 125kW — EXACT same anchors
+
+Stock 10604 → 25700 (+142%). Universal MED17 EA888 Gen2 IQ release
+pattern at 262KB compact anchor. Same family as Scirocco 2.0 TSI
+06J906026AR pairs #1004/#1006 (which use sw503606/sw395040 AR at
+slightly different anchors 0x00F607/0x00F63F).
+
+**NEW DEF 2 — Tiguan 2.0 TSI 147kW MED17 @ 0x010E79** (2 SWs, 2 pairs):
+
+`med17_tiguan_20tsi_06j906026h_010e79` covers H suffix 147kW.
+
+- #1176 sw397325 `06J906026H` 147kW
+- #1177 sw397724 `06J906026H` 147kW (sister SW)
+
+Stock 10583 → 25700 (+143%) at Δ=+0x1862 shift from 125kW anchor.
+
+**0x06CC76 def EXTENDED** — +sw524160 (#1169/#1170 sister pairs):
+
+Now covers 6 SWs (LK/LL/LE/FQ).
+
+**Touareg observations (no wire — mixed SGOs)**:
+
+- #1178 sw396753 `06J906026D` 2MB (Tiguan) — 2MB dump of #1175's 262KB
+  cluster but at different anchor (0x056AC0/0x058580 — not 0x04F617
+  2MB-twin convention). Different tuner style. Logged.
+- #1179 sw369816 `03G906016EH` Touran 1.9 TDI 1MB — EDC16U31 at
+  0x0E342F/EC3E7 cluster, stock 3287 → 14765 +349%. Single SW.
+- #1180 sw367948 `070906016F` Touareg 2.5 TDI 1MB — hits `0x0F0413 11B`
+  BE 17719 → 39223 +121%. Single SW.
+- #1181 sw387069 (no part, 1MB) Touareg 2.5 TDI — hits `0x0E3361 11B`
+  BE 17719 → 39223 +121% — SAME raw signature as #1180 at different
+  anchor (Δ=-0xD0B2). 2 SWs, 2 anchors, same raw. Potential cluster
+  after 3rd pair.
+- #1182 sw384629 `070906016DE` Touareg 2.5 TDI 524KB — matches T5
+  2.5 TDI 2MB def's 524KB counterpart structure (0x055Axx/055Exx/
+  056xxx range). 524KB twin of 0x1ECCDB family?
+- #1183 sw383041 `8E0907401AB` Touareg 3.0 TDI 524KB — `0x0717C3/AB3/
+  DA3 11B` TRIPLE mirror at stride +0x2F0 BE 13214 → 37278 +182%.
+  Unique EDC15/16 3-mirror pattern.
+- #1184 sw382708 `7L0907401B` Touareg 3.0 TDI 524KB — `0x0706CD 11B`
+  BE 13214 → 37278 +182% — same raw signature different anchor.
+  Pair #1183 + #1184 form potential 2-SW cluster.
+
+---
+
 ## VW Pairs #1153–1168 — 2 NEW Tiguan defs (0x06B512 + 0x06CC76) — huge LXX family
 
 **NEW DEF 1 — Tiguan LG/LK/LE/LH @ 0x06B512 2KB** (4 SWs, 5 pairs):

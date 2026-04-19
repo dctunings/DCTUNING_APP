@@ -2970,6 +2970,111 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── MED17 VW Tiguan 2.0 TSI EA888 Gen2 06J906026S/T/AB — 0x00F617 262KB IQ ─
+  //
+  // VW Tiguan 2.0 TSI (EA888 Gen2 turbo) 125 kW MED17. 262 KB compact
+  // dump format. 3 SWs across 3 part suffixes share EXACT anchor + raw
+  // signature. Verified in pair_analysis_log.md VW pairs:
+  //   #1173 sw396752 S · #1174 sw396755 AB · #1175 sw396753 T
+  //
+  // Map structure:
+  //   0x00F617  120 B u16 BE — IQ release (10604 → 25700, +142%)
+  //   0x016AB2  64 B u16 BE — companion (31503 → 45580, +45%)
+  //
+  // SAME universal MED17 EA113/EA888 120B IQ unlock pattern seen across
+  // VAG line (0x1CE0C8 in Golf 2MB, 0x1CE884 in Passat 8P, 0x1CE2A4 in
+  // Passat 3C, etc.) — here at 262KB compact anchor 0x00F617.
+  {
+    id: 'med17_tiguan_20tsi_06j906026_00f617',
+    name: 'Bosch MED17 (VW Tiguan 2.0 TSI EA888 Gen2 125kW — 06J906026S/T/AB 0x00F617 262KB)',
+    manufacturer: 'Bosch',
+    family: 'MED17',
+    identStrings: ['06J906026S', '06J906026T', '06J906026AB', '396752', '396753', '396755'],
+    fileSizeRange: [262144, 262144],
+    vehicles: ['VW Tiguan 2.0 TSI EA888 Gen2 125kW (06J906026S/T/AB sw 396752/396753/396755, 2006-2009)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x3FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'med17_tiguan_00f617_iq_release',
+        name: 'IQ Release 120B (Tiguan 2.0 TSI S/T/AB)',
+        category: 'fuel',
+        desc: 'IQ release at 0x00F617 (60 cells u16 BE = 120 B). Verified across 3 SWs + 3 part suffixes: stock 10604 → tuner consensus 25700 (+142%). Universal MED17 EA888 Gen2 IQ release pattern at 262KB compact anchor.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x00F617,
+        rows: 1, cols: 60, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 24000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 30000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'med17_tiguan_016ab2_companion',
+        name: 'IQ Release Companion 64B (Tiguan 2.0 TSI S/T/AB)',
+        category: 'fuel',
+        desc: 'Companion IQ release at 0x016AB2 (32 cells u16 BE = 64 B). Raw 31503 → 45580 (+45%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x016AB2,
+        rows: 1, cols: 32, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── MED17 VW Tiguan 2.0 TSI EA888 Gen2 06J906026H 147kW — 0x010E79 262KB ──
+  //
+  // VW Tiguan 2.0 TSI (EA888 Gen2) 147 kW higher-power MED17 variant.
+  // 2 SWs same SGO share EXACT anchor + raw signature. Verified in
+  // pair_analysis_log.md VW pairs:
+  //   #1176 sw397325 H · #1177 sw397724 H (sister SW)
+  //
+  // Anchor SHIFTED Δ=+0x1862 from 125kW variant's 0x00F617 — 147kW
+  // cal-block at higher address.
+  //
+  // Map structure:
+  //   0x010E79  120 B u16 BE — IQ release (10583 → 25700, +143%)
+  //   0x0181CA  64 B u16 BE — companion (31503 → 45580, +45%)
+  {
+    id: 'med17_tiguan_20tsi_06j906026h_010e79',
+    name: 'Bosch MED17 (VW Tiguan 2.0 TSI EA888 Gen2 147kW — 06J906026H 0x010E79 262KB)',
+    manufacturer: 'Bosch',
+    family: 'MED17',
+    identStrings: ['06J906026H', '397325', '397724'],
+    fileSizeRange: [262144, 262144],
+    vehicles: ['VW Tiguan 2.0 TSI EA888 Gen2 147kW (06J906026H sw 397325/397724, 2009)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x3FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'med17_tiguan_010e79_iq_release',
+        name: 'IQ Release 120B (Tiguan 2.0 TSI H 147kW)',
+        category: 'fuel',
+        desc: 'IQ release at 0x010E79 (60 cells u16 BE = 120 B). Verified 2 SWs on 06J906026H: stock 10583 → tuner consensus 25700 (+143%). Higher-power-variant anchor (Δ=+0x1862 from 125kW 0x00F617).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x010E79,
+        rows: 1, cols: 60, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 24000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 30000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 C46 VW Tiguan 2.0 TDI CR 03L906018LG/LK/LE/LH — 0x06B512 2KB ────
   //
   // VW Tiguan 2.0 TDI CR 81-125 kW EDC17 C46 late-gen LX-suffix family.
@@ -3055,9 +3160,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17 C46 (VW Tiguan 2.0 TDI CR 100-103kW — 03L906018LK/LL/LE/FQ 0x06CC76)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['03L906018LL', '03L906018FQ', '524113', '524133', '524646', '528319', '528324'],
+    identStrings: ['03L906018LL', '03L906018FQ', '524113', '524133', '524160', '524646', '528319', '528324'],
     fileSizeRange: [2097152, 2097152],
-    vehicles: ['VW Tiguan 2.0 TDI CR 100-103kW (03L906018LK/LL/LE/FQ sw 524113/524133/524646/528319/528324, 2012)'],
+    vehicles: ['VW Tiguan 2.0 TDI CR 100-103kW (03L906018LK/LL/LE/FQ sw 524113/524133/524160/524646/528319/528324, 2012-2013)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFFC,
     checksumLength: 4,
