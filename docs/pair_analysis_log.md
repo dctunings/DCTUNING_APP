@@ -71,6 +71,55 @@ discovered via `build_mb_pairs.js`). Numbering as `MB #N` separately.
 Mercedes uses a mix of Bosch (EDC15/EDC16/EDC17 CRAx/CR40/MSB), Delphi
 (CRD3), Temic (Actros OM501/OM906), and Siemens-Continental petrol.
 
+## MB Pairs #1-779 BULK COVERAGE ANALYSIS + CRAx sig upgrade (v3.9.4)
+
+Bulk signature-scan across all 779 Mercedes ORI files using each wired
+def's byte signature:
+
+| Def sig           | Pairs matched |
+| ----------------- | ------------- |
+| OM646 torque      | 43            |
+| OM646 boost       | 50            |
+| OM646 smoke       | 55            |
+| CRAx W169 (NEW)   | 18            |
+| Delphi CRD-646    | 6             |
+| OM642 torque      | 5             |
+| OM642 emission    | 5             |
+| OM642 CLS 20B map | 96            |
+
+**Coverage: 180/779 pairs matched by at least one wired sig (23%)**
+
+**CRAx upgrade**: extracted 20-byte map content from 7 confirmed sister
+SWs — BYTE-IDENTICAL across all. Updated `mb_crax_fuel_qty` with sig
+`18 24 19 96 1a ea 1c 34 1d 42 1d c4 1e 3c 1e be 1f 40 1f 9a` which
+now matches 18 pairs (11 at 0x011F9A + 7 at shifted anchors). The
+"raw 6003" mean reported by pair analyzer corresponds to ACTUAL map
+content starting with u16 BE values 6180/6550/6890/7220/7490/... in
+mg/st fuel quantity scale.
+
+**OM642 CLS 20B map signature massively broad** — the 20-byte map
+content `f1 01 14 01 33 01 9b 02 01 02 6a 02 d0 03 42 03 ba 04 37 04`
+matches 96 pairs across the entire W204/W219/W212/W251/W164/W251
+OM642 V6 family. The CLS W219 458KB def's signature will auto-find
+this universal torque table in ALL OM642 V6 variants.
+
+Unmatched pool (599 pairs):
+- 278 × 524KB (A-class EDC15 + C-class EDC15V older variants)
+- 129 × 1MB (older EDC15 PD C-class 2000-2005)
+- 77 × 2MB (C63 AMG ME9, CR40 EDC17, misc newer Bosch)
+- 23 × 262KB (AMG M113, older petrol)
+- 20 × 4MB (Delphi CRD3 family)
+- 19 × 3MB (Delphi CRD2 family)
+- 15 × 327KB (Siemens M300 petrol)
+- 5 × 528KB (Delphi CRD-646 NMA9D variant — shifted +8B)
+
+Major patterns identified in unmatched 1MB pool — 3 sub-clusters
+share content at anchor 0x01C23C but have DIFFERENT per-SW maps at
+0x012DFE (IQ limit target values: 3844 / 14339 / 43010 / 48898
+depending on SW family). Too SW-fragmented to wire cleanly.
+
+---
+
 ## MB Pairs #129–220 — NEW OM642 V6 def + CLS 320 CDI extension (v3.9.3)
 
 **NEW DEF — mb_om642_v6_30cdi (Mercedes OM642 V6 3.0 CDI)**:

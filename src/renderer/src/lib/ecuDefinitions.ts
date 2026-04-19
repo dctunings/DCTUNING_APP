@@ -9642,11 +9642,13 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     maps: [
       {
         id: 'mb_crax_fuel_qty',
-        name: 'Fuel Injection Quantity (6003 anchor)',
+        name: 'Fuel Injection Quantity',
         category: 'fuel',
-        desc: 'Mercedes CRAx EDC16 fuel quantity — anchor 0x011F9A confirmed EXACT raw signature 6003 across FIVE sister SWs (sw389341 ×2, sw382210, sw378289, sw383368). Stage1 in study data consistently raises to 6303 (+5%) as baseline, with aggressive tunes going further.',
+        desc: 'Mercedes CRAx EDC16 fuel quantity. 20-byte map content signature BYTE-IDENTICAL across 18 pairs (11 at fixed 0x011F9A, 7 at shifted anchors). Confirmed SWs: sw389341, sw382210, sw378289, sw383368, sw392610, sw378297, sw383368, sw377536, and more. Stage1 raises +5% as conservative baseline with aggressive tunes +15-30%.',
         signatures: [
-          // Raw byte match 6003 BE = 0x17 0x73 is too generic — use fixedOffset fallback
+          // First 20 bytes of the 216-byte map — identical across all CRAx sister SWs
+          // Values 6180/6550/6890/7220/7490/7620/7740/7870/8000/8090/8170/8280 mg/st
+          [0x18, 0x24, 0x19, 0x96, 0x1a, 0xea, 0x1c, 0x34, 0x1d, 0x42, 0x1d, 0xc4, 0x1e, 0x3c, 0x1e, 0xbe, 0x1f, 0x40, 0x1f, 0x9a],
         ],
         sigOffset: 0,
         fixedOffset: 0x011F9A,
