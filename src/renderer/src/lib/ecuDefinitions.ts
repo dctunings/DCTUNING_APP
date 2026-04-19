@@ -11648,6 +11648,84 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC16 BMW E83 X3 2.0D sw370435 — 0x15F029 1511680B cluster ───────────
+  //
+  // BMW E83 X3 2.0D (M47TU2) 110.3 kW EDC16 1511680B dump format.
+  // Single SW sw370435 with 2 sister pairs (different BlockIDs). Verified
+  // in pair_analysis_log.md BMW pairs:
+  //   #1017 sw370435 `0281011564` · #1018 sw370435 `0281011564 O_811AC3`
+  //
+  // Map structure (EXACT match across 2 sister pairs):
+  //   0x15F029  69 B u16 BE — IQ release (stock 10504 → 20480, +95%)
+  //   0x16FFF0  11 B u16 BE — rail pressure cut (stock 65535 → 11928, -82%)
+  {
+    id: 'edc16_bmw_e83_x3_20d_0281011564_15f029',
+    name: 'Bosch EDC16 (BMW E83 X3 2.0D M47TU2 110.3kW — 0281011564 sw370435 0x15F029)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281011564', '370435'],
+    fileSizeRange: [1511680, 1511680],
+    vehicles: ['BMW E83 X3 2.0D M47TU2 110.3kW (0281011564 sw 370435, 2006)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x170FFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_e83_x3_20d_15f029_iq_release',
+        name: 'IQ Release 69B (E83 X3 2.0D sw370435)',
+        category: 'fuel',
+        desc: 'IQ release at 0x15F029 (34 cells u16 BE = 69 B). 2 sister pairs EXACT anchor: stock 10504 → tuner consensus 20480 (+95%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x15F029,
+        rows: 1, cols: 34, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 18500 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 20500 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 23000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── MSV70 BMW E85 3.0i Siemens 5WK98086 — 0x059D65 2MB petrol cluster ────
+  //
+  // BMW E85 Z4 3.0i Siemens MSV70 170-195 kW petrol. 2 pairs across 2 dump
+  // formats (2MB + 2.5MB) with EXACT anchor. Verified in
+  // pair_analysis_log.md BMW pairs: #1030 170kW 2.5MB · #1031 195kW 2MB
+  //
+  // Map structure:
+  //   0x059D65  9 B u16 BE — IQ upper (stock 24103 → 45800, +90%)
+  //   0x0479C0  12 B u16 BE — torque lift (stock 9963 → 10959, +10%)
+  {
+    id: 'msv70_bmw_e85_30i_059d65',
+    name: 'Siemens MSV70 (BMW E85 Z4 3.0i 170-195kW — 5WK98086 0x059D65)',
+    manufacturer: 'Siemens',
+    family: 'MSVx',
+    identStrings: ['5WK98086'],
+    fileSizeRange: [2097152, 2625536],
+    vehicles: ['BMW E85 Z4 3.0i 170-194.9kW Siemens MSV70 (5WK98086, 2005-2008)'],
+    maps: [
+      {
+        id: 'msv70_bmw_e85_30i_059d65_iq_upper',
+        name: 'IQ Upper 9B (E85 Z4 3.0i Siemens MSV70)',
+        category: 'fuel',
+        desc: 'IQ upper at 0x059D65 (4-5 cells u16 BE = 9 B). 2 pairs cross-dump-format EXACT anchor: stock 24103 → tuner consensus 45800 (+90%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x059D65,
+        rows: 1, cols: 5, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 42000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 46000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC16 BMW E83 3.0d 160.3kW — 0x0E0209 2031616B cluster ────────────────
   //
   // BMW E83 X3 3.0d (M57D30TU) 160.3 kW EDC16 2031616B. 2 SWs across

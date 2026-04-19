@@ -3814,6 +3814,56 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #1017–1032 — 2 NEW defs (E83 X3 2.0D sw370435 + E85 Z4 3.0i MSV70)
+
+**NEW DEF 1 — BMW E83 X3 2.0D sw370435 @ 0x15F029 1511680B** (2 sister pairs):
+
+`edc16_bmw_e83_x3_20d_0281011564_15f029` — 1.44MB EDC16.
+
+- #1017 sw370435 `0281011564` (no specific BlockID)
+- #1018 sw370435 `0281011564 O_811AC3` sister same SW, different BlockID
+
+Both hit EXACT `0x15F029 69B` BE 10504 → 20480 (+95% IQ release) +
+`0x16FFF0 11B` BE 65535 → 11928 (-82% rail pressure cut).
+
+Same SW also appears at different anchors in pair #1015 (0x1693C9
+mirror pair) — multi-tune on same ORI.
+
+**NEW DEF 2 — BMW E85 Z4 3.0i Siemens MSV70 @ 0x059D65** (2 pairs, 2 formats):
+
+`msv70_bmw_e85_30i_059d65` — covers 2MB + 2.5MB dump formats.
+
+- #1030 170kW 5WK98086 2625536B (2.5MB)
+- #1031 194.9kW 5WK98086 2097152B (2MB)
+
+Both hit EXACT `0x059D65 9B` BE 24103 → 45800 (+90% IQ upper) +
+`0x0479C0 12B` BE 9963 → 10959 (+10% torque lift) — cross-format anchor
+match across 2 dump sizes.
+
+**Already-wired defs confirmed**:
+- #1025/#1026 sw507453 E84 2.0d 2MB → matches wired
+  `edc17_bmw_e87_20d_n47_846kw_0584b6` def. Cross-chassis (E84) match
+  for E81-E87 wired def confirms SW sw507453 works across chassis.
+
+**Observations (no wire)**:
+- #1019 sw361894 `0281011564` 1015808B — different dump format (992KB
+  same as E65 730D) with 0x0F1485/0x0E02BA pattern. Same Bosch part as
+  #1017/#1018 but older 1015808B dump. Single SW.
+- #1020/#1021/#1022/#1032 E83 X3 3.0i + E85 Z4 3.0si Siemens 5WK93014/
+  5WK93018 — 268B tune +5-6% pattern at 0x04AD region (already cross-
+  family noted for MSV70 family). 1048576B (1MB). #1022 is 59.9% file
+  change (full cal replacement — skipped for pair-diff).
+- #1023 sw387339 E83 X3-3.0SD 210kW 2MB — 0x0D9DD8 42B + 0x0D9FE6 42B
+  mirror pair. SAME ANCHOR FAMILY as wired E71 3.0d 0x0C9DC6 def at
+  Δ=+0x10000 shift! Cross-chassis 2MB variant of 2031616B def.
+- #1024 sw504298 E84 2.0d 2MB — 0x071AAE 312B + 0x0718BC 199B +58%.
+  Different SW pattern from main clusters.
+- #1027 sw396583 E84 2.0d 2MB — 0x057DB8/0x057D92 emission cut.
+- #1028/#1029 sw504298 E84 2.0d 2MB — 2 sister pairs at 0x0589FA 14B
+  + 0x0589A0 10B emission cut. Related to #994 from prior batch.
+
+---
+
 ## BMW Pairs #1001–1016 — E83 3.0d NEW def + sw389882 cross-chassis extension
 
 **NEW DEF — BMW E83 X3 3.0d M57D30TU @ 0x0E0209 2031616B** (2 SWs, 2 parts):
