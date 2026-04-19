@@ -11325,6 +11325,105 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC16 BMW E81-E87 116D 85kW — 0x0151BC 270336B compact cluster ──────
+  //
+  // BMW E81-E87 116D (N47D20 1.6 TDI) 84-85 kW EDC16 compact 270336B
+  // (264KB) dump format. 1 SW across 2 different part-number strings.
+  // Verified in pair_analysis_log.md BMW pairs:
+  //   #898 `08506281 08508640 1037396564` · #899 sw396564 `0281016068
+  //   08506281 08506960 08506962` — both hit EXACT anchors + raw signature.
+  //
+  // Map structure (EXACT match across 2 pairs):
+  //   0x0151BC  22 B u16 BE — IQ release (stock 3831 → 31620, +725%)
+  //   0x017F32  42 B u16 BE — emission cut (stock 37849 → 32, -99.9%)
+  {
+    id: 'edc16_bmw_116d_0151bc',
+    name: 'Bosch EDC16 (BMW E81-E87 116D N47D20 85kW — 0x0151BC 264KB compact)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281016068', '08506281', '08508640', '08506960', '08506962', '396564', '1037396564'],
+    fileSizeRange: [270336, 270336],
+    vehicles: ['BMW E81-E87 116D N47D20 84.6-85kW (0281016068 sw 396564, 2009)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x41FFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_116d_0151bc_iq_release',
+        name: 'IQ Release 22B (E81-E87 116D)',
+        category: 'fuel',
+        desc: 'IQ release at 0x0151BC (11 cells u16 BE = 22 B). 2 pairs EXACT anchor + raw signature: stock 3831 → tuner consensus 31620 (+725%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0151BC,
+        rows: 1, cols: 11, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 28000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 32000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 36000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC16 BMW E71 3.0d 172.8kW — 0x0F2FD5 2MB DDE cluster ─────────────────
+  //
+  // BMW E71 3.0d 172.8 kW EDC16 2097152B (2MB) DDE dump. Same SW sw500775
+  // across 2 different Bosch parts + DDE BlockIDs. Verified in
+  // pair_analysis_log.md BMW pairs:
+  //   #855 sw500775 `O_D2NT87` (no part) · #892 sw500775 `0281016639 O_D2NT87`
+  //
+  // Map structure (EXACT stock match):
+  //   0x0F2FD5  15 B u16 BE — IQ upper A (stock 23195)
+  //   0x0F304D  15 B u16 BE — IQ upper B (stock 20964)
+  {
+    id: 'edc16_bmw_e71_30d_0f2fd5',
+    name: 'Bosch EDC16 (BMW E71 3.0d 172.8kW — 0281016639 sw500775 0x0F2FD5 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281016639', '500775'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E71 3.0d 172.8kW DDE 2MB (0281016639 sw 500775, 2009)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x1FFFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_e71_30d_0f2fd5_iq_a',
+        name: 'IQ Upper A 15B (E71 3.0d sw500775)',
+        category: 'fuel',
+        desc: 'IQ upper A at 0x0F2FD5 (7 cells u16 BE = 15 B). 2 pairs EXACT anchor: stock 23195 → tuner consensus ~37500 (+61%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0F2FD5,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 35000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 38000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 42000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_bmw_e71_30d_0f304d_iq_b',
+        name: 'IQ Upper B 15B (E71 3.0d sw500775 Δ=+0x78)',
+        category: 'fuel',
+        desc: 'IQ upper B at 0x0F304D (Δ=+0x78 from A). Stock 20964.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0F304D,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 32000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 35000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 38000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC16 BMW E71 3.0d 210kW — 0x0C9DC6 2031616B alt-cluster ─────────────
   //
   // BMW E71 X6 3.0d 210 kW EDC16 sister cluster at different anchor (higher

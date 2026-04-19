@@ -3814,6 +3814,66 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #889–904 — 2 NEW defs (116D + E71 3.0d sw500775) + E81 catalog
+
+**NEW DEF 1 — BMW E81-E87 116D N47D20 @ 0x0151BC 270336B** (2 pairs):
+
+`edc16_bmw_116d_0151bc` — 264KB compact EDC16 dump.
+
+- #898 `08506281 08508640 1037396564`
+- #899 sw396564 `0281016068 08506281 08506960 08506962`
+
+Both hit EXACT anchors:
+- `0x0151BC 22B` BE 3831 → 31620 (+725% IQ release)
+- `0x017F32 42B` BE 37849 → 32 (-99.9% emission cut)
+
+2 pairs same-SW different Bosch-part-string confirm cluster.
+
+**NEW DEF 2 — BMW E71 3.0d 172.8kW sw500775 @ 0x0F2FD5 2MB**:
+
+`edc16_bmw_e71_30d_0f2fd5` — 2MB DDE variant.
+
+- #855 sw500775 `O_D2NT87` (no part, prior batch)
+- #892 sw500775 `0281016639 O_D2NT87` — with part
+
+Both hit EXACT 0x0F2FD5 15B (stock 23195) + 0x0F304D 15B (stock 20964)
+with same sw500775 stock signature across 2 part strings.
+
+**0x0E304F def EXTENDED** — +sw500775 from pair #891 (03L906019 variant
+wait no BMW `0281015851`). sw500775 already in def, this pair reconfirms.
+
+**BMW E71 3.0d sw500776 multi-tune** (pairs #889/#890 same ORI):
+- #889 `Bosch` (no suffix) 2MB — 0x0FD750 40B -87% + 0x0D9952 52B +71%
+- #890 same ORI, different tune at 0x0D99D4/0x0D9944 52B/66B
+- Different tuners on same 500776 ORI.
+
+**E71 3.5D sw500776 `0281016640`** (#893) — 2MB DDE variant hits
+0x0D9DC6 (Δ=+0x10000 from wired 0x0C9DC6!) BE 3057 → 10000 with SAME
+stock raw as wired 2031616B cluster. 2MB vs 2031616B dump format shift
+of +0x10000 (64KB). Sister def wire candidate after 2nd SW.
+
+**E71 3.5i petrol** (#894 sw333711) — 1 byte change. Byte-near-identical.
+
+**BMW E81/E87 118D EDC16 single-SW observations**:
+- #895 sw390654 105.2kW 270336B — 0x02D3DE/0x02D3C2 13B cluster. Single.
+- #901 sw376968 `0281012880` 2MB — 0x0D3B70 24B +45% + 0x0D4402 26B +28%
+- #902 sw374483 `0281012502` 2105344B (NEW 2MB+8KB dump!) — 0x0D3868 52B
+  +68% + 0x0EEA4D 11B -66%
+- #903 sw389883 `0281011964` 2031616B — 0x0C3C10 52B +71% + 0x0C9BE2 20B
+  +67% (RAW 4783→8192 same as 116D pattern +71% — cross-chassis
+  universal cell value)
+- #904 sw394078 270336B — 0x0297E8 28B +110% + 0x02EF42 128B -52%
+
+**BMW E81/E87 116i petrol 2006** (#900 sw? `07557809 07528291` 131072B):
+- 7 regions only, 0x00F7BB 8×13 +5.7% — light petrol tune
+
+**E81/E87 1.6i Siemens** (#897) — 2MB, 23 regions, `0x06EE60/0x06EE82 10B`
+mirror pair BE 52492 → 8205 -84% (emission cut pattern). Single SW.
+
+**E81/E87 1.6i petrol** (#896 sw376230) — 1MB, 14 regions. Single.
+
+---
+
 ## BMW Pairs #873–888 — 2 NEW defs + X5-3.0SD ext + BMW E70/E71 EDC16 cluster
 
 **NEW DEF 1 — BMW E71 3.0d 210kW @ 0x0C9DC6 EDC16** (3 pairs, 2 parts, 2 SWs):
