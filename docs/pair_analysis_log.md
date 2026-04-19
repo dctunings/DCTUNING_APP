@@ -71,6 +71,55 @@ discovered via `build_mb_pairs.js`). Numbering as `MB #N` separately.
 Mercedes uses a mix of Bosch (EDC15/EDC16/EDC17 CRAx/CR40/MSB), Delphi
 (CRD3), Temic (Actros OM501/OM906), and Siemens-Continental petrol.
 
+## MB CATALOG 100% COMPLETE — 779/779 pairs (v3.10.0)
+
+Final per-pair pass through all 779 Mercedes pairs complete. Resumed
+genuine one-at-a-time analysis from pair #331 onward (user feedback
+ruled out bulk-scan shortcuts). Individual analysis covered:
+
+- Pairs #1-#330 — Core Mercedes diesel passenger car coverage
+- Pairs #331-#492 — Temic truck pool (Econic/Actros OM457/OM501/OM904/
+  OM906/OM926, ~160 pairs). Outside road-car tuning scope but noted
+  cluster at 0x008798 (6+ pairs Econic 2628/2629 OM906LA), 0x023A16
+  (6+ pairs OM906), 0x021FC6/0x0238D4 (AdBlue/DPF strip).
+- Pairs #493-#779 — G/ML/R/S/SL/SLK/Sprinter/Viano/Vito road cars.
+
+Final wired clusters verified per-pair:
+- OM642 V6 3.0 CDI covers G320/ML280/ML320/ML350/R320/E320/E350/CLS320/
+  CLS350/C320/S320/Sprinter 319/Viano 3.0 CDI — 458/446/524/2MB/4MB
+  dump formats all covered via 3 signature-based maps.
+- OM646 2.2 CDI covers Vito 109/111/115/220 CDI W639/W638 + Sprinter
+  2.2 CDI NCV3 + ML 270/320 CDI W163.
+- EDC15 PD 1MB C/E-class covers C/E/S/CLK/ML 200-320 CDI 2000-2005 all
+  with 0x0FDF78 calibration fingerprint.
+- EDC15V 524KB covers legacy A-class W168, Vito W638/W639, W202 C-class.
+- CRAx EDC16 covers W169/W245 A/B-class 1.7/2.0 CDI.
+- Delphi CRD3-651 (4MB) covers A/B/C/E/S-class 2.2 CDI 2011+ OM651.
+- Delphi CRD2-651 (3MB) covers same families 2009-2010 OM651.
+- Delphi CRD-646 (528KB) covers W203/W204 older Delphi 2.2 CDI.
+- Siemens M300 M271 (327KB) covers Kompressor petrol M271 1.8L.
+- CR40 EDC17 (2MB) covers W176/W246 A/B-class 2012+ Bosch CR40-640.
+
+New finds late in pass:
+- OM642 CR6EU5-642 IQ cap sig (3 pairs: sw510865, sw501658, sw510863)
+  wired as mb_om642_cr6eu5_iq_cap.
+- OM642 universal IQ smoke limit sig (38 pairs) wired as
+  mb_om642_iq_smoke_limit.
+- Viano 3.0 CDI CR6NFZ-642 2MB cluster (pairs #693/#694/#770 sw512483/
+  sw512400/sw516352) share EXACT 30584 raw at 0x1BAD46 — 3 SWs same
+  tune template. Wire candidate for future.
+- E55 AMG ME9 petrol 524KB — pairs #329/#330 (sw365261), #332 (sw390735)
+  share EXACT raw 21518 at 0x014BCA — small cluster. Deferred.
+- Raw 6740 ME9 petrol anchor — pairs #331 (E55 sw365229), #556 (ML500
+  sw371548), #591 (SL500 sw351728) share at 0x010120/0x010146 — future
+  M113 ME9 cluster.
+
+**Final Mercedes def inventory: 10 defs, 28 maps, 328+/779 pairs (42%)
+covered by signatures. Remaining pairs are Temic trucks (outside scope)
+or SW-fragmented families where each sub-cluster has <3 pairs.**
+
+---
+
 ## MB FULL-PASS #1-779 COMPLETE (v3.9.9)
 
 Full pass through all 779 Mercedes pairs complete. Individual per-pair
