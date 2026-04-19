@@ -2698,10 +2698,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
   // 03L906022FG defs — just at a different per-SGO anchor (0x06AD86).
   {
     id: 'edc17_c46_golf_20tdi_03l906018xx_06ad86',
-    name: 'Bosch EDC17 C46 (VW Golf/Sharan/Tiguan 2.0 TDI CR 80-125kW — 03L906018AR/BB/BC/GC/DQ/BD/HQ/FA/FB 0x06AD86)',
+    name: 'Bosch EDC17 C46 (VW Golf/Sharan/Tiguan/Touran 2.0 TDI CR 80-125kW — 03L906018AR/BB/BC/GC/DQ/BD/HQ/FA/FB/DR/NM 0x06AD86)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['508903', '509927', '509929', '510943', '510944', '510958', '510959', '513641', '524624', '525556', '525558', '509915', '513640', '509900', '509913', '511990', '03L906018DQ', '03L906018BD', '03L906018HQ', '03L906018FA', '03L906018FB'],
+    identStrings: ['508903', '509927', '509929', '510943', '510944', '510958', '510959', '513641', '524624', '525556', '525558', '509915', '513640', '509900', '509913', '511990', '509916', '515262', '03L906018DQ', '03L906018BD', '03L906018HQ', '03L906018FA', '03L906018FB', '03L906018DR', '03L906018NM'],
     fileSizeRange: [2097152, 2097152],
     vehicles: ['VW Golf + Passat 2.0 TDI CR 100-125kW (03L906018/AR/AT/BB/BC/BE/BF/BG/GC sw 508903/509927/509929/510943/510944/510958/510959/513641/524624/525556/525558, 2010-2012)'],
     checksumAlgo: 'bosch-crc32',
@@ -2970,6 +2970,66 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 C46 VW Touran/Golf 2.0 TDI CR — 0x1ED29A 2MB anchor-shifted ────
+  //
+  // VW Touran / Golf 2.0 TDI CR 103 kW EDC17 C46 with Δ=-0x2DE shift from
+  // 0x1F007A cluster. Same raw signature 14259 → 57390 at different
+  // cal-block anchor — per-SW sub-variant. 2 SWs confirmed. Verified in
+  // pair_analysis_log.md VW pairs:
+  //   #1135 sw395477 `03L906022G` · #1281 sw396412 `03L906022BQ`
+  //
+  // Map structure (EXACT match):
+  //   0x1ED29A  2048 B u16 BE — protection ceiling A (14259 → 57390, +302%)
+  //   0x1EDCDE  512 B u16 BE — companion A (14413 → 57390, +298%)
+  //   0x1EDABC  512 B u16 BE — torque lift (23107 → 57390, +148%)
+  //   0x1F8246  200 B u16 BE — IQ release (4135 → 12405, +200%)
+  {
+    id: 'edc17_c46_golf_touran_20tdi_1ed29a',
+    name: 'Bosch EDC17 C46 (VW Golf/Touran 2.0 TDI CR 103kW — 03L906022G/BQ 0x1ED29A)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['395477', '396412'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Golf/Touran 2.0 TDI CR 103kW (03L906022G/BQ sw 395477/396412, 2009-2010)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_1ed29a_protection',
+        name: 'Protection Ceiling 2KB (Golf/Touran sw395477/sw396412)',
+        category: 'limiter',
+        desc: 'Protection ceiling at 0x1ED29A (1024 cells u16 BE = 2 KB). 2 SWs EXACT anchor: stock 14259 → tuner consensus 57390 (+302%). Δ=-0x2DE anchor-shift of main 0x1F007A cluster.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1ED29A,
+        rows: 32, cols: 32, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_c46_1edcde_companion',
+        name: 'Companion Ceiling 512B (Golf/Touran 1ED29A cluster)',
+        category: 'limiter',
+        desc: 'Companion at 0x1EDCDE (256 cells u16 BE = 512 B). Stock 14413 → 57390 (+298%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1EDCDE,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC16 PD VW Touran 1.9 TDI 03G906021KB/KC — 0x064963 524KB cluster ───
   //
   // VW Touran 1.9 TDI PD 77 kW EDC16 PD. 2 part suffixes KB/KC share
@@ -3051,9 +3111,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC16 PD (VW Touran 1.9 TDI PD 77kW — 03G906021AB 0x05AA99 triple-mirror)',
     manufacturer: 'Bosch',
     family: 'EDC16',
-    identStrings: ['03G906021AB', '389840'],
+    identStrings: ['03G906021AB', '03G906021RN', '389840', '391834'],
     fileSizeRange: [524288, 524288],
-    vehicles: ['VW Touran 1.9 TDI PD 77kW (03G906021AB sw 389840, 2002-2007)'],
+    vehicles: ['VW Touran 1.9/2.0 TDI PD 77-103kW (03G906021AB/RN sw 389840/391834, 2002-2007)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x7FFFC,
     checksumLength: 4,

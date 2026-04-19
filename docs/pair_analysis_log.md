@@ -70,6 +70,75 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1281–1296 — NEW 0x1ED29A def + extensions across 3 existing defs
+
+**NEW DEF — 0x1ED29A 2MB anchor-shifted variant of 0x1F007A cluster** (2 SWs):
+
+`edc17_c46_golf_touran_20tdi_1ed29a` covers Δ=-0x2DE shifted protection ceiling.
+
+- #1135 sw395477 `03L906022G` (from earlier batch)
+- #1281 sw396412 `03L906022BQ`
+
+Both hit SAME raw signatures at SAME anchors:
+- `0x1ED29A 2048B` BE 14259 → 57390 (+302%) protection ceiling
+- `0x1EDCDE 512B` BE 14413 → 57390 (+298%) companion
+- `0x1EDABC 512B` BE 23107 → 57390 (+148%) torque lift
+- `0x1F8246 200B` BE 4135 → 12405 (+200%) IQ release
+
+Same raw signature as 0x1F007A def but at Δ=-0x2DE shifted anchor.
+BQ + G suffixes both use this shifted variant.
+
+**03G906021AB 0x05AA99 def EXTENDED** — +sw391834 `03G906021RN` (pair #1288):
+
+RN suffix joins AB cluster at EXACT triple-mirror anchors 0x05AA99/AC99/AE99
+with stock 7470 → 20569 (+175%). 2 SWs + 2 suffixes now.
+
+**0x06AD86 def EXTENDED** — +2 NEW SWs + 2 NEW suffixes:
+- +sw509916 `03L906018DR` (pair #1284 exact match 15351 → 57390)
+- +sw515262 `03L906018NM` (pair #1286 exact match 21260 → 57390 125kW)
+
+Now covers 11 part suffixes, 18 SWs:
+(AR/BB/BC/GC/DQ/BD/HQ/FA/FB/DR/NM) — major Golf/Sharan/Tiguan/Touran
+2.0 TDI CR 80-125kW protection ceiling family.
+
+**Transporter 2.0 BiTDI CR observations** (pairs #1295/#1296):
+
+- sw505433 `03L906022JD` @ 0x07CBDE 16×16
+- sw518073 `03L906022JD` @ 0x077DBA 16×16 (Δ=-0x4E24 shifted)
+- Both share raw 22134 → 47749 (+116%) — same code, different cal-block
+  locations per SW. Per-SW anchor drift too wide for fixedOffset.
+- NEW JD suffix catalogued for future session.
+
+**Touran 2.0 TDI PPD1.2 observations**:
+
+- #1290 SN1S0M8000000 `03G906018EH` 2101248B (2MB+4KB NEW format!) —
+  already covered by PPD1.2 def (SN1S0M8000000 + 03G906018EH in defs).
+- #1291 SN100L6000000 `03G906018EH` 262KB — already covered.
+
+**Touran 1.9 TDI PD observations (no wire — single SWs)**:
+- #1287 sw368223 `03G906016AL` 1MB — `0x0F8FED 11B` -95% emission cut
+- #1288 sw391834 `03G906021RN` 524KB — ADDED to 0x05AA99 def
+- #1289 sw383709 `03G906021MJ` 524KB — `0x06B1FF 11B` +78% NEW MJ suffix
+
+**Transporter misc observations** (no wire):
+- #1292 sw355660 `074906021F` Transporter 65KB (tiny EDC15) — old Bosch
+  `0281001470` hardware. Unusual small dump. Single.
+- #1293 sw368204 `038906016A` — 4KB (no change, truncated file)
+- #1294 sw360550 `038906012CE` Transporter 1.9D 524KB EDC15 64kW —
+  348 regions with `0x0592xx 10B` multi-mirror emission cuts. Single SW.
+
+**03L906022G sw396096 alt-tuner** (pair #1282) — same sw396096 already
+added to 398757 def but this pair targets different maps (`0x1C309E/
+0x1C2D64` emission + `0x1CE3C2/0x1CC8D6 13B`). Multi-tune on same ORI.
+
+**Pair #1285 sw509916 DR sister** — same SW as #1284 but different tuner
+hits `0x03BEE0 66B` +161% + `0x0713F0 10B` +130%. Different style but
+same ORI — confirms ORI structure completeness.
+
+**Pair #1283 sw398823 QG** — already catalogued #1131 — same SW logged.
+
+---
+
 ## VW Pairs #1265–1280 — 2 NEW Touran EDC16 PD defs (KB/KC + AB clusters)
 
 **NEW DEF 1 — Touran 1.9 TDI 03G906021KB/KC @ 0x064963** (3 SWs, 3 pairs):
