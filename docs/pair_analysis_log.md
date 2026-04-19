@@ -71,6 +71,46 @@ discovered via `build_mb_pairs.js`). Numbering as `MB #N` separately.
 Mercedes uses a mix of Bosch (EDC15/EDC16/EDC17 CRAx/CR40/MSB), Delphi
 (CRD3), Temic (Actros OM501/OM906), and Siemens-Continental petrol.
 
+## MB 2 MORE defs — EDC15V extension + EDC15 PD 1MB (73 pairs) (v3.9.6)
+
+Coverage 229 -> 328 / 779 pairs (29% -> **42%**).
+
+**EXTENSION — mb_edc15v_cdi_524kb (was mb_edc15_a170cdi)**:
+- Renamed and extended with second map `mb_edc15v_axis_anchor` covering
+  32 pairs — not just A170 CDI W168 but also Vito 108/110/220 CDI W638/
+  W639 and C200/C220 CDI W202. 20-byte axis signature at 0x10D91 (19
+  pairs primary) + 0x78D91 (9 pairs mirror) + 0x08D91 (5 pairs 363xxx
+  SWs). identStrings list expanded to 25+ Bosch part numbers.
+
+**NEW DEF — mb_edc15_pd_cclass_1mb (Mercedes EDC15 PD C/E-class 1MB)**:
+- 73 pairs — the LARGEST Mercedes cluster found so far.
+- 17-byte signature `3d 13 f0 c8 f0 d9 08 c4 69 a1 c0 ae da 00 f6 47
+  e0` at exact anchor 0xFDF78 BYTE-IDENTICAL across ALL 73 pairs.
+- Covers C200/C220/C270/C320, E200/E220/E270/E280/E320 CDI W203/W210/
+  W211, CLK 270/320 CDI W209, ML 270 CDI W163, S 320 CDI W220.
+- identStrings list 35+ Bosch 0281010xxx/0281011xxx part numbers.
+- This is calibration fingerprint (not primary tuning target) but
+  enables correct ECU identification for these legacy pre-OM646
+  diesels (2000-2005).
+
+Coverage by sig:
+- OM646: 43/50/55 (torque/boost/smoke)
+- CRAx W169: 18
+- Delphi CRD-646: 6
+- OM642 torque/emission: 5 each, CLS 20B: 96
+- CRD3-651 4MB: 11
+- Siemens M300: 11
+- EDC15V axis: 32 (EXTENDED)
+- CRD2-651 3MB: 19
+- **EDC15 PD 1MB: 73 (NEW)**
+
+Unmatched pool now 451 pairs (58%), mostly:
+- 270 × 524KB (Econic trucks, legacy Vito 524KB, AMG ME9 petrol)
+- 56 × 1MB remaining (outside EDC15 PD cluster)
+- 77 × 2MB (C63 AMG ME9, CR40, sw-fragmented)
+
+---
+
 ## MB 4 NEW defs — CRD2-651 3MB + CRD3-651 4MB + Siemens M300 + EDC15 A170 (v3.9.5)
 
 Added FOUR new Mercedes defs via bulk byte-sig analysis across all

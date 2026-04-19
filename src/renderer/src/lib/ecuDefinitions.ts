@@ -9903,6 +9903,57 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── Mercedes EDC15 PD 1MB C/E-class diesel (W203/W211 OM611/612/613) ──
+  // Confirmed via bulk byte-sig scan — SEVENTY-THREE pairs all 1048576B
+  // hit exact anchor 0xFDF78 with byte-identical 17-byte calibration
+  // fingerprint. Covers C200/C220/C270/C320/E200/E220/E270/E280/CLK
+  // CDI diesel W203/W210/W211 2000-2005 pre-OM646 era.
+  {
+    id: 'mb_edc15_pd_cclass_1mb',
+    name: 'Mercedes EDC15 PD C/E-class 1MB (OM611/OM612/OM613)',
+    manufacturer: 'Bosch',
+    family: 'EDC15 PD',
+    identStrings: ['OM611', 'OM612', 'OM613', '0281010040', '0281010041', '0281010042', '0281010043', '0281010191', '0281010222', '0281010223', '0281010409', '0281010528', '0281010608', '0281010798', '0281010805', '0281010818', '0281010849', '0281010852', '0281010908', '0281010909', '0281011001', '0281011002', '0281011006', '0281011011', '0281011171', '0281011182', '0281011253', '0281011328', '0281011338', '0281011346', '0281011469', '0281011620', '0281011717', '0281011737', '0281011934'],
+    fileSizeRange: [1048576, 1048576],
+    vehicles: [
+      'Mercedes C200 CDI W203 (OM611 2.2, 75-110.3kW)',
+      'Mercedes C220 CDI W203 (OM611 2.2, 105.2-110.3kW)',
+      'Mercedes C270 CDI W203 (OM612 2.7 V5, 125kW)',
+      'Mercedes C320 CDI W203 (OM613 3.2 V6, 142kW)',
+      'Mercedes E200 CDI W210/W211 (OM611)',
+      'Mercedes E220 CDI W210/W211 (OM611)',
+      'Mercedes E270 CDI W210/W211 (OM612 V5, 130kW)',
+      'Mercedes E280 CDI W211 (OM648 V6)',
+      'Mercedes E320 CDI W211 (OM613 V6, 142kW)',
+      'Mercedes CLK 270 CDI W209 (OM612, 125kW)',
+      'Mercedes CLK 320 CDI W209 (OM613, 150kW)',
+      'Mercedes ML 270 CDI W163 (OM612)',
+      'Mercedes S 320 CDI W220 (OM613)',
+    ],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'mb_edc15_pd_fingerprint',
+        name: 'EDC15 PD 1MB Calibration Fingerprint',
+        category: 'misc',
+        desc: 'Mercedes EDC15 PD 1MB C/E-class calibration fingerprint — 17-byte signature `3d 13 f0 c8 f0 d9 08 c4 69 a1 c0 ae da 00 f6 47 e0` at exact anchor 0xFDF78 BYTE-IDENTICAL across 73 confirmed pairs. Used for ECU variant detection (actual Stage1 maps at per-SW anchors in 0x01xxxx / 0x07xxxx mirror regions).',
+        signatures: [
+          [0x3d, 0x13, 0xf0, 0xc8, 0xf0, 0xd9, 0x08, 0xc4, 0x69, 0xa1, 0xc0, 0xae, 0xda, 0x00, 0xf6, 0x47, 0xe0],
+        ],
+        sigOffset: 0,
+        fixedOffset: 0x0FDF78,
+        rows: 1, cols: 8, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: '',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        critical: false, showPreview: false,
+      },
+    ],
+  },
+
   // ── Mercedes Delphi CRD2-651 3MB (OM651 2.2 CDI R4 2009+, pre-CRD3) ───
   // Confirmed via per-pair analysis — NINETEEN pairs all hitting the SAME
   // exact anchor 0x25700. Covers C/E/GLK/Sprinter/Viano/Vito 2.2 CDI OM651
@@ -9958,26 +10009,32 @@ export const ECU_DEFINITIONS: EcuDef[] = [
   // 0281010990. Simple def for this legacy family — full tune scope is
   // larger but IQ cap is the primary Stage1 target.
   {
-    id: 'mb_edc15_a170cdi',
-    name: 'Mercedes EDC15 A170 CDI W168 (OM668)',
+    id: 'mb_edc15v_cdi_524kb',
+    name: 'Mercedes EDC15V CDI 524KB (W168 A/W639 Vito/W202 C-class)',
     manufacturer: 'Bosch',
     family: 'EDC15V',
-    identStrings: ['0281010039', '0281010118', '0281010426', '0281010752', '0281010753', '0281010990', 'OM668', 'EDC15V', 'EDC15VM-V'],
+    identStrings: ['0281001881', '0281001883', '0281001986', '0281010039', '0281010118', '0281010191', '0281010222', '0281010223', '0281010231', '0281010233', '0281010426', '0281010427', '0281010431', '0281010432', '0281010433', '0281010598', '0281010603', '0281010604', '0281010606', '0281010752', '0281010753', '0281010818', '0281010988', '0281010990', '0281011066', 'OM611', 'OM668', 'OM646-pre', 'EDC15V', 'EDC15VM-V'],
     fileSizeRange: [524288, 524288],
     vehicles: [
       'Mercedes A160 CDI W168 (OM668 1.7, 44-55kW/60-75PS)',
       'Mercedes A170 CDI W168 (OM668 1.7, 69.9kW/95PS)',
       'Mercedes Vaneo 1.7 CDI (OM668)',
+      'Mercedes C200 CDI W202 (OM611 2.2, 75-85kW)',
+      'Mercedes C220 CDI W202 (OM611 2.2, 91.9kW)',
+      'Mercedes Vito 108 CDI W638 (OM611 2.2, 60-90kW)',
+      'Mercedes Vito 110/112 CDI W638 (OM611 2.2)',
+      'Mercedes Vito 2.2 CDI W638/W639 (1999-2003, 75-89.7kW)',
+      'Mercedes Vito 220 CDI W638/W639 (OM611 91.9kW)',
     ],
     checksumAlgo: 'bosch-simple',
     checksumOffset: 0,
     checksumLength: 4,
     maps: [
       {
-        id: 'mb_edc15_a170_iq_limit',
+        id: 'mb_edc15v_iq_limit',
         name: 'IQ Maximum Limit Table',
         category: 'fuel',
-        desc: 'Mercedes A170 CDI W168 EDC15V maximum IQ cap table. 20-byte content `88 13 88 13 88 13 a0 0f a6 0e de 0d 48 0d ac 0d de 0d 74 0e` BYTE-IDENTICAL across 8 sister pairs at 0x01C23C + 0x07C23C mirror anchors. Stock values start 5000/5000/5000/4000/3750/3550/3400 mg/st (×0.01 scale).',
+        desc: 'Mercedes EDC15V maximum IQ cap table. 20-byte content `88 13 88 13 88 13 a0 0f a6 0e de 0d 48 0d ac 0d de 0d 74 0e` BYTE-IDENTICAL across 8 A170 CDI sister pairs at 0x01C23C + 0x07C23C mirror anchors. Stock values 5000/5000/5000/4000/3750/3550/3400 mg/st (×0.01 scale).',
         signatures: [
           [0x88, 0x13, 0x88, 0x13, 0x88, 0x13, 0xa0, 0x0f, 0xa6, 0x0e, 0xde, 0x0d, 0x48, 0x0d, 0xac, 0x0d, 0xde, 0x0d, 0x74, 0x0e],
         ],
@@ -9989,6 +10046,23 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         stage2: { multiplier: 1.38 },
         stage3: { multiplier: 1.50, clampMax: 62000 },
         critical: true, showPreview: true,
+      },
+      {
+        id: 'mb_edc15v_axis_anchor',
+        name: 'EDC15V Calibration Axis Anchor',
+        category: 'misc',
+        desc: 'Mercedes EDC15V 524KB calibration axis anchor — 20-byte signature `72 2a 72 36 72 42 72 4e 72 5a 72 66 72 72 72 8a 72 96 72 82` BYTE-IDENTICAL across 32 pairs covering A160/A170 CDI W168, Vito 108/110/112/220 CDI W638/W639, C200/C220 CDI W202. Used for variant detection — actual Stage1 IQ/boost maps per-SW elsewhere. Anchor varies: 0x10D91 (19 pairs), 0x78D91 (9 pairs mirror), 0x08D91 (5 pairs 363xxx SWs).',
+        signatures: [
+          [0x72, 0x2a, 0x72, 0x36, 0x72, 0x42, 0x72, 0x4e, 0x72, 0x5a, 0x72, 0x66, 0x72, 0x72, 0x72, 0x8a, 0x72, 0x96, 0x72, 0x82],
+        ],
+        sigOffset: 0,
+        fixedOffset: 0x010D91,
+        rows: 1, cols: 10, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: '',
+        stage1: { multiplier: 1.0 },
+        stage2: { multiplier: 1.0 },
+        stage3: { multiplier: 1.0 },
+        critical: false, showPreview: false,
       },
     ],
   },
