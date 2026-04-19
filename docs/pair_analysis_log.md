@@ -70,6 +70,66 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1297–1312 — 3 NEW Transporter 2.0 TDI CR EDC17 C46 defs
+
+**NEW DEF 1 — Transporter 2.0 BiTDI CR 03L906022JD/JE @ 0x077DBA** (6 pairs, 3 SWs):
+
+`edc17_c46_transporter_20bitdi_03l906022jd_077dba` — T5 BiTDI 132.4kW.
+
+- #1296 sw518073 JD (from prior batch)
+- #1298 sw518079 `03L907309L` (alt part code for same ECU)
+- #1303 sw518073 JD · #1304 sw518073 JD · #1305 sw518073 JD (sisters)
+- #1306 sw518078 JE — NEW JE suffix variant at SAME anchor
+
+All 6 pairs EXACT anchors:
+- `0x077DBA 16×16 512B` BE 22134 → 47749 (+116%) torque ceiling
+- `0x037C7A 104B` / `0x037F28 40B` emission cut cluster (-99%)
+
+**NEW DEF 2 — Transporter 2.0 BiTDI CR 03L906022JE @ 0x07C9F2** (3 pairs, 2 SWs):
+
+`edc17_c46_transporter_20bitdi_03l906022je_07c9f2` — alt-anchor variant.
+
+- #1297 sw509954 JE
+- #1299 sw508906 `508906P755W` (alt part code)
+- #1307 sw509954 JE (sister of #1297)
+
+SAME raw signature 22134 → 47749 (+116%) but at Δ=+0x4C238 shifted
+anchor. Sub-variant SW 509954 + 508906 uses this anchor.
+
+**NEW DEF 3 — Transporter 2.0 TDI CR 03L906022CD/CH @ 0x070292** (2 SWs):
+
+`edc17_c46_transporter_20tdi_03l906022cd_070292` — T5 75-103kW.
+
+- #1308 sw518131 CD 75kW · #1312 sw518139 CH 103kW
+
+Both hit:
+- `0x070292 2KB` BE 20108 → 57390 (+185% protection ceiling)
+- `0x07000A 512B` BE 30474 → 57390 (+88% companion)
+- `0x037AC6 66B` emission cut
+
+**Pair #1300 sw536198 `03L906019HM`** — EDC17 C64 (not C46) family, 2MB:
+- `0x07CB3C 16B` BE 10117→19460 +92% + `0x04390E 40B` -99% emission
+- Single SW, NEW HM suffix in C64 family. Logged.
+
+**Pair #1301 sw515250 `03L906022JE` "Letzte bearbeitung"** — DPF version
+of #1306 style with emission cut pattern. Already covered by JE ident.
+
+**Pair #1302 sw525525 `03L906019GH` alt-tune** — `0x0433A2/0x0435B6/
+0x04349A` emission cut cluster. sw525525 also appears as #1310 (different
+tune hitting 0x067494 12×15 IQ ceiling) and #1311 (similar emission).
+Same SW, 3 different tuner styles on same ORI.
+
+**Pair #1310 sw525525 GH** — 12×15 IQ ceiling pattern at `0x067494 12×15`
+BE 15→27232 +179584% + `0x067CD0 12×15` BE 649→24771 +3715%. Same
+12×15 IQ ceiling pattern shape as wired Amarok 03L906019FA / Golf
+03L906022G defs but at DIFFERENT anchor 0x067494 (vs 0x0623F0 / 0x1DBC2C).
+EDC17 C64 family sub-variant. Single SW — logged for future session.
+
+**Pair #1309 sw518154 `03L906019DH`** — `0x037AC6 66B` +161% + `0x037BD0
+40B` +142% + `0x0379D8 24B` +135% — 2MB cluster. NEW DH suffix C64 family.
+
+---
+
 ## VW Pairs #1281–1296 — NEW 0x1ED29A def + extensions across 3 existing defs
 
 **NEW DEF — 0x1ED29A 2MB anchor-shifted variant of 0x1F007A cluster** (2 SWs):

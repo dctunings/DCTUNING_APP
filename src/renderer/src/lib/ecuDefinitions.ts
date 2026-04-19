@@ -2970,6 +2970,147 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 C46 VW Transporter 2.0 BiTDI/TDI CR 03L906022JD/JE — 0x077DBA ──
+  //
+  // VW Transporter T5 2.0 BiTDI CR / 2.0 TDI CR 132 kW EDC17 C46.
+  // 3 SWs across 2 part suffixes + 1 alt-part (03L907309L) share EXACT
+  // anchor + raw signature. Verified in pair_analysis_log.md VW pairs:
+  //   #1296 sw518073 JD · #1298 sw518079 03L907309L · #1303 sw518073 JD ·
+  //   #1304 sw518073 JD · #1305 sw518073 JD · #1306 sw518078 JE
+  //
+  // Map structure (EXACT match across 6 pairs):
+  //   0x077DBA  16×16 = 512 B u16 BE — torque ceiling (22134 → 47749, +116%)
+  //   0x037C7A  104 B u16 BE — emission cut A (37006 → 32, -99.9%)
+  //   0x037F28  40 B u16 BE — emission cut B (29968 → 32, -99.9%)
+  //   0x037E1C  8×4 = 32 B u16 BE — emission cut C (15679 → 32, -99.8%)
+  {
+    id: 'edc17_c46_transporter_20bitdi_03l906022jd_077dba',
+    name: 'Bosch EDC17 C46 (VW Transporter 2.0 BiTDI/TDI CR 132kW — 03L906022JD/JE 0x077DBA)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['03L906022JD', '03L906022JE', '03L907309L', '518073', '518078', '518079'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Transporter T5 2.0 BiTDI CR 132.4kW (03L906022JD/JE sw 518073/518078/518079, 2010-2011)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_t5_077dba_torque_ceiling',
+        name: 'Torque Ceiling 16×16 (Transporter 03L906022JD/JE)',
+        category: 'limiter',
+        desc: 'Torque ceiling at 0x077DBA (16×16 = 256 cells u16 BE = 512 B). 3 SWs + 6 pairs EXACT anchor: stock 22134 → tuner consensus 47749 (+116%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x077DBA,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 53000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 C46 VW Transporter 2.0 BiTDI CR 03L906022JE — 0x07C9F2 alt-anchor ─
+  //
+  // Sub-variant of 0x077DBA cluster — same raw signature (22134 → 47749)
+  // but at Δ=+0x4C238 shifted anchor for specific SWs. Verified in
+  // pair_analysis_log.md VW pairs:
+  //   #1297 sw509954 JE · #1299 sw508906 (508906P755W) ·
+  //   #1307 sw509954 JE (sister of #1297)
+  {
+    id: 'edc17_c46_transporter_20bitdi_03l906022je_07c9f2',
+    name: 'Bosch EDC17 C46 (VW Transporter 2.0 BiTDI CR 132kW — 03L906022JE 0x07C9F2 alt-anchor)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['509954', '508906'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Transporter T5 2.0 BiTDI CR 132.4kW (03L906022JE / 508906P755W sw 509954/508906, 2010-2011)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_t5_07c9f2_torque_ceiling',
+        name: 'Torque Ceiling 16×16 (Transporter 03L906022JE alt-anchor)',
+        category: 'limiter',
+        desc: 'Torque ceiling at 0x07C9F2 (16×16 = 256 cells u16 BE = 512 B). 2 SWs + 3 pairs EXACT anchor: stock 22134 → tuner consensus 47749 (+116%). Δ=+0x4C238 shift from 0x077DBA main cluster — sw509954/sw508906 sub-variant.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x07C9F2,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 53000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 C46 VW Transporter 2.0 TDI CR 03L906022CD/CH — 0x070292 2KB ────
+  //
+  // VW Transporter T5 2.0 TDI CR 75-103 kW EDC17 C46. 2 SWs across
+  // 2 part suffixes (CD/CH) share EXACT 2KB protection ceiling anchor.
+  // Verified in pair_analysis_log.md VW pairs:
+  //   #1308 sw518131 CD 75kW · #1312 sw518139 CH 103kW
+  //
+  // Map structure:
+  //   0x070292  2 KB (1024 cells u16 BE) — protection ceiling
+  //                                        (20108 → 57390, +185%)
+  //   0x07000A  512 B u16 BE — companion (30474 → 57390, +88%)
+  //   0x037AC6  66 B u16 BE — emission cut (22424 → 32, -99.9%)
+  {
+    id: 'edc17_c46_transporter_20tdi_03l906022cd_070292',
+    name: 'Bosch EDC17 C46 (VW Transporter 2.0 TDI CR 75-103kW — 03L906022CD/CH 0x070292)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['03L906022CD', '03L906022CH', '518131', '518139'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Transporter T5 2.0 TDI CR 75-103kW (03L906022CD/CH sw 518131/518139, 2011-2012)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_c46_t5_070292_protection',
+        name: 'Protection Ceiling 2KB (Transporter 03L906022CD/CH)',
+        category: 'limiter',
+        desc: 'Protection ceiling at 0x070292 (1024 cells u16 BE = 2 KB). 2 SWs EXACT anchor: stock 20108 → tuner consensus 57390 (+185%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x070292,
+        rows: 32, cols: 32, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_c46_t5_07000a_companion',
+        name: 'Companion Ceiling 512B (Transporter CD/CH)',
+        category: 'limiter',
+        desc: 'Companion at 0x07000A (256 cells u16 BE = 512 B). Stock 30474 → 57390 (+88%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x07000A,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 C46 VW Touran/Golf 2.0 TDI CR — 0x1ED29A 2MB anchor-shifted ────
   //
   // VW Touran / Golf 2.0 TDI CR 103 kW EDC17 C46 with Δ=-0x2DE shift from
