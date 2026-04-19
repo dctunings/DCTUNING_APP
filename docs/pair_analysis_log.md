@@ -71,6 +71,40 @@ discovered via `build_mb_pairs.js`). Numbering as `MB #N` separately.
 Mercedes uses a mix of Bosch (EDC15/EDC16/EDC17 CRAx/CR40/MSB), Delphi
 (CRD3), Temic (Actros OM501/OM906), and Siemens-Continental petrol.
 
+## MB Pairs #221-284 continued per-pair analysis (v3.9.7)
+
+Continued individual per-pair analysis of Mercedes pairs #221-#284 to
+verify bulk-scan coverage. Confirmed that:
+
+- **E280 CDI V6 OM648 458752B/446464B cluster** (pairs #245-#249,
+  #260, #261, #271, #273-#279) — all 10 pairs auto-matched by wired
+  mb_om642_v6_30cdi `OM642 CLS 20B` signature at 0x43227. OM648 is
+  effectively OM642's 3.0 V6 predecessor with same cal layout.
+- **E320 CDI 1MB EDC15 PD** (pairs #264, #265, #266, #267, #268, #269,
+  #270, #272, #281, #282, #284) — all auto-matched by wired
+  mb_edc15_pd_cclass_1mb signature at 0xFDF78.
+- **E290 TD pre-CDI** (pairs #252, #255, #256) — EDC1.x/EDC15V 524KB
+  legacy. Different family from EDC15V CDI — outside current scope.
+
+Current def inventory for Mercedes (10 defs, 27 maps):
+
+| Def                        | Maps | Pairs | Coverage |
+| -------------------------- | ---- | ----- | -------- |
+| mb_edc16_om646             |  6   |  55+  | ★★★★★    |
+| mb_om642_v6_30cdi          |  4   |  96+  | ★★★★★    |
+| mb_edc15_pd_cclass_1mb     |  1   |  73   | ★★★★★    |
+| mb_edc15v_cdi_524kb        |  2   |  32   | ★★★★     |
+| mb_delphi_crd2_651         |  1   |  19   | ★★★      |
+| mb_crax_edc16_w169         |  5   |  18   | ★★★      |
+| mb_delphi_crd3_651         |  1   |  11   | ★★★      |
+| mb_siemens_m300_m271       |  1   |  11   | ★★★      |
+| mb_delphi_crd646           |  3   |  6    | ★★       |
+| mb_cr40_edc17_w176         |  3   |  2    | ★        |
+
+Total signature coverage: **328/779 pairs (42%)**
+
+---
+
 ## MB 2 MORE defs — EDC15V extension + EDC15 PD 1MB (73 pairs) (v3.9.6)
 
 Coverage 229 -> 328 / 779 pairs (29% -> **42%**).
