@@ -11325,6 +11325,81 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 BMW E81-E87 2.0d N47 150kW sw395779 — 0x074104 2MB 512B IQ ────
+  //
+  // BMW E81-E87 2.0d N47 150 kW EDC17 2MB DDE higher-power variant.
+  // sw395779 2 pairs across 2 DDE BlockIDs hit EXACT 512B IQ anchor.
+  // Verified in pair_analysis_log.md BMW pairs:
+  //   #949 sw395779 `O_71MLID381A` · #975 sw395779 `O_71MLID371A` (sister SW)
+  //
+  // Map structure:
+  //   0x074104  512 B u16 BE — IQ release (stock 27930 → 57390, +106%)
+  //   0x05851E  52 B u16 BE — emission cut (stock 38152 → 32, -99.9%)
+  {
+    id: 'edc17_bmw_e87_20d_n47_150kw_074104',
+    name: 'Bosch EDC17 (BMW E81-E87 2.0d N47 150kW — sw395779 0x074104 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['395779'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E81-E87 2.0d N47D20 150kW DDE 2MB (sw 395779, 2007-2009)'],
+    maps: [
+      {
+        id: 'edc17_bmw_e87_20d_074104_iq_release',
+        name: 'IQ Release 512B (E87 2.0d N47 150kW sw395779)',
+        category: 'fuel',
+        desc: 'IQ release at 0x074104 (256 cells u16 BE = 512 B). 2 pairs EXACT anchor: stock 27930 → tuner consensus 57390 (+106%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x074104,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 52000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 58000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 BMW E81-E87 2.0d N47 130kW sw396565 — 0x0682D4 cross-format ────
+  //
+  // BMW E81-E87 2.0d N47 130 kW EDC17 sw396565 across 2 dump formats
+  // (1540096B + 2MB) at SAME anchor. Verified in pair_analysis_log.md BMW
+  // pairs: #974 sw396565 2MB · #979 sw396565 1540096B
+  //
+  // Map structure (same in both formats):
+  //   0x0682D4  30 B u16 BE — IQ release (stock 15039 → 30825, +105%)
+  //   0x0581D2  14 B u16 BE — emission cut (stock 39452 → 32, -99.9%)
+  {
+    id: 'edc17_bmw_e87_20d_n47_130kw_0682d4',
+    name: 'Bosch EDC17 (BMW E81-E87 2.0d N47 130kW — sw396565 0x0682D4 2MB/1540K)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281014572', '396565'],
+    fileSizeRange: [1540096, 2097152],
+    vehicles: ['BMW E81-E87 2.0d N47D20 130.2kW DDE (0281014572 sw 396565, 2009)'],
+    maps: [
+      {
+        id: 'edc17_bmw_e87_20d_0682d4_iq_release',
+        name: 'IQ Release 30B (E87 2.0d N47 130kW sw396565)',
+        category: 'fuel',
+        desc: 'IQ release at 0x0682D4 (15 cells u16 BE = 30 B). 2 pairs EXACT anchor across 2 dump formats: stock 15039 → tuner consensus 30825 (+105%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0682D4,
+        rows: 1, cols: 15, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 28000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 32000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 36000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 BMW E81-E87 2.0d N47 100-105kW — 0x07491C 2MB DDE cluster ──────
   //
   // BMW E81-E87 2.0d (N47D20) 100-105 kW EDC17 DDE BlockID-labelled.

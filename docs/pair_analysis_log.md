@@ -3814,6 +3814,54 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #969–984 — 2 NEW E87 2.0d N47 defs (150kW + 130kW) + 2009/2010 catalog
+
+**NEW DEF 1 — BMW E87 2.0d N47 150kW sw395779 @ 0x074104** (2 pairs, 2 BlockIDs):
+
+`edc17_bmw_e87_20d_n47_150kw_074104` — 2MB DDE.
+
+- #949 sw395779 `O_71MLID381A` (prior batch)
+- #975 sw395779 `O_71MLID371A` — sister SW at EXACT anchor
+
+`0x074104 512B` BE 27930 → 57390 (+106% IQ release) + `0x05851E 52B`
+emission cut.
+
+**NEW DEF 2 — BMW E87 2.0d N47 130kW sw396565 @ 0x0682D4** (2 pairs, 2 formats):
+
+`edc17_bmw_e87_20d_n47_130kw_0682d4` — supports BOTH 2MB + 1540096B dumps.
+
+- #974 sw396565 `O_71R6IC112A` 2MB
+- #979 sw396565 `0281014572 O_71R6IC112A` 1540096B
+
+Cross-dump-format anchor match: 0x0682D4 works in both. `30B` IQ release
+stock 15039 → 30825 (+105%).
+
+**Cross-SW observation — 0x0682D4/0x06A4F0/0x06A6C4 30B same raw**:
+Across 5+ pairs (#956, #957, #963, #974, #979) the 30B IQ release at
+0x06Axxx anchor family all share stock 15039 → 30825 (+105%). Signature
+candidate covering sw394079/sw509475/sw396565 when wider signature wire
+supported.
+
+**Cross-SW observation — 0x07491C/0x071C48 16B same raw**:
+sw396567 (#977) at `0x071C48 16B` hits SAME stock 21269 as wired 0x07491C
+def at Δ=-0x2D4 shift. Another sub-variant of N47 100-105kW universal cell.
+
+**sw399762 0x057D1A pattern** (pairs #972/#978): 2 sister pairs same SW
+same emission-cut anchor. Confirms consistent pattern.
+
+**sw501612 105kW** (#973 `O_73S3KB081A`) — 0x066FD4 23B + 0x058154 16B.
+Similar to E87 2.0d 105kW sw507453 cluster from prior batch (0x06703C
+Δ=+0x68).
+
+**sw391386** (#971 `O_73MDIB221A`) — emission cut at 0x057C8C.
+**sw389230** (#970 `O_73KLIB321A`) — emission cut at 0x058942.
+
+**E87 2.0d 270336B compact format** (pair #969 sw509476, pair #976
+sw394080) — compact dump emission-cut pattern. sw394080 only 156B
+changed (almost-null tune).
+
+---
+
 ## BMW Pairs #953–968 — 1 NEW def (E87 2.0d N47 0x07491C) + emission-cut catalog
 
 **NEW DEF WIRED — BMW E81-E87 2.0d N47 100-105kW @ 0x07491C 2MB** (4 pairs, 3 SWs):
