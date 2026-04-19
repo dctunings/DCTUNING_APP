@@ -2970,6 +2970,121 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC16 VW Touareg 3.0 TDI 8E0907401AB — 0x0717C3 524KB triple-mirror ───
+  //
+  // VW Touareg 3.0 TDI V6 CR (Audi derived 8E hardware) 165-171 kW EDC16 1MB
+  // cal-strip to 524KB dump. 2 SWs across same SGO share EXACT triple-mirror
+  // anchor trio at stride +0x2F0. Verified in pair_analysis_log.md VW pairs:
+  //   #1183 sw383041 2004 165.5kW · #1185 sw377333 2004 165kW · #1200 sw377333
+  //
+  // Map structure (EXACT match):
+  //   0x0717C3  11 B u16 BE — IQ Mirror A (stock 13214 → 37278, +182%)
+  //   0x071AB3  11 B u16 BE — IQ Mirror B (Δ=+0x2F0)
+  //   0x071DA3  11 B u16 BE — IQ Mirror C (Δ=+0x5E0)
+  {
+    id: 'edc16_touareg_30tdi_8e0907401ab_0717c3',
+    name: 'Bosch EDC16 (VW Touareg 3.0 TDI V6 165kW — 8E0907401AB 0x0717C3 triple-mirror 524KB)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['8E0907401AB', '377333', '383041'],
+    fileSizeRange: [524288, 524288],
+    vehicles: ['VW Touareg 3.0 TDI V6 165kW (8E0907401AB sw 377333/383041, 2004-2007)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_touareg_0717c3_iq_mirror_a',
+        name: 'IQ Mirror A 11B (Touareg 8E0907401AB)',
+        category: 'fuel',
+        desc: 'IQ mirror A at 0x0717C3 (5-6 cells u16 BE = 11 B). Verified 2 SWs at EXACT anchor + stock 13214 → tuner consensus 37278 (+182%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0717C3,
+        rows: 1, cols: 6, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 35000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_touareg_071ab3_iq_mirror_b',
+        name: 'IQ Mirror B 11B (Touareg 8E0907401AB Δ=+0x2F0)',
+        category: 'fuel',
+        desc: 'IQ mirror B at 0x071AB3 (Δ=+0x2F0 from A). Same raw signature 13214 → 37278 (+182%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x071AB3,
+        rows: 1, cols: 6, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 35000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_touareg_071da3_iq_mirror_c',
+        name: 'IQ Mirror C 11B (Touareg 8E0907401AB Δ=+0x5E0)',
+        category: 'fuel',
+        desc: 'IQ mirror C at 0x071DA3 (Δ=+0x5E0 from A). Same raw signature.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x071DA3,
+        rows: 1, cols: 6, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 35000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC16 VW Touareg 3.0 TDI 7L0907401A — 0x0713F1 524KB IQ release ───────
+  //
+  // VW Touareg 3.0 TDI V6 164.8 kW EDC16 — 7L (Touareg-specific) hardware.
+  // 2 SWs same SGO share EXACT anchor. Verified in pair_analysis_log.md
+  // VW pairs: #1189 sw380764 · #1193 sw505494
+  //
+  // Map structure:
+  //   0x0713F1  11 B u16 BE — IQ upper (23252 → 50029, +115%)
+  //   0x071947  11 B u16 BE — IQ mirror A (19565 → 31187, +59%)
+  //   0x071C37  11 B u16 BE — IQ mirror B (Δ=+0x2F0 from A)
+  {
+    id: 'edc16_touareg_30tdi_7l0907401a_0713f1',
+    name: 'Bosch EDC16 (VW Touareg 3.0 TDI V6 164.8kW — 7L0907401A 0x0713F1 524KB)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['7L0907401A', '380764', '505494'],
+    fileSizeRange: [524288, 524288],
+    vehicles: ['VW Touareg 3.0 TDI V6 164.8kW (7L0907401A sw 380764/505494, 2006-2007)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_touareg_0713f1_iq_upper',
+        name: 'IQ Upper 11B (Touareg 7L0907401A)',
+        category: 'fuel',
+        desc: 'IQ upper at 0x0713F1 (5-6 cells u16 BE = 11 B). 2 SWs EXACT anchor + stock 23252 → tuner consensus 50029 (+115%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0713F1,
+        rows: 1, cols: 6, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 52000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 57000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── MED17 VW Tiguan 2.0 TSI EA888 Gen2 06J906026S/T/AB — 0x00F617 262KB IQ ─
   //
   // VW Tiguan 2.0 TSI (EA888 Gen2 turbo) 125 kW MED17. 262 KB compact

@@ -70,6 +70,65 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1185–1200 — 2 NEW Touareg 3.0 TDI EDC16 defs + 2007 catalog
+
+**NEW DEF 1 — Touareg 3.0 TDI 8E0907401AB @ 0x0717C3 triple-mirror** (2 SWs):
+
+`edc16_touareg_30tdi_8e0907401ab_0717c3` covers 8E hardware 165-171kW V6.
+
+- #1183 sw383041 `8E0907401AB` 165.5kW — 0x0717C3/0x071AB3/0x071DA3 triple
+- #1185 sw377333 `8E0907401AB` 165kW — EXACT same anchors (triple mirror)
+
+All 3 anchors hit with raw stock 13214 → 37278 (+182%). Stride between
+mirrors Δ=0x2F0 — EDC16 storage-mirror layout.
+
+**NEW DEF 2 — Touareg 3.0 TDI 7L0907401A @ 0x0713F1** (2 SWs):
+
+`edc16_touareg_30tdi_7l0907401a_0713f1` covers 7L hardware 164.8kW V6.
+
+- #1189 sw380764 `7L0907401A` — 0x0713F1 11B BE 23252→50029 +115%
+- #1193 sw505494 `7L0907401A` — EXACT same anchor + raw signature
+
+Tight cross-SW anchor match. 7L hardware is Touareg-specific (vs 8E
+Audi-shared).
+
+**Cross-format observations**:
+
+Same-SW different-format pairs confirm 524KB↔2MB mapping conventions:
+- #1187 sw382093 `7L0907401B` 2MB @ 0x1EFFA9 — companion 2MB variant
+- #1190 sw382093 `7L0907401B` 2MB — sister of #1187
+- #1184 sw382708 `7L0907401B` 524KB @ 0x0706CD — same SW 382708 also
+  appears in #1192 2MB @ 0x1EFFDD. Δ=0x1E9910 dump shift.
+
+**Single-SW observations (no wire yet)**:
+
+- #1186 sw375570 `8E0907401AB` 262KB — VERY light tune (3 regions)
+  just emission cuts. Doesn't match main cluster.
+- #1188 sw375569 `8E0907401AB` 524KB 171kW — `0x07169D 9B` +94% different
+  anchor pattern from main 0x0717C3 cluster. Single.
+- #1191 sw379816 `7L0907401B` 524KB — `0x070507/0x0704DF 13B` BE 23345→
+  42674 +83% + 18523→41990 +127%. Different anchors from main clusters.
+- #1192 sw382708 `7L0907401B` 2MB 171kW — `0x1EFFDD 13B` BE 8673→40844
+  +371% + several 13B 19682/20151/22882 stocks. Unique per-SW pattern.
+- #1194 sw386348 `7L0907401F` 2626048B (2.5MB DPF dump!) — `0x26F8ED
+  11B` BE 23252→50029 same raw sig as wired 0x0713F1 but different anchor
+  and dump format. DPF variant.
+- #1196 sw379816 `7L0907401B` 2MB — `0x1D2F1A 16B` +146% + `0x1F0507 13B`
+  +103%. Same SW as #1191 524KB but 2MB format with different anchors.
+- #1197 sw386372 `7L0907401D` 2MB — `0x1EFE83/0x1F011B/0x1F03B3 11B`
+  TRIPLE mirror at Δ=0x298 stride BE 19668→46240 +135%. NEW 7L0907401D
+  pattern — could wire after 2nd SW confirms.
+- #1198 sw387060 `7L0907401D` 524KB — `0x06F95B/0x06F933 13B` different
+  anchor. Single.
+- #1199 sw374592 `8E0907401AB` 524KB 171kW — `0x071D35/0x072303/
+  0x0725F3/0x0728E3 11B` QUAD mirror at Δ=0x2F0 BE 23252→50029 +115%.
+  Same raw as wired 0x0713F1 def but at different anchor+SGO. Different
+  power variant (171kW vs 164.8kW).
+- #1200 sw377333 `8E0907401AB` 524KB — `0x07169D 9B` +67% (lighter tune
+  of the 0x07169D pattern from #1188).
+
+---
+
 ## VW Pairs #1169–1184 — 2 NEW MED17 Tiguan 2.0 TSI defs + Touareg + 0x06CC76 ext
 
 **NEW DEF 1 — Tiguan 2.0 TSI 125kW MED17 @ 0x00F617** (3 SWs, 3 pairs):
