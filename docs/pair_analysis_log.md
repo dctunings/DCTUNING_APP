@@ -3814,6 +3814,66 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #1113–1128 — 2 NEW defs (E90 325D 0281015130 + sw390904) + X5-3.0SD ext
+
+**NEW DEF 1 — BMW E90-E91 325D 0281015130 @ 0x0E2337 2031616B** (2 SWs):
+
+`edc16_bmw_e90_325d_0281015130_0e2337` — 2031616B EDC16.
+
+- #1110 sw500774 `0281015130 08509255` (prior batch)
+- #1114 sw399769 `0281015130 08506953`
+
+Both hit EXACT `0x0E2337 13B` + `0x0E234B 13B` BE 26377 → 45150 (+71%).
+
+**NEW DEF 2 — BMW E90-E91 325D sw390904 @ 0x0E2281 2031616B** (2 pairs, 2 parts):
+
+`edc16_bmw_e90_325d_sw390904_0e2281` — cross-part same SW.
+
+- #1112 sw390904 `0281014543 07811148` (prior batch)
+- #1113 sw390904 `0281015130 07811147`
+
+Both hit EXACT `0x0E2281 11B` + `0x0E22A9 11B` (Δ=+0x28 mirror) BE
+13320 → 40200 (+202%) + 24585 → 55305 (+125%).
+
+**X5-3.0SD def EXTENDED** — +0281016640 part (pair #1126 E90 335d):
+- sw500776 on NEW Bosch part 0281016640 E90-E91 335d 2031616B
+- hits EXACT 0x0C99D4 52B + 0x0C9952 52B (52B vs 38B in def — same map)
+- Cross-model (E70 X5-3.0SD → E90 335d) confirmation for sw500776 code.
+- Now covers 3 Bosch parts (0281015128/0281015241/0281016640) across
+  E70/E71/E90/E91 chassis for sw500776.
+
+**Already-wired cross-chassis confirmations**:
+- #1109 sw390114 `0281014543` + #1111 sw383498 `0281012994` + #1114
+  sw399769 `0281015130` — same raw 26377→45150 signature at per-SW drift
+  anchors 0x0E230B/0x0E2337/0x0E23AF.
+
+**Observations (no wire)**:
+- #1115 sw500774 `0281016638` 2031616B (different part from wired X5-3.0SD
+  def 0x0E9C72) — 0x0C8F8E 52B + 0x0C9010 52B BE 4783→8192 +71% (same
+  universal cell stock 4783 as sw379333 def).
+- #1116 sw? E90-E91 325i N46 2.5MB Siemens — 9 regions, minor petrol tune.
+- #1117 sw777111 E90-E91 325i 2MB — 0x06EED8 22B +88% + 0x05820A 4×3 -40%.
+- #1118 sw? E90-E91 325i 2012 2MB Bosch `07612455` — 0x0621D3 58B +131%
+  + 0x073506 6B emission cut. Late N52 petrol.
+- #1119 sw376969 E90-E91 330d `0281012707` 2031616B — 0x0C42D6/0x0C4BEC
+  30B mirror (Δ=+0x916) +29%. M57TU 3.0 diesel.
+- #1120 sw390002 E90-E91 330d `O_046T81` 2MB — 0x0F2737/0x0F2BC3 15B
+  mirror -67%/-59% rail pressure cut. Same SW as #1014 + #1122.
+- #1121 sw387658 `0281012707` E90-E91 330D 2031616B — 0x0DFBC7 11B
+  BE 520→25096 +4726% + 0x0DFC35 11B BE 13320→50952 +283%.
+- #1122 sw390002 `0281015129` 2031616B 330d — 0x0E3001 11B + 0x0E3015 11B
+  (already confirmed in #1014).
+- #1123 sw390115 E90-E91 330d `0281014205` 2031616B — 0x0E2E35 11B +325%
+  + 0x0E2EFD 11B +220%.
+- #1124 sw383494 E90-E91 335d `0281013854` 2031616B — 0x0DD969 19B +48%
+  + 0x0E9C3A 30B +34%.
+- #1125 sw383837 E90-E91 335D `O_92BT48` 2MB — 0x0DA038 320B + 0x0D93B0
+  304B +40-43%. Same SW as E70 3.0d #861 but 2MB vs 2031616B.
+- #1127/#1128 sw772227 E90-E91 335i Siemens — #1127 has 82% file rewrite
+  (cal replacement), #1128 normal tune at 0x05F3C0 emission cut.
+
+---
+
 ## BMW Pairs #1097–1112 — NEW sw394079 270336B + E90 325D 144.9kW cluster catalog
 
 **NEW DEF — BMW E90-E91 320d sw394079 @ 0x02EED6 270336B** (4 pairs):

@@ -11886,6 +11886,123 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC16 BMW E90-E91 325D 144.9kW 0281015130 — 0x0E2337 2031616B ────────
+  //
+  // BMW E90-E91 325D M57D30TU 144.9 kW EDC16 2031616B. 2 SWs same Bosch
+  // part 0281015130. Verified in pair_analysis_log.md BMW pairs:
+  //   #1110 sw500774 `0281015130 08509255` · #1114 sw399769 `0281015130
+  //   08506953`
+  //
+  // Map structure (EXACT match across 2 SWs):
+  //   0x0E2337  13 B u16 BE — IQ upper A (stock 26377 → 45150, +71%)
+  //   0x0E234B  13 B u16 BE — IQ upper B mirror (Δ=+0x14)
+  //
+  // Same raw 26377→45150 signature as sw390114 (#1109 @ 0x0E230B, Δ=-0x2C)
+  // and sw383498 (#1111 @ 0x0E23AF, Δ=+0x78) — 325D family-wide signature
+  // at per-SW drifting anchors. Only 0x0281015130 parts hit EXACT 0x0E2337.
+  {
+    id: 'edc16_bmw_e90_325d_0281015130_0e2337',
+    name: 'Bosch EDC16 (BMW E90-E91 325D M57D30TU 144.9kW — 0281015130 0x0E2337 2031616B)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281015130', '399769', '500774'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E90-E91 325D M57D30TU 144.9kW (0281015130 sw 399769/500774, 2007-2008)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x1F7FFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_e90_325d_0e2337_iq_upper_a',
+        name: 'IQ Upper A 13B (E90 325D 0281015130)',
+        category: 'fuel',
+        desc: 'IQ upper A at 0x0E2337 (6-7 cells u16 BE = 13 B). 2 SWs EXACT anchor: stock 26377 → tuner consensus 45150 (+71%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0E2337,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 42000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_bmw_e90_325d_0e234b_iq_upper_b',
+        name: 'IQ Upper B 13B (E90 325D 0281015130 Δ=+0x14)',
+        category: 'fuel',
+        desc: 'IQ upper B at 0x0E234B (Δ=+0x14 mirror from A). Stock 24755 → 42334 (+71%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0E234B,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 42000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC16 BMW E90-E91 325D 144.9kW sw390904 — 0x0E2281 2031616B ──────────
+  //
+  // BMW E90-E91 325D sw390904 EDC16 2031616B. 2 pairs across 2 Bosch parts
+  // (0281014543 + 0281015130). Verified in pair_analysis_log.md BMW pairs:
+  //   #1112 sw390904 `0281014543` · #1113 sw390904 `0281015130`
+  //
+  // Map structure:
+  //   0x0E2281  11 B u16 BE — IQ upper A (stock 13320 → 40200, +202%)
+  //   0x0E22A9  11 B u16 BE — IQ upper B mirror (Δ=+0x28)
+  {
+    id: 'edc16_bmw_e90_325d_sw390904_0e2281',
+    name: 'Bosch EDC16 (BMW E90-E91 325D 144.9kW — sw390904 0x0E2281 2031616B)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['390904'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E90-E91 325D M57D30TU 144.9kW (0281014543/0281015130 sw 390904, 2007-2008)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x1F7FFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_e90_325d_sw390904_0e2281_iq_a',
+        name: 'IQ Upper A 11B (E90 325D sw390904)',
+        category: 'fuel',
+        desc: 'IQ upper A at 0x0E2281 (5-6 cells u16 BE = 11 B). 2 pairs 2 parts EXACT anchor: stock 13320 → tuner consensus 40200 (+202%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0E2281,
+        rows: 1, cols: 6, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 37000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 42000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_bmw_e90_325d_sw390904_0e22a9_iq_b',
+        name: 'IQ Upper B 11B (E90 325D sw390904 Δ=+0x28)',
+        category: 'fuel',
+        desc: 'IQ upper B at 0x0E22A9 (Δ=+0x28 mirror from A). Stock 24585 → 55305 (+125%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0E22A9,
+        rows: 1, cols: 6, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 52000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 56000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 60000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC17 BMW E90-E91 320d sw394079 — 0x02EED6 270336B compact ───────────
   //
   // BMW E90-E91 320d sw394079 N47D20 130.2 kW EDC17 270336B compact format.
@@ -12589,9 +12706,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC16 (BMW E70/E71 X5-3.0SD M57D30TU2 210kW — 0281015128 0x0E9C72 1984KB)',
     manufacturer: 'Bosch',
     family: 'EDC16',
-    identStrings: ['0281015128', '0281015241', '500776', '397536', '390902'],
+    identStrings: ['0281015128', '0281015241', '0281016640', '500776', '397536', '390902'],
     fileSizeRange: [2031616, 2031616],
-    vehicles: ['BMW E70/E71 X5-3.0SD M57D30TU2 210.4kW bi-turbo (0281015128/0281015241 sw 390902/397536/500776, 2007-2008)'],
+    vehicles: ['BMW E70/E71 X5-3.0SD / E90-E91 335d M57D30TU2 210.4kW bi-turbo (0281015128/0281015241/0281016640 sw 390902/397536/500776, 2007-2009)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x1F7FFC,
     checksumLength: 4,
