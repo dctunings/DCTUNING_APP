@@ -64,6 +64,71 @@ was code-changed, and what was left as a placeholder for future pairs.
 - Without symbols, confident naming requires cross-reference against a
   second EDC16 PD pair with the same software gen, or an A2L.
 
+# Mercedes catalog (D:\DATABASE\Tuning_DB_BIN\Mercedes Benz)
+
+**779 ORI/Stage1 pairs** in Mercedes folder (from 832 ORI / 783 Stage1
+discovered via `build_mb_pairs.js`). Numbering as `MB #N` separately.
+Mercedes uses a mix of Bosch (EDC15/EDC16/EDC17 CRAx/CR40/MSB), Delphi
+(CRD3), Temic (Actros OM501/OM906), and Siemens-Continental petrol.
+
+## MB Pairs #1–40 — OPENING CATALOG — 3 NEW defs wired (v3.9.1)
+
+**NEW DEF — Mercedes EDC16 OM646 2.2 CDI (W211 C/E-class) 1511680B**:
+`mb_edc16_om646` — 6 maps wired via fixedOffset from EXACT raw matches
+across sister SWs sw366670 (pair #2) and sw370739 (pair #3):
+- `mb_om646_torque_demand` @ 0x140B99 · raw 19822→55495 (+180%)
+- `mb_om646_smoke_limiter` @ 0x13F992 60B · raw 4430→10000 (+126%)
+- `mb_om646_fuel_qty` @ 0x13FE9A 60B · raw 5013→10000 (+99%)
+- `mb_om646_boost_target` @ 0x15C5E7 13B · raw 15668→32053 (+105%)
+- `mb_om646_boost_duty` @ 0x15C687 13B · raw 22491→35718 (+59%)
+- `mb_om646_torque_secondary` @ 0x1364C6 24B · raw 4158→6030 (+45%)
+
+Pair #1 sw368500 (different ORI) hits 0x13D00F with EXACT raw 19822 at
+Δ=-0x3B8A shifted anchor — indicates same map on a different SW layout.
+
+**NEW DEF — Mercedes CRAx EDC16 W169 A/B-class 253952B/262144B**:
+`mb_crax_edc16_w169` — 5 maps wired via fixedOffset across FIVE+ sister
+SWs that share EXACT raw signature 6003 at 0x011F9A:
+- sw389341 (pairs #11 + #12)
+- sw382210 (pair #15)
+- sw378289 (pair #24)
+- sw383368 (pair #37)
+- sw392610 (pair #39)
+
+Stable anchor set: 0x011F9A (fuel qty, BE 6003→6303 across all 5 SWs),
+0x0015F8 8×9 (boost target 1357 or 1554), 0x00183C 8×9 (boost feedback
+1402/1599/1661), 0x013EBE 32×7 (torque/fuel 3872→4206 or 4232→4566),
+0x011C54 30B (fuel limit 4917→7010 across sw378289/sw383368/sw392620).
+
+**NEW DEF — Mercedes CR40 EDC17 W176 A/B-class 2097152B**:
+`mb_cr40_edc17_w176` — 3 maps wired across sister SWs sw512420 (pair
+#31 A180 CDI 80.2kW) and sw512421 (pair #30 A160 CDI 59.6kW). Both
+2MB CR40-640-6GA1 ME04 with EXACT raw signatures at:
+- 0x0A114C 256B BE raw 34853 (torque demand table A)
+- 0x0A1308 256B BE raw 34561 (torque demand table B)
+- Plus standard EDC17 Kf_ fuel quantity sig map.
+
+Other notable MB observations from #1–40:
+- **Delphi CRD3 4MB A200/B200 2.0 CDI** (pair #32 sw651901) — 28 regions,
+  large torque cluster at 0x0B6Exx / 0x0D3Dxx with ±40-120% changes. Need
+  more SWs to identify cluster anchor. First CRD3 candidate logged.
+- **2MB EDC17 A_280CDI sw383655** (pair #28) — fires BE 5000→10000 +100%
+  at THREE locations (0x1A6FB2 / 0x1A71F6 / 0x1F3B5A) consistent with
+  A-Class 280CDI 132kW Stage 1. Cluster analog to other Bosch 2MB EDC17.
+- **Temic Actros 524KB** (pairs #34/#35) — only 6 bytes diff each (auth
+  signature / checksum tweaks only, no real Stage 1). Skip.
+- **Siemens Continental A190 Turbo Benzin** (pair #27) — 5WK90939 2MB
+  Stage 1 shows typical petrol boost+MAF shifts. Non-Bosch — defer.
+- **EDC15 524KB A-class 0281010xxx** triple/quad mirror pattern at
+  0x014xxx / 0x01Cxxx / 0x07Cxxx / 0x024xxx (pairs #13 sw351603, #14/#22
+  sw351351, #16 sw350615, #18 sw351350, #21 sw351602, #23 sw351705).
+  Pair #14 and #18 share EXACT anchor 0x014354+0x01C354+0x07C354 triple.
+  Cluster catalog — wire after more EDC15 A-class pairs (currently 8
+  different SWs with 4-stage mirror pattern, each SW has unique raw
+  values → family pattern is real but needs 2+ SWs to share stock raw).
+
+---
+
 # VW catalog (D:\DATABASE\Tuning_DB_BIN\VW)
 
 **1374 ORI/Stage1 pairs** in VW folder. Numbering as `VW #N` separately.
