@@ -2970,6 +2970,89 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC17 VW Touareg 3.0 TDI CR DPF V6 7L0907401H — 0x1DD8C6 2MB cluster ──
+  //
+  // VW Touareg 3.0 TDI CR DPF V6 155-176.5 kW EDC17 2MB dump format.
+  // 2 SWs share EXACT anchor + raw signature on main torque-lift cluster.
+  // Verified in pair_analysis_log.md VW pairs:
+  //   #1202 sw509949 155.2kW · #1213 sw509943 176.5kW (also #1215 alt-tune)
+  //
+  // Map structure:
+  //   0x1DD8C6  128 B u16 BE — IQ release A (stock 5125 → 45060, +779%)
+  //   0x1DD954  16×13 = 416 B u16 BE — torque ceiling A (21409 → 48549, +127%)
+  //   0x1DDB3E  16×16 = 512 B u16 BE — torque ceiling B (22186 → 47801, +115%)
+  //
+  // Note: sw392978, sw394198, sw500172, sw509943 ALSO appear at this SGO
+  // hitting 0x1B4xxx / 0x1A9xxx emission-cut region (alternate tuner
+  // targeting) on same ORI — confirms ORI structure but different tune
+  // targets. Only the 2-SW cluster at 0x1DD8C6 is fixedOffset-reliable.
+  //
+  // Pair #1214 sw397811 `3D0907401D` 2MB — hits `0x1F9212 16×16` with
+  // SAME raw 22186 → 47801 signature at Δ=+0x1B6D4 shifted anchor
+  // (different 3D chassis). Not added to fixedOffset but flagged.
+  {
+    id: 'edc17_touareg_30tdi_7l0907401h_1dd8c6',
+    name: 'Bosch EDC17 (VW Touareg 3.0 TDI CR DPF V6 155-176.5kW — 7L0907401H 0x1DD8C6)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['7L0907401H', '509943', '509949'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['VW Touareg 3.0 TDI CR DPF V6 155-176.5kW (7L0907401H sw 509943/509949, 2008-2010)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x7FFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc17_touareg_1dd8c6_iq_release',
+        name: 'IQ Release 128B (Touareg 7L0907401H)',
+        category: 'fuel',
+        desc: 'IQ release at 0x1DD8C6 (64 cells u16 BE = 128 B). 2 SWs EXACT anchor: stock 5125 → tuner consensus 45060 (+779%). Critical Stage 1 map.',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1DD8C6,
+        rows: 1, cols: 64, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 42000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_touareg_1dd954_torque_ceiling_a',
+        name: 'Torque Ceiling A 16×13 (Touareg 7L0907401H)',
+        category: 'limiter',
+        desc: 'Torque ceiling A at 0x1DD954 (16 cols × 13 rows = 208 cells u16 BE). Stock 21409 → 48549 (+127%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1DD954,
+        rows: 13, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 45000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc17_touareg_1ddb3e_torque_ceiling_b',
+        name: 'Torque Ceiling B 16×16 (Touareg 7L0907401H)',
+        category: 'limiter',
+        desc: 'Torque ceiling B at 0x1DDB3E (16 cols × 16 rows = 256 cells u16 BE). Stock 22186 → 47801 (+115%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x1DDB3E,
+        rows: 16, cols: 16, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 53000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC16 VW Touareg 3.0 TDI 8E0907401AB — 0x0717C3 524KB triple-mirror ───
   //
   // VW Touareg 3.0 TDI V6 CR (Audi derived 8E hardware) 165-171 kW EDC16 1MB

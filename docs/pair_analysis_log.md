@@ -70,6 +70,64 @@ was code-changed, and what was left as a placeholder for future pairs.
 VW shares much of the same Bosch hardware as Audi (sister VAG group),
 so we expect to see big overlaps with the wired Audi defs.
 
+## VW Pairs #1201–1216 — 1 NEW Touareg 3.0 TDI CR DPF EDC17 def (2 SWs) + tail catalog
+
+**NEW DEF — Touareg 3.0 TDI CR DPF V6 EDC17 7L0907401H @ 0x1DD8C6** (2 SWs):
+
+`edc17_touareg_30tdi_7l0907401h_1dd8c6` covers 155-176.5kW DPF 2MB.
+
+- #1202 sw509949 155.2kW — 0x1DD8C6 128B + 0x1DD954 16×13 + 0x1DDB3E 16×16
+- #1213 sw509943 176.5kW — EXACT same anchors + raw signatures
+
+Raw signatures (across 2 SWs):
+- `0x1DD8C6 128B` BE 5125 → 45060 (+779% — critical IQ release)
+- `0x1DD954 16×13 208B` BE 21409 → 48549 (+127% torque ceiling A)
+- `0x1DDB3E 16×16 256B` BE 22186 → 47801 (+115% torque ceiling B)
+
+**Multi-tune confirmation**: sw509943 appears at 7L0907401H in BOTH
+#1211 (emission-cut at 0x1B47B2/0x1B4638/0x1B4664 pattern) AND #1213
+(0x1DD8C6 torque cluster). Same ORI, different tuner choices.
+
+**Cross-chassis observation (Pair #1214)**:
+`3D0907401D` sw397811 2MB hits `0x1F9212 16×16` with SAME raw 22186
+→ 47801 signature as 7L0907401H def — but at Δ=+0x1B6D4 shifted anchor.
+Different 3D chassis wiring — same code, relocated. Single SW, no wire.
+
+**Emission-cut sub-pattern across 7L0907401H** (no wire — different
+raw sigs per SW):
+- #1208 sw392978 — `0x1B47DC 8B` BE 50626→3395 -93%
+- #1209 sw394198 — `0x1A9F98/1A9C94 12B` + `0x1B47DC 8B`
+- #1210 sw500172 — `0x1B4664/0x1B4894 10-20B` to zero
+- #1211 sw509943 — `0x1B47B2 13B` BE 1963→23978 +1122% (+ LE+710k%!)
+- #1215 sw392978 — `0x1AA212/0x1AA2E4` + `0x1D0706/1D072E` cluster
+
+Emission-disable region 0x1B4xxx / 0x1A9xxx / 0x1AA2xx catalogued for
+future DPF-delete wire.
+
+**4MB DPF-dump format observations**:
+- #1204 sw509943 `7L0907401N` 4325376B (4.25MB) — edits at `0x3DEF4F`
+  region — NEW dump format for Touareg DPF.
+- #1216 sw509943 `7L0907401H` 4325376B — SAME 4.25MB format as #1204
+  but different SGO. Both hit high-region `0x3DEF4F/0x3D0C8A/0x3D0CB2/
+  0x3D0242`. Possible 2-SW cluster needs verification with 3rd pair.
+
+**Very unusual format observations**:
+- #1206 sw509950 `7L0907401AB` 2MB 176.5kW — only emission-cut
+  `0x1AA7xx/0x1AA68x` pattern. Light tune. Single.
+- #1207 sw518184 `7P0907401F` 4194304B (4MB!) — `0x36B556/0x36B79A/
+  0x36C0AA 10B` triple-mirror at stride 0x244 BE 7141→32384 +354%.
+  NEW 4MB dump format (different from 4.25MB). Single.
+- #1212 sw521025 `7L0907401H` 2MB — only 2 regions, very light tune.
+
+**Single-SW observations** (no cluster yet):
+- #1201 sw383041 `8E0907401AB` 524KB 2007 (sister of #1183) — ALT tuner
+  at `0x07169D 9B` +67% vs #1183's 0x0717C3 triple-mirror. Multi-tune
+  on same ORI.
+- #1203 sw516683 `7P0907401` 2MB 103kW — `0x1D16D0 512B` + `0x1D1FF4
+  16×16` — Touareg entry-level 103kW variant. Single.
+
+---
+
 ## VW Pairs #1185–1200 — 2 NEW Touareg 3.0 TDI EDC16 defs + 2007 catalog
 
 **NEW DEF 1 — Touareg 3.0 TDI 8E0907401AB @ 0x0717C3 triple-mirror** (2 SWs):
