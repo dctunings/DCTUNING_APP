@@ -3814,6 +3814,82 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #821–852 — E65 730D EDC16 cluster (1 NEW def) + E63 petrol + X3
+
+**NEW DEF WIRED — E65 730D M57D30 160kW EDC16 @ 0x0F244F** (4 pairs, 2 parts):
+
+`edc16_bmw_e65_730d_0f244f` — 1015808B (992KB) truncated EDC16 dump format.
+
+- #835 sw361884 `0281011231 07796156` (2004) — 0x0F244F 199B + 0x0EEC89 17B
+- #836 sw361820 (no part string) — EXACT same anchors + raw signature
+- #837 sw361884 `0281010898 07796160` (2004) — EXACT same anchors
+- #838 sw361884 `0281011231 07796156` (2004 sister) — EXACT same anchors
+
+Raw signature across 4 pairs:
+- `0x0F244F 199B` BE 23089 → 45279 (+96% IQ upper)
+- `0x0EEC89 17B` BE 26885 → 35461 (+32% torque lift)
+
+2 Bosch part numbers (0281010898 + 0281011231) share EXACT anchor +
+raw signature for the same sw361884 SW. Clear wire.
+
+**E65 730D 2005 DDE update** (pair #839 sw361884 Upd 390907):
+- Different tuner hits `0x0F2457/0x0F246B 11B` BE 6665 → 42249 +534%
+- "Upd" (update) variant — same ORI, different tuner target
+- Logged — related to 0x0F244F cluster.
+
+**E65 730D 2005 165kW 130560B "compact" variant** (#840/#841 sister):
+- sw361884 with 130KB partial dump — EDC16 cal-strip format
+- 0x016C55 21B + 0x00062F 7B — different anchor layout
+- Logged.
+
+**E65 730D 169kW 2031616B cluster** (pairs #842/#843/#844):
+- sw374797 `0281011886` — 0x0C3EBC 22B BE 5444→8192 +51%
+- sw381343 `0281013500` — 0x0C45B0 22B BE 5444→8192 (Δ=+0x6F4)
+- sw376969 `0281012707` — 0x0C4BEC 30B BE 4891→6302 +29%
+- 3 SWs share raw 5444→8192 pattern at close anchors. Per-SW drift.
+- Note: 2031616B = 1984KB (NEW EDC17 dump format for E65 later revisions).
+
+**E63 petrol observations (no wire)**:
+- #825 sw370376 `0261209010` E63 645i 131072B ME7 — 0x01430A 128B +20%
+- #826 sw377011 `0261209092` E63 650i 2MB — 0x1DAF66 127B +24%
+- #827/#828 sw? E63 M6 V10 `07842121` 262KB — sister pair, different
+  tune targets
+- #829 sw? E63 M6 V10 `07842103` 262KB — `0x01076C 26B` +21%
+
+**E65 petrol observations (no wire)**:
+- #830 sw376079 `0261S02002` E65 6.0i V12 1MB — 0x0C86DF 16×14 -22%
+- #846 sw351852 `0261209002` E65 730i 1MB — tiny 12B change
+- #848 sw351852 `0261209002` E65 745i 1508608B — 0x16FFB0 16B -88%
+- #849 sw370376 `0261209010` E65 745i 131072B — **EXACT match to E63 #825
+  at 0x01430A 128B + 0x0142E6 18B** — same hardware E63/E65 745i/645i
+  cluster. 2 cars on same 0261209010 SW370376. Potential wire after more
+  pairs confirm.
+- #850 sw389760 `0261209002` E65 745i 1MB — 0x0CF8C2 16B +26%
+
+**E65 730 2010 DDE7.x BlockID format** (pair #831 `O_78T7-000009D0-046`):
+- 2MB · 57 regions · 0.461%
+- Newer DDE format — same as pairs #804/#814/#815 from prior batch.
+
+**E61 520D DPF BlockID** (pair #821 sw399763 `O_71RWDC172A`):
+- 2MB · 78 regions · `0x0710B0 200B` BE 27521→58146 +111%
+- + DPF emission cut cluster at 0x05xxxx. DPF-enabled SW variant.
+
+**E61 X3 Siemens 5WK93020 2005** (pair #822) — ME9 1MB, 6 regions, 3 ×
+268B loose regions +5% (torque lift pattern).
+
+**E63 325i Siemens 5WK90078** (pair #823) — byte-identical, skip.
+**E63 630i Bosch 5WK98085** (pair #824) — 2621440B (2.5MB) MSV70 petrol,
+8×8 at `0x053523` +11%.
+
+**E65 740D 2010 DDE** (pair #847 sw377759 `O_28Z9G2` 2MB) — 0x0C472A
+32B +21%, 0x0C4013 8×9 -11%.
+
+**E65 X3 3.0i Siemens 5WK93014** (pair #851) — 1MB, only 16B change.
+**E69 320D 2005 Bosch 0281012754 sw847934** (pair #852 — note NON-E46
+E69 chassis) — 2MB EDC16, `0x0FDF20 16B` -88% + `0x0D41E0 52B` +68%.
+
+---
+
 ## BMW Pairs #617–820 — E60-E61 530D/535D/530i/550 EDC16/17 + DDE family
 
 **E60-E61 530D 160-171 kW DDE Bosch tool block IDs**:

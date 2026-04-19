@@ -11325,6 +11325,65 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC16 BMW E65 730D sw361884 — 0x0F244F 1015808B cluster ──────────────
+  //
+  // BMW E65 730D (M57D30 6-cyl diesel) 160kW EDC16. 1015808B = 992KB
+  // truncated BMW-specific EDC16 dump format. 1 SW across 2 Bosch part
+  // suffixes (0281010898 + 0281011231) + SW-variant without part string.
+  // Verified in pair_analysis_log.md BMW pairs:
+  //   #835 sw361884 0281011231 · #836 sw361820 (no part) · #837 sw361884
+  //   0281010898 · #838 sw361884 0281011231
+  //
+  // Map structure (EXACT match across 4 pairs):
+  //   0x0F244F  199 B u16 BE — IQ upper (stock 23089 → 45279, +96%)
+  //   0x0EEC89  17 B u16 BE — torque lift (stock 26885 → 35461, +32%)
+  {
+    id: 'edc16_bmw_e65_730d_0f244f',
+    name: 'Bosch EDC16 (BMW E65 730D M57D30 160kW — 0x0F244F 992KB)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281010898', '0281011231', '361884', '361820'],
+    fileSizeRange: [1015808, 1015808],
+    vehicles: ['BMW E65 730D M57D30 160kW (0281010898/0281011231 sw 361820/361884, 2003-2005)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0xF7FFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_e65_730d_iq_upper',
+        name: 'IQ Upper 199B (E65 730D sw361884)',
+        category: 'fuel',
+        desc: 'IQ upper at 0x0F244F (100 cells u16 BE = 199 B). 4 pairs across 2 part suffixes + 2 SWs EXACT anchor: stock 23089 → tuner consensus 45279 (+96%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0F244F,
+        rows: 1, cols: 100, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 42000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 46000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 50000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'edc16_bmw_e65_730d_torque_lift',
+        name: 'Torque Lift 17B (E65 730D sw361884)',
+        category: 'limiter',
+        desc: 'Torque lift at 0x0EEC89 (8 cells u16 BE = 17 B). Stock 26885 → 35461 (+32%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0EEC89,
+        rows: 1, cols: 8, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 34000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 37000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── BMW B47 diesel (2014+) — Bosch EDC17C56 / EDC17C76 ──────────────────
   {
     id: 'bmw_b47',
