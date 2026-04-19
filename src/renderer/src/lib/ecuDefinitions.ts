@@ -11382,9 +11382,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC17 (BMW E81-E87 2.0d 270336B compact — sw396564 0x0299AC)',
     manufacturer: 'Bosch',
     family: 'EDC17',
-    identStrings: ['0281016068', '396564'],
+    identStrings: ['0281016068', '396564', '395777'],
     fileSizeRange: [270336, 270336],
-    vehicles: ['BMW E81-E87 2.0d N47 84-85kW 270336B compact (0281016068 sw 396564, 2008-2010)'],
+    vehicles: ['BMW E81-E87 / E90-E91 2.0d N47 84-105kW 270336B compact (0281016068 sw 395777/396564, 2008-2010)'],
     maps: [
       {
         id: 'edc17_bmw_e87_20d_compact_0299ac_iq_cut',
@@ -11886,6 +11886,88 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC16 BMW E90-E91 318D 2MB twins of E87 120D 0x0C3E60/0x0C3C10 defs ──
+  //
+  // BMW E90-E91 318D sw381342 / sw389883 EDC16 2MB dump (vs 2031616B
+  // standard). Same raw signature 3538 → 8192 at Δ=+0x10000 shifted
+  // anchors per format. Verified in pair_analysis_log.md BMW pairs:
+  //   #1066 sw381342 `0281013502` 2MB · #1070 sw389883 `O_S14947` 2MB
+  //
+  // Map structure:
+  //   sw381342: 0x0D3E60 85B (2MB = +0x10000 from sw381341 0x0C3E60)
+  //   sw389883: 0x0D3C10 85B (2MB = +0x10000 from sw389882 0x0C3C10)
+  //   Both stock 3538 → 8192 (+132%)
+  //
+  // Wired for sw381342 at 0x0D3E60 as primary — sw389883 2MB covered by
+  // its own anchor at Δ=-0x250 relative to sw381342 but same raw.
+  {
+    id: 'edc16_bmw_e90_318d_0d3e60_2mb',
+    name: 'Bosch EDC16 (BMW E90-E91 318D 2MB — 0281013502 sw381342 0x0D3E60)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281013502', '381342', '389883'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E91 318D 89.7-107kW 2MB (0281013502 sw 381342/389883, 2006-2007)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x1FFFFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_e90_318d_0d3e60_iq_release',
+        name: 'IQ Release 85B (E90-E91 318D sw381342 2MB)',
+        category: 'fuel',
+        desc: 'IQ release at 0x0D3E60 (42 cells u16 BE = 85 B). 2MB twin of wired 2031616B 0x0C3E60 def (Δ=+0x10000 dump-format shift). Stock 3538 → 8192 (+132%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0D3E60,
+        rows: 1, cols: 42, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 7600 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 8500 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 9500 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── EDC17 BMW E81-E87 + E90-E91 270336B compact sw390654 @ 0x02D3DE ──────
+  //
+  // BMW 118D/318D sw390654 105.2 kW EDC17 270336B (264KB) compact dump.
+  // Cross-chassis match. Verified in pair_analysis_log.md BMW pairs:
+  //   #895 E81-E87 118D sw390654 · #1069 E90-E91 318d sw390654 `0281014239`
+  //
+  // Map structure (EXACT across 2 chassis):
+  //   0x02D3DE  13 B u16 BE — IQ release A (stock 17333 → 43658, +152%)
+  //   0x02D3C2  13 B u16 BE — IQ release B (Δ=-0x1C, stock 18868 → 33973, +80%)
+  {
+    id: 'edc17_bmw_118d_318d_sw390654_02d3de',
+    name: 'Bosch EDC17 (BMW E81-E87 118D / E90-E91 318D — sw390654 0x02D3DE 264KB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281014239', '390654'],
+    fileSizeRange: [270336, 270336],
+    vehicles: ['BMW E81-E87 118D / E90-E91 318D 105.2kW 264KB compact (0281014239 sw 390654, 2007)'],
+    maps: [
+      {
+        id: 'edc17_bmw_118d_318d_sw390654_02d3de_iq_a',
+        name: 'IQ Release A 13B (118D/318D sw390654 compact)',
+        category: 'fuel',
+        desc: 'IQ release A at 0x02D3DE (6-7 cells u16 BE = 13 B). 2 pairs cross-chassis EXACT anchor: stock 17333 → tuner consensus 43658 (+152%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x02D3DE,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 40000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 44000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC16 BMW E83 X3 2.0D sw370435 — 0x15F029 1511680B cluster ───────────
   //
   // BMW E83 X3 2.0D (M47TU2) 110.3 kW EDC16 1511680B dump format.
@@ -12018,9 +12100,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC16 (BMW E81-E87 120D M47D20 120kW — 0281011416 sw381341 0x0C3E60)',
     manufacturer: 'Bosch',
     family: 'EDC16',
-    identStrings: ['0281011416', '381341'],
+    identStrings: ['0281011416', '0281013502', '0281012501', '381341', '381342'],
     fileSizeRange: [2031616, 2031616],
-    vehicles: ['BMW E81-E87 120D M47D20 119.9kW (0281011416 sw 381341, 2004-2005)'],
+    vehicles: ['BMW E81-E87 120D / E90-E91 318D/320D M47D20 89.7-120kW (0281011416/0281013502/0281012501 sw 381341/381342, 2004-2007)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x1F7FFC,
     checksumLength: 4,

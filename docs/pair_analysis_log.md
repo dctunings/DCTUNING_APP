@@ -3814,6 +3814,65 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #1065–1080 — 2 NEW defs (E90 318D 2MB + 118D/318D 264KB) + 3 extensions
+
+**NEW DEF 1 — BMW E90-E91 318D 2MB @ 0x0D3E60** (2 pairs):
+
+`edc16_bmw_e90_318d_0d3e60_2mb` — 2MB dump format twin of wired
+2031616B 0x0C3E60 def (Δ=+0x10000 format shift).
+
+- #1066 sw381342 `0281013502 O_A34943` E90-E91 318D
+- #1070 sw389883 `O_S14947` E90-E91 318D at 0x0D3C10 (same format
+  twin of sw389882 0x0C3C10 wired def)
+
+Wired for sw381342 anchor 0x0D3E60. Both SWs confirm same-raw 3538 →
+8192 (+132%) across 2MB dump format.
+
+**NEW DEF 2 — BMW 118D/318D sw390654 @ 0x02D3DE 264KB** (2 pairs cross-chassis):
+
+`edc17_bmw_118d_318d_sw390654_02d3de` — 270336B compact EDC17.
+
+- #895 E81-E87 118D sw390654 (from prior batch)
+- #1069 E90-E91 318d sw390654 `0281014239` — cross-chassis confirmation
+
+Both hit EXACT 0x02D3DE 13B + 0x02D3C2 13B. Stock 17333 → 43658 (+152%).
+
+**Extensions to existing defs**:
+
+`edc16_bmw_e87_120d_0c3e60` +1 Bosch part:
+- +0281012501 (pair #1080 E90-E91 320d sw381341) — NEW Bosch part for
+  same SW, hits EXACT wired anchors. Cross-chassis E87→E90.
+
+`edc17_bmw_e87_20d_compact_0299ac` +1 NEW SW:
+- +sw395777 (pair #1073 E90-E91 318d 270336B) — hits EXACT wired anchors
+  0x0299AC 28B + 0x02E392 13B. Now covers 3 SWs (396564/507452/395777)
+  cross-chassis.
+
+**sw396567 alt-anchor observation** (pairs #1074/#1075):
+- Both hit `0x0275E8 28B` BE 30800 → 2387 — SAME raw as wired 0x0299AC
+  def but at Δ=-0x23C4 shifted anchor. 2 pairs same SW. Sub-variant
+  logged for future signature wire.
+
+**sw522661 E90 318D 4MB dump format** (pair #1076 `O_7CPBKE236A`):
+- 4194304B (4MB) @ `0x3AE100/0x3AE122 8B` mirror BE 7180 → 40975 +471%
+- Same stock 7180 as sw507447 E87 #993 + E90 #1052 — universal N47 cell
+  at 4MB dump format anchor. Cross-format extension.
+
+**Observations (no wire)**:
+- #1065 sw396567 `Bosch_Bosch` 2MB — 0x071A26/0x06AA52 11B mirror pair,
+  same SW as wired 0x07491C def but different anchors (multi-tune style).
+- #1067 sw379333 `0281013252` 2031616B — 0x0CE2C1 17B + 0x0CA1D6 20B.
+  Different anchor from wired 0x0D4208 def (different part code variant).
+- #1068 sw376968 `0281012880` 2031616B — 0x0CA1A6 20B + 0x0C3B70 24B.
+- #1072 sw394078 E90-E91 270KB @ 0x017E10 — already covered by 270KB
+  observation pattern from prior batch.
+- #1077 sw379515 E90-E91 318i `0261201104` N46 ME7 — emission cut only.
+- #1078 sw376089 E90-E91 318i `0261201106` — emission cut.
+- #1079 sw394079 E90-E91 320D 270336B — compact format sw394079 at
+  0x02EED6 13B (different anchor than 2MB 0x06A4F0 def).
+
+---
+
 ## BMW Pairs #1049–1064 — 3 NEW defs (325D sw383498 + N47 cross-chassis + 325d sw504248)
 
 **NEW DEF 1 — BMW E90 325D sw383498 @ 0x0D9286 2MB** (2 pairs cross-format):
