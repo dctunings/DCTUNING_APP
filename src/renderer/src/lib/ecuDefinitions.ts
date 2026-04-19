@@ -11325,6 +11325,117 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── MSV70 BMW E81-E87 130i — 0x0423CA 2625536B (2.5MB) Siemens cluster ───
+  //
+  // BMW E81-E87 130i 195 kW Siemens MSV70 2625536B (2.5MB) dump.
+  // Single SW with 2 sister pairs (different tuner stage1). Verified in
+  // pair_analysis_log.md BMW pairs: #927 · #928 (sisters, same ORI).
+  //
+  // Map structure:
+  //   0x0423CA  50 B u16 BE — torque lift (stock 6554 → 8192, +25%)
+  //   0x053678  120 B u16 BE — IQ upper (stock 14163 → 15705, +11%)
+  {
+    id: 'msv70_bmw_e87_130i_0423ca',
+    name: 'Siemens MSV70 (BMW E81-E87 130i 195kW — 5WK98084 0x0423CA 2.5MB)',
+    manufacturer: 'Siemens',
+    family: 'MSVx',
+    identStrings: ['5WK98084'],
+    fileSizeRange: [2625536, 2625536],
+    vehicles: ['BMW E81-E87 130i N54 194.9kW Siemens MSV70 (5WK98084, 2009)'],
+    maps: [
+      {
+        id: 'msv70_bmw_130i_0423ca_torque_lift',
+        name: 'Torque Lift 50B (E87 130i Siemens MSV70)',
+        category: 'limiter',
+        desc: 'Torque lift at 0x0423CA (25 cells u16 BE = 50 B). 2 sister pairs EXACT anchor: stock 6554 → tuner consensus 8192 (+25%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0423CA,
+        rows: 1, cols: 25, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 7500 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 8100 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 8500 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'msv70_bmw_130i_053678_iq_upper',
+        name: 'IQ Upper 120B (E87 130i Siemens MSV70)',
+        category: 'fuel',
+        desc: 'IQ upper at 0x053678 (60 cells u16 BE = 120 B). Stock 14163 → 15705 (+11%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x053678,
+        rows: 1, cols: 60, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 15500 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 16500 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 18000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
+  // ── MSD80 BMW E81-E87 135i N54 — 0x070F3E 2MB cluster ────────────────────
+  //
+  // BMW E81-E87 135i N54 225 kW Bosch MSD80. 2MB dump format. 1 SW (333711)
+  // across 2 labels (Bosch + Siemens-labelled sister). Verified in
+  // pair_analysis_log.md BMW pairs:
+  //   #932 sw333711 Bosch `07611790 07611358` · #933 Siemens labeled same
+  //   07611790 07611358 ORI — both hit EXACT same anchor.
+  //
+  // Map structure:
+  //   0x070F3E  72 B u16 BE — IQ release (stock 13067 → 59404, +355%)
+  //   0x0621AF  58 B u16 BE — torque lift (stock 20851 → 50060-55919, +140-168%)
+  //
+  // Note: sw333711 also appears at 0x06646E 72B in pair #929 (different
+  // tuner, same raw signature) — anchor-variant on same ORI logged.
+  {
+    id: 'msd80_bmw_135i_n54_070f3e',
+    name: 'Bosch MSD80 (BMW E81-E87 135i N54 225kW — 07611790 0x070F3E 2MB)',
+    manufacturer: 'Bosch',
+    family: 'MSD8x',
+    identStrings: ['07611790', '07611358', '333711'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E81-E87 135i N54 225kW Bosch MSD80 (07611790/07611358 sw 333711, 2008)'],
+    maps: [
+      {
+        id: 'msd80_bmw_135i_070f3e_iq_release',
+        name: 'IQ Release 72B (E87 135i N54 MSD80)',
+        category: 'fuel',
+        desc: 'IQ release at 0x070F3E (36 cells u16 BE = 72 B). 2 pairs EXACT anchor: stock 13067 → tuner consensus 59404 (+355% — massive fuel release).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x070F3E,
+        rows: 1, cols: 36, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 55000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 59000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 62000 },
+        critical: true, showPreview: true,
+      },
+      {
+        id: 'msd80_bmw_135i_0621af_torque_lift',
+        name: 'Torque Lift 58B (E87 135i N54 MSD80)',
+        category: 'limiter',
+        desc: 'Torque lift at 0x0621AF (29 cells u16 BE = 58 B). Stock 20851 → tuner consensus 50060-55919 (+140-168%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0621AF,
+        rows: 1, cols: 29, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 48000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 53000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 58000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC16 BMW E81-E87 120D 120kW sw381341 — 0x0C3E60 2031616B cluster ───
   //
   // BMW E81-E87 120D (M47D20 2.0 TDI) 119.9 kW EDC16 2031616B (1984KB).

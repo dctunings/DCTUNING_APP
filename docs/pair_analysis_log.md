@@ -3814,6 +3814,55 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #921–936 — 2 NEW defs (E87 130i MSV70 + 135i MSD80)
+
+**NEW DEF 1 — BMW E87 130i N54 Siemens MSV70 @ 0x0423CA 2.5MB** (2 pairs):
+
+`msv70_bmw_e87_130i_0423ca` — 2625536B dump.
+
+- #927 / #928 sisters — same ORI, different stage1 files
+- EXACT anchors: 0x0423CA 50B (stock 6554 → 8192 +25%) + 0x053678 120B
+  (stock 14163 → 15705 +11%)
+
+**NEW DEF 2 — BMW E87 135i N54 Bosch MSD80 @ 0x070F3E 2MB** (2 pairs):
+
+`msd80_bmw_135i_n54_070f3e` — covers sw333711 `07611790 07611358`.
+
+- #932 (Bosch-labelled) + #933 (Siemens-labelled same file) — 2 pairs
+  at EXACT same anchor.
+- `0x070F3E 72B` BE 13067 → 59404 (+355% IQ release)
+- `0x0621AF 58B` BE 20851 → 50060-55919 (+140-168% torque lift)
+
+Note: pair #929 same sw333711 hits 0x06646E 72B (Δ=-0xAAD0) with SAME
+raw 13067 signature — anchor-variant logged as sub-cluster.
+
+**sw394079 E87 120D sister** (pairs #921/#922):
+- `O_71MJIC341A` + `O_71MJKC341A` both hit EXACT 0x06EEB8 15B +180%
+  + 0x078A06 8B -60%
+- 2 DDE BlockID labels, same file structure — 1-SW wire candidate
+  after 2nd SW confirmation.
+
+**sw389882 2MB variant** (pair #925):
+- `O_F1R947` 2MB — hits 0x0D3C10 85B + 0x0D35A0 24B with SAME raw 3538
+  as wired 2031616B def at Δ=+0x10000 shift. 2MB↔2031616B dump format
+  confirmed for sw389882.
+
+**E87 125i MSD80 petrol** (pair #926 sw? `MSD80_0049QK0MG70SMDU2S`):
+- 0x050910 16B +220% IQ release. Already covered by bmw_msd sig def.
+
+**E87 135i sw333711 single alt** (pair #929) — 0x06646E 72B sub-variant.
+**E87 135i sw772227** (pairs #930/#931) — different SW, emission cut.
+**E87 135i sw? 0x07590848 Siemens** (pair #934) — emission cut pattern
+similar to #930.
+
+**E87 2.0d 100kW sw507435** (pairs #935/#936) — 2 different tuner
+strategies on N47 engine:
+- #935 @ 0x150FA6/0x178850 large regions +55%
+- #936 @ 0x178972/0x17891E 17B mirror pair BE 3785/4105 → 33449/33801
+  +784%/+723% — more aggressive tune
+
+---
+
 ## BMW Pairs #905–920 — 2 NEW E87 120D EDC16 defs + single-SW observations
 
 **NEW DEF 1 — BMW E81-E87 120D sw381341 @ 0x0C3E60** (2 sister pairs):
