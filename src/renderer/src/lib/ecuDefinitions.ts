@@ -11648,6 +11648,45 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     ],
   },
 
+  // ── EDC16 BMW E83 3.0d 160.3kW — 0x0E0209 2031616B cluster ────────────────
+  //
+  // BMW E83 X3 3.0d (M57D30TU) 160.3 kW EDC16 2031616B. 2 SWs across
+  // 2 Bosch parts share EXACT anchor. Verified in pair_analysis_log.md BMW
+  // pairs: #1011 sw377760 0281013052 · #1013 sw379334 0281013253
+  //
+  // Map structure:
+  //   0x0E0209  15 B u16 BE — IQ release (stock 17122 → 35408, +107%)
+  {
+    id: 'edc16_bmw_e83_30d_0e0209',
+    name: 'Bosch EDC16 (BMW E83 X3 3.0d M57D30TU 160.3kW — 0281013052/0281013253 0x0E0209)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281013052', '0281013253', '377760', '379334'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E83 X3 3.0d M57D30TU 160.3kW (0281013052/0281013253 sw 377760/379334, 2005-2006)'],
+    checksumAlgo: 'bosch-crc32',
+    checksumOffset: 0x1F7FFC,
+    checksumLength: 4,
+    maps: [
+      {
+        id: 'edc16_bmw_e83_30d_0e0209_iq_release',
+        name: 'IQ Release 15B (E83 X3 3.0d 0281013052/0281013253)',
+        category: 'fuel',
+        desc: 'IQ release at 0x0E0209 (7 cells u16 BE = 15 B). 2 SWs EXACT anchor: stock 17122 → tuner consensus 35408 (+107%).',
+        signatures: [],
+        sigOffset: 0,
+        fixedOffset: 0x0E0209,
+        rows: 1, cols: 7, dtype: 'uint16', le: false,
+        factor: 1, offsetVal: 0, unit: 'raw',
+        skipCalSearch: true,
+        stage1: { multiplier: 1.0, addend: 0, clampMin: 33000 },
+        stage2: { multiplier: 1.0, addend: 0, clampMin: 37000 },
+        stage3: { multiplier: 1.0, addend: 0, clampMin: 41000 },
+        critical: true, showPreview: true,
+      },
+    ],
+  },
+
   // ── EDC16 BMW E81-E87 120D 120kW sw381341 — 0x0C3E60 2031616B cluster ───
   //
   // BMW E81-E87 120D (M47D20 2.0 TDI) 119.9 kW EDC16 2031616B (1984KB).
@@ -11724,9 +11763,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC16 (BMW E81-E87 120D 120kW — 0281012334/0281013501 sw389882 0x0C3C10)',
     manufacturer: 'Bosch',
     family: 'EDC16',
-    identStrings: ['0281012334', '0281013501', '389882'],
+    identStrings: ['0281012334', '0281013501', '0281013251', '389882'],
     fileSizeRange: [2031616, 2031616],
-    vehicles: ['BMW E81-E87 120D M47D20 119.9kW (0281012334/0281013501 sw 389882, 2005-2007)'],
+    vehicles: ['BMW E81-E87 120D M47D20 / E83 X3 2.0d 119.9kW (0281012334/0281013501/0281013251 sw 389882, 2005-2007)'],
     checksumAlgo: 'bosch-crc32',
     checksumOffset: 0x1F7FFC,
     checksumLength: 4,

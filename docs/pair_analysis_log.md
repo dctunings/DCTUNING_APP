@@ -3814,6 +3814,54 @@ identStrings. Will need to verify by loading a few in the app.
 **1322 ORI/Stage1 pairs** in BMW folder. Numbering BMW pairs as
 `BMW #N` separately from the Audi `Pair #N` numbers above.
 
+## BMW Pairs #1001–1016 — E83 3.0d NEW def + sw389882 cross-chassis extension
+
+**NEW DEF — BMW E83 X3 3.0d M57D30TU @ 0x0E0209 2031616B** (2 SWs, 2 parts):
+
+`edc16_bmw_e83_30d_0e0209` — 2031616B EDC16.
+
+- #1011 sw377760 `0281013052`
+- #1013 sw379334 `0281013253`
+
+Both hit EXACT `0x0E0209 15B` BE 17122 → 35408 (+107% IQ release).
+
+**sw389882 def EXTENDED** — +0281013251 part (pair #1016 E83 X3 2.0d):
+- Cross-chassis match: BMW E83 X3 2.0d uses same ORI as E87 120D
+- sw389882 + 0281013251 `07809360` 2031616B hits EXACT 0x0C3C10 85B
+
+Now covers 3 Bosch parts (0281012334 / 0281013501 / 0281013251) across
+E81-E87 + E83 X3 chassis.
+
+**Already-wired defs confirmed**:
+- #1001 sw396564 `O_73MPIB605A` 270336B → matches 116D 0x0151BC def ✓
+- #1002 sw396564 `08506281` 270336B → matches 116D 0x0151BC def ✓
+
+**Observations (no wire)**:
+- #1003 sw501612 `O_73S3IB082A` 2MB — 0x066FD4 23B same as #973 #950
+  (0281016069) sub-family
+- #1004 sw501614 `X_71S3ID051A` 2MB — 0x075F28 36B + 0x071888 200B;
+  SAME anchors as #986 sw399764 @ 0x075750/0x0710B0 — close but Δ=0x7D8
+  and Δ=0x838 shifts
+- #1005 sw379332 `0281013251` 2031616B — 0x0C4218 69B (similar to
+  sw381341 0x0C3E60 cluster but Δ=+0x3B8)
+- #1006 sw396560 `O_70MLHC232A` 2MB — 0x057B4E 18B + 0x07960C 287B
+  (different cluster pattern)
+- #1007 sw391389 270336B compact — 0x02E00A 13B + 0x017CE6 14B (same
+  pattern as #959/#961/#1000 0x017F32 family but Δ)
+- #1008 sw396560 270336B — 0x02EB46 12B +192% + 0x02EBD2 11B +161%
+- #1009 sw396560 2MB `O_70MLHC235A` — 0x057BA6 108B emission cut
+- #1010 sw361876 1015808B (992KB) `0281011121` — 0x0F1423/0x0F1437 11B
+  mirror pair stock 6665/7945 → 32009/36412 +380%/+358%. NEW E83 3.0d
+  150kW variant on E65 730D hardware (already wired).
+- #1012 sw361891 1015808B `0281011121` — 0x0E4F21 11B + 0x0E01D0 50B
+  (same 1015808B dump as E65 730D but different SW)
+- #1014 sw390002 `0281015129` 2031616B — 0x0E3001/0x0E3015 11B mirror
+  stock 21513/29193 → 52079/60015
+- #1015 sw370435 `0281011564` 1511680B E83 X3 2.0D 110kW — 0x1693C9/
+  0x169187 17B mirror pair stock 9416/10321 → 44360/45320 +371%/+339%
+
+---
+
 ## BMW Pairs #985–1000 — 2 NEW E87 2.0d defs (sw507453 emission + 270336B compact)
 
 **NEW DEF 1 — BMW E81-E87 2.0d N47 sw507453 84.6kW @ 0x0584B6 2MB** (3 pairs):
