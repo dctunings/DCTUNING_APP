@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { ECU_DEFINITIONS, ADDONS } from '../lib/ecuDefinitions'
-import type { EcuDef } from '../lib/ecuDefinitions'
+import type { EcuDef, MapDef, MapCategory, DataType } from '../lib/ecuDefinitions'
 import { detectEcu, detectEcuFromFilename, detectEcuFromCatalog, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, extractPartNumberFromBinary } from '../lib/binaryParser'
 import type { DetectedEcu, DetectedCatalogEcu, ExtractedMap, A2LValidationResult } from '../lib/binaryParser'
 import { buildRemap, buildFilename } from '../lib/remapEngine'
@@ -691,6 +691,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [cellAnchors, setCellAnchors] = useState<Record<string, Record<string, number>>>({})
   // Which map's Zone Editor panel is currently open (null = all closed)
   const [zoneEditorMapId, setZoneEditorMapId] = useState<string | null>(null)
+  // Advanced A2L section — which categories are expanded, and whether the whole section is open
+  const [advancedSectionOpen, setAdvancedSectionOpen] = useState(false)
+  const [advancedCatOpen, setAdvancedCatOpen] = useState<Record<string, boolean>>({})
 
   // Step 4 state
   const [remapResult, setRemapResult] = useState<RemapResult | null>(null)
@@ -1096,6 +1099,54 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       } catch (e) {
         // Scanner/classifier crashed — not fatal, just skip fallback
         console.warn('Scanner fallback failed:', e)
+      }
+    }
+
+    // ── A2L Extras: expose every A2L-validated map that isn't already in the
+    // main Stage-1 cards, so the user can tune beyond the 14 hardcoded maps.
+    // Each extra becomes an ExtractedMap with showPreview=false (doesn't appear
+    // in the main Preview grid) and stage1/2/3 multipliers all = 1 (no auto-
+    // modification). The Advanced A2L section renders them for read + optional
+    // edit. If the user touches one, existing customMultipliers / cellAnchors
+    // pick it up automatically at Build Remap time.
+    if (a2lValidation.length > 0) {
+      const mainOffsets = new Set<number>()
+      for (const em of maps) if (em.found && em.offset >= 0) mainOffsets.add(em.offset)
+      const validated = a2lValidation.filter(v => (v.status === 'valid' || v.status === 'uncertain') && !mainOffsets.has(v.map.fileOffset))
+      for (const v of validated) {
+        const a = v.map
+        const allowedCats: Record<string, MapCategory> = {
+          boost: 'boost', torque: 'torque', fuel: 'fuel', ignition: 'ignition',
+          limiter: 'limiter', egr: 'emission', dpf: 'emission',
+        }
+        const cat: MapCategory = allowedCats[(a.category ?? '').toLowerCase()] ?? 'misc'
+        const synthDef: MapDef = {
+          id:           `a2l_extra_${a.name}`,
+          name:         a.name,
+          category:     cat,
+          desc:         `A2L map · ${a.axisX?.label || ''} vs ${a.axisY?.label || ''} · ${a.rows}×${a.cols} ${a.dataType} · offset 0x${a.fileOffset.toString(16).toUpperCase()}`,
+          signatures:   [],
+          sigOffset:    0,
+          fixedOffset:  a.fileOffset,
+          rows:         a.rows,
+          cols:         a.cols,
+          dtype:        a.dataType as DataType,
+          le:           a.le,
+          factor:       a.factor || 1,
+          offsetVal:    a.physicalOffset || 0,
+          unit:         '',
+          stage1:       { multiplier: 1 },
+          stage2:       { multiplier: 1 },
+          stage3:       { multiplier: 1 },
+          critical:     false,
+          showPreview:  false,
+          // Keep extras out of signature/scanner fallback on future loads
+          skipCalSearch: true,
+        }
+        const result = extractMap(fileBuffer, synthDef)
+        if (result.found) {
+          maps.push({ ...result, source: 'a2l' as const })
+        }
       }
     }
 
@@ -2373,10 +2424,14 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           </span>
         )}
         {(() => {
-          const visibleFound = extractedMaps.filter(m => m.found && m.mapDef.showPreview).length
-          const visibleTotal = extractedMaps.filter(m => m.mapDef.showPreview).length
-          const totalFound = extractedMaps.filter(m => m.found).length
-          const totalAll = extractedMaps.length
+          // Main counts exclude A2L extras (a2l_extra_* prefix) since they aren't
+          // part of the curated Stage-N card set — they're available in the
+          // Advanced A2L section below but shouldn't be counted as "hidden background".
+          const mainMaps = extractedMaps.filter(m => !m.mapDef.id.startsWith('a2l_extra_'))
+          const visibleFound = mainMaps.filter(m => m.found && m.mapDef.showPreview).length
+          const visibleTotal = mainMaps.filter(m => m.mapDef.showPreview).length
+          const totalFound = mainMaps.filter(m => m.found).length
+          const totalAll = mainMaps.length
           const hiddenFound = totalFound - visibleFound
           return (
             <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
@@ -2798,6 +2853,142 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           )
         })}
       </div>
+
+      {/* ── Advanced A2L maps — everything the loaded A2L exposes that isn't ──
+           in the Stage-N curated cards. Grouped by category, collapsible.
+           Clicking a map opens it in the existing Zone Editor; any edits flow
+           through the same customMultipliers / cellAnchors pipeline, so the
+           Build Remap button writes them naturally without touching the
+           remap engine. Untouched extras default to 1× (no change).
+      */}
+      {(() => {
+        const extras = extractedMaps.filter(m => m.found && m.mapDef.id.startsWith('a2l_extra_'))
+        if (extras.length === 0) return null
+
+        // Group by category
+        const byCat: Record<string, typeof extras> = {}
+        for (const e of extras) {
+          const c = e.mapDef.category || 'misc'
+          if (!byCat[c]) byCat[c] = []
+          byCat[c].push(e)
+        }
+        // Stable category order
+        const catOrder: MapCategory[] = ['boost', 'fuel', 'torque', 'ignition', 'smoke', 'limiter', 'emission', 'misc']
+        const cats = catOrder.filter(c => byCat[c] && byCat[c].length > 0)
+
+        const totalEdited = extras.filter(e => customMultipliers[e.mapDef.id] !== undefined || (cellAnchors[e.mapDef.id] && Object.keys(cellAnchors[e.mapDef.id]).length > 0)).length
+
+        return (
+          <div style={{ marginBottom: 20, borderRadius: 10, background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <div
+              onClick={() => setAdvancedSectionOpen(!advancedSectionOpen)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', cursor: 'pointer', userSelect: 'none' }}
+            >
+              <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                {advancedSectionOpen ? '▼' : '▶'} A2L Maps (Advanced)
+              </span>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1 }}>
+                {extras.length} additional maps from loaded A2L — click any to tune beyond the Stage {stage} cards
+              </span>
+              {totalEdited > 0 && (
+                <span style={{ fontSize: 10, fontWeight: 800, color: '#22c55e', padding: '2px 8px', borderRadius: 4, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)' }}>
+                  {totalEdited} edited
+                </span>
+              )}
+            </div>
+
+            {advancedSectionOpen && (
+              <div style={{ padding: '0 16px 12px 16px', borderTop: '1px solid var(--border)' }}>
+                {cats.map(cat => {
+                  const list = byCat[cat]
+                  const editedInCat = list.filter(e => customMultipliers[e.mapDef.id] !== undefined || (cellAnchors[e.mapDef.id] && Object.keys(cellAnchors[e.mapDef.id]).length > 0)).length
+                  const open = advancedCatOpen[cat] ?? false
+                  return (
+                    <div key={cat} style={{ marginTop: 10 }}>
+                      <div
+                        onClick={() => setAdvancedCatOpen({ ...advancedCatOpen, [cat]: !open })}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', cursor: 'pointer', userSelect: 'none', background: 'rgba(0,0,0,0.18)', borderRadius: 6 }}
+                      >
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)' }}>
+                          {open ? '▼' : '▶'} {cat.toUpperCase()}
+                        </span>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1 }}>
+                          {list.length} maps
+                        </span>
+                        {editedInCat > 0 && (
+                          <span style={{ fontSize: 10, color: '#22c55e', fontWeight: 700 }}>{editedInCat} edited</span>
+                        )}
+                      </div>
+                      {open && (
+                        <div style={{ display: 'grid', gap: 4, marginTop: 6 }}>
+                          {list
+                            .slice()
+                            .sort((a, b) => a.mapDef.name.localeCompare(b.mapDef.name))
+                            .map(m => {
+                              const id = m.mapDef.id
+                              const isMapOpen = zoneEditorMapId === id
+                              const hasEdit = customMultipliers[id] !== undefined || (cellAnchors[id] && Object.keys(cellAnchors[id]).length > 0)
+                              const vals = m.data.flatMap(r => r)
+                              const vMin = vals.length ? Math.min(...vals) : 0
+                              const vMax = vals.length ? Math.max(...vals) : 0
+                              return (
+                                <div key={id} style={{
+                                  background: hasEdit ? 'rgba(34,197,94,0.04)' : 'rgba(255,255,255,0.02)',
+                                  border: `1px solid ${hasEdit ? 'rgba(34,197,94,0.25)' : 'rgba(255,255,255,0.05)'}`,
+                                  borderRadius: 6, padding: '6px 10px',
+                                }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <span style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--text-muted)', minWidth: 78 }}>
+                                      0x{m.offset.toString(16).toUpperCase().padStart(6, '0')}
+                                    </span>
+                                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                      {m.mapDef.name}
+                                    </span>
+                                    <span style={{ fontSize: 10, color: 'var(--text-muted)', minWidth: 50, textAlign: 'right' }}>
+                                      {m.mapDef.rows}×{m.mapDef.cols}
+                                    </span>
+                                    <span style={{ fontSize: 10, color: 'var(--text-muted)', minWidth: 110, textAlign: 'right', fontFamily: 'monospace' }}>
+                                      {vMin.toFixed(1)} – {vMax.toFixed(1)}
+                                    </span>
+                                    <button
+                                      className="btn-secondary"
+                                      style={{ fontSize: 10, padding: '2px 10px' }}
+                                      onClick={() => setZoneEditorMapId(isMapOpen ? null : id)}
+                                    >
+                                      {hasEdit ? '📐 Edited' : isMapOpen ? 'Close' : 'Edit'}
+                                    </button>
+                                  </div>
+                                  {isMapOpen && (
+                                    <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                                      <ZoneEditor
+                                        rows={m.mapDef.rows}
+                                        cols={m.mapDef.cols}
+                                        edits={cellAnchors[id] ?? {}}
+                                        stageMul={customMultipliers[id] ?? 1}
+                                        physData={m.data}
+                                        factor={m.mapDef.factor}
+                                        offsetVal={m.mapDef.offsetVal}
+                                        unit={m.mapDef.unit}
+                                        axisXLabel="X"
+                                        axisYLabel="Y"
+                                        onApply={(next) => setCellAnchors({ ...cellAnchors, [id]: next })}
+                                        onClearAll={() => { const c = { ...cellAnchors }; delete c[id]; setCellAnchors(c); const cm = { ...customMultipliers }; delete cm[id]; setCustomMultipliers(cm) }}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <button className="btn-secondary" onClick={() => setStep(2)}>Back</button>
