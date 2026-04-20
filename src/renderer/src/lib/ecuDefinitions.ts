@@ -949,7 +949,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     // EDC16 uses MPC561/MPC562 PowerPC — DAMOS symbol names embedded as ASCII in most variants.
     // Part numbers: 0281014xxx (transitional), 0281015xxx (main EDC16), 0281016xxx (late/EDC16+).
     // 1,037 real-world DRT files analysed — top DAMOS names confirmed at 70–91% occurrence.
-    identStrings: ['EDC16', 'EDC 16', '0281014', '0281015', '0281016', 'EDC16C', 'EDC16U', 'EDC16CP', 'EDC16C3', 'EDC16C8', 'EDC16C34', 'EDC16U31'],
+    // "BOSCHFCMCLCFCMDIAP" + "FCMCLCFCMDIAP" are the Bosch diagnostic/calibration
+    // header marker embedded in EDC16 PowerPC binaries — appears in virtually ALL
+    // VW/Audi/Seat/Skoda 1.9/2.0 TDI PD EDC16 dumps, even when the literal text
+    // "EDC16" is not present in flash (e.g. sw 389289 Golf test binary).
+    // "03G906021QJ" is the EDC16U34 PD Golf part number (sw 389289 — primary test binary).
+    identStrings: ['EDC16', 'EDC 16', '0281014', '0281015', '0281016', 'EDC16C', 'EDC16U', 'EDC16CP', 'EDC16C3', 'EDC16C8', 'EDC16C34', 'EDC16U31', 'EDC16U34', 'BOSCHFCMCLCFCMDIAP', 'FCMCLCFCMDIAP', '03G906021QJ'],
     fileSizeRange: [524288, 4194304],   // 512KB – 4MB (EDC16+ variants e.g. Q7 4.2 TDI can be 2MB+)
     vehicles: ['VW Golf Mk4/5 1.9/2.0 TDI', 'Audi A3/A4 1.9/2.0 TDI', 'VW Passat 2.0 TDI', 'Seat Leon 1.9/2.0 TDI', 'Skoda Octavia 1.9/2.0 TDI', 'Audi A6/Q7 3.0 TDI'],
     // CHECKSUM: EDC16 uses CRC32 over the calibration block. Unlike EDC15's additive algorithm,
@@ -3315,7 +3320,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     name: 'Bosch EDC16 PD (VW Touran 1.9 TDI PD 77kW — 03G906021AB 0x05AA99 triple-mirror)',
     manufacturer: 'Bosch',
     family: 'EDC16',
-    identStrings: ['03G906021AB', '03G906021RN', '389840', '391834'],
+    // SW-only identStrings. Dropped '03G906021AB' / '03G906021RN' because they
+    // appear as predecessor-reference strings in many unrelated VW 1.9 TDI PD
+    // binaries (e.g. Golf sw 389289 contains 03G906021AB literal text in its
+    // Bosch metadata even though it's a different ECU). The 389840/391834 SW
+    // numbers are unique to this specific Touran AB/RN variant.
+    identStrings: ['389840', '391834'],
     fileSizeRange: [524288, 524288],
     vehicles: ['VW Touran 1.9/2.0 TDI PD 77-103kW (03G906021AB/RN sw 389840/391834, 2002-2007)'],
     checksumAlgo: 'bosch-crc32',
