@@ -84,7 +84,12 @@ export function detectEcu(buffer: ArrayBuffer): DetectedEcu | null {
     }
   }
 
-  return bestScore > 0.15 ? best : null
+  // Threshold raised 0.15 → 0.50. Below that, the match is a weak ident-string
+  // collision (e.g. "EDC16" substring + size-OK = 0.23) against a very specific
+  // variant def — worse than saying "not recognised" because it claims confidence
+  // the app doesn't have. At <50% we fall back to the catalog detector + user
+  // override, which is honest about uncertainty.
+  return bestScore >= 0.50 ? best : null
 }
 
 // ─── Part number extraction from binary content ───────────────────────────────
