@@ -4,31 +4,49 @@ import type { ActiveVehicle } from '../lib/vehicleContext'
 
 interface Props { connected: boolean; activeVehicle: ActiveVehicle | null }
 
-const ECU_VENDORS = ['Bosch (ME7, MED17, EDC17)', 'Siemens / Continental', 'Delphi / Aptiv', 'Marelli / Magneti', 'Denso', 'Hitachi', 'Mitsubishi Electric']
+// VAG-only ECU catalog (VW / Audi / Skoda / Seat).
+const ECU_VENDORS = ['Bosch (ME7, MED9, MED17, EDC16, EDC17)', 'Siemens / Continental']
 
 const ECU_MODELS: Record<string, string[]> = {
-  'Bosch (ME7, MED17, EDC17)': ['ME7.1 (VW/Audi 1.8T)', 'ME7.4.4 (VW/Audi 1.8T)', 'ME7.5.10 (VW/Audi 2.0T)', 'MED9.1 (Audi/VW FSI)', 'MED9.5.10 (Audi/VW TFSI)', 'MED17.1 (various)', 'MED17.5.21 (VW Golf VII)', 'EDC16U1 (VW/Audi TDI)', 'EDC16U31 (VW/Audi TDI)', 'EDC16C3 (VW/Audi TDI)', 'EDC17C46 (VAG TDI)', 'EDC17CP14 (BMW Diesel)'],
-  'Siemens / Continental': ['SID803 (Peugeot/Citroen)', 'SID206 (Peugeot/Citroen)', 'PPD1.1 (VW TDI)', 'PPD1.2 (VW TDI)'],
-  'Delphi / Aptiv': ['DCM3.5 (Renault/Nissan)', 'DCM6.2 (Opel/Vauxhall)'],
-  'Marelli / Magneti': ['MJD8 (Fiat/Alfa)', 'MJD9 (Fiat/Alfa)'],
-  'Denso': ['275800 (Toyota/Subaru)', '175800 (Toyota/Subaru)'],
-  'Hitachi': ['SH72531 (Nissan)'],
-  'Mitsubishi Electric': ['E6T (Mitsubishi/Hyundai)'],
+  'Bosch (ME7, MED9, MED17, EDC16, EDC17)': [
+    'ME7.1 (VW/Audi 1.8T)',
+    'ME7.4.4 (VW/Audi 1.8T)',
+    'ME7.5.10 (VW/Audi 2.0T)',
+    'MED9.1 (Audi/VW FSI)',
+    'MED9.5.10 (Audi/VW TFSI)',
+    'MED17.1 (VAG)',
+    'MED17.5.21 (VW Golf VII)',
+    'EDC16U1 (VW/Audi TDI)',
+    'EDC16U31 (VW/Audi TDI)',
+    'EDC16U34 (VW/Audi TDI)',
+    'EDC16C3 (VW/Audi TDI)',
+    'EDC17C46 (VAG TDI)',
+    'EDC17C64 (VAG TDI)',
+  ],
+  'Siemens / Continental': [
+    'SIMOS PCR2.1 (VAG 1.6 TDI)',
+    'PPD1.1 (VW TDI)',
+    'PPD1.2 (VW TDI)',
+  ],
 }
 
 const PROCESSORS: Record<string, string> = {
-  'ME7.1 (VW/Audi 1.8T)': 'Infineon C167 / Motorola MPC5xx',
-  'ME7.4.4 (VW/Audi 1.8T)': 'Infineon C167',
-  'ME7.5.10 (VW/Audi 2.0T)': 'Infineon C167',
-  'MED9.1 (Audi/VW FSI)': 'Infineon TriCore TC1762',
-  'MED9.5.10 (Audi/VW TFSI)': 'Infineon TriCore TC1762',
-  'MED17.1 (various)': 'Infineon TriCore TC1797',
-  'MED17.5.21 (VW Golf VII)': 'Infineon TriCore TC1797',
-  'EDC16U1 (VW/Audi TDI)': 'Infineon C167 / MPC5xx',
-  'EDC16U31 (VW/Audi TDI)': 'Infineon C167',
-  'EDC16C3 (VW/Audi TDI)': 'Infineon C167',
-  'EDC17C46 (VAG TDI)': 'Infineon TriCore TC1796',
-  'EDC17CP14 (BMW Diesel)': 'Infineon TriCore TC1796',
+  'ME7.1 (VW/Audi 1.8T)':       'Infineon C167 / Motorola MPC5xx',
+  'ME7.4.4 (VW/Audi 1.8T)':     'Infineon C167',
+  'ME7.5.10 (VW/Audi 2.0T)':    'Infineon C167',
+  'MED9.1 (Audi/VW FSI)':       'Infineon TriCore TC1762',
+  'MED9.5.10 (Audi/VW TFSI)':   'Infineon TriCore TC1762',
+  'MED17.1 (VAG)':              'Infineon TriCore TC1797',
+  'MED17.5.21 (VW Golf VII)':   'Infineon TriCore TC1797',
+  'EDC16U1 (VW/Audi TDI)':      'Infineon C167 / MPC5xx',
+  'EDC16U31 (VW/Audi TDI)':     'Infineon C167',
+  'EDC16U34 (VW/Audi TDI)':     'Infineon C167',
+  'EDC16C3 (VW/Audi TDI)':      'Infineon C167',
+  'EDC17C46 (VAG TDI)':         'Infineon TriCore TC1796',
+  'EDC17C64 (VAG TDI)':         'Infineon TriCore TC1797',
+  'SIMOS PCR2.1 (VAG 1.6 TDI)': 'Infineon TriCore TC1796',
+  'PPD1.1 (VW TDI)':            'Infineon TriCore TC1766',
+  'PPD1.2 (VW TDI)':            'Infineon TriCore TC1766',
 }
 
 const PROTOCOLS = ['CAN (ISO 15765)', 'K-Line (ISO 9141)', 'K-Line (ISO 14230 KWP2000)', 'J1850 PWM', 'J1850 VPW']

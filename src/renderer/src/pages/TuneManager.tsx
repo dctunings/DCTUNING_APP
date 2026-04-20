@@ -444,7 +444,7 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
             <input
               value={libMake}
               onChange={(e) => { setLibMake(e.target.value); setLibPage(0) }}
-              placeholder="Make (e.g. BMW)"
+              placeholder="Make (VW / Audi / Skoda / Seat)"
               style={{ width: 130, height: 34 }}
             />
             <input

@@ -98,8 +98,8 @@ const TYPE_COLORS: Record<string, string> = {
 const DIAGRAMS = [
   { id: 'obd2-pinout',   label: 'OBD2 Port Pinout',         category: 'OBD2',    desc: '16-pin ALDL/OBD2 connector (SAE J1962)' },
   { id: 'can-bus',       label: 'CAN Bus Nodes & Pinout',    category: 'CAN',     desc: 'ISO 15765-4 CAN bus topology' },
-  { id: 'bosch-me7',     label: 'Bosch ME7 Connector',       category: 'Bosch',   desc: 'ME7.x petrol ECU pin reference (VAG/BMW)' },
-  { id: 'bosch-edc17',   label: 'Bosch EDC17 Connector',     category: 'Bosch',   desc: 'EDC17 diesel ECU pin reference (VAG/BMW/Ford)' },
+  { id: 'bosch-me7',     label: 'Bosch ME7 Connector',       category: 'Bosch',   desc: 'ME7.x petrol ECU pin reference (VAG)' },
+  { id: 'bosch-edc17',   label: 'Bosch EDC17 Connector',     category: 'Bosch',   desc: 'EDC17 diesel ECU pin reference (VAG)' },
   { id: 'j2534-wiring',  label: 'J2534 Device Wiring',       category: 'J2534',   desc: 'PassThru interface OBD2 cable wiring' },
 ]
 
@@ -298,7 +298,7 @@ export default function WiringDiagrams({ activeVehicle }: { activeVehicle: Activ
       case 'bosch-edc17':  return (
         <div>
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16, color: 'var(--accent)' }}>Bosch EDC17 — ECU Pin Reference (Diesel)</div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>Used in: VW/Audi TDI 2.0 CR (2008+), BMW 320d/520d, Ford Focus/Mondeo TDCi, Seat/Skoda diesel (EDC17C46/C64/C74)</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>Used in: VW/Audi TDI 2.0 CR (2008+), Seat/Skoda diesel (EDC17C46/C64/C74)</div>
           <PinTable pins={EDC17_PINS} />
         </div>
       )

@@ -293,7 +293,7 @@ export default function Home({ setPage }: Props) {
             { name: 'K-TAG',          sub: 'Alientech · Pro',       badge: 'Files',  bc: '#60a5fa' },
             { name: 'Flex',           sub: 'Magic Motorsport',      badge: 'Files',  bc: '#60a5fa' },
             { name: 'Autotuner',       sub: 'J2534 / Files',         badge: 'J2534',  bc: '#a78bfa' },
-            { name: 'Tactrix OP 2.0', sub: 'Subaru / Toyota',       badge: 'J2534',  bc: '#a78bfa' },
+            { name: 'Tactrix OP 2.0', sub: 'Generic J2534',         badge: 'J2534',  bc: '#a78bfa' },
             { name: 'SM2 Pro',        sub: 'Scanmatik · €80–130',   badge: 'J2534',  bc: '#a78bfa' },
             { name: 'PCMTuner',       sub: 'J2534 flash suite',     badge: 'J2534',  bc: '#a78bfa' },
             { name: 'KT200 II',       sub: 'Tricore BSL',           badge: 'Files',  bc: '#60a5fa' },
