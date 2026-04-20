@@ -3,11 +3,9 @@ import VehicleStrip from '../components/VehicleStrip'
 import type { ActiveVehicle } from '../lib/vehicleContext'
 import type { EcuFileState } from '../App'
 import type { A2LMapDef } from '../lib/a2lParser'
-import type { DRTConvertedMap } from '../lib/drtParser'
 import type { Page } from '../App'
-import { readMapFromCandidate, readUnmatchedCandidate, matchUnknownsByDNA, generateCandidateDNA, matchByDNA, guessMapType } from '../lib/mapClassifier'
-import type { ClassifiedCandidate, MapGridData, AIMatch } from '../lib/mapClassifier'
-import { ECU_DEFINITIONS } from '../lib/ecuDefinitions'
+import { readMapFromCandidate, readUnmatchedCandidate, matchUnknownsByDNA, guessMapType } from '../lib/mapClassifier'
+import type { ClassifiedCandidate, AIMatch } from '../lib/mapClassifier'
 import { findAllLimiters, applyPopcorn, removePopcorn, applySmokeOnLaunch, removeSmokeOnLaunch, writeLimiterValue } from '../lib/featureProcessor'
 import type { FoundLimiter, FeatureResult } from '../lib/featureProcessor'
 import { extractAllMaps } from '../lib/binaryParser'
@@ -21,8 +19,9 @@ interface Props {
 
 type Tab = 'fuel' | 'timing' | 'boost' | 'limiters' | 'addons'
 
-// ─── Unified map type (A2L and DRT share same shape) ─────────────────────────
-type AnyMap = A2LMapDef | DRTConvertedMap
+// Alias kept for backward-compat with the readGrid/writeGridToBuffer helpers.
+// After the DRT removal the app is A2L-only for definition files.
+type AnyMap = A2LMapDef
 
 // ─── Binary read/write helpers ────────────────────────────────────────────────
 function clamp(v: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, v)) }
@@ -478,7 +477,7 @@ export default function Performance({ activeVehicle, ecuFile, setPage }: Props) 
   // ── Combine A2L + DRT maps ─────────────────────────────────────────────────
   const allMaps: AnyMap[] = useMemo(() => {
     if (!ecuFile) return []
-    return [...ecuFile.a2lMaps, ...ecuFile.drtMaps]
+    return [...ecuFile.a2lMaps]
   }, [ecuFile])
 
   // ── Find best map per category ─────────────────────────────────────────────

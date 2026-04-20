@@ -1,0 +1,37 @@
+//--------------------------------------------------------------------------------------------
+// You can use this to mass-delete versions that occur twice by name with in project.
+// WinOLS will only compare the version name - not the hexdump values!
+// For security reasons only duplicate that match the given name(s) will be detected.
+// You might want to remove duplicates of any kind and thus enter only a * into one line,
+// but keep in mind that this would also delete all "Imported version" or "version 1"
+// 'duplicates' and you probably don't want that.
+//
+// Lines STARTING with "//" are comments and thus ignored.
+// If the "//" in later in the line, it's considered normal characters and not a comment!
+//
+// WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!
+// WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!
+// WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!
+//
+// Be very careful with this function, it can cause a lot damage if used wrong.
+// There's no "undo". You are responsible for having a backup before using this function.
+// Keep in mind that probably don't want to delete some duplicates. Like "Imported version".
+// 
+//
+// Format:
+//   badNameDeleteThisIfDuplicate1
+//   badNameDeleteThisIfDuplicate2
+//
+//   // Wildcards are allowed - be very careful with this!
+//   badNameDeleteThisIfDuplicateMany*
+//
+// If multiple lines match, WinOLS will delete all
+//--------------------------------------------------------------------------------------------
+
+// Start editing here:
+
+badNameDeleteThisIfDuplicate1
+badNameDeleteThisIfDuplicate2
+
+// Wildcards are allowed - be very careful with this!
+badNameDeleteThisIfDuplicateMany*

@@ -1,0 +1,39 @@
+
+19/04/2026 (23:05:14) [9A10] Starting WinOLS 5.80.00 CommandLine: (Windows 10, Version 2009, Build 19045.6466, Redist:Yes Update0:No Update3:No, Account:damoc:lower, ComputerName:DESKTOP-V27H2AM, locale:.
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v808.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v807.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v806.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v805.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v804.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v803.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v802.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v801.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v800.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v799.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v798.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v797.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v796.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v795.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v794.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v793.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v792.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v791.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v790.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1000: C:\Users\damoc\AppData\Roaming\Evc\WinOLS.64Bit\ols.v789.cfg
+19/04/2026 (23:05:15) [9A10] Config load problem 1003
+19/04/2026 (23:05:51) [9A10] MessageBox: This WinOLS-Version is obsolete and some functions were deactivated. Please visit evc.de for a current version. [MSG2581] => OK
+19/04/2026 (23:05:55) [9A10] Main window received close command.
+19/04/2026 (23:05:55) [9A10] WinOLS ends 0a.
+19/04/2026 (23:05:55) [9A10] WinOLS ends 0b.
+19/04/2026 (23:05:55) [9A10] WinOLS ends 0a.
+19/04/2026 (23:05:55) [9A10] WinOLS ends 0b.
+19/04/2026 (23:05:55) [9A10] WinOLS ends 1/0.
+19/04/2026 (23:05:55) [9A10] WinOLS ends 2.
+19/04/2026 (23:05:55) [9A10] WinOLS ends 3a.
+19/04/2026 (23:05:55) [9A10] WinOLS ends 3b.
+19/04/2026 (23:05:55) [9A10] WinOLS ends 4.
+19/04/2026 (23:05:55) [9A10] WinOLS ends 5.
+19/04/2026 (23:05:55) [9A10] WinOLS ends 6.
+19/04/2026 (23:05:55) [9A10] WinOLS ends 7.
+19/04/2026 (23:05:56) [9A10] WinOLS ends 8.

@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <title>The dialog Create scripts (Menu Find)</title>
+   <meta name="generator" content="Help & Manual">
+   <meta name="keywords" content="Create Scripts,Winolsskript">
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <link type="text/css" href="default.css" rel="stylesheet">
+   <link type="text/css" href="custom.css" rel="stylesheet">
+   <script type="text/javascript" src="nsh.js"></script>
+   <script type="text/javascript" src="tablesort.js"></script>
+   
+<!-- non-scrolling headers for CHM and browser-based help, local styles-->
+<style TYPE="text/css" media="screen"> 
+   <!-- 
+   body {    
+      margin:0; 
+      padding:0; 
+      overflow: auto; 
+      background: #FFFFFF; 
+   } 
+   #idheader { 
+      width:100%; 
+      height:auto; 
+      padding: 0; 
+      margin: 0; 
+} 
+    #idheaderbg  {
+    background: #649CCC; 
+}
+   -->
+   </style>
+   
+<style TYPE="text/css" MEDIA="print">
+<!--
+/* Hide navigation links and add space between header
+     and text in the printed version. Not valid for eBooks. */
+#idnav { display:none;	 }
+.topichead { padding: 5px 5px 20px 5px; }
+-->
+</style>   
+</head>
+<body>
+<!--ZOOMSTOP-->
+
+<div id="idheader">
+<div id="idheaderbg">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" 
+       style="margin: 0px; color: #649CCC; background: url(header_bg.jpg);">
+
+  <tr valign="bottom">
+    <td align="left" valign="bottom" class="topichead" style="padding:10px">
+   <p class="crumbs" id="idnav" style="color:#000080"><b>Navigation:</b>&nbsp;
+   
+   <A HREF="Main_index.htm">Start page</A> > <a href="menu_suchen.htm">Commands of the menu Find</a> &gt; <a href="hid_skript_edit.htm">The command Scripts (Menu Find)</a>&nbsp;&gt;</p>
+   <p class="p_Heading1"><span class="f_Heading1">The dialog Create scripts (Menu Find)</span></p>
+
+    </td>
+    <td align="right" width="120" valign="middle" class="topichead" id="idnav" style="padding:10px">
+    <a href="javascript: print();"
+    		onmouseover="document.images.prntr.src='print1.gif'" 
+        onmouseout="document.images.prntr.src='print2.gif'"
+        ><img name="prntr" border="0" alt="Print" title="Drucken" src="print2.gif"
+        ></a>
+     <a href="hid_skript_edit.htm"
+        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
+        onmouseout="document.images.prev.src='btn_prev_n.gif'"
+        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
+        ></a><a href="hid_skript_edit.htm"
+        onmouseover="document.images.main.src='btn_home_h.gif'" 
+        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Up"
+        ></a><a href="menu_sonstiges.htm"
+        onmouseover="document.images.next.src='btn_next_h.gif'" 
+        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
+        ></a>
+    </td>
+  </tr>
+  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
+</table>
+</div>
+
+<!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
+  
+
+</div>  
+
+
+
+<div id="idcontent"><div id="innerdiv" style="padding:10px"> 
+<!--ZOOMRESTART-->
+<p><img src="scriptcreatee.png" width="609" height="607" border="0" alt=""></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">This dialog is the recommended way to create new scripts. The bases are always the changes in the current project. All you need to do is to select which changes you would like to export. Simply select the maps or data areas containing the changes. Data areas are less secure than maps because WinOLS has less information. </span><span class="f_WinOLS" style="font-weight: bold;">So, if possible, register maps that cover data areas.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS" style="font-weight: bold;">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS" style="font-weight: bold;">Data areas that do not contain at least 2 different byte values in the original version, are not listed for security reasons.</span><span class="f_WinOLS"> You can use the &quot;make larger&quot; checkbox to work around this. WinOLS will then increase the size of the data areas until a safe identification is possible.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">For maps you have the option the use the map id instead of the values to identify the map. This requires that the map has the id field filled in and that it already exists (with the same id) in the target project.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">If possible you should always restrict the script’s applicability as much as possible to avoid misuse and increase comfort. This is done be requiring entire blocks / maps to be recognized. Furthermore you may require certain project properties.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">In addition you may define how far addresses can be moved from their origin and how much the values may differ.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">When saving, you should always choose a long, descriptive filename since this name will later appear in the script list. Furthermore you should always store scripts in the WinOLS script directory, because they won’t appear in the script list otherwise.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">You can find more information about scripts in the <a href="scripts.htm">respective chapter</a>.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS" style="font-weight: bold;">Shortcuts</span></p>
+<p class="p_WinOLS"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="f_WinOLS">Mouse: &nbsp; &nbsp; &nbsp; &nbsp;-</span></p>
+<p class="p_WinOLS"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="f_WinOLS">Keyboard: &nbsp; &nbsp; &nbsp; &nbsp;-</span></p>
+
+<!--ZOOMSTOP-->
+
+</div></div>
+<script type="text/javascript"> 
+<!-- 
+var lastSlashPos = document.URL.lastIndexOf("/") >
+document.URL.lastIndexOf("\\") ? document.URL.lastIndexOf("/") :
+document.URL.lastIndexOf("\\");
+if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4
+).toLowerCase() != "~hh" )
+{
+    nsrInit();
+}
+--> 
+</script> 
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <title>Basics</title>
+   <meta name="generator" content="Help & Manual">
+   <meta name="keywords" content="">
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <link type="text/css" href="default.css" rel="stylesheet">
+   <link type="text/css" href="custom.css" rel="stylesheet">
+   <script type="text/javascript" src="nsh.js"></script>
+   <script type="text/javascript" src="tablesort.js"></script>
+   
+<!-- non-scrolling headers for CHM and browser-based help, local styles-->
+<style TYPE="text/css" media="screen"> 
+   <!-- 
+   body {    
+      margin:0; 
+      padding:0; 
+      overflow: auto; 
+      background: #FFFFFF; 
+   } 
+   #idheader { 
+      width:100%; 
+      height:auto; 
+      padding: 0; 
+      margin: 0; 
+} 
+    #idheaderbg  {
+    background: #649CCC; 
+}
+   -->
+   </style>
+   
+<style TYPE="text/css" MEDIA="print">
+<!--
+/* Hide navigation links and add space between header
+     and text in the printed version. Not valid for eBooks. */
+#idnav { display:none;	 }
+.topichead { padding: 5px 5px 20px 5px; }
+-->
+</style>   
+</head>
+<body>
+<!--ZOOMSTOP-->
+
+<div id="idheader">
+<div id="idheaderbg">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" 
+       style="margin: 0px; color: #649CCC; background: url(header_bg.jpg);">
+
+  <tr valign="bottom">
+    <td align="left" valign="bottom" class="topichead" style="padding:10px">
+   <p class="crumbs" id="idnav" style="color:#000080"><b>Navigation:</b>&nbsp;
+   
+   <A HREF="Main_index.htm">Start page</A> > <a href="advanced_topics.htm">Advanced topics</a> &gt; <a href="zusaetzliche_dateiformate.htm">Additional file formats</a>&nbsp;&gt;</p>
+   <p class="p_Heading1"><span class="f_Heading1">Basics</span></p>
+
+    </td>
+    <td align="right" width="120" valign="middle" class="topichead" id="idnav" style="padding:10px">
+    <a href="javascript: print();"
+    		onmouseover="document.images.prntr.src='print1.gif'" 
+        onmouseout="document.images.prntr.src='print2.gif'"
+        ><img name="prntr" border="0" alt="Print" title="Drucken" src="print2.gif"
+        ></a>
+     <a href="zusaetzliche_dateiformate.htm"
+        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
+        onmouseout="document.images.prev.src='btn_prev_n.gif'"
+        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
+        ></a><a href="zusaetzliche_dateiformate.htm"
+        onmouseover="document.images.main.src='btn_home_h.gif'" 
+        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Up"
+        ></a><a href="beispiel.htm"
+        onmouseover="document.images.next.src='btn_next_h.gif'" 
+        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
+        ></a>
+    </td>
+  </tr>
+  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
+</table>
+</div>
+
+<!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
+  
+
+</div>  
+
+
+
+<div id="idcontent"><div id="innerdiv" style="padding:10px"> 
+<!--ZOOMRESTART-->
+<p><span style="font-size: 12pt;">To integrate your own External Converter into WinoLS, you need an executable windows program which performs the conversion between your file format and an unpacked EcuX file in at least one direction. To indicate success the program must return the error code 0. If it returns any other value, WinOLS will display the program's STDOUT as error message.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">To allow WinOLS to find you program, you need to create the following registry-entries (all of the type &quot;string&quot;). If you want to give your program to third parties, it's recommended to create an installer for this:</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table cellspacing="0" cellpadding="0" border="0" style="border: none; border-spacing:0px;">
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="419" style="width:419px;"><p><span style="font-size: 12pt; font-style: italic;">HKCU\Software\EVC\WinOLS\Importer\Company\Name</span></p>
+</td>
+<td valign="top" width="1037" style="width:1037px;"><p><span style="font-size: 12pt;">Name of the file format</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="419" style="width:419px;"><p><span style="font-size: 12pt; font-style: italic;">HKCU\Software\EVC\WinOLS\Importer\Company\Author</span></p>
+</td>
+<td valign="top" width="1037" style="width:1037px;"><p><span style="font-size: 12pt;">Description of the author / company, perhaps with URL</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="419" style="width:419px;"><p><span style="font-size: 12pt; font-style: italic;">HKCU\Software\EVC\WinOLS\Importer\Company\Suffix</span></p>
+</td>
+<td valign="top" width="1037" style="width:1037px;"><p><span style="font-size: 12pt;">A list of file suffixes (without star or dot, separated by colons), which the converter can process. The first suffix in the list is the default-suffix during export.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="419" style="width:419px;"><p><span style="font-size: 12pt; font-style: italic;">HKCU\Software\EVC\WinOLS\Importer\Company\Import</span></p>
+</td>
+<td valign="top" width="1037" style="width:1037px;"><p><span style="font-size: 12pt;">Commandline which is run during import.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="419" style="width:419px;"><p><span style="font-size: 12pt; font-style: italic;">HKCU\Software\EVC\WinOLS\Importer\Company\Export</span></p>
+</td>
+<td valign="top" width="1037" style="width:1037px;"><p><span style="font-size: 12pt;">Commandline which is run during export.</span></p>
+</td>
+</tr>
+</table>
+</div>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">Please replace </span><span style="font-size: 12pt; font-style: italic;">Company </span><span style="font-size: 12pt;">with your company name. If your converter supports only one direction (e.g. only import), you can simply leave the registry key for the other direction empty.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">A command line should include the placeholders %1 and %2. They will be replaced with source and target. Example:</span></p>
+<p><span style="font-size: 12pt; font-style: italic;">&quot;C:\Program Files (x86)\Acme\ExternalConvertSample\converter_export.bat&quot; &quot;%1&quot; &quot;%2&quot;</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">Import:</span></p>
+<p><span style="font-size: 12pt;"> %1 is the path+filename of the file the user wants to import into WinOLS..</span></p>
+<p><span style="font-size: 12pt;"> %2 is a path (without trailing backslash) where WinOLS expects the files that would normally be compressed in an EcuX files. It's up to your converter program to create these files.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">Export:</span></p>
+<p><span style="font-size: 12pt;"> %1 is a path (without trailing backslash) where WinOLS stores the files that would normally be compressed in an EcuX files.</span></p>
+<p><span style="font-size: 12pt;"> %2 is the path+filename of the file the user wants to have. It's up to your converter program to create this file.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">EcuX:</span></p>
+<p><span style="font-size: 12pt;">Information about the EcuX file format can be found at <a href="https://ecux.evc.de" target="_blank" class="weblink">ecux.evc.de</a>. Normally EcuX files are zip files containing various other (contents.ini and binary file(s)). The zip compression is omitted in the External Converters and the files are expected / stored uncompressed in the above path.</span></p>
+
+<!--ZOOMSTOP-->
+
+</div></div>
+<script type="text/javascript"> 
+<!-- 
+var lastSlashPos = document.URL.lastIndexOf("/") >
+document.URL.lastIndexOf("\\") ? document.URL.lastIndexOf("/") :
+document.URL.lastIndexOf("\\");
+if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4
+).toLowerCase() != "~hh" )
+{
+    nsrInit();
+}
+--> 
+</script> 
+</body>
+</html>

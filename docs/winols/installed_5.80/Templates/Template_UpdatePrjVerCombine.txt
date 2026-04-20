@@ -1,0 +1,25 @@
+//--------------------------------------------------------------------------------------------
+// You can use this to automatically create version combinations inside a project.
+//
+// Lines STARTING with "//" are comments and thus ignored.
+// If the "//" is later in the line, it's considered normal characters and not a comment!
+//
+// Format:
+//   version1+feature1
+//   version1+feature2
+//   version2+feature1+feature2
+//
+// WinOLS will check for each line if such a version already exists. If not, it will look
+// for versions with the parts (like "version1" and "feature1") as exact name. If it finds
+// all of them, WinOLS will use AutoUpdate (see help file) to create a new version in the
+// same project that combines the first source version with all changes INSIDE MAPS from
+// other versions in that line. You can allow changes OUTSIDE OF MAPS, too, but there's
+// a risk of conflict. (Imagine 2 versions changing different bytes within the same float.)
+//
+// This function works only inside one project. It never takes data from another project.
+//--------------------------------------------------------------------------------------------
+
+// Start editing here:
+version1+feature1
+version1+feature2
+version2+feature1+feature2

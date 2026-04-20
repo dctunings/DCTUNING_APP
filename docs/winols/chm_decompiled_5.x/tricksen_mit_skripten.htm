@@ -1,0 +1,144 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <title>Trickery with scripts</title>
+   <meta name="generator" content="Help & Manual">
+   <meta name="keywords" content="">
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <link type="text/css" href="default.css" rel="stylesheet">
+   <link type="text/css" href="custom.css" rel="stylesheet">
+   <script type="text/javascript" src="nsh.js"></script>
+   <script type="text/javascript" src="tablesort.js"></script>
+   
+<!-- non-scrolling headers for CHM and browser-based help, local styles-->
+<style TYPE="text/css" media="screen"> 
+   <!-- 
+   body {    
+      margin:0; 
+      padding:0; 
+      overflow: auto; 
+      background: #FFFFFF; 
+   } 
+   #idheader { 
+      width:100%; 
+      height:auto; 
+      padding: 0; 
+      margin: 0; 
+} 
+    #idheaderbg  {
+    background: #649CCC; 
+}
+   -->
+   </style>
+   
+<style TYPE="text/css" MEDIA="print">
+<!--
+/* Hide navigation links and add space between header
+     and text in the printed version. Not valid for eBooks. */
+#idnav { display:none;	 }
+.topichead { padding: 5px 5px 20px 5px; }
+-->
+</style>   
+</head>
+<body>
+<!--ZOOMSTOP-->
+
+<div id="idheader">
+<div id="idheaderbg">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" 
+       style="margin: 0px; color: #649CCC; background: url(header_bg.jpg);">
+
+  <tr valign="bottom">
+    <td align="left" valign="bottom" class="topichead" style="padding:10px">
+   <p class="crumbs" id="idnav" style="color:#000080"><b>Navigation:</b>&nbsp;
+   
+   <A HREF="Main_index.htm">Start page</A> > <a href="advanced_topics.htm">Advanced topics</a> &gt; <a href="scripts.htm">Scripts</a>&nbsp;&gt;</p>
+   <p class="p_Heading1"><span class="f_Heading1">Trickery with scripts</span></p>
+
+    </td>
+    <td align="right" width="120" valign="middle" class="topichead" id="idnav" style="padding:10px">
+    <a href="javascript: print();"
+    		onmouseover="document.images.prntr.src='print1.gif'" 
+        onmouseout="document.images.prntr.src='print2.gif'"
+        ><img name="prntr" border="0" alt="Print" title="Drucken" src="print2.gif"
+        ></a>
+     <a href="importing_with_scripts.htm"
+        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
+        onmouseout="document.images.prev.src='btn_prev_n.gif'"
+        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
+        ></a><a href="scripts.htm"
+        onmouseover="document.images.main.src='btn_home_h.gif'" 
+        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Up"
+        ></a><a href="skriptproblem.htm"
+        onmouseover="document.images.next.src='btn_next_h.gif'" 
+        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
+        ></a>
+    </td>
+  </tr>
+  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
+</table>
+</div>
+
+<!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
+  
+
+</div>  
+
+
+
+<div id="idcontent"><div id="innerdiv" style="padding:10px"> 
+<!--ZOOMRESTART-->
+<p><span style="font-size: 12pt;">Technically speaking, each group is a list of offsets that are added to the address. Here, for example, all offsets (find address - 0x005A0) are stored in the group KF00:</span></p>
+<p><span style="font-size: 12pt;">search KF00 eByte 0x005A0 0x100000 0% &quot;247&quot;</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">The offsets are added back to the address here:</span></p>
+<p><span style="font-size: 12pt;">replace KF00 eByte 0x005A0 all absolute &quot;0&quot;</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">The address can be changed. This can be useful if you are searching at location A but want to change it at location B. (Important: The offset is in bytes, not in cells. The data organization must therefore be the same). The absolute address is less important (due to the tolerance) than the difference between the addresses of the two instructions. (Whereby WinOLS prefers the smallest possible offset in &quot;best&quot; mode).</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">For example, you can use this to search for something in a map, but change it in the axis. This assumes that the map + axis have the same data organization and the map is 1*x (or x*1).</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">Here is an example script that you can drag into a 16x1 map. It searches for 247 in the map and writes 0 to the axis (which must be directly in front of the map).</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table cellspacing="0" cellpadding="5" border="0" style="border: none; border-spacing:0px; border-collapse: collapse;">
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" bgcolor="#99ccff" style="background-color:#99ccff; border: solid 1px #000000;"><p><span class="f_CourierFixed">requires_winols &quot;2.08&quot;</span></p>
+<p><span class="f_CourierFixed">requires_map 16 1</span></p>
+<p><span class="f_CourierFixed">&nbsp;</span></p>
+<p><span class="f_CourierFixed">replace_mode absolute</span></p>
+<p><span class="f_CourierFixed">&nbsp;</span></p>
+<p><span class="f_CourierFixed">begin_requires</span></p>
+<p><span class="f_CourierFixed"> &nbsp; search KF00 eByte 0x005A0 0x100000 0% &quot;247&quot;</span></p>
+<p><span class="f_CourierFixed">end_requires</span></p>
+<p><span class="f_CourierFixed">&nbsp;</span></p>
+<p><span class="f_CourierFixed">begin_executable</span></p>
+<p><span class="f_CourierFixed"> &nbsp; search KF00 eByte 0x005A0 0x100000 0% &quot;247&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; replace KF00 eByte 0x00590 all absolute &quot;0&quot;</span></p>
+<p><span class="f_CourierFixed">end_executable</span></p>
+<p><span class="f_CourierFixed">&nbsp;</span></p>
+</td>
+</tr>
+</table>
+</div>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+
+<!--ZOOMSTOP-->
+
+</div></div>
+<script type="text/javascript"> 
+<!-- 
+var lastSlashPos = document.URL.lastIndexOf("/") >
+document.URL.lastIndexOf("\\") ? document.URL.lastIndexOf("/") :
+document.URL.lastIndexOf("\\");
+if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4
+).toLowerCase() != "~hh" )
+{
+    nsrInit();
+}
+--> 
+</script> 
+</body>
+</html>

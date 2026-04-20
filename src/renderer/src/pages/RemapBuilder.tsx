@@ -16,16 +16,6 @@ import type { ClassificationResult } from '../lib/mapClassifier'
 import { applyMemoryToCandidates } from '../lib/memoryLookup'
 import type { MemoryMatch } from '../lib/memoryLookup'
 
-// ─── Transpose helper (kept for any future use) ──────────────────────────────
-function transposeGrid(grid: number[][]): number[][] {
-  if (grid.length === 0 || grid[0].length === 0) return grid
-  const rows = grid.length, cols = grid[0].length
-  return Array.from({ length: cols }, (_, c) =>
-    Array.from({ length: rows }, (_, r) => grid[r][c])
-  )
-}
-
-const SCANNER_THRESHOLD = 35  // minimum score for a classified match
 import { supabase } from '../lib/supabase'
 import type { EcuFileState } from '../App'
 
@@ -814,7 +804,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           )
           setScanResult(result)
           // Share scanner results with Performance page
-          onEcuLoaded?.({ fileName: name, fileBuffer: buf, detected: det, a2lMaps: [], drtMaps: [], scanResult: result })
+          onEcuLoaded?.({ fileName: name, fileBuffer: buf, detected: det, a2lMaps: [], scanResult: result })
           // AI match unmatched candidates in background (non-blocking)
           if (result.unmatched.length > 0) {
             matchUnknownsByDNA(buf, result.unmatched, ecuForScan.family).then(aiMatches => {
@@ -841,7 +831,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
 
     setStep(1)
     // Share file state with Performance page (a2l/drt maps not loaded yet — updated later)
-    onEcuLoaded?.({ fileName: name, fileBuffer: buf, detected: det, a2lMaps: [], drtMaps: [] })
+    onEcuLoaded?.({ fileName: name, fileBuffer: buf, detected: det, a2lMaps: [] })
   }, [onEcuLoaded])
 
   const handleFileOpen = async () => {
@@ -1154,7 +1144,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     // Share extracted maps with Performance page via parent state
     const foundMaps = maps.filter(m => m.found)
     if (foundMaps.length > 0 && fileBuffer && detected) {
-      onEcuLoaded?.({ fileName, fileBuffer, detected, a2lMaps: [], drtMaps: [], extractedMaps: foundMaps })
+      onEcuLoaded?.({ fileName, fileBuffer, detected, a2lMaps: [], extractedMaps: foundMaps })
     }
     setStep(3)
   }
@@ -1343,7 +1333,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         }
       }
       // Share with Performance page
-      if (fileBuffer) onEcuLoaded?.({ fileName, fileBuffer, detected, a2lMaps: maps, drtMaps: [] })
+      if (fileBuffer) onEcuLoaded?.({ fileName, fileBuffer, detected, a2lMaps: maps })
     } catch (e) {
       setLoadError(`A2L parse failed: ${String(e)}`)
     }

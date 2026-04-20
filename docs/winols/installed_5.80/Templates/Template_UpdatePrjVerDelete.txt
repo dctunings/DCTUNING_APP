@@ -1,0 +1,40 @@
+//--------------------------------------------------------------------------------------------
+// You can use this to mass-delete versions.
+//
+// Lines STARTING with "//" are comments and thus ignored.
+// If the "//" in later in the line, it's considered normal characters and not a comment!
+//
+// WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!
+// WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!
+// WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!
+//
+// Be very careful with this function, it can cause a lot damage if used wrong.
+// There's no "undo". You are responsible for having a backup before using this function.
+// 
+//
+// Format:
+//   badNameDeleteThis1
+//   badNameDeleteThis2
+//
+//   // Wildcards are allowed - be very careful with this!
+//   badNameDeleteThisMany*
+//
+// If multiple lines match, WinOLS will delete all
+//--------------------------------------------------------------------------------------------
+
+// Start editing here:
+
+//
+// WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!
+// WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!
+// WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!  WARNING!
+//
+// Be very careful with this function, it can cause a lot damage if used wrong.
+// There's no "undo". You are responsible for having a backup before using this function.
+// 
+
+badNameDeleteThis1
+badNameDeleteThis2
+
+// Wildcards are allowed - be very careful with this!
+badNameDeleteThisMany*

@@ -1,0 +1,139 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <title>Elements</title>
+   <meta name="generator" content="Help & Manual">
+   <meta name="keywords" content="Elements">
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <link type="text/css" href="default.css" rel="stylesheet">
+   <link type="text/css" href="custom.css" rel="stylesheet">
+   <script type="text/javascript" src="nsh.js"></script>
+   <script type="text/javascript" src="tablesort.js"></script>
+   
+<!-- non-scrolling headers for CHM and browser-based help, local styles-->
+<style TYPE="text/css" media="screen"> 
+   <!-- 
+   body {    
+      margin:0; 
+      padding:0; 
+      overflow: auto; 
+      background: #FFFFFF; 
+   } 
+   #idheader { 
+      width:100%; 
+      height:auto; 
+      padding: 0; 
+      margin: 0; 
+} 
+    #idheaderbg  {
+    background: #649CCC; 
+}
+   -->
+   </style>
+   
+<style TYPE="text/css" MEDIA="print">
+<!--
+/* Hide navigation links and add space between header
+     and text in the printed version. Not valid for eBooks. */
+#idnav { display:none;	 }
+.topichead { padding: 5px 5px 20px 5px; }
+-->
+</style>   
+</head>
+<body>
+<!--ZOOMSTOP-->
+
+<div id="idheader">
+<div id="idheaderbg">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" 
+       style="margin: 0px; color: #649CCC; background: url(header_bg.jpg);">
+
+  <tr valign="bottom">
+    <td align="left" valign="bottom" class="topichead" style="padding:10px">
+   <p class="crumbs" id="idnav" style="color:#000080"><b>Navigation:</b>&nbsp;
+   
+   <A HREF="Main_index.htm">Start page</A> > <a href="special_aspects.htm">Special Aspects</a>&nbsp;&gt;</p>
+   <p class="p_Heading1"><span class="f_Heading1">Elements</span></p>
+
+    </td>
+    <td align="right" width="120" valign="middle" class="topichead" id="idnav" style="padding:10px">
+    <a href="javascript: print();"
+    		onmouseover="document.images.prntr.src='print1.gif'" 
+        onmouseout="document.images.prntr.src='print2.gif'"
+        ><img name="prntr" border="0" alt="Print" title="Drucken" src="print2.gif"
+        ></a>
+     <a href="selections.htm"
+        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
+        onmouseout="document.images.prev.src='btn_prev_n.gif'"
+        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
+        ></a><a href="special_aspects.htm"
+        onmouseover="document.images.main.src='btn_home_h.gif'" 
+        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Up"
+        ></a><a href="datenbereiche.htm"
+        onmouseover="document.images.next.src='btn_next_h.gif'" 
+        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
+        ></a>
+    </td>
+  </tr>
+  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
+</table>
+</div>
+
+<!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
+  
+
+</div>  
+
+
+
+<div id="idcontent"><div id="innerdiv" style="padding:10px"> 
+<!--ZOOMRESTART-->
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Basics:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">Nowadays one ECU can contain data in multiple eproms, processor, eeprom, etc. That’s why WinOLS can administrate these different data ranges, too. In WinOLS they’re called &quot;Elements&quot;.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; color: #000000;">One project can contain many elements (but at least one). Each element contains the data from one hardware, e.g. from the eprom.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Seeing the elements:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">By default WinOLS will show you the eprom element. You can recognize that from the title of the WinOLS window: &quot;WinOLS - 1134.ols (Original) as Engine / Eprom&quot;. If you have an element active, the map list will contain only the maps (and potential maps), which are in this element. Other functions like the &quot;<a href="hid_unterschiede.htm">Differences</a>&quot; window or the <a href="hid_suchebytes.htm">search function</a> ignore the data outside the current element, too. Just like export functions that only support one element (e.g. the binary export) and thus only export the current element.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; color: #000000;">Please note: By default all elements begin with the address 0. Thus, you can have a map in the eprom element at the address 0 and a map in the CPU element at address 0. Nevertheless these are different maps with different content.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Changing the current element:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">You’ll see a small black triangle next to the button &quot;Properties: Project&quot; (a green P on the symbol bar &quot;Navigation&quot;). If you click on it, a small menu will open, displaying all the elements that the project contains. Click on the desired element to activate it.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><img src="elementse.png" width="208" height="140" border="0" alt=""></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; color: #000000;">Instead you may also (if the project contains multiple elements) change the &quot;ECU usage&quot; in the Dialog &quot;<a href="hid_selectcar_edit1.htm">project properties</a>&quot; to get the same effect.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Hardware elements &amp; virtual elements:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">Some of the checksums (and the free plugin OLS550) define virtual elements within the &quot;normal&quot; hardware elements. These can be seen as subitems of the hardware elements in the selection list and can help to limit the view to the essentials. Virtual elements are very often &quot;<a href="datenbereiche.htm">data</a>&quot; elements and are then also used as help for the <a href="hid_file_projekt_suchen.htm">similarity search</a>.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">&lt;All elements&gt;:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">The list with the elements also contains an entry &quot;&lt;All elements&gt;&quot;. It shows all elements at the same time in one, long hexdump. This can be useful if you want to define the elements or if you’re unsure which element contains the maps that you’re looking for.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Editing &amp; defining elements:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">WinOLS automatically creates the elements when reading an ECU or importing from a BdmToGo file. If you want to change this definition, open the project properties and click the button &quot;...&quot; next to the ECU usage. The help for this dialog &quot;<a href="hid_multiprojekt.htm">Multiple elements in the project</a>&quot; (a subdialog of the &quot;<a href="hid_selectcar_edit1.htm">project properties</a>&quot;) explains the details.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Elements vs. Versions:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">One project can contain several elements and any number of versions. For all versions of one project the element definitions (Number, size, area) are identical. So, for example, an eprom element in the original cannot have a different size from the eprom element in version 1. If you change the current version, this change always applies to all elements of the project.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+
+<!--ZOOMSTOP-->
+
+</div></div>
+<script type="text/javascript"> 
+<!-- 
+var lastSlashPos = document.URL.lastIndexOf("/") >
+document.URL.lastIndexOf("\\") ? document.URL.lastIndexOf("/") :
+document.URL.lastIndexOf("\\");
+if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4
+).toLowerCase() != "~hh" )
+{
+    nsrInit();
+}
+--> 
+</script> 
+</body>
+</html>

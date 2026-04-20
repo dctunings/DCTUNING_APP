@@ -1,0 +1,187 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <title>Script language</title>
+   <meta name="generator" content="Help & Manual">
+   <meta name="keywords" content="begin_executable,begin_insert_map,begin_requires,check_property,end_executable,end_insert_map,end_requires,replace,replace_mode,requires_hexdump,requires_map,requires_winols,search,set_map_property,unique,search_by_mapid,tolerate_not_found,placeholders">
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <link type="text/css" href="default.css" rel="stylesheet">
+   <link type="text/css" href="custom.css" rel="stylesheet">
+   <script type="text/javascript" src="nsh.js"></script>
+   <script type="text/javascript" src="tablesort.js"></script>
+   
+<!-- non-scrolling headers for CHM and browser-based help, local styles-->
+<style TYPE="text/css" media="screen"> 
+   <!-- 
+   body {    
+      margin:0; 
+      padding:0; 
+      overflow: auto; 
+      background: #FFFFFF; 
+   } 
+   #idheader { 
+      width:100%; 
+      height:auto; 
+      padding: 0; 
+      margin: 0; 
+} 
+    #idheaderbg  {
+    background: #649CCC; 
+}
+   -->
+   </style>
+   
+<style TYPE="text/css" MEDIA="print">
+<!--
+/* Hide navigation links and add space between header
+     and text in the printed version. Not valid for eBooks. */
+#idnav { display:none;	 }
+.topichead { padding: 5px 5px 20px 5px; }
+-->
+</style>   
+</head>
+<body>
+<!--ZOOMSTOP-->
+
+<div id="idheader">
+<div id="idheaderbg">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" 
+       style="margin: 0px; color: #649CCC; background: url(header_bg.jpg);">
+
+  <tr valign="bottom">
+    <td align="left" valign="bottom" class="topichead" style="padding:10px">
+   <p class="crumbs" id="idnav" style="color:#000080"><b>Navigation:</b>&nbsp;
+   
+   <A HREF="Main_index.htm">Start page</A> > <a href="advanced_topics.htm">Advanced topics</a> &gt; <a href="scripts.htm">Scripts</a>&nbsp;&gt;</p>
+   <p class="p_Heading1"><span class="f_Heading1">Script language</span></p>
+
+    </td>
+    <td align="right" width="120" valign="middle" class="topichead" id="idnav" style="padding:10px">
+    <a href="javascript: print();"
+    		onmouseover="document.images.prntr.src='print1.gif'" 
+        onmouseout="document.images.prntr.src='print2.gif'"
+        ><img name="prntr" border="0" alt="Print" title="Drucken" src="print2.gif"
+        ></a>
+     <a href="basics.htm"
+        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
+        onmouseout="document.images.prev.src='btn_prev_n.gif'"
+        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
+        ></a><a href="scripts.htm"
+        onmouseover="document.images.main.src='btn_home_h.gif'" 
+        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Up"
+        ></a><a href="map_scripts.htm"
+        onmouseover="document.images.next.src='btn_next_h.gif'" 
+        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
+        ></a>
+    </td>
+  </tr>
+  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
+</table>
+</div>
+
+<!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
+  
+
+</div>  
+
+
+
+<div id="idcontent"><div id="innerdiv" style="padding:10px"> 
+<!--ZOOMRESTART-->
+<p class="p_WinOLS"><span class="f_WinOLS" style="font-weight: bold;">The following text describes the internal structure of scripts. This is only relevant for very advanced users with programming experience. Normally scripts should be created with the &quot;Add&quot; subdialog of the &quot;Script&quot; dialog.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS" style="font-weight: bold;">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS" style="font-weight: bold;">Groups:</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">A central concept of the WinOLS scripting language are groups. Thus you will find groups in several commands. A group is always represented by a symbolic name (e.g. &quot;KF01&quot;) and describes a set of all matching search results.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">For example, to search a map you would (strictly speaking) need three search commands. One for the map data and one for the data of each axis. The data should not be moved one beneath another (for example the distance between the map data and the data of the X-Axis should be the same in the source project and in the target project where the script is applied.)</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">Every search (details see below) has a defined start address. When WinOLS begins a search it will remember a list of all offsets relative to the start address and store it within the group. (If a search finds no results, the script cannot be applied.) So, if you search for the string &quot;128 129 130&quot; with the start address 0x1000, then the result could be that string will be found at the addresses 0x1000, 0x1100 and 0x1200. WinOLS will remember the values 0, 0x100 and 0x200 for the group.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">If you now issue another search command for the same group, the search string will only be search for the known offsets. If the string cannot be found at one of the known offsets, then this one will be removed from the group. So, if you search for &quot;100 101&quot; with 0x2000 as start address, then WinOLS will ONLY search at the addresses 0x2000, 0x2100 and 0x2200. All other places will be ignored. And if the string for example isn’t found at 0x2100, then this offset (0x100) will be ignored in further searches, too.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS" style="font-weight: bold;">Global commands:</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">requires_winols &quot;1.505&quot;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">The script can only be executed if at least WinOLS version 1.505 is running. This helps avoiding incompatibilities, because the last additions to the scripting language were made in version 1.505.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">requires_hexdump</span></p>
+<p><span style="font-size: 12pt;">This script can only be run if the currently active window shows a hexdump. It will be ignored for map windows.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">requires_map [X-Gr&ouml;&szlig;e Y-Gr&ouml;&szlig;e]</span></p>
+<p><span style="font-size: 12pt;">This script can only be run if the currently active window shows a map. It will be ignored for hexdump windows. You can specify 2 optional parameters that are the number of columns and rows that the map is expected to have. If the currently active map does not match this data then the script cannot be applied.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">replace_mode Mode1 [Mode2] [Mode3]</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">Defines, which replacement mode should be used. A script can specify multiple replace commands for the same data area, as long as they use a different mode. This command controls the selection in the script dialog. The first value (Mode1) is the default value in the dialog.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">The following keywords may be used for the Mode parameter: percent absolute difference2 all</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">The keyword all is a special case. If it is used, then Mode2 and Mode3 may note be used. Instead all replace commands within the script, no matter what mode they use, are executed. This can be useful if you want to use the same script both for absolute and difference (or percentile) changes. A selection of the mode in the script dialog is not possible in this case. If the keyword all is used, you should set the value for requires_winols to 1.088, because this keyword is not supported in earlier versions.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS" style="font-weight: bold;">Blocks:</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">begin_requires</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">end_requires</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">This surrounds a block that checks whether the script can be applied for the current project. Only if all search commands find something the script is regarded as applicable. Commands in this block can’t change the project.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">begin_executable [tolerate_not_found]</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">end_executable</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">Surrounds a block containing commands to execute the script and modify the project. If the tag tolerate_not_found is set, then the script execution won't stop if a group can't be mapped. (This does not influence the requires-block.)</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">begin_insert_map </span><span class="f_WinOLS" style="font-style: italic;">group</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">end_insert_map</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">This block may only be used within an EXECUTABLE block. It contains the definition for a map that is inserted when the script is executed. The group must be identical to one that was previously defined. If the group contains multiply positions only the best is used.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS" style="font-weight: bold;">Non-Global commands:</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">search </span><span class="f_WinOLS" style="font-style: italic;">Group Dataorganisation Startaddress Deviation Tolerance &quot;Searchstring</span><span class="f_WinOLS">&quot;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">This command performs a search for the search string. The string consists of several decimal numbers separated by spaces. A question mark may be used instead of a number, if any number is acceptable in this position. The data organisation (eByte, eLoHi, eHiLo, eLoHiLoHi, eHiLoHiLo) describes the data format in which the search string is expected in the project. The search will start at the start address and then expand to the left and right as far as the deviation allows it. The tolerance describes the maximal difference the search string values may have from the project.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS" style="font-weight: bold;">Important:</span><span class="f_WinOLS"> Prior to WinOLS 5.59.05, tolerance was not calculated correctly. For compatibility, WinOLS still uses the old method if requires_winols is less than &quot;5.09&quot;.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">search_by_mapid </span><span style="font-size: 12pt; font-style: italic;">Group maporaxis </span><span class="f_WinOLS" style="font-style: italic;">Startaddress</span><span style="font-size: 12pt; font-style: italic;"> &quot;mapid&quot;</span></p>
+<p><span style="font-size: 12pt;">This command is an alternative to &quot;search&quot; and useful if the map already exists in the target project and the id field is filled in. Then this command can determine the address from the map id instead of the map values. The parameter </span><span style="font-size: 12pt; font-style: italic;">maporaxis</span><span style="font-size: 12pt;"> must be &quot;map&quot;, &quot;x&quot; or &quot;y&quot; and shows which start address is used for the offset. Respectively the parameter </span><span style="font-size: 12pt; font-style: italic; color: #000000;">Startaddress </span><span style="font-size: 12pt;">should be set to the address or the map data or axis data. The </span><span style="font-size: 12pt; font-style: italic;">mapid </span><span style="font-size: 12pt;">is always the id of the map (and never of the axis).</span></p>
+<p><span style="font-size: 12pt;">Usually its a good idea to use separate groups for &quot;map&quot;, &quot;x&quot; and &quot;y&quot;. Then the script can still be applied if the axis addresses have changed (seen relatively to address of the map data).</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">check_size_by_mapid sizex sizey &quot;</span><span style="font-size: 12pt; font-style: italic;">mapid</span><span style="font-size: 12pt;">&quot;</span></p>
+<p><span style="font-size: 12pt;">Checks if the given map has the desired size.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">search_by_mapname </span><span style="font-size: 12pt; font-style: italic;">Group maporaxis </span><span class="f_WinOLS" style="font-style: italic;">Startaddress</span><span style="font-size: 12pt; font-style: italic;"> &quot;mapname&quot;</span></p>
+<p><span style="font-size: 12pt;">Just like search_by_mapid, but it searches for the map name, instead of the id.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">replace </span><span class="f_WinOLS" style="font-style: italic;">Group Dataorganisation Startaddress mode1 mode2 &quot;Replacestring&quot;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">This command replaces a search string with another string. Here you may use question marks, too. They represent a cell that should not be replaced with a different value. Mode1 defines whether only the best found position should be replaced (&quot;Best&quot;) or each (&quot;All&quot;). Mode2 defines whether the data will be changed absolute (&quot;Absolute&quot;) in percent (&quot;Percent&quot;) or whether the changes will be transferred as difference (&quot;Difference2&quot;)</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">Note: In WinOLS versions prior to 1.205 the automatic script generic could generate wrong values for the difference values. Due to security reasons the old keyword &quot;Difference&quot; was deactivated, so that no bad data could be generated. If you’ve created scripts by hand simply use the new keyword &quot;Difference2&quot;. Otherwise you should re-create the script or not use the difference method.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">unique </span><span class="f_WinOLS" style="font-style: italic;">Group</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">The script will only continue if the group contains exactly one entry.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">set_map_property &quot;Property&quot; &quot;Value&quot;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">This command may only be issued with an INSERT_MAP block. It will define the difference properties of a map. A complete list with all possible properties can be seen in any script that transfers a map.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">check_property &quot;Property&quot; &quot;Value&quot;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">This command checks whether the current project has this value in its properties. If this is not the case, the script can’t be executed. You may also enter a regular expression (like in perl or in good text editors). Regular expressions are marked by the prefix &quot;RE:&quot;. An example for the recognition of a Mercedes in its usual variations would be: check_property &quot;producer&quot; &quot;re:(Mercedes|^MB$)&quot;. If you would also like to accept an empty value for the producer: check_property &quot;producer&quot; &quot;re:(Mercedes|^MB$|^$)&quot;. Valid properties are: Producer, Chassis, Model, Softwareversion and Softwaresize.</span></p>
+<p><span style="font-size: 12pt;">Starting with WinOLS 5.34 you can use the same <a href="hid_config6f.htm">placeholders</a> here (like &quot;%Client.VIN%&quot;), that are allowed at other places (e.g. F12&gt;Export).</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">MessageBox &quot;Test&quot;</span></p>
+<p><span style="font-size: 12pt;">Displays the given text. This can be used for testing to check at which point the script execution stops. (Note: The testing phase is split in 2 parts. In part one all &quot;check_property&quot; commands are checked. The &quot;search&quot; commands are run in phase 2, together with MessageBox.)</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">comment </span><span class="f_WinOLS" style="font-style: italic;">Group</span><span style="font-size: 12pt;"> nBytes &quot;Text&quot;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">Creates a WinOLS comment with the given text and length in bytes at the start of each occurrence for this search group.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS" style="font-weight: bold;">Performance:</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">The scripts are quite fast. In order to keep the check whether a script can be applied or not fast, only one simple rule must be obeyed: Simple conditions first.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">Scripts are always processed in a linear way (starting at the top, and then going down). It is a good idea to use the SEARCH commands first that can be done quickly. This way the more complicated commands will be processed later and more rarely. SEARCH commands are simple / quick if they don’t contain questions marks, no or little deviation and allow no or little tolerance. CHECK_PROPERTY commands are also simple at should stand at the beginning.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+
+<!--ZOOMSTOP-->
+
+</div></div>
+<script type="text/javascript"> 
+<!-- 
+var lastSlashPos = document.URL.lastIndexOf("/") >
+document.URL.lastIndexOf("\\") ? document.URL.lastIndexOf("/") :
+document.URL.lastIndexOf("\\");
+if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4
+).toLowerCase() != "~hh" )
+{
+    nsrInit();
+}
+--> 
+</script> 
+</body>
+</html>

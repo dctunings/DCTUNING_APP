@@ -1,0 +1,19 @@
+//--------------------------------------------------------------------------------------------
+// This is a WinOLS "MapProperties->Id" file.
+// Do not edit while it's inside "c:\program files". Copy it to your own folder first!
+//--------------------------------------------------------------------------------------------
+// You can use it to define the values for the Id combobox drop-down.
+//--------------------------------------------------------------------------------------------
+// Format:
+//   MyId1
+//   MyId2
+//
+//   // My optional comment (not shown in the drop-down)
+//   MyId3 // My optional comment (not shown in the drop-down)
+//--------------------------------------------------------------------------------------------
+// Start editing here:
+MyId1
+MyId2
+
+// My optional comment (not shown in the drop-down)
+MyId3 // My optional comment (not shown in the drop-down)

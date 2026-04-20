@@ -1,0 +1,211 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <title>Example</title>
+   <meta name="generator" content="Help & Manual">
+   <meta name="keywords" content="">
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <link type="text/css" href="default.css" rel="stylesheet">
+   <link type="text/css" href="custom.css" rel="stylesheet">
+   <script type="text/javascript" src="nsh.js"></script>
+   <script type="text/javascript" src="tablesort.js"></script>
+   
+<!-- non-scrolling headers for CHM and browser-based help, local styles-->
+<style TYPE="text/css" media="screen"> 
+   <!-- 
+   body {    
+      margin:0; 
+      padding:0; 
+      overflow: auto; 
+      background: #FFFFFF; 
+   } 
+   #idheader { 
+      width:100%; 
+      height:auto; 
+      padding: 0; 
+      margin: 0; 
+} 
+    #idheaderbg  {
+    background: #649CCC; 
+}
+   -->
+   </style>
+   
+<style TYPE="text/css" MEDIA="print">
+<!--
+/* Hide navigation links and add space between header
+     and text in the printed version. Not valid for eBooks. */
+#idnav { display:none;	 }
+.topichead { padding: 5px 5px 20px 5px; }
+-->
+</style>   
+</head>
+<body>
+<!--ZOOMSTOP-->
+
+<div id="idheader">
+<div id="idheaderbg">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" 
+       style="margin: 0px; color: #649CCC; background: url(header_bg.jpg);">
+
+  <tr valign="bottom">
+    <td align="left" valign="bottom" class="topichead" style="padding:10px">
+   <p class="crumbs" id="idnav" style="color:#000080"><b>Navigation:</b>&nbsp;
+   
+   <A HREF="Main_index.htm">Start page</A> > <a href="advanced_topics.htm">Advanced topics</a> &gt; <a href="zusaetzliche_dateiformate.htm">Additional file formats</a>&nbsp;&gt;</p>
+   <p class="p_Heading1"><span class="f_Heading1">Example</span></p>
+
+    </td>
+    <td align="right" width="120" valign="middle" class="topichead" id="idnav" style="padding:10px">
+    <a href="javascript: print();"
+    		onmouseover="document.images.prntr.src='print1.gif'" 
+        onmouseout="document.images.prntr.src='print2.gif'"
+        ><img name="prntr" border="0" alt="Print" title="Drucken" src="print2.gif"
+        ></a>
+     <a href="externe_konverter.htm"
+        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
+        onmouseout="document.images.prev.src='btn_prev_n.gif'"
+        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
+        ></a><a href="zusaetzliche_dateiformate.htm"
+        onmouseover="document.images.main.src='btn_home_h.gif'" 
+        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Up"
+        ></a><a href="copyright_contact__internet.htm"
+        onmouseover="document.images.next.src='btn_next_h.gif'" 
+        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
+        ></a>
+    </td>
+  </tr>
+  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
+</table>
+</div>
+
+<!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
+  
+
+</div>  
+
+
+
+<div id="idcontent"><div id="innerdiv" style="padding:10px"> 
+<!--ZOOMRESTART-->
+<p><span style="font-size: 12pt;">Here are the files that you need for a sample converter, including installer (Inno setup). This sample demonstrates only the integration. Effectively it does not convert anything, but only copies the eprom element and thus works only with projects that have an eprom element.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">File: contents.ini</span></p>
+<p><span style="font-size: 12pt;">; This is the Contents.ini file of an EcuX package. It's an open format, you're welcome to import/export it with your own tools. For the current version documentation check http://ecux.evc.de/</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">[global]</span></p>
+<p><span style="font-size: 12pt;">EcuX_version &nbsp; &nbsp; &nbsp; &nbsp; = 0.3</span></p>
+<p><span style="font-size: 12pt;">AuthorTool &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; = ExternalConverterSample</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">[Description]</span></p>
+<p><span style="font-size: 12pt;">NumVersions &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;= 1</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">[File1]</span></p>
+<p><span style="font-size: 12pt;">Filename &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; = eprom.bin</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">File: converter_export.bat</span></p>
+<p><span style="font-size: 12pt;">@rem WinOLS external converter sample, http://www.evc.de</span></p>
+<p><span style="font-size: 12pt;">@rem </span></p>
+<p><span style="font-size: 12pt;">@rem Please note that we're using a bat file for simplicity. You'll probably want to use an exe.</span></p>
+<p><span style="font-size: 12pt;">@rem </span></p>
+<p><span style="font-size: 12pt;">@rem Each converter receives 2 inputs. The export converter receices:</span></p>
+<p><span style="font-size: 12pt;">@rem %1 - the temporary path containing the files that would normally be inside an EcuX file (http://ecux.evc.de/)</span></p>
+<p><span style="font-size: 12pt;">@rem %2 - path + filename of the file that the user expects as final output</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">@rem For sake simplicity this file simply copies the source file.</span></p>
+<p><span style="font-size: 12pt;">@rem Note: This exporter only works for file that have an element named &quot;Eprom&quot;.</span></p>
+<p><span style="font-size: 12pt;">@copy &quot;%~1\eprom1.bin&quot; &quot;%~2&quot;</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">@rem returns any error from the last copy command to WinOLS: </span></p>
+<p><span style="font-size: 12pt;">@exit /b %ERRORLEVEL%</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">File: converter_import.bat</span></p>
+<p><span style="font-size: 12pt;">@rem WinOLS external converter sample, http://www.evc.de</span></p>
+<p><span style="font-size: 12pt;">@rem </span></p>
+<p><span style="font-size: 12pt;">@rem Please note that we're using a bat file for simplicity. You'll probably want to use an exe.</span></p>
+<p><span style="font-size: 12pt;">@rem </span></p>
+<p><span style="font-size: 12pt;">@rem Each converter receives 2 inputs. The import converter receices:</span></p>
+<p><span style="font-size: 12pt;">@rem %1 - path + filename of the file that the user expects us to import</span></p>
+<p><span style="font-size: 12pt;">@rem %2 - the temporary path where we have to create everything that's normally inside an EcuX file (http://ecux.evc.de/)</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">@rem %~dp0 is bat magic for &quot;path of this bat file&quot;</span></p>
+<p><span style="font-size: 12pt;">@copy &quot;%~dp0\contents.ini&quot; &quot;%~2\contents.ini&quot;</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">@rem For sake simplicity this file simply copies the source file.</span></p>
+<p><span style="font-size: 12pt;">@copy &quot;%~1&quot; &quot;%~2\eprom.bin&quot;</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">@rem returns any error from the last copy command to WinOLS: </span></p>
+<p><span style="font-size: 12pt;">@exit /b %ERRORLEVEL%</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">File: is_SampleConverter.iss</span></p>
+<p><span style="font-size: 12pt;">; Script generated by the Inno Setup Script Wizard.</span></p>
+<p><span style="font-size: 12pt;">; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">#define MyAppName &quot;WinOLS ExternalConvertSample&quot;</span></p>
+<p><span style="font-size: 12pt;">#define MyAppVerName &quot;WinOLS ExternalConvertSample 1.00&quot;</span></p>
+<p><span style="font-size: 12pt;">#define MyAppPublisher &quot;Acme Corp&quot;</span></p>
+<p><span style="font-size: 12pt;">#define MyAppURL &quot;http://www.example.org/&quot;</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">[Setup]</span></p>
+<p><span style="font-size: 12pt;">; NOTE: The value of AppId uniquely identifies this application.</span></p>
+<p><span style="font-size: 12pt;">; Do not use the same AppId value in installers for other applications.</span></p>
+<p><span style="font-size: 12pt;">; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)</span></p>
+<p><span style="font-size: 12pt;">AppId={{cbafb88b-60ae-42a1-b31c-5fbba95738bf}</span></p>
+<p><span style="font-size: 12pt;">AppName={#MyAppName}</span></p>
+<p><span style="font-size: 12pt;">AppVerName={#MyAppVerName}</span></p>
+<p><span style="font-size: 12pt;">AppPublisher={#MyAppPublisher}</span></p>
+<p><span style="font-size: 12pt;">AppPublisherURL={#MyAppURL}</span></p>
+<p><span style="font-size: 12pt;">AppSupportURL={#MyAppURL}</span></p>
+<p><span style="font-size: 12pt;">AppUpdatesURL={#MyAppURL}</span></p>
+<p><span style="font-size: 12pt;">DefaultDirName={pf32}\Acme\ExternalConvertSample</span></p>
+<p><span style="font-size: 12pt;">DefaultGroupName={#MyAppName}</span></p>
+<p><span style="font-size: 12pt;">OutputBaseFilename=ExternalConvertSample</span></p>
+<p><span style="font-size: 12pt;">Compression=lzma</span></p>
+<p><span style="font-size: 12pt;">SolidCompression=true</span></p>
+<p><span style="font-size: 12pt;">ShowLanguageDialog=no</span></p>
+<p><span style="font-size: 12pt;">WindowResizable=false</span></p>
+<p><span style="font-size: 12pt;">WindowVisible=true</span></p>
+<p><span style="font-size: 12pt;">WizardImageFile=compiler:WizModernImage-IS.bmp</span></p>
+<p><span style="font-size: 12pt;">WizardSmallImageFile=compiler:WizModernSmallImage-IS.bmp</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">[Languages]</span></p>
+<p><span style="font-size: 12pt;">Name: english; MessagesFile: compiler:Default.isl</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">[Files]</span></p>
+<p><span style="font-size: 12pt;">Source: contents.ini; DestDir: {app}; Flags: ignoreversion</span></p>
+<p><span style="font-size: 12pt;">Source: converter_import.bat; DestDir: {app}; Flags: ignoreversion</span></p>
+<p><span style="font-size: 12pt;">Source: converter_export.bat; DestDir: {app}; Flags: ignoreversion</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">[Registry]</span></p>
+<p><span style="font-size: 12pt;">Root: HKCU; Subkey: &quot;Software\EVC\WinOLS\Importer\Acme&quot;; ValueType: string; ValueName: &quot;Name&quot;; &nbsp; ValueData: &quot;Sample&quot;</span></p>
+<p><span style="font-size: 12pt;">Root: HKCU; Subkey: &quot;Software\EVC\WinOLS\Importer\Acme&quot;; ValueType: string; ValueName: &quot;Author&quot;; ValueData: &quot;SampleCompanyName, http://www.example.org/&quot;</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">; We support multiple suffixes. The first one is the primary suffix that is appended by default when exporting</span></p>
+<p><span style="font-size: 12pt;">Root: HKCU; Subkey: &quot;Software\EVC\WinOLS\Importer\Acme&quot;; ValueType: string; ValueName: &quot;Suffix&quot;; ValueData: &quot;externalconvertersample,ecs&quot;</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">; Links to the software that would provide the actual work. Our sample just copies, without any actual conversions.</span></p>
+<p><span style="font-size: 12pt;">; Notes: - {app} is replaced at install time by inno setup with you install target path</span></p>
+<p><span style="font-size: 12pt;">; &nbsp; &nbsp; &nbsp; &nbsp;- %1 and %2 are replaced by WinOLS with the source and target path/filename. (Path without backslash at the end)</span></p>
+<p><span style="font-size: 12pt;">; &nbsp; &nbsp; &nbsp; &nbsp;- Don't forget the &quot;&quot; around the paths! The outer quotes are for inno setup. The inner double quotes are converted to single quotes by inno setup</span></p>
+<p><span style="font-size: 12pt;">Root: HKCU; Subkey: &quot;Software\EVC\WinOLS\Importer\Acme&quot;; ValueType: string; ValueName: &quot;Import&quot;; ValueData: &quot;&quot;&quot;{app}\converter_import.bat&quot;&quot; &quot;&quot;%1&quot;&quot; &quot;&quot;%2&quot;&quot;&quot;</span></p>
+<p><span style="font-size: 12pt;">Root: HKCU; Subkey: &quot;Software\EVC\WinOLS\Importer\Acme&quot;; ValueType: string; ValueName: &quot;Export&quot;; ValueData: &quot;&quot;&quot;{app}\converter_export.bat&quot;&quot; &quot;&quot;%1&quot;&quot; &quot;&quot;%2&quot;&quot;&quot;</span></p>
+
+<!--ZOOMSTOP-->
+
+</div></div>
+<script type="text/javascript"> 
+<!-- 
+var lastSlashPos = document.URL.lastIndexOf("/") >
+document.URL.lastIndexOf("\\") ? document.URL.lastIndexOf("/") :
+document.URL.lastIndexOf("\\");
+if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4
+).toLowerCase() != "~hh" )
+{
+    nsrInit();
+}
+--> 
+</script> 
+</body>
+</html>

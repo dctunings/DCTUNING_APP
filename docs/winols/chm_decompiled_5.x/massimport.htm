@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <title>The command Import directory (Menu Project)</title>
+   <meta name="generator" content="Help & Manual">
+   <meta name="keywords" content="Import directory">
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <link type="text/css" href="default.css" rel="stylesheet">
+   <link type="text/css" href="custom.css" rel="stylesheet">
+   <script type="text/javascript" src="nsh.js"></script>
+   <script type="text/javascript" src="tablesort.js"></script>
+   
+<!-- non-scrolling headers for CHM and browser-based help, local styles-->
+<style TYPE="text/css" media="screen"> 
+   <!-- 
+   body {    
+      margin:0; 
+      padding:0; 
+      overflow: auto; 
+      background: #FFFFFF; 
+   } 
+   #idheader { 
+      width:100%; 
+      height:auto; 
+      padding: 0; 
+      margin: 0; 
+} 
+    #idheaderbg  {
+    background: #649CCC; 
+}
+   -->
+   </style>
+   
+<style TYPE="text/css" MEDIA="print">
+<!--
+/* Hide navigation links and add space between header
+     and text in the printed version. Not valid for eBooks. */
+#idnav { display:none;	 }
+.topichead { padding: 5px 5px 20px 5px; }
+-->
+</style>   
+</head>
+<body>
+<!--ZOOMSTOP-->
+
+<div id="idheader">
+<div id="idheaderbg">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" 
+       style="margin: 0px; color: #649CCC; background: url(header_bg.jpg);">
+
+  <tr valign="bottom">
+    <td align="left" valign="bottom" class="topichead" style="padding:10px">
+   <p class="crumbs" id="idnav" style="color:#000080"><b>Navigation:</b>&nbsp;
+   
+   <A HREF="Main_index.htm">Start page</A> > <a href="menu_file.htm">Commands of the menu Project</a> &gt; <a href="ex____import.htm">Ex - &amp; Import</a>&nbsp;&gt;</p>
+   <p class="p_Heading1"><span class="f_Heading1">The command Import directory (Menu Project)</span></p>
+
+    </td>
+    <td align="right" width="120" valign="middle" class="topichead" id="idnav" style="padding:10px">
+    <a href="javascript: print();"
+    		onmouseover="document.images.prntr.src='print1.gif'" 
+        onmouseout="document.images.prntr.src='print2.gif'"
+        ><img name="prntr" border="0" alt="Print" title="Drucken" src="print2.gif"
+        ></a>
+     <a href="hid_sendmail.htm"
+        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
+        onmouseout="document.images.prev.src='btn_prev_n.gif'"
+        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
+        ></a><a href="ex____import.htm"
+        onmouseover="document.images.main.src='btn_home_h.gif'" 
+        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Up"
+        ></a><a href="dlg_autoupdate_autoimport.htm"
+        onmouseover="document.images.next.src='btn_next_h.gif'" 
+        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
+        ></a>
+    </td>
+  </tr>
+  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
+</table>
+</div>
+
+<!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
+  
+
+</div>  
+
+
+
+<div id="idcontent"><div id="innerdiv" style="padding:10px"> 
+<!--ZOOMRESTART-->
+<p><span style="font-size: 12pt;">With this command you can import all files of a directory into the WinOLS project directory (of the current client). All file formats are supported, which can also be imported with the main program as a project. (Additional files like IFO or A2L are not supported.)</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">Source folder:</span></p>
+<p><span style="font-size: 12pt;">Select the folder (if necessary incl. subfolder) in which your projects are currently located.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">Move:</span></p>
+<p><span style="font-size: 12pt;">You can move the source files in case of success/error. This is helpful to find out which files have created problems during import and which ones have already been imported.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">Filter:</span></p>
+<p><span style="font-size: 12pt;">Here you select which files should be imported and which files should be ignored. (Technically, these are a positive and a negative list.) At this point, there is no distinction between the original and the version. If you want to import all files from the source folder without exception, you can simply uncheck both checkboxes in this area.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">Version detection:</span></p>
+<p><span style="font-size: 12pt;">If you have separate version files in addition to the original, these can be imported directly into the same WinOLS project as a version. Specify a filter (e. g. *. org) with which WinOLS can recognize the original files within the files. Anything that is not the original application file is considered a version.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">Optional fallback strategy: If the original is not recognized, WinOLS can simply consider the oldest file as the original.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">Requirements:</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="18"><span style="font-size: 12pt; font-family: 'Arial'; color: #000000;">1.</span></td><td><span style="font-size: 12pt;">The file must be in a format that can be imported as a version. (e. g. bin or hex; but not ols)</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="18"><span style="font-size: 12pt; font-family: 'Arial'; color: #000000;">2.</span></td><td><span style="font-size: 12pt;">The relationship between the original and the version must be recognizable. (see below)</span></td></tr></table></div><p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">To allow WinOLS match a version to the correct original, there are 2 checkboxes / strategies:</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 12pt; font-family: 'Symbol'; font-style: normal; color: #000000; text-decoration: none;">&#183;</span></td><td><span style="font-size: 12pt;">The original and its versions are in a subdirectory alone (without any other original/versions).</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 12pt; font-family: 'Symbol'; font-style: normal; color: #000000; text-decoration: none;">&#183;</span></td><td><span style="font-size: 12pt;">The only difference between the original and its versions is the suffix. (Example: abc. org and abc. version1) In this case, the suffix of the version is automatically saved as version name in the project.</span></td></tr></table></div><p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">Versions that cannot be assigned to an original are ignored.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">Groups:</span></p>
+<p><span style="font-size: 12pt;">You can use groups to further subdivide the files if several file types would otherwise unintentionally become one project (because they are in the same directory). You can use file filters (such as *eprom*) for this purpose. Individual file filters are separated by &quot;;&quot;. The groups are separated by &quot;/&quot;.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">Example: *.group1 / *.group2a; *.group2b / *.*</span></p>
+<p><span style="font-size: 12pt;">All files with the suffix ‘group1’ end up in one project. All files with “group2a” or ‘group2b’ end up in another project. And all other files end up in a third project.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">Wildcards:</span></p>
+<p><span style="font-size: 12pt;">The 3 input fields in the lower part can handle standard Windows wildcards like '*. bin'. Even more complex wildcards like '*. version*' are possible. (The asterisk always stands for an arbitrary sequence of characters.)</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">Tip:</span></p>
+<p><span style="font-size: 12pt;">For this function, use a client that does not yet have any projects. This way you can easily delete and restart everything in case of problems.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Shortcuts</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 24px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="89"><span style="font-size: 12pt; color: #000000;">Symbol bar:</span></td><td><span style="font-size: 12pt; color: #000000;">-</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 24px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="89"><span style="font-size: 12pt; color: #000000;">Keyboard:</span></td><td><span style="font-size: 12pt; color: #000000;">-</span></td></tr></table></div><p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+
+<!--ZOOMSTOP-->
+
+</div></div>
+<script type="text/javascript"> 
+<!-- 
+var lastSlashPos = document.URL.lastIndexOf("/") >
+document.URL.lastIndexOf("\\") ? document.URL.lastIndexOf("/") :
+document.URL.lastIndexOf("\\");
+if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4
+).toLowerCase() != "~hh" )
+{
+    nsrInit();
+}
+--> 
+</script> 
+</body>
+</html>

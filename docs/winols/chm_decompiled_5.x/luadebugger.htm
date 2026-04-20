@@ -1,0 +1,151 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <title>The dialog Lua Debugger (Menu Window)</title>
+   <meta name="generator" content="Help & Manual">
+   <meta name="keywords" content="lua debugger,debugger">
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <link type="text/css" href="default.css" rel="stylesheet">
+   <link type="text/css" href="custom.css" rel="stylesheet">
+   <script type="text/javascript" src="nsh.js"></script>
+   <script type="text/javascript" src="tablesort.js"></script>
+   
+<!-- non-scrolling headers for CHM and browser-based help, local styles-->
+<style TYPE="text/css" media="screen"> 
+   <!-- 
+   body {    
+      margin:0; 
+      padding:0; 
+      overflow: auto; 
+      background: #FFFFFF; 
+   } 
+   #idheader { 
+      width:100%; 
+      height:auto; 
+      padding: 0; 
+      margin: 0; 
+} 
+    #idheaderbg  {
+    background: #649CCC; 
+}
+   -->
+   </style>
+   
+<style TYPE="text/css" MEDIA="print">
+<!--
+/* Hide navigation links and add space between header
+     and text in the printed version. Not valid for eBooks. */
+#idnav { display:none;	 }
+.topichead { padding: 5px 5px 20px 5px; }
+-->
+</style>   
+</head>
+<body>
+<!--ZOOMSTOP-->
+
+<div id="idheader">
+<div id="idheaderbg">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" 
+       style="margin: 0px; color: #649CCC; background: url(header_bg.jpg);">
+
+  <tr valign="bottom">
+    <td align="left" valign="bottom" class="topichead" style="padding:10px">
+   <p class="crumbs" id="idnav" style="color:#000080"><b>Navigation:</b>&nbsp;
+   
+   <A HREF="Main_index.htm">Start page</A> > <a href="menu_window.htm">Commands of the menu Window</a> &gt; <a href="hid_lua_again.htm">The dialog Lua (Menu Window)</a>&nbsp;&gt;</p>
+   <p class="p_Heading1"><span class="f_Heading1">The dialog Lua Debugger (Menu Window)</span></p>
+
+    </td>
+    <td align="right" width="120" valign="middle" class="topichead" id="idnav" style="padding:10px">
+    <a href="javascript: print();"
+    		onmouseover="document.images.prntr.src='print1.gif'" 
+        onmouseout="document.images.prntr.src='print2.gif'"
+        ><img name="prntr" border="0" alt="Print" title="Drucken" src="print2.gif"
+        ></a>
+     <a href="hid_lua_again.htm"
+        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
+        onmouseout="document.images.prev.src='btn_prev_n.gif'"
+        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
+        ></a><a href="hid_lua_again.htm"
+        onmouseover="document.images.main.src='btn_home_h.gif'" 
+        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Up"
+        ></a><a href="hid_luacrypt.htm"
+        onmouseover="document.images.next.src='btn_next_h.gif'" 
+        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
+        ></a>
+    </td>
+  </tr>
+  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
+</table>
+</div>
+
+<!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
+  
+
+</div>  
+
+
+
+<div id="idcontent"><div id="innerdiv" style="padding:10px"> 
+<!--ZOOMRESTART-->
+<p><img src="luadebuggere.png" width="678" height="434" border="0" alt=""></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">The Lua debugger allows you to execute Lua scripts step by step and view the contents of the variables. You can reach this function via the &quot;<a href="hid_lua_again.htm">Re-run last LUA script</a>&quot; dialog (requires a configured LUA path).</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Step/In/Out:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">Keyboard: F10/F11/Shift-F11</span></p>
+<p><span style="font-size: 12pt; color: #000000;">Executes a single program step. The 3 buttons differ in their behavior with LUA sub-functions. While &quot;Step&quot; executes the function completely and only stops again afterwards, StepIn also allows you to step through the sub-function individually. StepOut allows you to continue executing the code until the current function is terminated.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Walk/Jog:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">These functions work as if you keep using StepIn (F11). While Walk always pauses for 500ms, Jog works as fast as it can. Both functions are ended by a breakpoint or by the Pause button.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Run:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">Keyboard: F5</span></p>
+<p><span style="font-size: 12pt; color: #000000;">Runs the script without debugger interaction until a breakpoint is reached or Pause is clicked.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Pause:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">Interrupts the current script, at the next LUA command</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Edit:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">Exits the script run and starts the editor mode. With Ctrl+Space you can call up a list of possible commands for words you have started. You can save the current file with Ctrl+S. As soon as you start the script execution, the file is saved and the editor mode ends.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Restart:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">Interrupts the current script, at the next LUA command and restarts it.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Close:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">Closes the debugger</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Line colors:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">The yellow line is the current line. The previous lines are highlighted in gray.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Breakpoints:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">You can set/delete breakpoints by clicking to the left of the line numbers. Breakpoints interrupt the Walk/Jog/Run functions. In editor mode, you can set breakpoints with F9.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Watches:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">You can see global/local variables in the windows at the bottom left/right. You can also query variables using the mouse tooltip and view them in the virtual comments that appear n the line during execution.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Notes:</span></p>
+<p><span style="font-size: 12pt; color: #000000;">The editor allows a maximum of 2048 characters per line. This is a third-party limitation that we cannot currently change.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Shortcuts</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 24px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="89"><span style="font-size: 12pt; color: #000000;">Symbol bar:</span></td><td><span style="font-size: 12pt; color: #000000;">-</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 24px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="89"><span style="font-size: 12pt; color: #000000;">Keyboard:</span></td><td><span style="font-size: 12pt; color: #000000;">-</span></td></tr></table></div><p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+
+<!--ZOOMSTOP-->
+
+</div></div>
+<script type="text/javascript"> 
+<!-- 
+var lastSlashPos = document.URL.lastIndexOf("/") >
+document.URL.lastIndexOf("\\") ? document.URL.lastIndexOf("/") :
+document.URL.lastIndexOf("\\");
+if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4
+).toLowerCase() != "~hh" )
+{
+    nsrInit();
+}
+--> 
+</script> 
+</body>
+</html>
