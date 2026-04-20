@@ -1328,20 +1328,26 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       const boundaryRe = new RegExp(`(^|[^A-Za-z0-9])(${escape(q)}${altQuery ? '|' + escape(altQuery) : ''})([^A-Za-z0-9]|$)`, 'i')
       const strict = (data ?? []).filter(entry => boundaryRe.test(entry.filename))
 
-      // If strict match produced results, use those. If strict gave 0 but fuzzy found some,
-      // keep the fuzzy list but annotate — the user might be searching by family name or
-      // partial string where fuzzy IS what they want.
-      const finalList = strict.length > 0 ? strict : (data ?? [])
-      if (strict.length > 0 && strict.length < (data ?? []).length) {
-        setLibFallbackNote(`${strict.length} of ${(data ?? []).length} fuzzy matches are exact part-number matches — showing only those.`)
-      } else if (strict.length === 0 && (data ?? []).length > 0) {
-        setLibFallbackNote(`No exact matches for "${q}". Showing ${(data ?? []).length} fuzzy matches — review filenames carefully.`)
+      // EXACT-MATCH-ONLY policy: fuzzy substring hits where the query isn't a bounded
+      // token in the filename are almost never the A2L for the binary the user loaded.
+      // If strict has results → show those. If not → show nothing, even when fuzzy has hits.
+      if (strict.length > 0) {
+        if (strict.length < (data ?? []).length) {
+          setLibFallbackNote(`${strict.length} of ${(data ?? []).length} fuzzy matches are exact part-number matches — showing only those.`)
+        }
+        setLibResults(strict as DefinitionEntry[])
+        setLibTotal(strict.length)
+        setLibPage(page)
+        return strict.length
+      } else {
+        if ((data ?? []).length > 0) {
+          setLibFallbackNote(`No exact matches for "${q}". ${(data ?? []).length} loose substring hits found but none are the A2L for this binary — hidden.`)
+        }
+        setLibResults([])
+        setLibTotal(0)
+        setLibPage(page)
+        return 0
       }
-
-      setLibResults(finalList as DefinitionEntry[])
-      setLibTotal(strict.length > 0 ? strict.length : (count ?? 0))
-      setLibPage(page)
-      return strict.length > 0 ? strict.length : (count ?? 0)
     } finally {
       setLibLoading(false)
     }
@@ -1413,18 +1419,20 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             e.filename.toUpperCase().replace(/[^A-Z0-9]/g, '').includes(searchTerm.replace(/[^A-Z0-9]/g, ''))
             || (altTerm && e.filename.toUpperCase().replace(/[^A-Z0-9]/g, '').includes(altTerm.replace(/[^A-Z0-9]/g, '')))
           )
-          // ONLY auto-load when there is ONE exact A2L match for the part number.
-          // Multiple matches = ambiguous, don't guess — show them in the list and let user pick.
+          // EXACT MATCH ONLY: auto-load when there is exactly ONE A2L matching the part number.
+          // Anything else (zero matches, multiple ambiguous matches) → show nothing. A2L candidates
+          // not tied to this exact binary are almost never the right map.
           if (exactHits.length === 1) {
             loadDefinitionFromLibrary(exactHits[0] as DefinitionEntry)
-          } else if (exactHits.length > 1) {
-            setLibResults(exactHits as DefinitionEntry[])
-            setLibTotal(exactHits.length)
-            setLibFallbackNote(
-              `${exactHits.length} A2L files match part number ${part}. Pick the one whose filename matches your exact software version.`,
-            )
+          } else {
+            setLibResults([])
+            setLibTotal(0)
+            if (exactHits.length > 1) {
+              setLibFallbackNote(
+                `${exactHits.length} A2L files mention "${part}" but none is an exact match for this binary. Search manually if you have a specific file in mind.`,
+              )
+            }
           }
-          // Zero hits: leave list empty, search box pre-filled — user can click Search.
         })
     } else {
       // No part number found in binary or filename — pre-fill with ECU family
