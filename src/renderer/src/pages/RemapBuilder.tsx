@@ -1,26 +1,20 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { ECU_DEFINITIONS, ADDONS } from '../lib/ecuDefinitions'
 import type { EcuDef } from '../lib/ecuDefinitions'
-import { detectEcu, detectEcuFromFilename, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, syntheticMapDefFromDRT, extractPartNumberFromBinary } from '../lib/binaryParser'
-import type { DetectedEcu, ExtractedMap, A2LValidationResult } from '../lib/binaryParser'
+import { detectEcu, detectEcuFromFilename, detectEcuFromCatalog, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, extractPartNumberFromBinary } from '../lib/binaryParser'
+import type { DetectedEcu, DetectedCatalogEcu, ExtractedMap, A2LValidationResult } from '../lib/binaryParser'
 import { buildRemap, buildFilename } from '../lib/remapEngine'
 import type { Stage, AddonId, RemapResult } from '../lib/remapEngine'
 import { verifyChecksum, correctChecksum, correctBlockChecksums } from '../lib/checksumEngine'
 import type { BlockCorrectionResult } from '../lib/checksumEngine'
 import { parseA2L, extractMapsFromA2L, detectBaseAddress, guessEcuFamily, ECU_BASE_ADDRESSES } from '../lib/a2lParser'
 import type { A2LParseResult, A2LMapDef } from '../lib/a2lParser'
-import { parseDRT, convertDRTMaps, guessEcuFamilyFromDRT } from '../lib/drtParser'
-import type { DRTParseResult, DRTConvertedMap } from '../lib/drtParser'
-import { parseKP, convertKPMaps } from '../lib/kpParser'
-import type { KPParseResult, KPConvertedMap } from '../lib/kpParser'
 import { suppressDTCs, getActiveDTCGroups } from '../lib/dtcRemoval'
 import type { DTCPatternResult } from '../lib/dtcRemoval'
 import { scanBinaryForMaps, classifyCandidates, matchUnknownsByDNA } from '../lib/mapClassifier'
-import type { ClassificationResult, ScannedCandidate } from '../lib/mapClassifier'
-import { applyMemoryToCandidates, buildEntryFromCandidate, candidateSigHex } from '../lib/memoryLookup'
-import type { MemoryMatch, FingerprintEntry } from '../lib/memoryLookup'
-import { diffBinaries, findCoveringCandidate } from '../lib/binaryDiff'
-import type { DiffSummary, DiffRegion } from '../lib/binaryDiff'
+import type { ClassificationResult } from '../lib/mapClassifier'
+import { applyMemoryToCandidates } from '../lib/memoryLookup'
+import type { MemoryMatch } from '../lib/memoryLookup'
 
 // ─── Transpose helper (kept for any future use) ──────────────────────────────
 function transposeGrid(grid: number[][]): number[][] {
@@ -671,6 +665,10 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
 
   // Step 1 state
   const [detected, setDetected] = useState<DetectedEcu | null>(null)
+  // Catalog-backed detection (WinOLS 698-ECU catalog). Populated for ANY binary
+  // with a recognised variant name — independent of our 217 internal EcuDefs.
+  // Shown as a secondary hint when `detected` is null or weak.
+  const [catalogHit, setCatalogHit] = useState<DetectedCatalogEcu | null>(null)
   const [selectedEcuId, setSelectedEcuId] = useState('')
 
   // Step 2 state
@@ -703,16 +701,6 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [a2lMaps, setA2lMaps] = useState<A2LMapDef[]>([])
   const [a2lFileName, setA2lFileName] = useState<string>('')
 
-  // DRT state
-  const [drtResult, setDrtResult] = useState<DRTParseResult | null>(null)
-  const [drtMaps, setDrtMaps] = useState<DRTConvertedMap[]>([])
-  const [drtFileName, setDrtFileName] = useState<string>('')
-
-  // KP state
-  const [kpResult, setKpResult] = useState<KPParseResult | null>(null)
-  const [kpMaps, setKpMaps] = useState<KPConvertedMap[]>([])
-  const [kpFileName, setKpFileName] = useState<string>('')
-
   // DTC removal state
   const [dtcResults, setDtcResults] = useState<DTCPatternResult[]>([])
   const [dtcSuppressedCount, setDtcSuppressedCount] = useState(0)
@@ -724,13 +712,6 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   // user has previously confirmed "this exact Kf_ signature = this map".
   const [memoryMatches, setMemoryMatches] = useState<MemoryMatch[]>([])
   // UI state for the "Confirm as…" dialog that writes an entry to memory.
-  // Stage1 / tuned pair for diff mode — user loads a second binary and we show
-  // every byte region that changed between ORI and Stage1, so they can see
-  // what a tuner actually modified in real files.
-  const [stage1Buffer, setStage1Buffer] = useState<ArrayBuffer | null>(null)
-  const [stage1Name, setStage1Name] = useState<string>('')
-  const [diffResult, setDiffResult] = useState<DiffSummary | null>(null)
-  const [diffBusy, setDiffBusy] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [scannerBusy, setScannerBusy] = useState(false)
   const [scannerDebug, setScannerDebug] = useState('')
@@ -789,11 +770,15 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     } else {
       setSelectedEcuId('')
     }
-    // Clear ALL previously loaded A2L/DRT state when a new binary is loaded.
+    // Catalog lookup runs independently — returns a variant hit even when we
+    // don't have a full internal def for that ECU. Useful for "unknown" binaries.
+    // Filename is passed because most diesel ECUs don't carry their family
+    // name as a literal string in the flash — it's only in the filename.
+    setCatalogHit(detectEcuFromCatalog(buf, name))
+    // Clear ALL previously loaded A2L state when a new binary is loaded.
     // Without this, a second binary load retains the first binary's A2L addresses
     // and writes map data at completely wrong offsets into the new binary.
     setA2lResult(null); setA2lMaps([]); setA2lFileName('')
-    setDrtResult(null); setDrtMaps([]); setDrtFileName('')
     setA2lValidation([])
     setA2lFallbackCount(0)
     setScannerFallbackCount(0)
@@ -803,8 +788,6 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     setLibFallbackNote(''); setLibOriginalNum(''); setLibLoadError('')
     setScanResult(null); setShowScanner(false)
     setMemoryMatches([])
-    // Loading a new ORI invalidates any previous Stage1 diff.
-    setStage1Buffer(null); setStage1Name(''); setDiffResult(null); setDiffBusy(false)
 
     // Run binary map scanner in background
     const ecuForScan = det?.def ?? null
@@ -900,129 +883,6 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     reader.readAsArrayBuffer(file)
   }, [processFile])
 
-  // ─── ORI vs Stage1 diff mode ─────────────────────────────────────────────
-  // Load a Stage1 / tuned counterpart to the currently-loaded ORI binary.
-  // The diff shows every byte region that a tuner actually modified — the
-  // most direct evidence of which maps matter for this specific ECU variant.
-  const handleStage1Load = async () => {
-    if (!fileBuffer) { setLoadError('Load the ORI file first.'); return }
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const api = (window as any).api
-      const loadArrayBuffer = async (): Promise<{ buf: ArrayBuffer; name: string } | null> => {
-        if (api?.openEcuFile) {
-          const r = await api.openEcuFile()
-          if (!r) return null
-          return {
-            buf: new Uint8Array(r.buffer).buffer,
-            name: (r.path || r.name) as string,
-          }
-        }
-        // Fallback: file input
-        return new Promise((resolve) => {
-          const input = document.createElement('input')
-          input.type = 'file'
-          input.accept = '.bin,.hex,.ori,.ori2,.mod,.s1,.stage1'
-          input.onchange = (ev) => {
-            const f = (ev.target as HTMLInputElement).files?.[0]
-            if (!f) { resolve(null); return }
-            const fr = new FileReader()
-            fr.onload = () => resolve({ buf: fr.result as ArrayBuffer, name: f.name })
-            fr.readAsArrayBuffer(f)
-          }
-          input.click()
-        })
-      }
-      const loaded = await loadArrayBuffer()
-      if (!loaded) return
-
-      setDiffBusy(true)
-      setStage1Buffer(loaded.buf)
-      setStage1Name(loaded.name)
-      // Defer so React can paint the busy state before the diff runs.
-      setTimeout(() => {
-        try {
-          const summary = diffBinaries(fileBuffer, loaded.buf)
-          setDiffResult(summary)
-        } catch (e) {
-          setLoadError(`Diff failed: ${String(e)}`)
-        } finally {
-          setDiffBusy(false)
-        }
-      }, 30)
-    } catch (err) {
-      setDiffBusy(false)
-      setLoadError(String(err))
-    }
-  }
-
-  /** Save a DiffRegion as a memory fingerprint. If the region aligns with a
-   *  scanner candidate, we use that candidate's Kf_ header + dimensions —
-   *  that's the ideal case (verified "tuner modified this 12×16 boost map").
-   *  Otherwise we store a region-only fingerprint (no axis/dim info, just
-   *  the before-bytes hex as the sig). */
-  const saveRegionToMemory = async (
-    region: DiffRegion,
-    label: string,
-    factor: number,
-    unit: string,
-    category: string,
-  ): Promise<boolean> => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const api = (window as any).api
-    if (!api?.memory?.save || !fileBuffer) return false
-    // Try to pair with a scanner candidate
-    const scanCands = scanResult
-      ? [...scanResult.candidates.map(cc => cc.candidate), ...scanResult.unmatched.map(cc => cc.candidate)]
-      : []
-    const covering = findCoveringCandidate(region, scanCands)
-    let entry
-    if (covering) {
-      entry = buildEntryFromCandidate(fileBuffer, covering, {
-        ecuFamily: selectedEcu?.family ?? detected?.def.family ?? 'UNKNOWN',
-        partNumber: null,
-        mapName: label,
-        category: category as 'boost'|'fuel'|'torque'|'ignition'|'smoke'|'limiter'|'emission'|'misc',
-        factor,
-        unit: unit || null,
-        confirmedBy: 'diff',
-      })
-    } else {
-      // No candidate — save a region-only fingerprint. Use first 12 bytes of
-      // the before-region as the sig surrogate. Future scans won't auto-match
-      // this (no Kf_ header), but the record is still useful for review.
-      const sigBytes = region.before.slice(0, 12)
-      let sigHex = ''
-      for (let i = 0; i < sigBytes.length; i++) sigHex += sigBytes[i].toString(16).padStart(2, '0')
-      entry = {
-        ecuFamily: selectedEcu?.family ?? detected?.def.family ?? 'UNKNOWN',
-        partNumber: null,
-        sigHex,
-        rows: 1, cols: region.length,
-        dtype: 'uint8' as const, le: true,
-        factor,
-        offsetVal: 0,
-        unit: unit || null,
-        mapDefId: null,
-        mapName: label,
-        category,
-        xAxis: null, yAxis: null,
-        dataMin: region.beforeMin,
-        dataMax: region.beforeMax,
-        dataMean: region.beforeMean,
-        dna128: null,
-        confirmedBy: 'diff-region',
-        notes: `byte region @ 0x${region.offset.toString(16)} len ${region.length}`,
-      }
-    }
-    try {
-      const res = await api.memory.save(entry)
-      return !!res?.ok
-    } catch {
-      return false
-    }
-  }
-
   // Loading state for the Preview Changes button — inline scanner for Delphi/no-signature
   // ECUs takes 3-5 seconds on a 4MB binary and blocks the UI thread. Without this flag
   // the button appears unresponsive and user thinks the app is stuck.
@@ -1111,66 +971,6 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         return em
       })
       setA2lFallbackCount(fallbackCount)
-    }
-
-    // DRT fallback: DRT files provide direct file offsets (no signature needed).
-    // Match DRT maps to unfound ecuDef maps by category + closest dimensions.
-    // Category bridge: DRT 'egr'/'dpf' → ecuDef 'emission'
-    if (drtMaps.length > 0) {
-      const normCat = (c: string) => (c === 'egr' || c === 'dpf') ? 'emission' : c
-      const drtUsedOffsets = new Set<number>()
-      // Mark all addresses already claimed by signature or A2L matches
-      for (const em of maps) { if (em.found && em.offset >= 0) drtUsedOffsets.add(em.offset) }
-      let drtCount = 0
-      maps = maps.map(em => {
-        if (em.found) return em
-        const candidates = drtMaps.filter(dm => normCat(dm.category) === em.mapDef.category)
-        if (candidates.length === 0) return em
-        // Sort by closest row×col dimensions so best-matching DRT map is tried first
-        const sorted = [...candidates].sort((a, b) =>
-          (Math.abs(a.rows - em.mapDef.rows) + Math.abs(a.cols - em.mapDef.cols)) -
-          (Math.abs(b.rows - em.mapDef.rows) + Math.abs(b.cols - em.mapDef.cols))
-        )
-        for (const dm of sorted) {
-          const synthDef = syntheticMapDefFromDRT(dm, em.mapDef)
-          const result = extractMap(fileBuffer, synthDef)
-          if (result.found && !drtUsedOffsets.has(result.offset)) {
-            drtUsedOffsets.add(result.offset)
-            drtCount++
-            return { ...result, source: 'drt' as const }
-          }
-        }
-        return em
-      })
-      setA2lFallbackCount(c => c + drtCount)
-    }
-
-    // KP fallback: same approach as DRT — direct file offsets, match by category + dimensions.
-    if (kpMaps.length > 0) {
-      const normCat = (c: string) => (c === 'egr' || c === 'dpf') ? 'emission' : c
-      const kpUsedOffsets = new Set<number>()
-      for (const em of maps) { if (em.found && em.offset >= 0) kpUsedOffsets.add(em.offset) }
-      let kpCount = 0
-      maps = maps.map(em => {
-        if (em.found) return em
-        const candidates = kpMaps.filter(km => normCat(km.category) === em.mapDef.category)
-        if (candidates.length === 0) return em
-        const sorted = [...candidates].sort((a, b) =>
-          (Math.abs(a.rows - em.mapDef.rows) + Math.abs(a.cols - em.mapDef.cols)) -
-          (Math.abs(b.rows - em.mapDef.rows) + Math.abs(b.cols - em.mapDef.cols))
-        )
-        for (const km of sorted) {
-          const synthDef = syntheticMapDefFromDRT(km, em.mapDef)
-          const result = extractMap(fileBuffer, synthDef)
-          if (result.found && !kpUsedOffsets.has(result.offset)) {
-            kpUsedOffsets.add(result.offset)
-            kpCount++
-            return { ...result, source: 'kp' as const }
-          }
-        }
-        return em
-      })
-      setA2lFallbackCount(c => c + kpCount)
     }
 
     // Scanner fallback: for ECUs like Delphi DCM6.2 (VAG TDI) where definitions have
@@ -1461,10 +1261,6 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       setA2lResult(result)
       setA2lMaps(maps)
       setA2lFileName(file.name)
-      // Clear any DRT if A2L loaded
-      setDrtResult(null)
-      setDrtMaps([])
-      setDrtFileName('')
       // Validate A2L addresses against the loaded binary
       if (fileBuffer) {
         const validation = validateA2LMapsInBinary(fileBuffer, maps)
@@ -1490,52 +1286,6 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       if (fileBuffer) onEcuLoaded?.({ fileName, fileBuffer, detected, a2lMaps: maps, drtMaps: [] })
     } catch (e) {
       setLoadError(`A2L parse failed: ${String(e)}`)
-    }
-  }
-
-  // ─── DRT load ─────────────────────────────────────────────────────────────
-  const handleDRTLoad = async (file: File) => {
-    try {
-      const buf = await file.arrayBuffer()
-      const driverName = file.name.replace(/\.drt$/i, '')
-      const result = parseDRT(buf, driverName)
-      const converted = convertDRTMaps(result)
-      // Auto-detect ECU from DRT
-      if (!selectedEcuId) {
-        const family = guessEcuFamilyFromDRT(result)
-        const match = ECU_DEFINITIONS.find(e => e.family === family || e.id.includes(family.toLowerCase()))
-        if (match) setSelectedEcuId(match.id)
-      }
-      setDrtResult(result)
-      setDrtMaps(converted)
-      setDrtFileName(file.name)
-      // Clear A2L definition — but KEEP a2lValidation so validated addresses
-      // remain available as primary fallback (A2L addresses run before DRT fallback)
-      setA2lResult(null)
-      setA2lMaps([])
-      setA2lFileName('')
-      // Share with Performance page
-      if (fileBuffer) onEcuLoaded?.({ fileName, fileBuffer, detected, a2lMaps: [], drtMaps: converted })
-    } catch (e) {
-      setLoadError(`DRT parse failed: ${String(e)}`)
-    }
-  }
-
-  // ─── KP load ──────────────────────────────────────────────────────────────
-  const handleKPLoad = async (file: File) => {
-    try {
-      const buf = await file.arrayBuffer()
-      const result = parseKP(buf)
-      const converted = convertKPMaps(result)
-      setKpResult(result)
-      setKpMaps(converted)
-      setKpFileName(file.name)
-      // Clear A2L and DRT — KP is the active definition source
-      setA2lResult(null); setA2lMaps([]); setA2lFileName('')
-      setDrtResult(null); setDrtMaps([]); setDrtFileName('')
-      if (fileBuffer) onEcuLoaded?.({ fileName, fileBuffer, detected, a2lMaps: [], drtMaps: [] })
-    } catch (e) {
-      setLoadError(`KP parse failed: ${String(e)}`)
     }
   }
 
@@ -1739,33 +1489,15 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         setA2lResult(result)
         setA2lMaps(maps)
         setA2lFileName(entry.filename)
-        setDrtResult(null); setDrtMaps([]); setDrtFileName('')
         // Validate A2L addresses against the loaded binary
         if (fileBuffer) {
           const validation = validateA2LMapsInBinary(fileBuffer, maps)
           setA2lValidation(validation)
           setShowSigExport(false)
         }
-      } else if (entry.file_type === 'drt') {
-        const buf = await data.arrayBuffer()
-        const result = parseDRT(buf, entry.driver_name ?? entry.filename)
-        const converted = convertDRTMaps(result)
-        setDrtResult(result)
-        setDrtMaps(converted)
-        setDrtFileName(entry.filename)
-        // Keep a2lValidation so A2L-validated addresses remain as primary fallback
-        setA2lResult(null); setA2lMaps([]); setA2lFileName('')
-        setKpResult(null); setKpMaps([]); setKpFileName('')
       } else {
-        // KP file
-        const buf = await data.arrayBuffer()
-        const result = parseKP(buf)
-        const converted = convertKPMaps(result)
-        setKpResult(result)
-        setKpMaps(converted)
-        setKpFileName(entry.filename)
-        setA2lResult(null); setA2lMaps([]); setA2lFileName('')
-        setDrtResult(null); setDrtMaps([]); setDrtFileName('')
+        // Only A2L definitions are supported. Non-A2L files are ignored.
+        setLibLoadError(`${entry.filename} is not an A2L — only A2L definitions are supported.`)
       }
       // If binary is already loaded, advance to step 1 automatically
       if (fileBuffer) setStep(1)
@@ -1838,10 +1570,10 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         style={{
           marginTop: 16, border: '1px dashed var(--border)', borderRadius: 12,
           padding: '20px', textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.15s ease',
-          background: (a2lFileName || drtFileName || kpFileName) ? 'rgba(34,197,94,0.04)' : 'transparent',
+          background: a2lFileName ? 'rgba(34,197,94,0.04)' : 'transparent',
         }}
         onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
-        onMouseLeave={e => (e.currentTarget.style.borderColor = (a2lFileName || drtFileName || kpFileName) ? 'rgba(34,197,94,0.4)' : 'var(--border)')}
+        onMouseLeave={e => (e.currentTarget.style.borderColor = a2lFileName ? 'rgba(34,197,94,0.4)' : 'var(--border)')}
         onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--accent)' }}
         onDragLeave={e => { e.currentTarget.style.borderColor = 'var(--border)' }}
         onDrop={e => {
@@ -1851,20 +1583,16 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           if (!f) return
           const lower = f.name.toLowerCase()
           if (lower.endsWith('.a2l')) handleA2LLoad(f)
-          else if (lower.endsWith('.drt')) handleDRTLoad(f)
-          else if (lower.endsWith('.kp')) handleKPLoad(f)
         }}
         onClick={() => {
           const input = document.createElement('input')
           input.type = 'file'
-          input.accept = '.a2l,.A2L,.drt,.DRT,.kp,.KP'
+          input.accept = '.a2l,.A2L'
           input.onchange = (ev) => {
             const f = (ev.target as HTMLInputElement).files?.[0]
             if (!f) return
             const lower = f.name.toLowerCase()
             if (lower.endsWith('.a2l')) handleA2LLoad(f)
-            else if (lower.endsWith('.drt')) handleDRTLoad(f)
-            else if (lower.endsWith('.kp')) handleKPLoad(f)
           }
           input.click()
         }}
@@ -1897,52 +1625,16 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
               )
             })()}
           </div>
-        ) : drtFileName ? (
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 800, color: '#22c55e', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              ✓ DRT Loaded
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
-              {drtFileName}
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-              {drtResult?.totalMaps} MAPs · {drtResult?.totalCurves} CURVEs · ECM Titanium driver
-            </div>
-            {drtResult?.warnings[0] && (
-              <div style={{ fontSize: 10, color: '#f59e0b', marginTop: 4 }}>{drtResult.warnings[0]}</div>
-            )}
-          </div>
-        ) : kpFileName ? (
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 800, color: '#22c55e', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              ✓ KP Loaded
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
-              {kpFileName}
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-              {kpResult?.maps.length ?? 0} maps · WinOLS MapPack
-            </div>
-            {kpResult?.warnings[0] && (
-              <div style={{ fontSize: 10, color: '#f59e0b', marginTop: 4 }}>{kpResult.warnings[0]}</div>
-            )}
-          </div>
         ) : (
           <>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
               {SIG_SUPPORTED.includes(selectedEcuId || detected?.def.id || '')
-                ? 'Optional: Drop definition file or search library'
-                : '⚠ Required: Drop an A2L, DRT, or KP file, or load one from the library above'}
+                ? 'Optional: Drop an A2L definition or search library'
+                : '⚠ Required: Drop an A2L file, or load one from the library above'}
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', fontWeight: 700 }}>
                 .a2l — Bosch/ASAP2
-              </span>
-              <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.3)', fontWeight: 700 }}>
-                .drt — ECM Titanium
-              </span>
-              <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(184,240,42,0.1)', color: 'var(--lime)', border: '1px solid rgba(184,240,42,0.3)', fontWeight: 700 }}>
-                .kp — WinOLS MapPack
               </span>
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, opacity: 0.7 }}>
@@ -1985,6 +1677,13 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             <span style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>Compatible vehicles: </span>
             {detected.def.vehicles.join(' · ')}
           </div>
+          {catalogHit && (
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(0,174,200,0.15)' }}>
+              <span style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>WinOLS variant: </span>
+              {catalogHit.entry.manufacturer} {catalogHit.entry.variant}
+              {catalogHit.entry.plugin && <> · plugin <code style={{ color: 'var(--accent)' }}>{catalogHit.entry.plugin}</code></>}
+            </div>
+          )}
         </div>
       ) : (
         <div style={{ marginBottom: 20, padding: '16px 18px', borderRadius: 10, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)' }}>
@@ -2004,6 +1703,27 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
               <div>You can manually select the closest ECU family below, or contact DCTuning to add support for this file.</div>
             </div>
           )}
+          {catalogHit && (
+            <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, background: 'rgba(0,174,200,0.07)', border: '1px solid rgba(0,174,200,0.25)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--accent)' }}>💡 Identified via WinOLS catalog</span>
+                <span style={{ fontSize: 10, color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                  confidence {(catalogHit.confidence * 100).toFixed(0)}%
+                </span>
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
+                {catalogHit.entry.manufacturer} {catalogHit.entry.variant}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                Family: <strong style={{ color: 'var(--text-secondary)' }}>{catalogHit.entry.group ?? '—'}</strong>
+                {catalogHit.entry.use && <> · Use: <strong style={{ color: 'var(--text-secondary)' }}>{catalogHit.entry.use}</strong></>}
+                {catalogHit.entry.plugin && <> · WinOLS plugin: <strong style={{ color: 'var(--text-secondary)' }}>{catalogHit.entry.plugin}</strong></>}
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 6, fontStyle: 'italic' }}>
+                Matched string in binary: <code style={{ color: 'var(--accent)' }}>{catalogHit.matchedString}</code>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -2016,7 +1736,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       {(() => {
         const ecuId = selectedEcuId || detected?.def.id || ''
         const sigSupported = ['edc15', 'me7', 'me9', 'me9_merc', 'bmw_ms43'].includes(ecuId)
-        const needsBanner  = ecuId && !sigSupported && !a2lResult && !drtResult && !kpResult
+        const needsBanner  = ecuId && !sigSupported && !a2lResult
         if (!needsBanner) return null
         return (
           <div style={{ marginBottom: 20, padding: '14px 18px', borderRadius: 10, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.35)', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
@@ -2028,43 +1748,33 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
               <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.65 }}>
                 <strong style={{ color: 'var(--text-secondary)' }}>{detected?.def.name ?? ecuId}</strong> does not embed map addresses in the binary.
                 Maps can only be located using an
-                <strong style={{ color: 'var(--text-secondary)'}}> A2L</strong> or
-                <strong style={{ color: 'var(--text-secondary)'}}> DRT</strong> definition file
+                <strong style={{ color: 'var(--text-secondary)'}}> A2L</strong> definition file
                 that contains the exact calibration memory layout.
               </div>
               <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 8, fontWeight: 700 }}>
-                👇 Search the library below and load a matching A2L or DRT file to proceed.
+                👇 Search the library below and load a matching A2L file to proceed.
               </div>
             </div>
           </div>
         )
       })()}
 
-      {(a2lResult || drtResult || kpResult) && (
+      {a2lResult && (
         <div style={{ marginBottom: 20, padding: '16px 18px', borderRadius: 10, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: '#22c55e' }}>
-              ✓ {a2lResult ? 'A2L' : drtResult ? 'DRT' : 'KP'} Definition Loaded
+              ✓ A2L Definition Loaded
             </span>
             <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 4, background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)' }}>
-              {a2lResult ? 'ASAP2 / Bosch' : drtResult ? 'ECM Titanium' : 'WinOLS MapPack'}
+              ASAP2 / Bosch
             </span>
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 12 }}>
-            {a2lResult
-              ? `${a2lResult.totalMaps} MAPs · ${a2lResult.totalCurves} CURVEs · ${a2lResult.totalValues} scalar values`
-              : drtResult
-              ? `${drtResult.totalMaps} MAPs · ${drtResult.totalCurves} CURVEs · ${drtResult.maps.length} total entries`
-              : `${kpResult!.maps.length} maps extracted · WinOLS MapPack`
-            }
+            {`${a2lResult.totalMaps} MAPs · ${a2lResult.totalCurves} CURVEs · ${a2lResult.totalValues} scalar values`}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
             {(['boost', 'torque', 'fuel', 'ignition'] as const).map(cat => {
-              const count = a2lResult
-                ? a2lMaps.filter(m => m.category === cat).length
-                : drtResult
-                ? drtMaps.filter(m => m.category === cat).length
-                : kpMaps.filter(m => m.category === cat).length
+              const count = a2lMaps.filter(m => m.category === cat).length
               return count > 0 ? (
                 <div key={cat} style={{ background: 'var(--bg-card)', borderRadius: 8, padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 11, color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{cat}</span>
@@ -2073,14 +1783,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
               ) : null
             })}
           </div>
-          {drtResult?.warnings[0] && (
-            <div style={{ marginTop: 8, fontSize: 11, color: '#f59e0b' }}>{drtResult.warnings[0]}</div>
-          )}
           {a2lResult?.warnings[0] && (
             <div style={{ marginTop: 8, fontSize: 11, color: '#f59e0b' }}>{a2lResult.warnings[0]}</div>
-          )}
-          {kpResult?.warnings[0] && (
-            <div style={{ marginTop: 8, fontSize: 11, color: '#f59e0b' }}>{kpResult.warnings[0]}</div>
           )}
 
           {/* A2L address validation panel — only shown when A2L is the active definition */}
@@ -2253,72 +1957,6 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         )}
         {libLoadError && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 6 }}>{libLoadError}</div>}
       </div>
-
-      {/* ── ORI vs Stage1 diff ────────────────────────────────────────────── */}
-      {/* Load a tuned counterpart and see exactly which byte regions the    */}
-      {/* tuner modified. Each region can be saved to memory as a verified   */}
-      {/* fingerprint for future binaries.                                   */}
-      {fileBuffer && (
-        <div style={{ marginTop: 16, padding: '12px 14px', borderRadius: 10, background: 'rgba(184,240,42,0.03)', border: '1px solid rgba(184,240,42,0.15)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--lime)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              ORI vs Stage1 Diff
-            </span>
-            {stage1Name && (
-              <span style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                vs <span style={{ color: 'var(--text-secondary)' }}>{stage1Name.split(/[\\/]/).pop()}</span>
-              </span>
-            )}
-            {!stage1Name && (
-              <span style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1 }}>
-                Load a Stage1 or tuned binary to see what bytes a tuner actually changed
-              </span>
-            )}
-            <button
-              className="btn-secondary"
-              style={{ fontSize: 11, padding: '4px 12px' }}
-              onClick={handleStage1Load}
-              disabled={diffBusy}
-            >
-              {diffBusy ? 'Diffing…' : stage1Name ? 'Load different Stage1' : 'Load Stage1 / Tuned'}
-            </button>
-          </div>
-
-          {diffResult && !diffResult.sizesMatch && (
-            <div style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 6, padding: '8px 10px' }}>
-              File sizes don't match — the two files aren't an ORI/Stage1 pair of the same variant.
-            </div>
-          )}
-          {diffResult?.sameBytes && (
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', padding: '8px 0' }}>
-              No differing bytes — the two files are byte-identical.
-            </div>
-          )}
-
-          {diffResult && diffResult.sizesMatch && !diffResult.sameBytes && (
-            <div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
-                <strong style={{ color: 'var(--text-primary)' }}>{diffResult.regions.length}</strong> map-sized regions modified
-                {diffResult.noise.length > 0 && (
-                  <span style={{ marginLeft: 8, color: 'rgba(255,255,255,0.35)' }}>
-                    (+ {diffResult.noise.length} tiny changes ignored as noise)
-                  </span>
-                )}
-                <span style={{ marginLeft: 8 }}>·</span>
-                {' '}<strong style={{ color: 'var(--text-primary)' }}>{diffResult.changedBytes.toLocaleString()}</strong>
-                {' / '}
-                {diffResult.totalBytes.toLocaleString()} bytes total
-                {' '}({((diffResult.changedBytes / diffResult.totalBytes) * 100).toFixed(3)}%)
-              </div>
-              <DiffRegionList
-                regions={diffResult.regions}
-                scanResult={scanResult}
-                onSave={saveRegionToMemory}
-              />
-            </div>
-          )}
-        </div>
-      )}
 
       {/* ── Binary Map Scanner ─────────────────────────────────────────────── */}
       {(scanResult || scannerBusy) && (
@@ -2962,9 +2600,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                     <span style={{ fontSize: 10, color: m.mapDef.critical ? '#ef4444' : '#6b7280', fontWeight: 600 }}>
                       {m.mapDef.critical ? 'Not Found (Critical)' : 'Not Found'}
                     </span>
-                    {!a2lResult && !drtResult && (
+                    {!a2lResult && (
                       <span style={{ fontSize: 9, color: 'rgba(0,174,200,0.65)', fontWeight: 700 }}>
-                        → Load A2L/DRT
+                        → Load A2L
                       </span>
                     )}
                   </div>
@@ -3361,9 +2999,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
               setStep(0); setFileName(''); setFileBuffer(null); setHexPreview(''); setLoadError('')
               setDetected(null); setSelectedEcuId(''); setAddons([]); setStage(1)
               setExtractedMaps([]); setRemapResult(null); setBlockResult(null)
-              // Clear A2L / DRT definition state — old definition must not bleed into a new file
+              // Clear A2L definition state — old definition must not bleed into a new file
               setA2lResult(null); setA2lMaps([]); setA2lFileName('')
-              setDrtResult(null); setDrtMaps([]); setDrtFileName('')
               setA2lValidation([]); setA2lFallbackCount(0); setScannerFallbackCount(0); setShowSigExport(false); setSigExportText('')
               // Clear library search state
               setLibSearch(''); setLibResults([]); setLibTotal(0); setLibPage(0)
@@ -3430,233 +3067,4 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   )
 }
 
-// ─── Diff region list — one row per DiffRegion ──────────────────────────────
-// Shows what a tuner changed on this specific ECU variant. Each row lets the
-// user save the finding to the local memory DB so future binaries of the same
-// variant auto-identify the map.
-function DiffRegionList(props: {
-  regions: DiffRegion[]
-  scanResult: ClassificationResult | null
-  onSave: (region: DiffRegion, label: string, factor: number, unit: string, category: string) => Promise<boolean>
-}) {
-  const { regions, scanResult, onSave } = props
-  // Show most-changed regions first — those are the likely primary tuning targets.
-  const sorted = [...regions].sort((a, b) => b.pctChange - a.pctChange)
-  return (
-    <div style={{ display: 'grid', gap: 4, maxHeight: 420, overflowY: 'auto' }}>
-      {sorted.slice(0, 50).map((r, idx) => (
-        <DiffRegionRow
-          key={`${r.offset}-${idx}`}
-          region={r}
-          scanResult={scanResult}
-          onSave={onSave}
-        />
-      ))}
-      {sorted.length > 50 && (
-        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', textAlign: 'center', padding: 6 }}>
-          +{sorted.length - 50} more regions (sorted by % change)
-        </div>
-      )}
-    </div>
-  )
-}
 
-function DiffRegionRow(props: {
-  region: DiffRegion
-  scanResult: ClassificationResult | null
-  onSave: (region: DiffRegion, label: string, factor: number, unit: string, category: string) => Promise<boolean>
-}) {
-  const { region, scanResult, onSave } = props
-  const [open, setOpen] = useState(false)
-  const [label, setLabel] = useState('')
-  const [factor, setFactor] = useState('1')
-  const [unit, setUnit] = useState('')
-  const [category, setCategory] = useState('boost')
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-
-  // Pair the region with a scanner candidate if its data block overlaps.
-  const scanCands = scanResult
-    ? [...scanResult.candidates, ...scanResult.unmatched]
-    : []
-  const covering = (() => {
-    const regEnd = region.offset + region.length
-    for (const cc of scanCands) {
-      const c = cc.candidate
-      const elSize = c.dtype === 'uint16' || c.dtype === 'int16' ? 2 : 1
-      const cStart = c.offset
-      const cEnd = c.offset + c.rows * c.cols * elSize
-      if (region.offset < cEnd && regEnd > cStart) return cc
-    }
-    return null
-  })()
-
-  const suggestedLabel = covering?.bestMatch?.mapDefName ?? ''
-  if (suggestedLabel && !label) setLabel(suggestedLabel)
-
-  const save = async () => {
-    setSaving(true)
-    const ok = await onSave(region, label || 'Unnamed region', parseFloat(factor) || 1, unit, category)
-    setSaving(false)
-    if (ok) { setSaved(true); setOpen(false) }
-  }
-
-  return (
-    <div style={{
-      padding: '8px 10px', borderRadius: 6,
-      background: saved ? 'rgba(34,197,94,0.04)' : 'rgba(255,255,255,0.02)',
-      border: `1px solid ${saved ? 'rgba(34,197,94,0.25)' : 'rgba(255,255,255,0.05)'}`,
-      fontSize: 11, color: 'var(--text-secondary)',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', flexWrap: 'wrap' }} onClick={() => setOpen(!open)}>
-        <span style={{ fontFamily: 'monospace', fontWeight: 700, minWidth: 78, color: 'var(--text-primary)' }}>
-          0x{region.offset.toString(16).toUpperCase().padStart(6, '0')}
-        </span>
-        {/* Shape — either inferred (stride cluster) or raw size */}
-        {region.inferredRows && region.inferredCols ? (
-          <span style={{ minWidth: 70, color: 'var(--accent)', fontWeight: 700 }}>
-            {region.inferredCols}×{region.inferredRows}
-          </span>
-        ) : (
-          <span style={{ minWidth: 70, color: 'var(--text-muted)' }}>{region.length} bytes</span>
-        )}
-        {/* Real values (u16 interpretation when possible) */}
-        {region.valueKind !== 'u8' && region.valueBeforeMean !== undefined ? (
-          <span style={{ minWidth: 200, color: 'var(--text-secondary)' }}>
-            <span style={{ color: 'var(--text-muted)' }}>ORI</span> {Math.round(region.valueBeforeMean)}
-            <span style={{ color: 'var(--text-muted)' }}> → Stage1</span> {Math.round(region.valueAfterMean!)}
-            <span style={{ color: 'var(--text-muted)', fontSize: 10 }}> ({region.valueKind})</span>
-          </span>
-        ) : (
-          <span style={{ minWidth: 200, color: 'var(--text-muted)', fontSize: 10 }}>
-            raw {region.beforeMin}–{region.beforeMax} → {region.afterMin}–{region.afterMax}
-          </span>
-        )}
-        {/* % change */}
-        <span style={{ minWidth: 60, fontWeight: 700, textAlign: 'right',
-          color: region.pctChange > 30 ? '#f59e0b' : region.pctChange > 8 ? '#b8f02a' : 'var(--text-muted)' }}>
-          {region.pctChange > 0 ? '+' : ''}{region.pctChange.toFixed(1)}%
-        </span>
-        {/* Scanner context (when a candidate sits on this same address) */}
-        {covering ? (
-          <span style={{ fontSize: 10, color: 'var(--accent)', flex: 1 }}>
-            ↳ matches {covering.candidate.rows}×{covering.candidate.cols} scanner candidate
-            {covering.bestMatch && <span style={{ marginLeft: 4, color: 'var(--text-secondary)' }}>
-              (guess: {covering.bestMatch.mapDefName}, {Math.round(covering.bestMatch.score)}%)
-            </span>}
-          </span>
-        ) : region.inferredRows ? (
-          <span style={{ fontSize: 10, color: 'var(--text-muted)', flex: 1, fontStyle: 'italic' }}>
-            shape inferred from {region.inferredRows} modified rows, stride {region.stride} bytes
-          </span>
-        ) : (
-          <span style={{ fontSize: 10, color: 'var(--text-muted)', flex: 1, fontStyle: 'italic' }}>
-            loose block (not map-shaped)
-          </span>
-        )}
-        {saved && <span style={{ fontSize: 10, color: '#22c55e', fontWeight: 700 }}>✓ saved</span>}
-        {!saved && <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{open ? '▼' : '▶'}</span>}
-      </div>
-
-      {open && !saved && (
-        <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          {/* Interpreted values (u16) — the meaningful numbers if we have them */}
-          {region.valueKind !== 'u8' && region.valueBeforeMean !== undefined ? (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 11, color: 'var(--text-muted)', marginBottom: 10 }}>
-              <div>
-                <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 2 }}>
-                  ORI values ({region.valueKind})
-                </div>
-                <div>range <span style={{ color: 'var(--text-primary)' }}>{region.valueBeforeMin} – {region.valueBeforeMax}</span></div>
-                <div>average <span style={{ color: 'var(--text-primary)' }}>{region.valueBeforeMean.toFixed(1)}</span></div>
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 2 }}>
-                  Stage1 values ({region.valueKind})
-                </div>
-                <div>range <span style={{ color: 'var(--text-primary)' }}>{region.valueAfterMin} – {region.valueAfterMax}</span></div>
-                <div>average <span style={{ color: 'var(--text-primary)' }}>{region.valueAfterMean!.toFixed(1)}</span></div>
-              </div>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 10.5, color: 'var(--text-muted)', marginBottom: 10 }}>
-              <div>
-                <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 2 }}>ORI (raw bytes)</div>
-                <div>range {region.beforeMin}–{region.beforeMax}, mean {region.beforeMean.toFixed(1)}</div>
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 2 }}>Stage1 (raw bytes)</div>
-                <div>range {region.afterMin}–{region.afterMax}, mean {region.afterMean.toFixed(1)}</div>
-              </div>
-            </div>
-          )}
-
-          {/* Shape hint */}
-          {region.inferredRows && (
-            <div style={{ marginBottom: 10, padding: '6px 10px', background: 'rgba(0,174,200,0.05)', border: '1px solid rgba(0,174,200,0.2)', borderRadius: 6, fontSize: 10.5, color: 'var(--text-secondary)' }}>
-              Looks like a <strong>{region.inferredCols}×{region.inferredRows} uint16 table</strong> —
-              inferred from {region.inferredRows} modified rows at {region.stride}-byte stride.
-              Real tuner changes usually sit on map boundaries like this.
-            </div>
-          )}
-          {covering && (
-            <div style={{ marginBottom: 10, fontSize: 10.5, color: 'var(--text-muted)' }}>
-              <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 2 }}>Scanner sees</div>
-              <div>
-                {covering.candidate.rows}×{covering.candidate.cols} {covering.candidate.dtype} ({covering.candidate.le ? 'LE' : 'BE'})
-                {covering.candidate.axisX && ` · X ${covering.candidate.axisX.min}–${covering.candidate.axisX.max}`}
-                {covering.candidate.axisY && ` · Y ${covering.candidate.axisY.min}–${covering.candidate.axisY.max}`}
-              </div>
-              {covering.hypotheses.length > 0 && (
-                <div style={{ marginTop: 4 }}>
-                  <span style={{ fontWeight: 700 }}>Top guesses:</span>{' '}
-                  {covering.hypotheses.slice(0, 3).map((h, i) => (
-                    <span key={h.mapDefId} style={{ marginRight: 8 }}>
-                      <span style={{ color: 'var(--text-secondary)' }}>{h.mapDefName}</span>
-                      <span style={{ color: 'var(--text-muted)' }}> ({Math.round(h.score)}%)</span>
-                      {i < 2 && ','}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
-            <input
-              value={label}
-              onChange={e => setLabel(e.target.value)}
-              placeholder="Map name (e.g. Boost Target)"
-              style={{ fontSize: 11, padding: '6px 8px', borderRadius: 5, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'inherit' }}
-            />
-            <select value={category} onChange={e => setCategory(e.target.value)}
-              style={{ fontSize: 11, padding: '6px 8px', borderRadius: 5, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'inherit' }}>
-              <option value="boost">boost</option>
-              <option value="fuel">fuel</option>
-              <option value="torque">torque</option>
-              <option value="ignition">ignition</option>
-              <option value="smoke">smoke</option>
-              <option value="limiter">limiter</option>
-              <option value="emission">emission</option>
-              <option value="misc">misc</option>
-            </select>
-            <input value={factor} onChange={e => setFactor(e.target.value)} placeholder="factor (e.g. 0.1)"
-              style={{ fontSize: 11, padding: '6px 8px', borderRadius: 5, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'inherit' }} />
-            <input value={unit} onChange={e => setUnit(e.target.value)} placeholder="unit (e.g. mbar)"
-              style={{ fontSize: 11, padding: '6px 8px', borderRadius: 5, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'inherit' }} />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button
-              className="btn-primary"
-              style={{ fontSize: 11, padding: '4px 14px' }}
-              onClick={save}
-              disabled={saving || !label.trim()}
-            >
-              {saving ? 'Saving…' : 'Save to memory'}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}

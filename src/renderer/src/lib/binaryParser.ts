@@ -1,6 +1,7 @@
 import type { EcuDef, MapDef, DataType } from './ecuDefinitions'
 import { ECU_DEFINITIONS } from './ecuDefinitions'
 import type { A2LMapDef } from './a2lParser'
+import { ECU_CATALOG, type EcuCatalogEntry } from './ecuCatalog'
 
 export interface DetectedEcu {
   def: EcuDef
@@ -204,6 +205,71 @@ export function detectEcuFromFilename(filename: string): DetectedEcu | null {
           }
         }
       }
+    }
+  }
+  return null
+}
+
+// ─── Catalog-backed ECU variant detection (WinOLS 698-ECU catalog) ────────────
+// Search the binary ASCII for any known WinOLS ECU variant name.
+// Unlike detectEcu() which requires one of our 217 internal EcuDefs, this
+// covers all 695 WinOLS-recognised variants — so we can at least tell the user
+// "this is a MED17.5.25" even if we don't yet have a map catalog for it.
+//
+// The catalog is sorted longest-variant-first, so "MED17.5.25" matches before
+// "MED17" (which would otherwise be a subset match). First hit wins.
+//
+// Returns null when no variant name is embedded in the binary.
+
+export interface DetectedCatalogEcu {
+  entry: EcuCatalogEntry
+  matchedString: string   // the exact variant name found in the binary
+  confidence: number      // 0-1, higher for longer/more-specific matches
+}
+
+export function detectEcuFromCatalog(buffer: ArrayBuffer, filename?: string): DetectedCatalogEcu | null {
+  const bytes = new Uint8Array(buffer)
+
+  // For large files, scan only header + trailer regions — same strategy as detectEcu.
+  let scanBytes: Uint8Array
+  if (bytes.length > 1048576) {
+    const first = bytes.slice(0, 524288)
+    const midStart = Math.floor(bytes.length * 0.70)
+    const mid = bytes.slice(midStart, midStart + 262144)
+    const last = bytes.slice(bytes.length - 262144)
+    const combined = new Uint8Array(first.length + mid.length + last.length)
+    combined.set(first, 0)
+    combined.set(mid, first.length)
+    combined.set(last, first.length + mid.length)
+    scanBytes = combined
+  } else {
+    scanBytes = bytes
+  }
+
+  // Build ASCII haystacks — raw (with spaces) and "compact" (all whitespace +
+  // underscores removed) so variants like "EDC17_CP20" match "EDC17CP20".
+  const ascii        = Array.from(scanBytes).map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : ' ').join('')
+  const asciiCompact = ascii.replace(/[\s_]+/g, '')
+
+  // ALSO include the filename (if supplied) in the search corpus. Most tuning
+  // files carry the ECU family name in the filename but not in the binary —
+  // "Audi_A3_EDC16_...Original" won't have "EDC16" literal bytes in flash,
+  // but the name does. Without this, catalog detection misses ~70% of diesel binaries.
+  const fileStr = filename ?? ''
+
+  const haystackUpper        = (ascii + '\n' + fileStr).toUpperCase()
+  const haystackCompactUpper = (asciiCompact + '\n' + fileStr.replace(/[\s_]+/g, '')).toUpperCase()
+
+  // Catalog is already sorted by length DESC — first hit is the most specific.
+  // Skip extremely short variants (≤3 chars) to avoid false-positives in random bytes.
+  for (const entry of ECU_CATALOG) {
+    if (entry.variant.length < 4) continue
+    const target = entry.variant.toUpperCase()
+    const targetCompact = target.replace(/[\s_]+/g, '')
+    if (haystackUpper.includes(target) || haystackCompactUpper.includes(targetCompact)) {
+      // Length-based confidence: a 12-char match is way more specific than a 4-char match.
+      const conf = Math.min(1, entry.variant.length / 12)
+      return { entry, matchedString: entry.variant, confidence: conf }
     }
   }
   return null
