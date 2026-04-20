@@ -32,7 +32,7 @@ import type { EcuFileState } from '../App'
 interface DefinitionEntry {
   id: string
   filename: string
-  file_type: 'a2l' | 'drt' | 'kp'
+  file_type: 'a2l'                 // A2L-only after cleanup — DRT and KP libraries no longer consumed.
   driver_name: string | null
   ecu_family: string | null
   make: string | null
@@ -1311,6 +1311,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       const { data, count } = await supabase
         .from('definitions_index')
         .select('*', { count: 'exact' })
+        .eq('file_type', 'a2l')                    // A2L-only library
         .or(orFilter)
         .not('filename', 'ilike', '._%')
         .order('filename')
@@ -1397,9 +1398,11 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         : `filename.ilike.%${searchTerm}%`
 
       // Try to auto-load if there is exactly one A2L whose filename contains this part number.
+      // A2L-only: we no longer auto-load DRT/KP files.
       supabase
         .from('definitions_index')
         .select('*')
+        .eq('file_type', 'a2l')
         .or(ilikeFilter)
         .not('filename', 'ilike', '._%')
         .order('filename')
@@ -1410,63 +1413,25 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             e.filename.toUpperCase().replace(/[^A-Z0-9]/g, '').includes(searchTerm.replace(/[^A-Z0-9]/g, ''))
             || (altTerm && e.filename.toUpperCase().replace(/[^A-Z0-9]/g, '').includes(altTerm.replace(/[^A-Z0-9]/g, '')))
           )
+          // ONLY auto-load when there is ONE exact A2L match for the part number.
+          // Multiple matches = ambiguous, don't guess — show them in the list and let user pick.
           if (exactHits.length === 1) {
             loadDefinitionFromLibrary(exactHits[0] as DefinitionEntry)
+          } else if (exactHits.length > 1) {
+            setLibResults(exactHits as DefinitionEntry[])
+            setLibTotal(exactHits.length)
+            setLibFallbackNote(
+              `${exactHits.length} A2L files match part number ${part}. Pick the one whose filename matches your exact software version.`,
+            )
           }
-          // Multiple hits or no hits: leave list empty, search box pre-filled — user clicks Search
+          // Zero hits: leave list empty, search box pre-filled — user can click Search.
         })
     } else {
       // No part number found in binary or filename — pre-fill with ECU family
       setLibSearch(family)
     }
 
-    // Auto-suggest DRT files for the detected ECU family.
-    // DRT files use ECM Titanium internal IDs (e.g. C20_1F23.drt) — part-number searches
-    // will NEVER match them. Show family-matched DRTs automatically so the user can click to load.
-    // Filter out "- Copia" duplicate files from the Italian ECM Titanium library dumps.
-    // Also include KP (WinOLS MapPack) files that match the same ECU family.
-    const drtFamily = (detected.def.family || detected.def.id.toUpperCase()).split('.')[0]
-    if (drtFamily) {
-      // Run both queries in parallel — DRT and KP — then merge results
-      Promise.all([
-        supabase
-          .from('definitions_index')
-          .select('*', { count: 'exact' })
-          .eq('file_type', 'drt')
-          .ilike('ecu_family', `%${drtFamily}%`)
-          .not('filename', 'ilike', '._%')
-          .not('filename', 'ilike', '% - Copia%')
-          .order('filename')
-          .range(0, LIB_PAGE_SIZE - 1),
-        supabase
-          .from('definitions_index')
-          .select('*', { count: 'exact' })
-          .eq('file_type', 'kp')
-          .ilike('ecu_family', `%${drtFamily}%`)
-          .not('filename', 'ilike', '._%')
-          .order('filename')
-          .limit(50),
-      ]).then(([drtRes, kpRes]) => {
-        const drtData  = (drtRes.data  ?? []) as DefinitionEntry[]
-        const kpData   = (kpRes.data   ?? []) as DefinitionEntry[]
-        const drtCount = drtRes.count  ?? drtData.length
-        const kpCount  = kpRes.count   ?? kpData.length
-
-        // KP files first (higher priority — exact map addresses), then DRTs
-        const merged = [...kpData, ...drtData]
-        if (merged.length > 0) {
-          setLibResults(merged)
-          setLibTotal(drtCount + kpCount)
-          const parts: string[] = []
-          if (kpCount > 0) parts.push(`${kpCount} KP MapPack${kpCount > 1 ? 's' : ''}`)
-          if (drtCount > 0) parts.push(`${drtCount} DRT files`)
-          setLibFallbackNote(
-            `Auto-loaded ${parts.join(' + ')} for ${drtFamily} — click any to load map addresses. ` +
-            `Search above by part number to find an exact A2L match.`
-          )
-        }
-      })
-    }
+    // DRT + KP auto-suggest removed — library is A2L-only now.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detected, fileName, fileBuffer])
 
@@ -1935,8 +1900,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                           </span>
                         </span>
                       )}
-                      <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, background: entry.file_type === 'a2l' ? 'rgba(34,197,94,0.1)' : entry.file_type === 'kp' ? 'rgba(184,240,42,0.1)' : 'rgba(59,130,246,0.1)', color: entry.file_type === 'a2l' ? '#22c55e' : entry.file_type === 'kp' ? 'var(--lime)' : '#3b82f6', fontWeight: 700, flexShrink: 0 }}>
-                        .{entry.file_type}
+                      <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, background: 'rgba(34,197,94,0.1)', color: '#22c55e', fontWeight: 700, flexShrink: 0 }}>
+                        .a2l
                       </span>
                     </div>
                     <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.filename}</div>
@@ -2553,9 +2518,6 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                 <CatBadge cat={m.mapDef.category} />
                 {m.source === 'a2l' && (
                   <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: 'rgba(34,197,94,0.12)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)' }}>A2L</span>
-                )}
-                {m.source === 'drt' && (
-                  <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: 'rgba(59,130,246,0.12)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.3)' }}>DRT</span>
                 )}
                 {m.source === 'fixedOffset' && (
                   <span title="Located by hardcoded offset — lower confidence than signature match" style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)' }}>OFFSET</span>
