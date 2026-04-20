@@ -26,7 +26,6 @@ import type { ActiveVehicle } from './lib/vehicleContext'
 import { useAuth } from './lib/useAuth'
 import { useSubscription } from './lib/useSubscription'
 import type { A2LMapDef } from './lib/a2lParser'
-import type { DRTConvertedMap } from './lib/drtParser'
 import type { DetectedEcu } from './lib/binaryParser'
 import type { ClassificationResult } from './lib/mapClassifier'
 
@@ -35,7 +34,6 @@ export interface EcuFileState {
   fileBuffer: ArrayBuffer
   detected: DetectedEcu | null
   a2lMaps: A2LMapDef[]
-  drtMaps: DRTConvertedMap[]
   scanResult?: ClassificationResult | null
   extractedMaps?: import('./lib/binaryParser').ExtractedMap[]  // Maps found via signatures (from Remap Builder)
 }
@@ -114,7 +112,6 @@ export default function App() {
     isTrialActive,
     trialMinutesLeft,
     trialExpired,
-    refresh: refreshSub,
     createCheckoutSession,
     openCustomerPortal,
   } = useSubscription(user)
