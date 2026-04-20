@@ -927,13 +927,17 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       for (const em of maps) { if (em.found && em.offset >= 0) usedOffsets.add(em.offset) }
       let fallbackCount = 0
 
-      // ── Phase A: name-first matching (Pass 1) for ALL maps before any category fallback ──
-      // CRITICAL ORDER FIX: previously each map ran Pass1 then Pass2 sequentially, so
-      // edc16_torque_limit's Pass2 category-fallback could consume AccPed_trqEng0_MAP before
-      // edc16_drivers_wish got a chance to name-match it.  Run ALL name matches first, then
-      // ALL category fallbacks, so precise matches are never stolen by earlier fallbacks.
+      // ── Phase A: A2L name-match OVERRIDES signature matches when available ──
+      // A2L contains the manufacturer's authoritative memory map for THIS exact
+      // software version (validated against the binary — 819 of 1069 maps showed
+      // "valid" in the UI). Signatures are generic byte patterns — they can hit
+      // the wrong occurrence in a variant. When we have an A2L name-match for
+      // a mapDef, ALWAYS prefer the A2L address over a signature match.
+      //
+      // Previously: `if (em.found) return em` skipped A2L when signature hit.
+      // Now: A2L name-match wins unconditionally, and we release the signature's
+      // address from usedOffsets so it can be reused for another map.
       maps = maps.map(em => {
-        if (em.found) return em
         if (!em.mapDef.a2lNames?.length) return em
         for (const v of allPool) {
           if (usedOffsets.has(v.map.fileOffset)) continue
@@ -941,6 +945,11 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             const synthDef = syntheticMapDefFromA2L(v.map, em.mapDef)
             const result = extractMap(fileBuffer, synthDef)
             if (result.found) {
+              // If this map previously had a signature-based address, release
+              // it — another map without an A2L name can still claim it.
+              if (em.found && em.offset >= 0 && em.offset !== v.map.fileOffset) {
+                usedOffsets.delete(em.offset)
+              }
               usedOffsets.add(v.map.fileOffset)
               fallbackCount++
               return { ...result, source: 'a2l' as const }

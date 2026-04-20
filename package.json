@@ -1,6 +1,6 @@
 {
   "name": "dctuning-desktop",
-  "version": "3.10.7",
+  "version": "3.10.8",
   "description": "DCTuning Ireland — Professional ECU Tuning Suite",
   "main": "out/main/index.js",
   "scripts": {
