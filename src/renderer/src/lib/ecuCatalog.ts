@@ -1,14 +1,15 @@
 // AUTO-GENERATED from docs/winols/ecus_full_5.x.json (WinOLS 5.x installer data).
-// 695 unique ECU variants across 5 manufacturers.
+// 549 VAG-relevant ECU variants (filtered from the full 695 by:
+//   - Dropping manufacturer = Marelli, Caterpillar
+//   - Dropping BMW/Merc-specific variant families (DDE, MEV, MSS, MSD, MSV, MS4x, BMS, EML, EGSx)
 // Sorted by variant name length DESC — longer/more specific names matched first.
-// Regenerate: see scripts/buildEcuCatalog.js
 
 export interface EcuCatalogEntry {
   variant: string
   manufacturer: string | null
   group: string | null
-  plugin: string | null            // WinOLS plugin DLL (e.g. 'OLS807', 'OLS228')
-  use: string | null               // Engine / Gearbox / Hybrid
+  plugin: string | null
+  use: string | null
 }
 
 export const ECU_CATALOG: EcuCatalogEntry[] = [
@@ -205,111 +206,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "variant": "MEDG17.9.2",
     "manufacturer": "Bosch",
     "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MEVD17.2.2",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MEVD17.2.3",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MEVD17.2.4",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MEVD17.2.5",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MEVD17.2.6",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MEVD17.2.7",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MEVD17.2.8",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MEVD17.2.9",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MEVD17.2.G",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MEVD17.2.H",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MEVD17.2.P",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MEVD17.4.2",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MEVD17.4.4",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MJD602.03D",
-    "manufacturer": "Marelli",
-    "group": "MJD",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MJD8DS2.S2",
-    "manufacturer": "Marelli",
-    "group": "MJD",
     "plugin": null,
     "use": "Engine"
   },
@@ -1168,62 +1064,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "use": "Engine"
   },
   {
-    "variant": "MEV17.2.2",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MEV17.4.2",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MEV17.4.6",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MEVD17.26",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MJD602.04",
-    "manufacturer": "Marelli",
-    "group": "MJD",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MJD602.M1",
-    "manufacturer": "Marelli",
-    "group": "MJD",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MJD603.S3",
-    "manufacturer": "Marelli",
-    "group": "MJD",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MJD8DS.P1",
-    "manufacturer": "Marelli",
-    "group": "MJD",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
     "variant": "SID807EVO",
     "manufacturer": "Siemens/Continental",
     "group": "SID",
@@ -1861,13 +1701,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "use": "Engine"
   },
   {
-    "variant": "MEVD17.2",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
     "variant": "MD1CE101",
     "manufacturer": "Bosch",
     "group": "MD1",
@@ -2092,20 +1925,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "use": "Engine"
   },
   {
-    "variant": "A4E4v3.1",
-    "manufacturer": "Caterpillar",
-    "group": "ADEM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "A5E2v2I1",
-    "manufacturer": "Caterpillar",
-    "group": "ADEM5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
     "variant": "CRD3P.C0",
     "manufacturer": "Delphi",
     "group": "CRD3",
@@ -2124,13 +1943,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "manufacturer": "Delphi",
     "group": "DCM3",
     "plugin": "OLS267",
-    "use": "Engine"
-  },
-  {
-    "variant": "MM4TV.GQ",
-    "manufacturer": "Marelli",
-    "group": "MM4",
-    "plugin": null,
     "use": "Engine"
   },
   {
@@ -2442,13 +2254,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "use": "Engine"
   },
   {
-    "variant": "ME1.5.5",
-    "manufacturer": "Bosch",
-    "group": "M(E)1-5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
     "variant": "ME2.7.1",
     "manufacturer": "Bosch",
     "group": "M(E)1-5",
@@ -2715,30 +2520,9 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "use": "Engine"
   },
   {
-    "variant": "MEV17.2",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MEV17.4",
-    "manufacturer": "Bosch",
-    "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
     "variant": "MG1CP00",
     "manufacturer": "Bosch",
     "group": "MG1",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "A5X12I1",
-    "manufacturer": "Caterpillar",
-    "group": "ADEM5",
     "plugin": null,
     "use": "Engine"
   },
@@ -2788,13 +2572,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "variant": "DCM7.24",
     "manufacturer": "Delphi",
     "group": "DCM7",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM48.10",
-    "manufacturer": "Marelli",
-    "group": "MMxx",
     "plugin": null,
     "use": "Engine"
   },
@@ -2925,13 +2702,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "use": "Engine"
   },
   {
-    "variant": "BMS-MP",
-    "manufacturer": "Bosch",
-    "group": "BMS",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
     "variant": "EDC15C",
     "manufacturer": "Bosch",
     "group": "EDC15",
@@ -3009,20 +2779,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "use": "Engine"
   },
   {
-    "variant": "M1.5.4",
-    "manufacturer": "Bosch",
-    "group": "M(E)1-5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "M1.5.5",
-    "manufacturer": "Bosch",
-    "group": "M(E)1-5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
     "variant": "M2.1.1",
     "manufacturer": "Bosch",
     "group": "M(E)1-5",
@@ -3069,13 +2825,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "manufacturer": "Bosch",
     "group": "M(E)1-5",
     "plugin": "OLS231",
-    "use": "Engine"
-  },
-  {
-    "variant": "M5.9.2",
-    "manufacturer": "Bosch",
-    "group": "M(E)1-5",
-    "plugin": null,
     "use": "Engine"
   },
   {
@@ -3145,34 +2894,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "variant": "ME17.9",
     "manufacturer": "Bosch",
     "group": "ME(DV)17",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "A4E4I3",
-    "manufacturer": "Caterpillar",
-    "group": "ADEM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "A4E4v2",
-    "manufacturer": "Caterpillar",
-    "group": "ADEM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "A4E4v3",
-    "manufacturer": "Caterpillar",
-    "group": "ADEM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "A5E2v2",
-    "manufacturer": "Caterpillar",
-    "group": "ADEM5",
     "plugin": null,
     "use": "Engine"
   },
@@ -3251,139 +2972,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "manufacturer": "Delphi",
     "group": "DCM6",
     "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM48P2",
-    "manufacturer": "Marelli",
-    "group": "MMxx",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM6LPA",
-    "manufacturer": "Marelli",
-    "group": "MM6",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM6KPB",
-    "manufacturer": "Marelli",
-    "group": "MM6",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM7GVE",
-    "manufacturer": "Marelli",
-    "group": "MM7",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM8GMF",
-    "manufacturer": "Marelli",
-    "group": "MM8",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM8GMK",
-    "manufacturer": "Marelli",
-    "group": "MM8",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM8GML",
-    "manufacturer": "Marelli",
-    "group": "MM8",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM8GSF",
-    "manufacturer": "Marelli",
-    "group": "MM8",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM8GSW",
-    "manufacturer": "Marelli",
-    "group": "MM8",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM9TDE",
-    "manufacturer": "Marelli",
-    "group": "MM9",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM10JA",
-    "manufacturer": "Marelli",
-    "group": "MM10",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MJ8F3H",
-    "manufacturer": "Marelli",
-    "group": "MJ",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MJD602",
-    "manufacturer": "Marelli",
-    "group": "MJD",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MJD6F3",
-    "manufacturer": "Marelli",
-    "group": "MJD",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MJD6JF",
-    "manufacturer": "Marelli",
-    "group": "MJD",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MJD8DF",
-    "manufacturer": "Marelli",
-    "group": "MJD",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MJD9DF",
-    "manufacturer": "Marelli",
-    "group": "MJD",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MS41.0",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS",
-    "plugin": "OLS222",
-    "use": "Engine"
-  },
-  {
-    "variant": "MS41.1",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS",
-    "plugin": "OLS222",
     "use": "Engine"
   },
   {
@@ -3702,34 +3290,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "use": "Engine"
   },
   {
-    "variant": "BMS43",
-    "manufacturer": "Bosch",
-    "group": "BMS",
-    "plugin": "OLS222",
-    "use": "Engine"
-  },
-  {
-    "variant": "BMS46",
-    "manufacturer": "Bosch",
-    "group": "BMS",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "BMS-K",
-    "manufacturer": "Bosch",
-    "group": "BMS",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "BMS-X",
-    "manufacturer": "Bosch",
-    "group": "BMS",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
     "variant": "EDC15",
     "manufacturer": "Bosch",
     "group": "EDC15",
@@ -3751,20 +3311,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "use": "Engine"
   },
   {
-    "variant": "EGS19",
-    "manufacturer": "Bosch",
-    "group": "EGS",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "M1.55",
-    "manufacturer": "Bosch",
-    "group": "M(E)1-5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
     "variant": "M2.81",
     "manufacturer": "Bosch",
     "group": "M(E)1-5",
@@ -3780,20 +3326,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
   },
   {
     "variant": "M3.83",
-    "manufacturer": "Bosch",
-    "group": "M(E)1-5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "M5.41",
-    "manufacturer": "Bosch",
-    "group": "M(E)1-5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "M5.92",
     "manufacturer": "Bosch",
     "group": "M(E)1-5",
     "plugin": null,
@@ -3975,415 +3507,9 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "use": "Engine"
   },
   {
-    "variant": "A5E11",
-    "manufacturer": "Caterpillar",
-    "group": "ADEM5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "A5E12",
-    "manufacturer": "Caterpillar",
-    "group": "ADEM5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "A6E11",
-    "manufacturer": "Caterpillar",
-    "group": "ADEM6",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "A6E10",
-    "manufacturer": "Caterpillar",
-    "group": "ADEM6",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
     "variant": "MT20U",
     "manufacturer": "Delphi",
     "group": "MTxx",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM1AP",
-    "manufacturer": "Marelli",
-    "group": "MMxx",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM48P",
-    "manufacturer": "Marelli",
-    "group": "MMxx",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM4AF",
-    "manufacturer": "Marelli",
-    "group": "MM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM4AV",
-    "manufacturer": "Marelli",
-    "group": "MM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM4BV",
-    "manufacturer": "Marelli",
-    "group": "MM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM4CF",
-    "manufacturer": "Marelli",
-    "group": "MM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM4CM",
-    "manufacturer": "Marelli",
-    "group": "MM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM4EF",
-    "manufacturer": "Marelli",
-    "group": "MM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM4EV",
-    "manufacturer": "Marelli",
-    "group": "MM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM4GM",
-    "manufacturer": "Marelli",
-    "group": "MM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM4GV",
-    "manufacturer": "Marelli",
-    "group": "MM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM4HV",
-    "manufacturer": "Marelli",
-    "group": "MM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM4LV",
-    "manufacturer": "Marelli",
-    "group": "MM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM4MV",
-    "manufacturer": "Marelli",
-    "group": "MM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM4SF",
-    "manufacturer": "Marelli",
-    "group": "MM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM4TV",
-    "manufacturer": "Marelli",
-    "group": "MM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM59F",
-    "manufacturer": "Marelli",
-    "group": "MM5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM5AF",
-    "manufacturer": "Marelli",
-    "group": "MM5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM5AM",
-    "manufacturer": "Marelli",
-    "group": "MM5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM5DM",
-    "manufacturer": "Marelli",
-    "group": "MM5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM5FH",
-    "manufacturer": "Marelli",
-    "group": "MM5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM5NF",
-    "manufacturer": "Marelli",
-    "group": "MM5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM5NR",
-    "manufacturer": "Marelli",
-    "group": "MM5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM5SF",
-    "manufacturer": "Marelli",
-    "group": "MM5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM5SM",
-    "manufacturer": "Marelli",
-    "group": "MM5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM6JF",
-    "manufacturer": "Marelli",
-    "group": "MM6",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM6KP",
-    "manufacturer": "Marelli",
-    "group": "MM6",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM6LP",
-    "manufacturer": "Marelli",
-    "group": "MM6",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM7GF",
-    "manufacturer": "Marelli",
-    "group": "MM7",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM7GV",
-    "manufacturer": "Marelli",
-    "group": "MM7",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM7SM",
-    "manufacturer": "Marelli",
-    "group": "MM7",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM9DF",
-    "manufacturer": "Marelli",
-    "group": "MM9",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MM9GF",
-    "manufacturer": "Marelli",
-    "group": "MM9",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MJ6F3",
-    "manufacturer": "Marelli",
-    "group": "MJ",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MJ8DF",
-    "manufacturer": "Marelli",
-    "group": "MJ",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MJ8F3",
-    "manufacturer": "Marelli",
-    "group": "MJ",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MJ9DF",
-    "manufacturer": "Marelli",
-    "group": "MJ",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "EGS51",
-    "manufacturer": "Siemens/Continental",
-    "group": "EGS",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "EGS52",
-    "manufacturer": "Siemens/Continental",
-    "group": "EGS",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "EGS53",
-    "manufacturer": "Siemens/Continental",
-    "group": "EGS",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MSS50",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS(SV)",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MSS52",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS(SV)",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MSS54",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS(SV)",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MSS60",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS(SV)",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MSS65",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS(SV)",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MSS70",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS(SV)",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MSV70",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS(SV)",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MSD80",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS(SV)",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MSD81",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS(SV)",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MSD85",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS(SV)",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MSD87",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS(SV)",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MSV80",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS(SV)",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MSV85",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS(SV)",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MSV90",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS(SV)",
     "plugin": null,
     "use": "Engine"
   },
@@ -4444,13 +3570,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "use": "Engine"
   },
   {
-    "variant": "M2.5",
-    "manufacturer": "Bosch",
-    "group": "M(E)1-5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
     "variant": "M2.7",
     "manufacturer": "Bosch",
     "group": "M(E)1-5",
@@ -4465,28 +3584,7 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "use": "Engine"
   },
   {
-    "variant": "M2.9",
-    "manufacturer": "Bosch",
-    "group": "M(E)1-5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
     "variant": "M3.2",
-    "manufacturer": "Bosch",
-    "group": "M(E)1-5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "M4.3",
-    "manufacturer": "Bosch",
-    "group": "M(E)1-5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "M4.4",
     "manufacturer": "Bosch",
     "group": "M(E)1-5",
     "plugin": null,
@@ -4500,52 +3598,10 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "use": "Engine"
   },
   {
-    "variant": "M5.9",
-    "manufacturer": "Bosch",
-    "group": "M(E)1-5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
     "variant": "MED9",
     "manufacturer": "Bosch",
     "group": "ME(D)9",
     "plugin": "OLS288",
-    "use": "Engine"
-  },
-  {
-    "variant": "A4E4",
-    "manufacturer": "Caterpillar",
-    "group": "ADEM4",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "A5E2",
-    "manufacturer": "Caterpillar",
-    "group": "ADEM5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "A5M8",
-    "manufacturer": "Caterpillar",
-    "group": "ADEM5",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "A6E2",
-    "manufacturer": "Caterpillar",
-    "group": "ADEM6",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "A6E4",
-    "manufacturer": "Caterpillar",
-    "group": "ADEM6",
-    "plugin": null,
     "use": "Engine"
   },
   {
@@ -4587,34 +3643,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "variant": "MT92",
     "manufacturer": "Delphi",
     "group": "MTxx",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "C602",
-    "manufacturer": "Marelli",
-    "group": "C",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "C603",
-    "manufacturer": "Marelli",
-    "group": "C",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "C635",
-    "manufacturer": "Marelli",
-    "group": "C",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "MJD8",
-    "manufacturer": "Marelli",
-    "group": "MJD",
     "plugin": null,
     "use": "Engine"
   },
@@ -4759,27 +3787,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "use": "Engine"
   },
   {
-    "variant": "MS42",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS",
-    "plugin": "OLS222",
-    "use": "Engine"
-  },
-  {
-    "variant": "MS43",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS",
-    "plugin": "OLS222",
-    "use": "Engine"
-  },
-  {
-    "variant": "MS45",
-    "manufacturer": "Siemens/Continental",
-    "group": "MS",
-    "plugin": "OLS222",
-    "use": "Engine"
-  },
-  {
     "variant": "SDI3",
     "manufacturer": "Siemens/Continental",
     "group": "SDI",
@@ -4822,20 +3829,6 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "use": "Engine"
   },
   {
-    "variant": "BMS",
-    "manufacturer": "Bosch",
-    "group": "BMS",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "EML",
-    "manufacturer": "Bosch",
-    "group": "EML",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
     "variant": "ME7",
     "manufacturer": "Bosch",
     "group": "ME(D)7",
@@ -4857,23 +3850,9 @@ export const ECU_CATALOG: EcuCatalogEntry[] = [
     "use": "Engine"
   },
   {
-    "variant": "MJD",
-    "manufacturer": "Marelli",
-    "group": "MJD",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
     "variant": "EMS",
     "manufacturer": "Siemens/Continental",
     "group": "EMS",
-    "plugin": null,
-    "use": "Engine"
-  },
-  {
-    "variant": "A3",
-    "manufacturer": "Caterpillar",
-    "group": "ADEM3",
     "plugin": null,
     "use": "Engine"
   }
