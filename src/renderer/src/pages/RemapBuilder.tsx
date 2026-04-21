@@ -2083,7 +2083,54 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
               if (!byOffset.has(m.offset)) byOffset.set(m.offset, [])
               byOffset.get(m.offset)!.push(m)
             }
+            // Within each group, prefer "real" names over placeholder mapNNNN/scNNNN labels.
+            // PPD1 + some EDC17C46 A2Ls use generic numbered labels as fallback when the
+            // source didn't have real DAMOS names — pick any alias that has a meaningful
+            // identifier (underscore + lowercase = typical DAMOS style) as primary instead.
+            const isGenericName = (n: string) => /^(map|sc|var|char)\d+$/i.test(n)
+            const hasRealStructure = (n: string) => /[a-z]_[a-z]/.test(n)
+            for (const matches of byOffset.values()) {
+              matches.sort((a, b) => {
+                const aGeneric = isGenericName(a.name) ? 1 : 0
+                const bGeneric = isGenericName(b.name) ? 1 : 0
+                if (aGeneric !== bGeneric) return aGeneric - bGeneric  // real names first
+                const aReal = hasRealStructure(a.name) ? 0 : 1
+                const bReal = hasRealStructure(b.name) ? 0 : 1
+                if (aReal !== bReal) return aReal - bReal
+                return a.name.localeCompare(b.name)
+              })
+            }
             const groups = [...byOffset.entries()].sort(([a], [b]) => a - b)
+
+            // Big-endian families. For the preview, we need to decode uint16 in the
+            // right byte order — EDC16/EDC17/ME7/SIMOS12 are BE, MED17/MG1/SIMOS18 LE.
+            const BE_FAMILIES = new Set(['EDC15', 'EDC16', 'EDC16U', 'EDC17', 'EDC17C46', 'EDC17C64', 'ME7', 'SIMOS8', 'SIMOS12', 'SIMOS16'])
+            const isBE = BE_FAMILIES.has(sigScanResult.detectedFamily)
+
+            // Given rows*cols 16-bit values at offset, return a 2D array of uint16 values.
+            const previewValues = (offset: number, rows: number, cols: number): number[][] | null => {
+              if (!fileBuffer) return null
+              const byteLen = rows * cols * 2
+              if (offset < 0 || offset + byteLen > fileBuffer.byteLength) return null
+              const view = new DataView(fileBuffer)
+              const out: number[][] = []
+              for (let r = 0; r < rows; r++) {
+                const row: number[] = []
+                for (let c = 0; c < cols; c++) {
+                  const i = offset + (r * cols + c) * 2
+                  row.push(view.getUint16(i, !isBE))
+                }
+                out.push(row)
+              }
+              return out
+            }
+
+            // Quick stats for the preview header
+            const previewStats = (vals: number[][]) => {
+              let min = Infinity, max = -Infinity, sum = 0, n = 0
+              for (const r of vals) for (const v of r) { if (v < min) min = v; if (v > max) max = v; sum += v; n++ }
+              return { min, max, mean: Math.round(sum / n), n }
+            }
 
             const copyToClipboard = (text: string) => {
               navigator.clipboard.writeText(text).catch(() => {})
@@ -2184,41 +2231,94 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                           </span>
                           <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={primary.desc}>{primary.desc}</span>
                         </div>
-                        {isExpanded && (
-                          <div style={{ padding: '8px 14px 10px 98px', background: 'rgba(0,0,0,0.2)', fontSize: 11 }}>
-                            <div style={{ marginBottom: 6, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                              <span style={{ color: 'var(--text-muted)' }}>Offset:</span>
-                              <code style={{ color: '#22c55e' }}>0x{offset.toString(16).padStart(6, '0')}</code>
-                              <button
-                                onClick={e => { e.stopPropagation(); copyToClipboard(`0x${offset.toString(16).padStart(6, '0')}`) }}
-                                style={{ padding: '2px 8px', fontSize: 10, background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 4, cursor: 'pointer' }}
-                              >Copy offset</button>
-                              <span style={{ color: 'var(--text-muted)' }}>{primary.type} · {primary.rows}×{primary.cols} · {primary.family}</span>
-                              {primary.portable ? (
-                                <span style={{ padding: '1px 6px', fontSize: 9, background: 'rgba(34,197,94,0.2)', color: '#22c55e', borderRadius: 3 }}>PORTABLE</span>
+                        {isExpanded && (() => {
+                          // Read the actual map data from the binary — assumes uint16 cells.
+                          // Most Bosch tunables are uint16, so this gives a meaningful preview.
+                          const vals = previewValues(offset, primary.rows, primary.cols)
+                          const stats = vals ? previewStats(vals) : null
+                          // Color scale: map each value to green (low) → yellow (mid) → red (high)
+                          const colorFor = (v: number) => {
+                            if (!stats || stats.min === stats.max) return 'rgba(255,255,255,0.06)'
+                            const t = (v - stats.min) / (stats.max - stats.min)
+                            const r = Math.round(34 + (239 - 34) * t)
+                            const g = Math.round(197 - (197 - 68) * t)
+                            const b = Math.round(94 - (94 - 68) * t)
+                            return `rgba(${r},${g},${b},0.18)`
+                          }
+                          return (
+                            <div style={{ padding: '8px 14px 12px 98px', background: 'rgba(0,0,0,0.2)', fontSize: 11 }}>
+                              <div style={{ marginBottom: 8, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                                <span style={{ color: 'var(--text-muted)' }}>Offset:</span>
+                                <code style={{ color: '#22c55e' }}>0x{offset.toString(16).padStart(6, '0')}</code>
+                                <button
+                                  onClick={e => { e.stopPropagation(); copyToClipboard(`0x${offset.toString(16).padStart(6, '0')}`) }}
+                                  style={{ padding: '2px 8px', fontSize: 10, background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 4, cursor: 'pointer' }}
+                                >Copy offset</button>
+                                <span style={{ color: 'var(--text-muted)' }}>{primary.type} · {primary.rows}×{primary.cols} · {primary.family} · {isBE ? 'BE' : 'LE'} uint16</span>
+                                {primary.portable ? (
+                                  <span style={{ padding: '1px 6px', fontSize: 9, background: 'rgba(34,197,94,0.2)', color: '#22c55e', borderRadius: 3 }}>PORTABLE</span>
+                                ) : (
+                                  <span style={{ padding: '1px 6px', fontSize: 9, background: 'rgba(251,191,36,0.15)', color: '#fbbf24', borderRadius: 3 }}>PARTIAL</span>
+                                )}
+                                {stats && (
+                                  <span style={{ marginLeft: 'auto', color: 'var(--text-muted)', fontSize: 10 }}>
+                                    min=<b style={{ color: '#e5e5e5' }}>{stats.min}</b>{' '}
+                                    max=<b style={{ color: '#e5e5e5' }}>{stats.max}</b>{' '}
+                                    mean=<b style={{ color: '#e5e5e5' }}>{stats.mean}</b>{' '}
+                                    ({stats.n} cells)
+                                  </span>
+                                )}
+                              </div>
+                              <div style={{ marginBottom: 8, color: '#e5e5e5' }}>{primary.desc}</div>
+
+                              {/* Map value preview grid — raw uint16 values at this offset.
+                                  Scaling factor is unknown per family so shows raw values.
+                                  Heatmap colors let the user eyeball whether it looks like
+                                  a real tunable map (gradient) vs a random hit (speckle). */}
+                              {vals ? (
+                                <div style={{ marginBottom: 8, overflowX: 'auto' }}>
+                                  <table style={{ borderCollapse: 'collapse', fontSize: 10, fontFamily: 'monospace' }}>
+                                    <tbody>
+                                      {vals.map((row, r) => (
+                                        <tr key={r}>
+                                          {row.map((v, c) => (
+                                            <td key={c} style={{
+                                              padding: '2px 5px', minWidth: 32, textAlign: 'right',
+                                              border: '1px solid rgba(255,255,255,0.05)',
+                                              background: colorFor(v),
+                                              color: '#e5e5e5',
+                                            }}>{v}</td>
+                                          ))}
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
                               ) : (
-                                <span style={{ padding: '1px 6px', fontSize: 9, background: 'rgba(251,191,36,0.15)', color: '#fbbf24', borderRadius: 3 }}>PARTIAL</span>
+                                <div style={{ marginBottom: 8, color: '#ef4444', fontSize: 10 }}>
+                                  Map preview unavailable — offset out of bounds for this binary.
+                                </div>
+                              )}
+
+                              {matches.length > 1 && (
+                                <div>
+                                  <div style={{ color: 'var(--text-muted)', marginBottom: 4 }}>
+                                    {matches.length} A2L map names share this 24-byte signature (Bosch-default identical data):
+                                  </div>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingLeft: 8 }}>
+                                    {matches.map((m, i) => (
+                                      <div key={i} style={{ color: '#e5e5e5', display: 'flex', gap: 8 }}>
+                                        <span style={{ color: 'var(--text-muted)', minWidth: 20 }}>{i + 1}.</span>
+                                        <span style={{ fontWeight: 600, flex: 1 }}>{m.name}</span>
+                                        <span style={{ color: 'var(--text-muted)', fontSize: 10, maxWidth: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={m.desc}>{m.desc}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
                               )}
                             </div>
-                            <div style={{ marginBottom: 6, color: '#e5e5e5' }}>{primary.desc}</div>
-                            {matches.length > 1 && (
-                              <div>
-                                <div style={{ color: 'var(--text-muted)', marginBottom: 4 }}>
-                                  {matches.length} A2L map names share this 24-byte signature (Bosch-default identical data):
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingLeft: 8 }}>
-                                  {matches.map((m, i) => (
-                                    <div key={i} style={{ color: '#e5e5e5', display: 'flex', gap: 8 }}>
-                                      <span style={{ color: 'var(--text-muted)', minWidth: 20 }}>{i + 1}.</span>
-                                      <span style={{ fontWeight: 600, flex: 1 }}>{m.name}</span>
-                                      <span style={{ color: 'var(--text-muted)', fontSize: 10, maxWidth: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={m.desc}>{m.desc}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                          )
+                        })()}
                       </div>
                     )
                   })}
