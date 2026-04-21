@@ -1,0 +1,47 @@
+{
+  "source": "VW SIMOS 18.1 EA888 Funktionsrahmen (2014-11-10, SC8L50Y0)",
+  "documentKey": "10213413 SPE 000 DE",
+  "totalIdentifiers": 34590,
+  "prefixCounts": {
+    "LV": 7651,
+    "NC": 5580,
+    "IP": 2973,
+    "LC": 2219,
+    "LDP": 2074,
+    "CTR": 1312,
+    "STATE": 1052,
+    "LF": 878,
+    "LDPM": 865,
+    "FAC": 849,
+    "ID": 552,
+    "TQ": 403,
+    "NLC": 284,
+    "PRS": 279,
+    "TQI": 279,
+    "IDX": 269,
+    "NLF": 239,
+    "MAF": 238,
+    "LAMB": 219,
+    "NR": 197,
+    "CLC": 194,
+    "MFF": 189,
+    "ABC": 187,
+    "CLF": 170,
+    "PWM": 147,
+    "VP": 141,
+    "IGA": 140,
+    "PRM": 139,
+    "CAM": 135,
+    "VLS": 130
+  },
+  "usefulness": "Vocabulary reference. NOT a substitute for A2L+bin pairs (needed for actual signatures). 0 known EDC-style tuner names (IQCCOR/KFMIOP), 83 tuning-relevant SIMOS names (BOOST/TQ_LIM/TQ_DES/RAIL).",
+  "usableAs": [
+    "Name dictionary to validate A2L maps we find later",
+    "Description source (after cross-reference)",
+    "Gap analyzer (track SIMOS coverage)"
+  ],
+  "notUsableAs": [
+    "Direct signature source (FR has no binary content)",
+    "Address lookup (FR has no memory addresses)"
+  ]
+}

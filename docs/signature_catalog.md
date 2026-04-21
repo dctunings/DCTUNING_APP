@@ -168,7 +168,8 @@ dctuning-desktop/
 
 ### SIMOS has zero training data
 - SIMOS18 (Tricore) and PCR2.1 (Siemens) are both labeled SIMOS in our classifier but we had no SIMOS pairs in `ori_a2l_pairs.json` that made it past base-detection
-- **Fix:** Do a targeted SIMOS-only harvest — find SIMOS A2Ls specifically, fix whatever's making their pairs fail base-detection (likely Tricore with non-standard base)
+- **Partial asset:** We extracted the Continental Funktionsrahmen for VW SIMOS 18.1 EA888 (220 MB PDF → 3.2 MB text). Saved 34,590 SIMOS18 DAMOS-style identifiers at `docs/simos18/names.json` for use as a validation dictionary once we have actual A2L+bin pairs. See `docs/simos18/README.md` for full assessment. **FR alone is not enough — no binary signatures in it.**
+- **Fix:** Do a targeted SIMOS-only harvest — find SIMOS A2Ls specifically, fix whatever's making their pairs fail base-detection (likely Tricore with non-standard base). Or write a .ols parser to extract from WinOLS projects.
 
 ### .ols files ignored
 - Lots of .ols files on D: drive — WinOLS project files containing binary + labels
