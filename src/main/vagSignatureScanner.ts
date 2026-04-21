@@ -18,7 +18,13 @@
 import fs from 'fs'
 import path from 'path'
 
-const FAMILIES = ['ME7', 'EDC16', 'EDC17', 'MED9', 'MED17', 'PPD1', 'OTHER'] as const
+const FAMILIES = [
+  'ME7',
+  'EDC16', 'EDC16U', 'EDC17', 'EDC17C46',
+  'MED9', 'MED17',
+  'SIMOS8', 'SIMOS16', 'SIMOS18',
+  'PPD1', 'MG1', 'OTHER',
+] as const
 type Family = (typeof FAMILIES)[number]
 
 interface CompactEntry {
@@ -87,6 +93,9 @@ function loadFamily(fam: Family): Bucket {
     const full = Buffer.from(e.s, 'base64')
     if (full.length !== 24) continue
     const p8 = full.slice(0, 8).toString('hex').toUpperCase()
+    // Skip entries with low-entropy 8-byte prefix — all-zeros and all-FFs cause
+    // quadratic blowup scanning erased flash regions without being uniquely identifying.
+    if (p8 === '0000000000000000' || p8 === 'FFFFFFFFFFFFFFFF' || /^(..)\1{7}$/.test(p8)) continue
     if (!bucket.has(p8)) bucket.set(p8, [])
     bucket.get(p8)!.push({ e, full })
   }

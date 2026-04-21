@@ -1,8 +1,22 @@
 # DAMOS Signature Catalog — How It Was Built
 
-**Date:** 2026-04-21
-**Version shipped:** v3.11.0
-**Status:** Live in Remap Builder, 152,119 signatures across 7 VAG families
+**Date:** 2026-04-21 (initial), updated 2026-04-21 with SIMOS/SREC
+**Version shipped:** v3.11.1
+**Status:** Live in Remap Builder, **239,382 signatures across 13 VAG families**
+
+## v3.11.1 update — SIMOS + SREC unlock
+
+After the v3.11.0 ship, a second sweep discovered 64% more pairs we'd missed:
+- **524 pair folders with binary+A2L** on D: (was 292)
+- Added SREC (.s19) parser — unlocks 397 new pairs, including 63 SIMOS-specific folders
+- Broadened VAG part-number regex (was missing `80A`, `8W0`, `8S0`, etc.)
+- New families in catalog: **SIMOS18 (25,679 entries), SIMOS8 (8,773), SIMOS16 (1,871), MG1 (36,583), EDC16U (11,417), EDC17C46 (21,625)**
+- Fixed zero-prefix quadratic-blowup bug (hot 0x00/0xFF prefixes caused scan hangs on erased-flash regions)
+- Held-out Audi S1 SIMOS18 test: **0 → 7,655 maps identified**
+- MED9: fixed family mis-labeling (was ending up in OTHER); now correctly classifies + finds 279 MAPs avg (was 42)
+- PPD1: **16 → 244 MAPs avg** (15× improvement)
+
+## v3.11.0 original release
 
 ## The problem we solved
 
