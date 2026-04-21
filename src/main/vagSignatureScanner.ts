@@ -35,12 +35,14 @@ interface CompactEntry {
   t: string       // type: 'M'/'C'/'V'/'B' (MAP/CURVE/VALUE/VAL_BLK)
   d: string       // description
   p: 0 | 1        // 1 = fully portable across all source binaries
-  // v6 additions — scaling extracted from A2L COMPU_METHOD with Bosch INVERSE convention.
-  // Absent when factor is 1.0 (identity transform) to save space; caller treats missing = raw.
+  // v6: scaling extracted from A2L COMPU_METHOD with Bosch INVERSE convention.
   f?: number      // factor (physical = raw * f + ov)
   ov?: number     // offset
   u?: string      // unit string
-  v?: 1           // 1 = scaling verified across ≥2 training pairs; absent = not verified
+  v?: 1           // 1 = scaling verified across ≥2 training pairs + plausibility checked
+  // v7: dtype from A2L RECORD_LAYOUT + data offset within record (for axis-embedded maps)
+  dt?: string     // dtype code: u1/s1/u2/s2/u4/s4/f4 (compact form of UBYTE/SBYTE/UWORD/SWORD/ULONG/SLONG/FLOAT32)
+  dO?: number     // bytes from the A2L address to skip before data starts (axes header)
 }
 
 export interface ScanMatch {
@@ -52,12 +54,14 @@ export interface ScanMatch {
   type: 'MAP' | 'CURVE' | 'VALUE' | 'VAL_BLK'
   desc: string
   portable: boolean
-  // v6: scaling data from A2L COMPU_METHOD — only populated when verified by
-  // cross-binary consensus, otherwise undefined (caller shows raw values).
   factor?: number
   offsetVal?: number
   unit?: string
   scalingVerified?: boolean
+  // v7: verified dtype from A2L RECORD_LAYOUT (cross-pair consensus) + byte offset
+  // into the record where actual data cells start (non-zero for axis-embedded maps).
+  dtype?: 'uint8' | 'int8' | 'uint16' | 'int16' | 'uint32' | 'int32' | 'float32'
+  dataOffset?: number
 }
 
 export interface ScanResult {
@@ -70,6 +74,14 @@ export interface ScanResult {
 
 const TYPE_MAP: Record<string, ScanMatch['type']> = { M: 'MAP', C: 'CURVE', V: 'VALUE', B: 'VAL_BLK' }
 
+// Decode v7 compact dtype codes to the strings the app's binaryParser expects.
+const DTYPE_MAP: Record<string, ScanMatch['dtype']> = {
+  u1: 'uint8', s1: 'int8',
+  u2: 'uint16', s2: 'int16',
+  u4: 'uint32', s4: 'int32',
+  f4: 'float32',
+}
+
 // Prebuilt lookup per family — populated lazily on first scan.
 // prefix8Hex → array of { e: CompactEntry, fullSig: Buffer (24B) }
 type Bucket = Map<string, { e: CompactEntry; full: Buffer }[]>
@@ -77,8 +89,9 @@ const bucketsByFamily: Partial<Record<Family, Bucket>> = {}
 const catalogsByFamily: Partial<Record<Family, CompactEntry[]>> = {}
 
 function resolveCatalogPath(fam: Family): string {
-  // v6 catalog files (prefixed vagcat6_) include verified factor/unit per entry.
-  const fname = `vagcat6_${fam.toLowerCase()}.json`
+  // v7 catalog files include verified dtype (UBYTE/UWORD/etc.) per entry from A2L
+  // RECORD_LAYOUT, plus the data offset within the record for axis-embedded maps.
+  const fname = `vagcat7_${fam.toLowerCase()}.json`
   // In dev: resources/ sits next to project root. In packaged Electron, process.resourcesPath
   // points at the app's resources folder. Try both.
   const candidates = [
@@ -168,6 +181,7 @@ export function scanSignatures(buffer: ArrayBuffer | Buffer, forceFamily?: Famil
   if (detectedHits) {
     for (const [name, hit] of detectedHits) {
       const type = TYPE_MAP[hit.e.t] || 'VALUE'
+      const dtype = hit.e.dt ? DTYPE_MAP[hit.e.dt] : undefined
       matches.push({
         name,
         family: detected as Family,
@@ -177,11 +191,12 @@ export function scanSignatures(buffer: ArrayBuffer | Buffer, forceFamily?: Famil
         type,
         desc: hit.e.d,
         portable: hit.e.p === 1,
-        // v6: surface verified scaling when present in catalog
         factor: hit.e.f,
         offsetVal: hit.e.ov,
         unit: hit.e.u,
         scalingVerified: hit.e.v === 1,
+        dtype,
+        dataOffset: hit.e.dO,
       })
       byType[type]++
     }

@@ -1336,12 +1336,13 @@ export interface SignatureMatch {
   type: 'MAP' | 'CURVE' | 'VALUE' | 'VAL_BLK'
   desc: string
   portable: boolean
-  // v6: verified scaling from A2L COMPU_METHOD cross-binary consensus.
-  // Present only when multiple training pairs agreed on the same factor/unit.
   factor?: number
   offsetVal?: number
   unit?: string
   scalingVerified?: boolean
+  // v7: verified dtype + data offset within record (from RECORD_LAYOUT cross-pair consensus)
+  dtype?: 'uint8' | 'int8' | 'uint16' | 'int16' | 'uint32' | 'int32' | 'float32'
+  dataOffset?: number
 }
 
 // v3.11.8: physical units restored, but now VERIFIED from A2L COMPU_METHOD blocks
@@ -1409,10 +1410,18 @@ export function syntheticMapDefFromSignature(match: SignatureMatch): MapDef {
     desc: match.desc || match.name,
     signatures: [],
     sigOffset: 0,
-    fixedOffset: match.offset,
+    // v7: if the A2L record has embedded axes (NO_AXIS_PTS headers + AXIS_PTS values),
+    // dataOffset tells us how many bytes to skip past that header to reach the actual
+    // data cells. Most Bosch/Continental A2Ls use separate axis tables (dataOffset=0)
+    // so this is typically 0.
+    fixedOffset: match.offset + (match.dataOffset ?? 0),
     rows: match.rows,
     cols: match.cols,
-    dtype: 'uint16',
+    // v7: prefer verified dtype from A2L RECORD_LAYOUT; fall back to uint16 only
+    // when unknown. ME7 often uses UBYTE/SBYTE for small-range values — decoding
+    // those as uint16 produced garbage (e.g. factor=10 RPM with raw uint8=50
+    // should give 500 RPM, but uint16 decode gives 128000 RPM).
+    dtype: match.dtype ?? 'uint16',
     le: !isBE,
     factor: scaling?.factor ?? 1,
     offsetVal: scaling?.offsetVal ?? 0,
