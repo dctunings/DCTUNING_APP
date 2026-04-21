@@ -38,6 +38,7 @@ import {
   j2534WriteECUFlash,
   type ECUIdentification,
 } from './j2534Manager'
+import { scanSignatures, getCatalogStats } from './vagSignatureScanner'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -303,6 +304,28 @@ app.whenReady().then(() => {
         resolve({ ok: false, error: err.message })
       })
     })
+  })
+
+  // VAG signature scanner — finds DAMOS-named maps in a loaded binary by matching
+  // against per-family signature catalogs bundled in resources/vag-signatures/.
+  // Returns the detected ECU family + list of identified maps with offsets, dims, and names.
+  ipcMain.handle('vag-scan-signatures', async (_, buffer: ArrayBuffer | number[], forceFamily?: string) => {
+    try {
+      const buf = Array.isArray(buffer) ? Buffer.from(buffer) : Buffer.from(buffer)
+      const fam = (forceFamily && typeof forceFamily === 'string') ? forceFamily : undefined
+      // @ts-expect-error — runtime-checked family string
+      const result = scanSignatures(buf, fam)
+      return { ok: true, result }
+    } catch (e) {
+      return { ok: false, error: (e as Error).message }
+    }
+  })
+  ipcMain.handle('vag-catalog-stats', () => {
+    try {
+      return { ok: true, stats: getCatalogStats() }
+    } catch (e) {
+      return { ok: false, error: (e as Error).message }
+    }
   })
 
   // Open a URL in the system default browser

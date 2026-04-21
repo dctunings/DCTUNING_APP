@@ -710,6 +710,25 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [scannerDebug, setScannerDebug] = useState('')
   // Scanner state removed — UNKNOWN candidates were noise
 
+  // VAG DAMOS-name signature scanner — scans the loaded binary against the
+  // per-family signature catalog built from 1,126 ORI+A2L pairs (152,119 sigs).
+  // Unlike the Kf_ scanner which only finds offsets, this finds REAL DAMOS names
+  // like AccPed_trqEng0_MAP, InjCrv_phiMI1APSCor1EOM1_MAP with dimensions + descriptions.
+  const [sigScanResult, setSigScanResult] = useState<{
+    detectedFamily: string
+    familyScores: Record<string, number>
+    totalMaps: number
+    byType: { MAP: number; CURVE: number; VALUE: number; VAL_BLK: number }
+    matches: Array<{
+      name: string; family: string; offset: number; rows: number; cols: number;
+      type: 'MAP' | 'CURVE' | 'VALUE' | 'VAL_BLK'; desc: string; portable: boolean;
+    }>
+  } | null>(null)
+  const [sigScanBusy, setSigScanBusy] = useState(false)
+  const [sigScanError, setSigScanError] = useState('')
+  const [showSigMaps, setShowSigMaps] = useState(false)
+  const [sigMapFilter, setSigMapFilter] = useState<'MAP' | 'CURVE' | 'ALL'>('MAP')
+
   // Library search state
   const [libSearch, setLibSearch] = useState('')
   const [libResults, setLibResults] = useState<DefinitionEntry[]>([])
@@ -781,6 +800,33 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     setLibFallbackNote(''); setLibOriginalNum(''); setLibLoadError('')
     setScanResult(null); setShowScanner(false)
     setMemoryMatches([])
+    // Reset signature scan state for the new binary
+    setSigScanResult(null); setSigScanBusy(false); setSigScanError(''); setShowSigMaps(false)
+
+    // VAG DAMOS-name signature scan — runs in parallel with the Kf_ scanner.
+    // Uses main-process IPC because the 152K-signature catalog lives on disk
+    // in resources/vag-signatures/ and shouldn't be loaded into the renderer.
+    setTimeout(async () => {
+      setSigScanBusy(true)
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const api = (window as any).api
+        if (api?.vagScanSignatures) {
+          // Transfer the buffer as an Array to avoid IPC cloning a DetachedArrayBuffer —
+          // main side converts back to Buffer. OK for ≤8MB binaries.
+          const arr = Array.from(new Uint8Array(buf))
+          const res = await api.vagScanSignatures(arr)
+          if (res?.ok) {
+            setSigScanResult(res.result)
+          } else {
+            setSigScanError(res?.error || 'Signature scan failed')
+          }
+        }
+      } catch (e) {
+        setSigScanError(String(e))
+      }
+      setSigScanBusy(false)
+    }, 100)
 
     // Run binary map scanner in background
     const ecuForScan = det?.def ?? null
@@ -1980,6 +2026,108 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         )}
         {libLoadError && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 6 }}>{libLoadError}</div>}
       </div>
+
+      {/* ── VAG Signature Scanner (DAMOS-named maps) ───────────────────────
+          Matches the binary against 152,119 portable signatures harvested from
+          1,126 ORI+A2L pairs. Produces real map names like AccPed_trqEng0_MAP
+          instead of generic Kf_0xOFFSET markers. Validated on 21 held-out
+          binaries: 86% find real maps. */}
+      {(sigScanResult || sigScanBusy || sigScanError) && (
+        <div style={{ marginTop: 16, border: '1px solid rgba(34,197,94,0.25)', borderRadius: 10, overflow: 'hidden' }}>
+          <div
+            onClick={() => setShowSigMaps(!showSigMaps)}
+            style={{
+              padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
+              background: 'rgba(34,197,94,0.05)', borderBottom: showSigMaps ? '1px solid rgba(34,197,94,0.2)' : 'none',
+            }}
+          >
+            <span style={{ fontSize: 14 }}>🏷️</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#22c55e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              DAMOS SIGNATURE SCANNER
+            </span>
+            {sigScanBusy ? (
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>Scanning against 152K signatures...</span>
+            ) : sigScanError ? (
+              <span style={{ fontSize: 11, color: '#ef4444', marginLeft: 'auto' }}>{sigScanError}</span>
+            ) : sigScanResult ? (
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                {sigScanResult.detectedFamily !== 'UNKNOWN' && (
+                  <span style={{ color: '#22c55e', fontWeight: 700, marginRight: 8 }}>
+                    {sigScanResult.detectedFamily}
+                  </span>
+                )}
+                <span style={{ color: '#22c55e', fontWeight: 700 }}>{sigScanResult.byType.MAP}</span> MAPs,{' '}
+                <span style={{ color: '#22c55e', fontWeight: 700 }}>{sigScanResult.byType.CURVE}</span> CURVEs,{' '}
+                <span style={{ color: 'var(--text-muted)' }}>{sigScanResult.totalMaps} total</span>
+              </span>
+            ) : null}
+            <span style={{ fontSize: 10, color: 'var(--text-muted)', transform: showSigMaps ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
+          </div>
+
+          {showSigMaps && sigScanResult && (
+            <div style={{ padding: '12px 16px' }}>
+              {/* Family confidence strip */}
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10 }}>
+                Family scores (sig hits across all candidates):{' '}
+                {Object.entries(sigScanResult.familyScores).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([f, n]) =>
+                  <span key={f} style={{ marginRight: 10 }}>
+                    <span style={{ color: f === sigScanResult.detectedFamily ? '#22c55e' : 'var(--text-muted)', fontWeight: f === sigScanResult.detectedFamily ? 700 : 400 }}>{f}</span>={n}
+                  </span>
+                )}
+              </div>
+              {/* Type filter tabs */}
+              <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                {(['MAP', 'CURVE', 'ALL'] as const).map(t => (
+                  <button
+                    key={t}
+                    onClick={() => setSigMapFilter(t)}
+                    style={{
+                      padding: '4px 10px', fontSize: 11, borderRadius: 6, cursor: 'pointer',
+                      background: sigMapFilter === t ? 'rgba(34,197,94,0.15)' : 'transparent',
+                      color: sigMapFilter === t ? '#22c55e' : 'var(--text-muted)',
+                      border: `1px solid ${sigMapFilter === t ? 'rgba(34,197,94,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                      fontWeight: sigMapFilter === t ? 700 : 400,
+                    }}
+                  >
+                    {t === 'MAP' ? `2D MAPs (${sigScanResult.byType.MAP})` :
+                     t === 'CURVE' ? `CURVEs (${sigScanResult.byType.CURVE})` :
+                     `All (${sigScanResult.totalMaps})`}
+                  </button>
+                ))}
+              </div>
+              {/* Map list */}
+              <div style={{ maxHeight: 380, overflowY: 'auto', fontFamily: 'monospace', fontSize: 11 }}>
+                {sigScanResult.matches
+                  .filter(m => sigMapFilter === 'ALL' || m.type === sigMapFilter)
+                  .slice(0, 500)
+                  .map((m, idx) => (
+                    <div
+                      key={`${m.offset}-${m.name}-${idx}`}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '80px 250px 60px 70px 1fr',
+                        gap: 8, padding: '4px 6px',
+                        borderBottom: '1px solid rgba(255,255,255,0.03)',
+                        color: m.portable ? '#e5e5e5' : 'var(--text-muted)',
+                      }}
+                    >
+                      <span style={{ color: '#22c55e' }}>0x{m.offset.toString(16).padStart(6, '0')}</span>
+                      <span style={{ fontWeight: 600 }} title={m.name}>{m.name}</span>
+                      <span style={{ color: 'var(--text-muted)' }}>{m.type}</span>
+                      <span style={{ color: 'var(--text-muted)' }}>{m.rows}×{m.cols}</span>
+                      <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={m.desc}>{m.desc}</span>
+                    </div>
+                  ))}
+                {sigScanResult.matches.filter(m => sigMapFilter === 'ALL' || m.type === sigMapFilter).length > 500 && (
+                  <div style={{ padding: 8, color: 'var(--text-muted)', textAlign: 'center' }}>
+                    Showing first 500 of {sigScanResult.matches.filter(m => sigMapFilter === 'ALL' || m.type === sigMapFilter).length}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Binary Map Scanner ─────────────────────────────────────────────── */}
       {(scanResult || scannerBusy) && (

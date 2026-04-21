@@ -25,6 +25,13 @@ const api = {
   obdReadPID: (pid: string) => ipcRenderer.invoke('obd-read-pid', pid),
   obdReadAllPIDs: () => ipcRenderer.invoke('obd-read-all-pids'),
 
+  // ─── VAG signature scanner ────────────────────────────────────────────────
+  // Scans a loaded binary against the per-family DAMOS signature catalog (152K sigs across 7 families).
+  // Returns the detected ECU family + named map matches with offsets and dimensions.
+  vagScanSignatures: (buffer: ArrayBuffer | number[], forceFamily?: string) =>
+    ipcRenderer.invoke('vag-scan-signatures', buffer, forceFamily),
+  vagCatalogStats: () => ipcRenderer.invoke('vag-catalog-stats'),
+
   // ─── J2534 registry scan ─────────────────────────────────────────────────
   scanJ2534: () => ipcRenderer.invoke('scan-j2534'),
 
