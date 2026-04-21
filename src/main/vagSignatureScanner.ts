@@ -35,6 +35,12 @@ interface CompactEntry {
   t: string       // type: 'M'/'C'/'V'/'B' (MAP/CURVE/VALUE/VAL_BLK)
   d: string       // description
   p: 0 | 1        // 1 = fully portable across all source binaries
+  // v6 additions — scaling extracted from A2L COMPU_METHOD with Bosch INVERSE convention.
+  // Absent when factor is 1.0 (identity transform) to save space; caller treats missing = raw.
+  f?: number      // factor (physical = raw * f + ov)
+  ov?: number     // offset
+  u?: string      // unit string
+  v?: 1           // 1 = scaling verified across ≥2 training pairs; absent = not verified
 }
 
 export interface ScanMatch {
@@ -46,6 +52,12 @@ export interface ScanMatch {
   type: 'MAP' | 'CURVE' | 'VALUE' | 'VAL_BLK'
   desc: string
   portable: boolean
+  // v6: scaling data from A2L COMPU_METHOD — only populated when verified by
+  // cross-binary consensus, otherwise undefined (caller shows raw values).
+  factor?: number
+  offsetVal?: number
+  unit?: string
+  scalingVerified?: boolean
 }
 
 export interface ScanResult {
@@ -65,7 +77,8 @@ const bucketsByFamily: Partial<Record<Family, Bucket>> = {}
 const catalogsByFamily: Partial<Record<Family, CompactEntry[]>> = {}
 
 function resolveCatalogPath(fam: Family): string {
-  const fname = `vagcat_${fam.toLowerCase()}.json`
+  // v6 catalog files (prefixed vagcat6_) include verified factor/unit per entry.
+  const fname = `vagcat6_${fam.toLowerCase()}.json`
   // In dev: resources/ sits next to project root. In packaged Electron, process.resourcesPath
   // points at the app's resources folder. Try both.
   const candidates = [
@@ -164,6 +177,11 @@ export function scanSignatures(buffer: ArrayBuffer | Buffer, forceFamily?: Famil
         type,
         desc: hit.e.d,
         portable: hit.e.p === 1,
+        // v6: surface verified scaling when present in catalog
+        factor: hit.e.f,
+        offsetVal: hit.e.ov,
+        unit: hit.e.u,
+        scalingVerified: hit.e.v === 1,
       })
       byType[type]++
     }

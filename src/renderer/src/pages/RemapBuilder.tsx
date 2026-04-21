@@ -726,6 +726,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     matches: Array<{
       name: string; family: string; offset: number; rows: number; cols: number;
       type: 'MAP' | 'CURVE' | 'VALUE' | 'VAL_BLK'; desc: string; portable: boolean;
+      // v6 verified scaling from A2L COMPU_METHOD
+      factor?: number; offsetVal?: number; unit?: string; scalingVerified?: boolean;
     }>
   } | null>(null)
   const [sigScanBusy, setSigScanBusy] = useState(false)
@@ -2315,6 +2317,15 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                                   <span style={{ padding: '1px 6px', fontSize: 9, background: 'rgba(34,197,94,0.2)', color: '#22c55e', borderRadius: 3 }}>PORTABLE</span>
                                 ) : (
                                   <span style={{ padding: '1px 6px', fontSize: 9, background: 'rgba(251,191,36,0.15)', color: '#fbbf24', borderRadius: 3 }}>PARTIAL</span>
+                                )}
+                                {/* v6: show verified physical unit next to the type. Only labeled when
+                                    the scaling was confirmed across ≥2 training A2Ls — otherwise the
+                                    preview stays raw. Separate from the LE/BE note because unit conveys
+                                    different information (bar vs Nm vs mg/stk). */}
+                                {primary.scalingVerified && primary.unit && (
+                                  <span title={`Scaling verified from A2L COMPU_METHOD across multiple training pairs. factor=${primary.factor} offset=${primary.offsetVal ?? 0}`} style={{ padding: '1px 6px', fontSize: 9, background: 'rgba(0,174,200,0.15)', color: 'var(--accent)', borderRadius: 3, fontWeight: 700 }}>
+                                    ✓ {primary.unit}
+                                  </span>
                                 )}
                                 {stats && (
                                   <span style={{ marginLeft: 'auto', color: 'var(--text-muted)', fontSize: 10 }}>

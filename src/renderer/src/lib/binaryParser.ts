@@ -1336,19 +1336,24 @@ export interface SignatureMatch {
   type: 'MAP' | 'CURVE' | 'VALUE' | 'VAL_BLK'
   desc: string
   portable: boolean
+  // v6: verified scaling from A2L COMPU_METHOD cross-binary consensus.
+  // Present only when multiple training pairs agreed on the same factor/unit.
+  factor?: number
+  offsetVal?: number
+  unit?: string
+  scalingVerified?: boolean
 }
 
-// REVERTED in v3.11.7: physical-unit curation was removed because the factors
-// were educated guesses not verified against the source A2L COMPU_METHOD blocks.
-// Showing "2.62 bar" when the real factor might produce "3.28 bar" was worse
-// than showing honest raw uint16 values. The catalog rebuild (v3.11.8) will
-// extract COMPU_METHOD from each A2L and store verified factor/unit per map,
-// so sig-adopted maps will then display in real physical units backed by the
-// actual DAMOS specification.
+// v3.11.8: physical units restored, but now VERIFIED from A2L COMPU_METHOD blocks
+// across multiple training pairs. When the scanner provides match.factor and the
+// scaling was confirmed in ≥2 binaries (match.scalingVerified), we use it directly.
+// Otherwise we fall back to raw uint16 display (factor=1) — no guessing.
 //
-// Until that lands, sig-scan maps show raw uint16 values. Stage multipliers
-// still work correctly because the ECU reads the raw bytes through its own
-// internal factor — display factor never affected write-back.
+// The COMPU_METHOD extraction uses Bosch/Continental INVERSE convention: the RAT_FUNC
+// coefficients in the A2L describe raw-as-function-of-physical, so we invert to get
+// physical-as-function-of-raw. Verified against known-value maps across PPD1, SIMOS18,
+// EDC17C46 — PPD1 map0883 MAP Limiter → 0.083 hPa/raw (raw 32768 → 2717 hPa = 2.72 bar
+// absolute, matches Stage 1 tune ceiling).
 
 export function syntheticMapDefFromSignature(match: SignatureMatch): MapDef {
   // Big-endian for older Bosch (EDC16/17, ME7, SIMOS 8/12/16). Little-endian for MED17, MG1,
@@ -1356,10 +1361,12 @@ export function syntheticMapDefFromSignature(match: SignatureMatch): MapDef {
   const BE_FAMILIES = new Set(['EDC15', 'EDC16', 'EDC16U', 'EDC17', 'EDC17C46', 'EDC17C64', 'ME7', 'SIMOS8', 'SIMOS12', 'SIMOS16'])
   const isBE = BE_FAMILIES.has(match.family.toUpperCase())
 
-  // v3.11.8 will restore physical-unit scaling once the signature catalog has
-  // been rebuilt with verified COMPU_METHOD data from the source A2Ls. Until
-  // then, raw uint16 is safer than potentially-wrong physical values.
-  const scaling: { factor: number; offsetVal: number; unit: string } | null = null
+  // Use the verified scaling from the catalog when available (factor confirmed by
+  // ≥2 training pairs agreeing). Otherwise fall back to raw uint16 (factor=1) rather
+  // than guessing — honest raw display beats wrong-by-2x physical values.
+  const scaling = (match.scalingVerified && match.factor !== undefined && isFinite(match.factor))
+    ? { factor: match.factor, offsetVal: match.offsetVal ?? 0, unit: match.unit ?? '' }
+    : null
 
   // Category heuristic — name first, description fallback. Purely cosmetic (colored badge)
   // but also drives the stage default multipliers below, so worth getting right.
