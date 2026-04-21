@@ -178,7 +178,10 @@ function MiniHeatmap({ data, label, mapCategory, allowUniform }: { data: number[
                   fontSize: 7, color: 'rgba(255,255,255,0.6)', fontWeight: 700,
                 }}
               >
-                {val > 99 ? Math.round(val) : val.toFixed(1)}
+                {/* Integer values (raw uint16 from sig-scan, or physical values that happen
+                    to land whole like +0% boost where factor*raw is integer) render without
+                    a fractional part — avoids "0.0" / "64.0" noise on raw-unit maps. */}
+                {Number.isInteger(val) ? val : (val > 99 ? Math.round(val) : val.toFixed(1))}
               </div>
             ))
           )}
@@ -2288,12 +2291,17 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                                   style={{ padding: '2px 8px', fontSize: 10, background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 4, cursor: 'pointer' }}
                                 >Copy offset</button>
                                 {/* Only MAPs and CURVEs are worth opening in the Stage editor — VALUE scalars
-                                    and VAL_BLKs don't have the row/col structure the editor expects, and you'd
-                                    just see a 1×1 or 1×N grid with no zoom-worthy content. */}
+                                    and VAL_BLKs don't have the row/col structure the editor expects. Also
+                                    skip dead maps (no variance) where multiplying raw values does nothing
+                                    useful — e.g. 1×1 all-zeros or all-same-constant lookup. */}
                                 {(primary.type === 'MAP' || primary.type === 'CURVE') && (
                                   adoptedSigOffsets.has(offset) ? (
                                     <span style={{ padding: '2px 8px', fontSize: 10, background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.4)', borderRadius: 4, fontWeight: 700 }}>
                                       ✓ Added to Stage Editor
+                                    </span>
+                                  ) : (stats && stats.min === stats.max) ? (
+                                    <span title="All cells hold the same value — nothing to tune here. Multiplying a constant by a percentage just scales the constant; there's no gradient to modify." style={{ padding: '2px 8px', fontSize: 10, background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4 }}>
+                                      Flat — not tunable
                                     </span>
                                   ) : (
                                     <button

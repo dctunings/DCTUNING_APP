@@ -1344,20 +1344,36 @@ export function syntheticMapDefFromSignature(match: SignatureMatch): MapDef {
   const BE_FAMILIES = new Set(['EDC15', 'EDC16', 'EDC16U', 'EDC17', 'EDC17C46', 'EDC17C64', 'ME7', 'SIMOS8', 'SIMOS12', 'SIMOS16'])
   const isBE = BE_FAMILIES.has(match.family.toUpperCase())
 
-  // Rough category guess from the map name — purely cosmetic (drives the colored badge).
+  // Category heuristic — name first, description fallback. Purely cosmetic (colored badge)
+  // but also drives the stage default multipliers below, so worth getting right.
   const n = match.name.toLowerCase()
   const d = match.desc.toLowerCase()
   let category: MapCategory = 'misc'
-  if (/boost|map_sp|map_lim|turbo|prs_boost/.test(n) || /boost|turbo|map.?lim|charger/.test(d)) category = 'boost'
-  else if (/smoke/.test(n) || /smoke/.test(d)) category = 'smoke'
-  else if (/tqi|torque|trq|tq_lim|pow_max/.test(n) || /torque|torq/.test(d)) category = 'torque'
-  else if (/iga|ign|spark|knk|knock/.test(n) || /ignition|spark|knock/.test(d)) category = 'ignition'
-  else if (/inj|iq|mff|mf_|fuel|rail/.test(n) || /inject|fuel|rail/.test(d)) category = 'fuel'
-  else if (/lim|max_/.test(n) || /limit/.test(d)) category = 'limiter'
-  else if (/egr|dpf|sa_|lamb|lnt/.test(n) || /egr|dpf|lambda|catalyst|nox/.test(d)) category = 'emission'
+  if (/boost|map_sp|map_lim|turbo|tcha|prs_boost|pv_grd|charger/.test(n) || /boost|turbo|charger|map.?lim|precontrol|n75/.test(d)) category = 'boost'
+  else if (/smoke|rauch|soot/.test(n) || /smoke|rauch|soot/.test(d)) category = 'smoke'
+  else if (/tqi|torque|trq|tq_lim|pow_max|drivers?.?wish|driver.?req/.test(n) || /torque|torq|drivers?.?wish|pedal.?map/.test(d)) category = 'torque'
+  else if (/iga|igni|spark|knk|knock|soi|ang_inj/.test(n) || /ignition|spark|knock|timing|soi/.test(d)) category = 'ignition'
+  else if (/\binj\b|iq_|mff|mf_|fuel|rail|maf_|quant|menge|t_close|t_doi/.test(n) || /inject|fuel|rail|quantity|menge/.test(d)) category = 'fuel'
+  else if (/lim|max_|min_|ceil/.test(n) || /limit|ceiling/.test(d)) category = 'limiter'
+  else if (/egr|dpf|sa_|lamb|lnt|urea|adblue|regen|rgn/.test(n) || /egr|dpf|lambda|catalyst|nox|regen/.test(d)) category = 'emission'
+  // "Pressure" alone lands in boost — most pressure maps in an ECU are manifold/rail pressure, which behave like boost.
+  else if (/prs_|press|_sp_/.test(n) || /pressure|druck/.test(d)) category = 'boost'
 
-  // Ensure a stable unique id — sig-scan maps may share names (aliases), so include offset.
+  // Category-driven default stage multipliers. Torque/fuel/boost get mild positive bumps —
+  // still conservative (user dials up from here); misc/limiter/emission/ignition start at 0%
+  // because blindly scaling those by a fixed % is almost always wrong.
+  let stage1Mul = 1, stage2Mul = 1, stage3Mul = 1
+  if (category === 'torque' || category === 'fuel') { stage1Mul = 1.08; stage2Mul = 1.15; stage3Mul = 1.25 }
+  else if (category === 'boost')                    { stage1Mul = 1.06; stage2Mul = 1.12; stage3Mul = 1.20 }
+  else if (category === 'smoke')                    { stage1Mul = 1.15; stage2Mul = 1.30; stage3Mul = 1.50 }
+
   const id = `sig_${match.family}_${match.offset.toString(16)}_${match.name.replace(/[^a-z0-9_]/gi, '_')}`.slice(0, 120)
+
+  // Generic numbered axis values so the Zone Editor has something to label with.
+  // The real axis breakpoints live in the binary at nearby offsets (Kf_ header) but sig-scan
+  // doesn't parse those — sequential indexes beat blank/undefined axis labels.
+  const axisXValues = Array.from({ length: match.cols }, (_, i) => i)
+  const axisYValues = Array.from({ length: match.rows }, (_, i) => i)
 
   return {
     id,
@@ -1366,21 +1382,23 @@ export function syntheticMapDefFromSignature(match: SignatureMatch): MapDef {
     desc: match.desc || match.name,
     signatures: [],
     sigOffset: 0,
-    fixedOffset: match.offset,  // jump straight to scanner's offset (already validated against the binary)
+    fixedOffset: match.offset,
     rows: match.rows,
     cols: match.cols,
-    dtype: 'uint16',           // overwhelmingly most common for Bosch tunables; user can't currently override
+    dtype: 'uint16',
     le: !isBE,
-    factor: 1,                 // no physical scaling known — show raw values; multiplier edits still work
+    factor: 1,
     offsetVal: 0,
-    unit: '',                  // raw units (no physical interpretation)
-    stage1: { multiplier: 1 },
-    stage2: { multiplier: 1 },
-    stage3: { multiplier: 1 },
-    critical: false,           // don't warn if missing
-    showPreview: true,         // render the mini heatmap + zone editor
-    allowUniform: true,        // some sig-scan maps are uniform lookup tables — don't flag
-    minQuality: 0,             // skip the quality filter; scanner already verified 24-byte sig match
+    unit: '',
+    stage1: { multiplier: stage1Mul },
+    stage2: { multiplier: stage2Mul },
+    stage3: { multiplier: stage3Mul },
+    axisXValues,
+    axisYValues,
+    critical: false,
+    showPreview: true,
+    allowUniform: true,
+    minQuality: 0,
   }
 }
 
