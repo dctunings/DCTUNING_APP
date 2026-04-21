@@ -728,6 +728,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [sigScanError, setSigScanError] = useState('')
   const [showSigMaps, setShowSigMaps] = useState(false)
   const [sigMapFilter, setSigMapFilter] = useState<'MAP' | 'CURVE' | 'ALL'>('MAP')
+  const [sigMapSearch, setSigMapSearch] = useState('')
+  const [sigExpandedOffset, setSigExpandedOffset] = useState<number | null>(null)
 
   // Library search state
   const [libSearch, setLibSearch] = useState('')
@@ -2064,68 +2066,176 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             <span style={{ fontSize: 10, color: 'var(--text-muted)', transform: showSigMaps ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
           </div>
 
-          {showSigMaps && sigScanResult && (
-            <div style={{ padding: '12px 16px' }}>
-              {/* Family confidence strip */}
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10 }}>
-                Family scores (sig hits across all candidates):{' '}
-                {Object.entries(sigScanResult.familyScores).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([f, n]) =>
-                  <span key={f} style={{ marginRight: 10 }}>
-                    <span style={{ color: f === sigScanResult.detectedFamily ? '#22c55e' : 'var(--text-muted)', fontWeight: f === sigScanResult.detectedFamily ? 700 : 400 }}>{f}</span>={n}
-                  </span>
-                )}
-              </div>
-              {/* Type filter tabs */}
-              <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-                {(['MAP', 'CURVE', 'ALL'] as const).map(t => (
-                  <button
-                    key={t}
-                    onClick={() => setSigMapFilter(t)}
-                    style={{
-                      padding: '4px 10px', fontSize: 11, borderRadius: 6, cursor: 'pointer',
-                      background: sigMapFilter === t ? 'rgba(34,197,94,0.15)' : 'transparent',
-                      color: sigMapFilter === t ? '#22c55e' : 'var(--text-muted)',
-                      border: `1px solid ${sigMapFilter === t ? 'rgba(34,197,94,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                      fontWeight: sigMapFilter === t ? 700 : 400,
-                    }}
-                  >
-                    {t === 'MAP' ? `2D MAPs (${sigScanResult.byType.MAP})` :
-                     t === 'CURVE' ? `CURVEs (${sigScanResult.byType.CURVE})` :
-                     `All (${sigScanResult.totalMaps})`}
-                  </button>
-                ))}
-              </div>
-              {/* Map list */}
-              <div style={{ maxHeight: 380, overflowY: 'auto', fontFamily: 'monospace', fontSize: 11 }}>
-                {sigScanResult.matches
-                  .filter(m => sigMapFilter === 'ALL' || m.type === sigMapFilter)
-                  .slice(0, 500)
-                  .map((m, idx) => (
-                    <div
-                      key={`${m.offset}-${m.name}-${idx}`}
+          {showSigMaps && sigScanResult && (() => {
+            // Group matches by offset — Bosch ECUs often have many related A2L names
+            // sharing identical 24-byte default data, so we collapse them into one
+            // row with "+N aliases" expand instead of listing each as a separate row.
+            type Match = typeof sigScanResult.matches[0]
+            const filteredMatches = sigScanResult.matches
+              .filter(m => sigMapFilter === 'ALL' || m.type === sigMapFilter)
+              .filter(m => !sigMapSearch.trim() || (
+                m.name.toLowerCase().includes(sigMapSearch.toLowerCase()) ||
+                m.desc.toLowerCase().includes(sigMapSearch.toLowerCase()) ||
+                `0x${m.offset.toString(16)}`.toLowerCase().includes(sigMapSearch.toLowerCase())
+              ))
+            const byOffset = new Map<number, Match[]>()
+            for (const m of filteredMatches) {
+              if (!byOffset.has(m.offset)) byOffset.set(m.offset, [])
+              byOffset.get(m.offset)!.push(m)
+            }
+            const groups = [...byOffset.entries()].sort(([a], [b]) => a - b)
+
+            const copyToClipboard = (text: string) => {
+              navigator.clipboard.writeText(text).catch(() => {})
+            }
+
+            return (
+              <div style={{ padding: '12px 16px' }}>
+                {/* Explainer — addresses the "is this legit?" trust question */}
+                <div style={{
+                  fontSize: 11, color: 'var(--text-muted)', marginBottom: 10, padding: '8px 10px',
+                  background: 'rgba(34,197,94,0.05)', borderLeft: '2px solid rgba(34,197,94,0.4)', borderRadius: 4,
+                }}>
+                  <strong style={{ color: '#22c55e' }}>How to read this:</strong>
+                  {' '}Each offset shows one representative map name. Bosch ships many related A2L
+                  variants sharing identical default data — click a row to see all the aliases at that offset.
+                  Matches work on factory bytes, so tuned/Stage&nbsp;N files still detect unchanged maps correctly.
+                </div>
+
+                {/* Family confidence strip */}
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10 }}>
+                  Family scores (sig hits across all candidates):{' '}
+                  {Object.entries(sigScanResult.familyScores).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([f, n]) =>
+                    <span key={f} style={{ marginRight: 10 }}>
+                      <span style={{ color: f === sigScanResult.detectedFamily ? '#22c55e' : 'var(--text-muted)', fontWeight: f === sigScanResult.detectedFamily ? 700 : 400 }}>{f}</span>={n}
+                    </span>
+                  )}
+                </div>
+
+                {/* Type filter tabs + search */}
+                <div style={{ display: 'flex', gap: 6, marginBottom: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                  {(['MAP', 'CURVE', 'ALL'] as const).map(t => (
+                    <button
+                      key={t}
+                      onClick={() => setSigMapFilter(t)}
                       style={{
-                        display: 'grid',
-                        gridTemplateColumns: '80px 250px 60px 70px 1fr',
-                        gap: 8, padding: '4px 6px',
-                        borderBottom: '1px solid rgba(255,255,255,0.03)',
-                        color: m.portable ? '#e5e5e5' : 'var(--text-muted)',
+                        padding: '4px 10px', fontSize: 11, borderRadius: 6, cursor: 'pointer',
+                        background: sigMapFilter === t ? 'rgba(34,197,94,0.15)' : 'transparent',
+                        color: sigMapFilter === t ? '#22c55e' : 'var(--text-muted)',
+                        border: `1px solid ${sigMapFilter === t ? 'rgba(34,197,94,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                        fontWeight: sigMapFilter === t ? 700 : 400,
                       }}
                     >
-                      <span style={{ color: '#22c55e' }}>0x{m.offset.toString(16).padStart(6, '0')}</span>
-                      <span style={{ fontWeight: 600 }} title={m.name}>{m.name}</span>
-                      <span style={{ color: 'var(--text-muted)' }}>{m.type}</span>
-                      <span style={{ color: 'var(--text-muted)' }}>{m.rows}×{m.cols}</span>
-                      <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={m.desc}>{m.desc}</span>
-                    </div>
+                      {t === 'MAP' ? `2D MAPs (${sigScanResult.byType.MAP})` :
+                       t === 'CURVE' ? `CURVEs (${sigScanResult.byType.CURVE})` :
+                       `All (${sigScanResult.totalMaps})`}
+                    </button>
                   ))}
-                {sigScanResult.matches.filter(m => sigMapFilter === 'ALL' || m.type === sigMapFilter).length > 500 && (
-                  <div style={{ padding: 8, color: 'var(--text-muted)', textAlign: 'center' }}>
-                    Showing first 500 of {sigScanResult.matches.filter(m => sigMapFilter === 'ALL' || m.type === sigMapFilter).length}
-                  </div>
-                )}
+                  <input
+                    type="text"
+                    value={sigMapSearch}
+                    onChange={e => setSigMapSearch(e.target.value)}
+                    placeholder="Search name, description, or 0xoffset..."
+                    style={{
+                      flex: 1, minWidth: 200, padding: '4px 10px', fontSize: 11,
+                      background: 'rgba(255,255,255,0.03)', color: '#e5e5e5',
+                      border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, outline: 'none',
+                    }}
+                  />
+                  {sigMapSearch && (
+                    <button
+                      onClick={() => setSigMapSearch('')}
+                      style={{ padding: '4px 10px', fontSize: 11, background: 'transparent', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, cursor: 'pointer' }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                    {groups.length} unique offsets · {filteredMatches.length} names
+                  </span>
+                </div>
+
+                {/* Grouped map list */}
+                <div style={{ maxHeight: 420, overflowY: 'auto', fontFamily: 'monospace', fontSize: 11 }}>
+                  {groups.slice(0, 500).map(([offset, matches]) => {
+                    const primary = matches[0]
+                    const isExpanded = sigExpandedOffset === offset
+                    return (
+                      <div key={offset} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                        <div
+                          onClick={() => setSigExpandedOffset(isExpanded ? null : offset)}
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '90px 260px 50px 70px 50px 1fr',
+                            gap: 8, padding: '6px 6px',
+                            cursor: 'pointer',
+                            background: isExpanded ? 'rgba(34,197,94,0.05)' : 'transparent',
+                            color: primary.portable ? '#e5e5e5' : 'var(--text-muted)',
+                          }}
+                          onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = 'rgba(255,255,255,0.02)' }}
+                          onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = 'transparent' }}
+                        >
+                          <span style={{ color: '#22c55e' }}>0x{offset.toString(16).padStart(6, '0')}</span>
+                          <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={primary.name}>{primary.name}</span>
+                          <span style={{ color: 'var(--text-muted)' }}>{primary.type}</span>
+                          <span style={{ color: 'var(--text-muted)' }}>{primary.rows}×{primary.cols}</span>
+                          <span style={{ color: matches.length > 1 ? '#fbbf24' : 'var(--text-muted)', fontSize: 10 }}>
+                            {matches.length > 1 ? `+${matches.length - 1} alias` : ''}
+                          </span>
+                          <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={primary.desc}>{primary.desc}</span>
+                        </div>
+                        {isExpanded && (
+                          <div style={{ padding: '8px 14px 10px 98px', background: 'rgba(0,0,0,0.2)', fontSize: 11 }}>
+                            <div style={{ marginBottom: 6, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                              <span style={{ color: 'var(--text-muted)' }}>Offset:</span>
+                              <code style={{ color: '#22c55e' }}>0x{offset.toString(16).padStart(6, '0')}</code>
+                              <button
+                                onClick={e => { e.stopPropagation(); copyToClipboard(`0x${offset.toString(16).padStart(6, '0')}`) }}
+                                style={{ padding: '2px 8px', fontSize: 10, background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 4, cursor: 'pointer' }}
+                              >Copy offset</button>
+                              <span style={{ color: 'var(--text-muted)' }}>{primary.type} · {primary.rows}×{primary.cols} · {primary.family}</span>
+                              {primary.portable ? (
+                                <span style={{ padding: '1px 6px', fontSize: 9, background: 'rgba(34,197,94,0.2)', color: '#22c55e', borderRadius: 3 }}>PORTABLE</span>
+                              ) : (
+                                <span style={{ padding: '1px 6px', fontSize: 9, background: 'rgba(251,191,36,0.15)', color: '#fbbf24', borderRadius: 3 }}>PARTIAL</span>
+                              )}
+                            </div>
+                            <div style={{ marginBottom: 6, color: '#e5e5e5' }}>{primary.desc}</div>
+                            {matches.length > 1 && (
+                              <div>
+                                <div style={{ color: 'var(--text-muted)', marginBottom: 4 }}>
+                                  {matches.length} A2L map names share this 24-byte signature (Bosch-default identical data):
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingLeft: 8 }}>
+                                  {matches.map((m, i) => (
+                                    <div key={i} style={{ color: '#e5e5e5', display: 'flex', gap: 8 }}>
+                                      <span style={{ color: 'var(--text-muted)', minWidth: 20 }}>{i + 1}.</span>
+                                      <span style={{ fontWeight: 600, flex: 1 }}>{m.name}</span>
+                                      <span style={{ color: 'var(--text-muted)', fontSize: 10, maxWidth: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={m.desc}>{m.desc}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                  {groups.length > 500 && (
+                    <div style={{ padding: 8, color: 'var(--text-muted)', textAlign: 'center' }}>
+                      Showing first 500 of {groups.length} offset groups — use search above to narrow down
+                    </div>
+                  )}
+                  {groups.length === 0 && (
+                    <div style={{ padding: 16, color: 'var(--text-muted)', textAlign: 'center' }}>
+                      No maps match your filter.
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )
+          })()}
         </div>
       )}
 
