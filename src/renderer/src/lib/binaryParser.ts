@@ -1320,6 +1320,70 @@ export function syntheticMapDefFromDRT(
   }
 }
 
+// ─── Build a MapDef from a DAMOS signature-scan match ─────────────────────────
+// Creates a stage-editable MapDef for a map discovered by the signature scanner
+// but not present in the curated ecuDefinitions. Factor defaults to 1.0 (raw
+// uint16 display) because the scanner only knows the 24-byte signature, not the
+// physical scaling. User can still apply uniform multipliers / zone edits and
+// write values back to the binary — the output is simply raw-value based rather
+// than physical-unit based (+10% of raw 26150 → 28765).
+export interface SignatureMatch {
+  name: string
+  family: string
+  offset: number
+  rows: number
+  cols: number
+  type: 'MAP' | 'CURVE' | 'VALUE' | 'VAL_BLK'
+  desc: string
+  portable: boolean
+}
+
+export function syntheticMapDefFromSignature(match: SignatureMatch): MapDef {
+  // Big-endian for older Bosch (EDC16/17, ME7, SIMOS 8/12/16). Little-endian for MED17, MG1,
+  // SIMOS 18, PPD1. Matches the decoding we do in the sig-scan heatmap preview.
+  const BE_FAMILIES = new Set(['EDC15', 'EDC16', 'EDC16U', 'EDC17', 'EDC17C46', 'EDC17C64', 'ME7', 'SIMOS8', 'SIMOS12', 'SIMOS16'])
+  const isBE = BE_FAMILIES.has(match.family.toUpperCase())
+
+  // Rough category guess from the map name — purely cosmetic (drives the colored badge).
+  const n = match.name.toLowerCase()
+  const d = match.desc.toLowerCase()
+  let category: MapCategory = 'misc'
+  if (/boost|map_sp|map_lim|turbo|prs_boost/.test(n) || /boost|turbo|map.?lim|charger/.test(d)) category = 'boost'
+  else if (/smoke/.test(n) || /smoke/.test(d)) category = 'smoke'
+  else if (/tqi|torque|trq|tq_lim|pow_max/.test(n) || /torque|torq/.test(d)) category = 'torque'
+  else if (/iga|ign|spark|knk|knock/.test(n) || /ignition|spark|knock/.test(d)) category = 'ignition'
+  else if (/inj|iq|mff|mf_|fuel|rail/.test(n) || /inject|fuel|rail/.test(d)) category = 'fuel'
+  else if (/lim|max_/.test(n) || /limit/.test(d)) category = 'limiter'
+  else if (/egr|dpf|sa_|lamb|lnt/.test(n) || /egr|dpf|lambda|catalyst|nox/.test(d)) category = 'emission'
+
+  // Ensure a stable unique id — sig-scan maps may share names (aliases), so include offset.
+  const id = `sig_${match.family}_${match.offset.toString(16)}_${match.name.replace(/[^a-z0-9_]/gi, '_')}`.slice(0, 120)
+
+  return {
+    id,
+    name: match.name,
+    category,
+    desc: match.desc || match.name,
+    signatures: [],
+    sigOffset: 0,
+    fixedOffset: match.offset,  // jump straight to scanner's offset (already validated against the binary)
+    rows: match.rows,
+    cols: match.cols,
+    dtype: 'uint16',           // overwhelmingly most common for Bosch tunables; user can't currently override
+    le: !isBE,
+    factor: 1,                 // no physical scaling known — show raw values; multiplier edits still work
+    offsetVal: 0,
+    unit: '',                  // raw units (no physical interpretation)
+    stage1: { multiplier: 1 },
+    stage2: { multiplier: 1 },
+    stage3: { multiplier: 1 },
+    critical: false,           // don't warn if missing
+    showPreview: true,         // render the mini heatmap + zone editor
+    allowUniform: true,        // some sig-scan maps are uniform lookup tables — don't flag
+    minQuality: 0,             // skip the quality filter; scanner already verified 24-byte sig match
+  }
+}
+
 // ─── Write map back into buffer ───────────────────────────────────────────────
 export function writeMap(buffer: ArrayBuffer, extracted: ExtractedMap, newRaw: number[][]): ArrayBuffer {
   if (!extracted.found || extracted.offset < 0) return buffer

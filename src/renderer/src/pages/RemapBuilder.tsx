@@ -1,7 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { ECU_DEFINITIONS, ADDONS } from '../lib/ecuDefinitions'
 import type { EcuDef, MapDef, MapCategory, DataType } from '../lib/ecuDefinitions'
-import { detectEcu, detectEcuFromFilename, detectEcuFromCatalog, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, extractPartNumberFromBinary } from '../lib/binaryParser'
+import { detectEcu, detectEcuFromFilename, detectEcuFromCatalog, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, syntheticMapDefFromSignature, extractPartNumberFromBinary } from '../lib/binaryParser'
+import type { SignatureMatch } from '../lib/binaryParser'
 import type { DetectedEcu, DetectedCatalogEcu, ExtractedMap, A2LValidationResult } from '../lib/binaryParser'
 import { buildRemap, buildFilename } from '../lib/remapEngine'
 import type { Stage, AddonId, RemapResult } from '../lib/remapEngine'
@@ -730,6 +731,10 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [sigMapFilter, setSigMapFilter] = useState<'MAP' | 'CURVE' | 'ALL'>('MAP')
   const [sigMapSearch, setSigMapSearch] = useState('')
   const [sigExpandedOffset, setSigExpandedOffset] = useState<number | null>(null)
+  // Offsets of sig-scan matches that have been adopted into the Stage editor.
+  // Keeps the button state consistent — once you've opened a map in Step 3
+  // we show "✓ Added" instead of "Open in Stage Editor" and disable re-adding.
+  const [adoptedSigOffsets, setAdoptedSigOffsets] = useState<Set<number>>(new Set())
 
   // Library search state
   const [libSearch, setLibSearch] = useState('')
@@ -804,6 +809,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     setMemoryMatches([])
     // Reset signature scan state for the new binary
     setSigScanResult(null); setSigScanBusy(false); setSigScanError(''); setShowSigMaps(false)
+    setAdoptedSigOffsets(new Set()); setSigExpandedOffset(null); setSigMapSearch('')
 
     // VAG DAMOS-name signature scan — runs in parallel with the Kf_ scanner.
     // Uses main-process IPC because the 152K-signature catalog lives on disk
@@ -913,6 +919,33 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       setLoadError(String(err))
     }
   }
+
+  // Adopt a sig-scan match into the Stage editor. Builds a synthetic MapDef,
+  // extracts the map data from the buffer, adds it to extractedMaps, and
+  // navigates to Step 3 so the user sees it in the same card/heatmap UI they
+  // use for curated maps. Factor defaults to 1.0 (raw values) — multiplier
+  // edits still work for stage-style tuning even without physical units.
+  const openSigMatchInStageEditor = useCallback((match: SignatureMatch) => {
+    if (!fileBuffer) return
+    if (adoptedSigOffsets.has(match.offset)) return
+    const synth = syntheticMapDefFromSignature(match)
+    const result = extractMap(fileBuffer, synth, detected?.def.family)
+    if (!result.found) {
+      // Shouldn't happen — scanner already verified the 24-byte signature at this offset.
+      // Log a debug line and bail silently rather than break the UI.
+      console.warn('[sig-adopt] extractMap returned not-found for', match.name, 'at 0x' + match.offset.toString(16))
+      return
+    }
+    setExtractedMaps(prev => {
+      // Guard against double-adding if user double-clicks or React StrictMode re-runs.
+      if (prev.some(m => m.mapDef.id === synth.id)) return prev
+      return [...prev, { ...result, source: 'signature' as const }]
+    })
+    setAdoptedSigOffsets(prev => new Set(prev).add(match.offset))
+    // Jump to Step 3 only if we aren't already on it — otherwise the user's
+    // scroll position on the scanner panel gets wiped unnecessarily.
+    if (step !== 3) setStep(3)
+  }, [fileBuffer, detected, step, adoptedSigOffsets])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -2254,6 +2287,21 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                                   onClick={e => { e.stopPropagation(); copyToClipboard(`0x${offset.toString(16).padStart(6, '0')}`) }}
                                   style={{ padding: '2px 8px', fontSize: 10, background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 4, cursor: 'pointer' }}
                                 >Copy offset</button>
+                                {/* Only MAPs and CURVEs are worth opening in the Stage editor — VALUE scalars
+                                    and VAL_BLKs don't have the row/col structure the editor expects, and you'd
+                                    just see a 1×1 or 1×N grid with no zoom-worthy content. */}
+                                {(primary.type === 'MAP' || primary.type === 'CURVE') && (
+                                  adoptedSigOffsets.has(offset) ? (
+                                    <span style={{ padding: '2px 8px', fontSize: 10, background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.4)', borderRadius: 4, fontWeight: 700 }}>
+                                      ✓ Added to Stage Editor
+                                    </span>
+                                  ) : (
+                                    <button
+                                      onClick={e => { e.stopPropagation(); openSigMatchInStageEditor(primary) }}
+                                      style={{ padding: '3px 10px', fontSize: 10, background: 'var(--accent)', color: '#000', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 800 }}
+                                    >Open in Stage Editor →</button>
+                                  )
+                                )}
                                 <span style={{ color: 'var(--text-muted)' }}>{primary.type} · {primary.rows}×{primary.cols} · {primary.family} · {isBE ? 'BE' : 'LE'} uint16</span>
                                 {primary.portable ? (
                                   <span style={{ padding: '1px 6px', fontSize: 9, background: 'rgba(34,197,94,0.2)', color: '#22c55e', borderRadius: 3 }}>PORTABLE</span>
@@ -2944,6 +2992,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                 )}
                 {m.source === 'scanner' && (
                   <span title="Located by binary scanner + classifier — matches axis pattern to map definition. Used for Delphi/non-Bosch formats." style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: 'rgba(168,85,247,0.12)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.3)' }}>SCAN</span>
+                )}
+                {m.source === 'signature' && m.mapDef.id.startsWith('sig_') && (
+                  <span title="Added from the DAMOS Signature Scanner. Raw uint16 values (no curated stage config) — use the multiplier to apply a percentage, or Zone Edit for per-region changes." style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: 'rgba(34,197,94,0.12)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)' }}>SIG</span>
                 )}
                 <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', flex: 1 }}>
                   {m.mapDef.name}
