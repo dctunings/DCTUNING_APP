@@ -1338,71 +1338,17 @@ export interface SignatureMatch {
   portable: boolean
 }
 
-// Curated physical-unit scaling for well-known tuning-critical sig-scan maps.
-// Applied in syntheticMapDefFromSignature when a match's name or desc matches a rule.
-// Factors here come from cross-referencing our PPD1/EDC17/SIMOS18 A2L training data
-// — once we have enough pairs agreeing on a factor/unit for a named map, we can
-// promote it to this table so users see real physical values (bar, mg/stk, °CA)
-// instead of raw uint16.
+// REVERTED in v3.11.7: physical-unit curation was removed because the factors
+// were educated guesses not verified against the source A2L COMPU_METHOD blocks.
+// Showing "2.62 bar" when the real factor might produce "3.28 bar" was worse
+// than showing honest raw uint16 values. The catalog rebuild (v3.11.8) will
+// extract COMPU_METHOD from each A2L and store verified factor/unit per map,
+// so sig-adopted maps will then display in real physical units backed by the
+// actual DAMOS specification.
 //
-// Even when shown in physical units, stage multipliers apply to RAW values and
-// the raw bytes get written back — so "+6% boost" on a 2500 mbar cell becomes
-// 2650 mbar which the ECU reads through its own internal factor. Factor here
-// is purely for display / user mental model.
-interface SigScaling {
-  family?: string                // restrict to one family (undefined = any)
-  nameMatch?: RegExp             // regex on match.name
-  descMatch?: RegExp             // regex on match.desc
-  factor: number                 // physical = raw * factor + offsetVal
-  offsetVal: number
-  unit: string
-}
-const SIG_SCALING_RULES: SigScaling[] = [
-  // ───── PPD1 (Siemens/Continental diesel) ─────────────────────────────────
-  // MAP / boost pressure: uint16 * 0.04 ≈ mbar absolute (65535 * 0.04 ≈ 2621 mbar = 2.62 bar, fits tuner ceiling)
-  { family: 'PPD1', descMatch: /MAP Limiter|Turbo \(MAP\)|MAP Setpoint|Pressure/i, factor: 0.04, offsetVal: 0, unit: 'mbar' },
-  { family: 'PPD1', descMatch: /Turbo Precontrol|N75 Duty/i, factor: 0.00152587890625, offsetVal: 0, unit: '%' },  // 0-100% in uint16: 65535/100 = 655.35, inv = 0.001526
-  { family: 'PPD1', descMatch: /Inj\. Quantity|Inj\. Duration|Smoke Limiter/i, factor: 0.01, offsetVal: 0, unit: 'mg/stk' },
-  { family: 'PPD1', descMatch: /Start of Inj\.|SOI|Inj\. Start/i, factor: 0.02197265625, offsetVal: 0, unit: '°CA' },  // 65535 = 1440° or 0.02197 per bit
-  { family: 'PPD1', descMatch: /Drivers Wish|Driver.?Wish/i, factor: 0.01, offsetVal: 0, unit: 'mg/stk' },
-
-  // ───── EDC17 family (C46, C64, generic — all similar scaling for common maps) ────
-  { family: 'EDC17', descMatch: /Boost|MAP Setpoint|MAP Limiter/i, factor: 0.04, offsetVal: 0, unit: 'mbar' },
-  { family: 'EDC17', descMatch: /Inj Quantity|IQ_|Menge|MF_bas/i, factor: 0.01, offsetVal: 0, unit: 'mg/stk' },
-  { family: 'EDC17', descMatch: /Smoke Limit|Rauchbegrenzung/i, factor: 0.01, offsetVal: 0, unit: 'mg/stk' },
-  { family: 'EDC17C46', descMatch: /Boost|MAP Setpoint|MAP Limiter/i, factor: 0.04, offsetVal: 0, unit: 'mbar' },
-  { family: 'EDC17C46', descMatch: /Inj Quantity|IQ_|Menge|MF_bas|InjCrv_q/i, factor: 0.01, offsetVal: 0, unit: 'mg/stk' },
-  { family: 'EDC17C46', nameMatch: /InjCrv_phi/, factor: 0.02197265625, offsetVal: 0, unit: '°CA' },  // injection angle maps
-
-  // ───── SIMOS 18 (VW/Audi EA888 TFSI petrol) ─────────────────────────────
-  // SIMOS18 uses different conventions — boost typically in Pa (not mbar). Factor 0.0305 ≈ 2000 mbar max.
-  { family: 'SIMOS18', nameMatch: /prs_boost|ip_n_tcha|tcha_sp|boost_sp/i, factor: 0.0305, offsetVal: 0, unit: 'mbar' },
-  { family: 'SIMOS18', nameMatch: /iga|ign_ang|iga_|spark_ang/i, factor: 0.023438, offsetVal: -71.993, unit: '°BTDC' },  // common SIMOS ignition scaling
-  { family: 'SIMOS18', nameMatch: /tqi|tq_|tqfr_/i, factor: 0.0977, offsetVal: 0, unit: 'Nm' },
-  { family: 'SIMOS18', nameMatch: /maf_|ip_fac_maf/i, factor: 0.1, offsetVal: 0, unit: 'kg/h' },
-
-  // ───── ME7 (VW/Audi older 1.8T/2.0T petrol) ─────────────────────────────
-  { family: 'ME7', descMatch: /Ladedruck|Boost|Pressure Setpoint/i, factor: 0.03906, offsetVal: 0, unit: 'mbar' },
-  { family: 'ME7', descMatch: /Inj.*ti|Einspritz/i, factor: 0.004, offsetVal: 0, unit: 'ms' },
-  { family: 'ME7', descMatch: /Lambda|Lambdasoll/i, factor: 0.00024414, offsetVal: 0, unit: 'λ' },  // 0-16 range via uint16
-
-  // ───── MED17 / MED9 (direct-inject petrol) ─────────────────────────────
-  { family: 'MED17', descMatch: /Ladedruck|Boost|MAP Setpoint|pdes/i, factor: 0.0305, offsetVal: 0, unit: 'mbar' },
-  { family: 'MED9', descMatch: /Ladedruck|Boost|MAP Setpoint|pdes/i, factor: 0.0305, offsetVal: 0, unit: 'mbar' },
-]
-
-function resolveSigScaling(match: SignatureMatch): { factor: number; offsetVal: number; unit: string } | null {
-  const fam = match.family.toUpperCase()
-  for (const r of SIG_SCALING_RULES) {
-    if (r.family && r.family.toUpperCase() !== fam) continue
-    if (r.nameMatch && !r.nameMatch.test(match.name)) continue
-    if (r.descMatch && !r.descMatch.test(match.desc)) continue
-    // At least one of the two patterns must have been specified (and matched to reach here).
-    if (!r.nameMatch && !r.descMatch) continue
-    return { factor: r.factor, offsetVal: r.offsetVal, unit: r.unit }
-  }
-  return null
-}
+// Until that lands, sig-scan maps show raw uint16 values. Stage multipliers
+// still work correctly because the ECU reads the raw bytes through its own
+// internal factor — display factor never affected write-back.
 
 export function syntheticMapDefFromSignature(match: SignatureMatch): MapDef {
   // Big-endian for older Bosch (EDC16/17, ME7, SIMOS 8/12/16). Little-endian for MED17, MG1,
@@ -1410,9 +1356,10 @@ export function syntheticMapDefFromSignature(match: SignatureMatch): MapDef {
   const BE_FAMILIES = new Set(['EDC15', 'EDC16', 'EDC16U', 'EDC17', 'EDC17C46', 'EDC17C64', 'ME7', 'SIMOS8', 'SIMOS12', 'SIMOS16'])
   const isBE = BE_FAMILIES.has(match.family.toUpperCase())
 
-  // If this map matches a curated scaling rule (e.g. PPD1 "MAP Limiter" → mbar), apply
-  // the physical factor/unit so the Stage editor shows "2615 mbar" instead of raw 65385.
-  const scaling = resolveSigScaling(match)
+  // v3.11.8 will restore physical-unit scaling once the signature catalog has
+  // been rebuilt with verified COMPU_METHOD data from the source A2Ls. Until
+  // then, raw uint16 is safer than potentially-wrong physical values.
+  const scaling: { factor: number; offsetVal: number; unit: string } | null = null
 
   // Category heuristic — name first, description fallback. Purely cosmetic (colored badge)
   // but also drives the stage default multipliers below, so worth getting right.
