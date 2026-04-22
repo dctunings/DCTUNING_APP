@@ -11,7 +11,11 @@ export interface ChecksumInfo {
 export interface BlockCorrectionResult {
   blocksFixed: number
   tableOffset: number
-  initMode: 'standard' | 'blockid' | 'bosch'
+  initMode: 'standard' | 'blockid' | 'bosch' | 'monolithic'
+  // 'monolithic' — file has a valid Bosch program descriptor header (FADECAFE/CAFEAFFE
+  // magic at 0x40000 area, typical of EDC16U VW PD-TDI monolithic cal files) but NO
+  // separate block CRC table. The single header CRC (bosch-crc32) is already sufficient —
+  // no block corrections needed. UI should show "✓ monolithic file" instead of warning.
 }
 
 // ─── CRC32 lookup table (reflected polynomial 0xEDB88320) ─────────────────────
@@ -221,15 +225,52 @@ function findBlockTable(
   return null
 }
 
+// ─── Detect EDC16U-style monolithic calibration header ──────────────────────
+// EDC16U VW PD-TDI files (e.g. 389289 1.9 TDI) have a Bosch program descriptor at
+// file offset 0x40000 marked by two 8-byte magic sequences:
+//   FA DE CA FE CA FE AF FE
+// These are end-of-descriptor markers (typically 3 per file — main/ASW1/CAL descriptors).
+// The file has NO separate block CRC table — only a single header CRC at the
+// checksumOffset (corrected by the main bosch-crc32 pass). If we see this signature,
+// we can assert the file is "monolithic" and the block-CRC warning is a false alarm.
+// Verified against 389289 Golf 1.9 TDI ORI file — 3 magic pairs at 0x4003C/0x40064/0x4008C.
+function hasMonolithicBoschHeader(bytes: Uint8Array): boolean {
+  const scanStart = 0x40000
+  const scanEnd = 0x40200
+  if (bytes.length < scanEnd) return false
+  let magicPairs = 0
+  for (let i = scanStart; i < scanEnd - 7; i++) {
+    if (bytes[i]   === 0xFA && bytes[i+1] === 0xDE && bytes[i+2] === 0xCA && bytes[i+3] === 0xFE &&
+        bytes[i+4] === 0xCA && bytes[i+5] === 0xFE && bytes[i+6] === 0xAF && bytes[i+7] === 0xFE) {
+      magicPairs++
+      i += 7  // skip past this magic pair to avoid double-counting
+    }
+  }
+  // Require at least 2 descriptors (ASW + CAL minimum) to avoid false positives
+  return magicPairs >= 2
+}
+
 // ─── Attempt block-level checksum correction ─────────────────────────────────
 // Modifies buffer in-place. Call AFTER correctChecksum (which handles header CRC).
-// Returns result — blocksFixed > 0 means block checksums were successfully corrected.
+// Returns result:
+//   blocksFixed > 0    → block checksums found and corrected
+//   initMode='monolithic' → EDC16U-style single-region file, no block CRCs needed (safe)
+//   otherwise          → no block table found, caller may warn user to verify externally
 export function correctBlockChecksums(buffer: ArrayBuffer): BlockCorrectionResult {
   const bytes = new Uint8Array(buffer)
   const view  = new DataView(buffer)
 
   const found = findBlockTable(bytes, view)
-  if (!found) return { blocksFixed: 0, tableOffset: 0, initMode: 'standard' }
+  if (!found) {
+    // Before warning, check if this is an EDC16U monolithic cal file — those legitimately
+    // have no block CRC table and only need the main header checksum (which has already
+    // been corrected by correctChecksum). Returning initMode='monolithic' tells the UI
+    // to display a green "no block CRCs needed" status instead of a yellow warning.
+    if (hasMonolithicBoschHeader(bytes)) {
+      return { blocksFixed: 0, tableOffset: 0x40000, initMode: 'monolithic' }
+    }
+    return { blocksFixed: 0, tableOffset: 0, initMode: 'standard' }
+  }
 
   const { entries, initMode, tableOffset } = found
   const boschBlockIds = [0x10, 0x40, 0x60, 0x80, 0x00, 0x01, 0x02, 0x03]

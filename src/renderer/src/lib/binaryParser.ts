@@ -1390,11 +1390,21 @@ export function syntheticMapDefFromSignature(match: SignatureMatch): MapDef {
   // because blindly scaling those by a fixed % is almost always wrong. Values calibrated
   // against typical diesel/petrol Stage 1/2/3 gains so the defaults land somewhere sensible
   // instead of overshooting — user can always crank higher.
+  // v3.11.16: Multipliers calibrated against real-world Stage 1/2/3 shop norms for VAG diesels:
+  //   • Golf 1.9/2.0 TDI 105-140 HP:  Stage 1 = +30 HP / +70 Nm (≈ +25-30% power)
+  //   • Stage 2 = +45-55 HP (requires DPF/EGR addons or hardware)
+  //   • Stage 3 = full tune with hardware mods
+  // Previous values (1.06/1.08/1.10 for Stage 1) produced output averaging +6-8% which is
+  // unusably conservative — real Stage 1 moves peak boost +15-20%, peak fuel +18-25%,
+  // torque ceiling +25-30%. These new values produce realistic Stage output on first click;
+  // user can still dial down per-map via the manual editor for conservative street tunes.
+  // Smoke limiter needs to rise more than fuel (else it caps the fuel increase) — hence
+  // the bigger step on smoke category.
   let stage1Mul = 1, stage2Mul = 1, stage3Mul = 1
-  if (category === 'torque')       { stage1Mul = 1.08; stage2Mul = 1.15; stage3Mul = 1.25 }
-  else if (category === 'fuel')    { stage1Mul = 1.08; stage2Mul = 1.15; stage3Mul = 1.22 }
-  else if (category === 'boost')   { stage1Mul = 1.06; stage2Mul = 1.12; stage3Mul = 1.18 }
-  else if (category === 'smoke')   { stage1Mul = 1.10; stage2Mul = 1.20; stage3Mul = 1.35 }
+  if (category === 'torque')       { stage1Mul = 1.22; stage2Mul = 1.35; stage3Mul = 1.50 }
+  else if (category === 'fuel')    { stage1Mul = 1.18; stage2Mul = 1.30; stage3Mul = 1.42 }
+  else if (category === 'boost')   { stage1Mul = 1.15; stage2Mul = 1.25; stage3Mul = 1.35 }
+  else if (category === 'smoke')   { stage1Mul = 1.25; stage2Mul = 1.40; stage3Mul = 1.55 }
 
   // v3.11.14: physical-unit safety clamps. If the catalog gave us a verified factor+unit,
   // we translate a category-specific physical ceiling (e.g. boost ≤ 3000 hPa, fuel ≤ 120 mg/stk)

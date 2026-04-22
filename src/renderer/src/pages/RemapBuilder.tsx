@@ -1838,16 +1838,48 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 12 }}>
             {detected.def.manufacturer} · {detected.def.family} · {(detected.fileSize / 1024).toFixed(0)} KB
           </div>
-          {/* Confidence bar */}
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-muted)', marginBottom: 4 }}>
-              <span>Detection confidence</span>
-              <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{(detected.confidence * 100).toFixed(0)}%</span>
-            </div>
-            <div style={{ height: 5, background: 'var(--bg-primary)', borderRadius: 3, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${detected.confidence * 100}%`, background: 'var(--accent)', borderRadius: 3, transition: 'width 0.5s ease' }} />
-            </div>
-          </div>
+          {/* Confidence bar — boosted by sig-scanner family match when scanner agrees.
+              v3.11.16: if sigScanResult picked a family overwhelmingly (top ≥5× 2nd-best)
+              AND that family appears in the selected EcuDef's identStrings, treat this
+              as a confirmed match and display ≥95% confidence. This prevents confusing
+              "52% confidence" on a file the scanner identifies with 10,000+ sig hits. */}
+          {(() => {
+            const scannerAgrees = (() => {
+              if (!sigScanResult) return null
+              const fam = sigScanResult.detectedFamily
+              if (!fam || fam === 'UNKNOWN') return null
+              // Check scanner score dominance (top ≥5× next-best family)
+              const scores = Object.entries(sigScanResult.familyScores).sort((a, b) => b[1] - a[1])
+              if (scores.length === 0 || scores[0][1] < 500) return null
+              const ratio = scores.length >= 2 && scores[1][1] > 0 ? scores[0][1] / scores[1][1] : Infinity
+              if (ratio < 5) return null
+              // Confirm the scanner's family matches the selected EcuDef's identStrings
+              const famUpper = fam.toUpperCase()
+              const idents = detected.def.identStrings.map(s => s.toUpperCase())
+              const matches = idents.some(i => i === famUpper || i.startsWith(famUpper) || famUpper.startsWith(i))
+              if (!matches) return null
+              return { family: fam, ratio, topScore: scores[0][1] }
+            })()
+            const displayConfidence = scannerAgrees ? Math.max(detected.confidence, 0.95) : detected.confidence
+            return (
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-muted)', marginBottom: 4 }}>
+                  <span>Detection confidence</span>
+                  <span style={{ color: scannerAgrees ? '#22c55e' : 'var(--accent)', fontWeight: 700 }}>
+                    {(displayConfidence * 100).toFixed(0)}%{scannerAgrees ? ' ✓' : ''}
+                  </span>
+                </div>
+                <div style={{ height: 5, background: 'var(--bg-primary)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${displayConfidence * 100}%`, background: scannerAgrees ? '#22c55e' : 'var(--accent)', borderRadius: 3, transition: 'width 0.5s ease' }} />
+                </div>
+                {scannerAgrees && (
+                  <div style={{ fontSize: 10, color: '#22c55e', marginTop: 4 }}>
+                    ✓ Signature scanner confirms family <strong>{scannerAgrees.family}</strong> · {scannerAgrees.topScore.toLocaleString()} signature hits ({scannerAgrees.ratio.toFixed(0)}× over next candidate)
+                  </div>
+                )}
+              </div>
+            )
+          })()}
           <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
             <span style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>Compatible vehicles: </span>
             {detected.def.vehicles.join(' · ')}
@@ -3584,7 +3616,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           </div>
         </div>
 
-        {/* Block-level checksum — show result or warning depending on whether auto-correction succeeded */}
+        {/* Block-level checksum — show result, success, or warning depending on detection outcome.
+            Three states: (1) block table found + corrected, (2) monolithic Bosch header (no blocks needed),
+            (3) no block table AND no monolithic header (genuine warning — user needs external tool). */}
         {['edc17', 'edc16', 'simos18', 'simos10', 'simos11', 'pcr21', 'med17'].includes(selectedEcu?.id ?? '') && (
           blockResult && blockResult.blocksFixed > 0 ? (
             // Block table was found and corrected automatically
@@ -3599,8 +3633,25 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                 </div>
               </div>
             </div>
+          ) : blockResult && blockResult.initMode === 'monolithic' ? (
+            // v3.11.16: EDC16U-style monolithic cal file — Bosch FADECAFE/CAFEAFFE descriptor
+            // at 0x40000 confirms single-region file with only a header CRC. No block table
+            // to worry about. The main bosch-crc32 already corrected at checksumOffset is sufficient.
+            <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 8, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 15, flexShrink: 0, marginTop: 1 }}>✅</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: '#22c55e', marginBottom: 3 }}>
+                  Monolithic Cal File — Single Header CRC Sufficient
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>
+                  Bosch program descriptor (FADECAFE/CAFEAFFE magic) found at 0x{blockResult.tableOffset.toString(16).toUpperCase()}.
+                  This variant has no separate block CRC table — the main header checksum (already corrected above) is the only checksum.
+                  File is ready to flash.
+                </div>
+              </div>
+            </div>
           ) : (
-            // Block table not found — fall back to external tool warning
+            // Genuine warning — no block table, no monolithic header detected either.
             <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 8, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.3)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
               <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>⚠️</span>
               <div>
