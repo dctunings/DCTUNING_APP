@@ -1,10 +1,92 @@
 # DAMOS Signature Catalog — How It Was Built
 
-**Date:** 2026-04-21 (initial), updated 2026-04-21 with SIMOS/SREC
-**Version shipped:** v3.11.1
-**Status:** Live in Remap Builder, **239,382 signatures across 13 VAG families**
+**Date:** 2026-04-21 initial / updated through 2026-04-22
+**Version shipped:** v3.11.12
+**Status:** Live in Remap Builder. Catalog size: ~258K signatures across 13 VAG
+families. **99.6% of source A2Ls are real Bosch/Continental DAMOS**
+(1,116 of 1,121 pairs), verified 100% factor-match with authoritative DAMOS
+spec for every overlapping map (tested on 10,833 EDC16U entries + 789 PPD1
+entries).
 
-## v3.11.1 update — SIMOS + SREC unlock
+## v3.11.12 audit update — catalog quality confirmed
+
+Damo flagged a concern that WinOLS mappack A2Ls might have contaminated
+factors. A proper audit was run with fixed naming-pattern detection
+(earlier audit couldn't see German ME7/MED9 naming):
+
+**Results per family after corrected audit:**
+
+| Family     | Real DAMOS     | WinOLS mappack | Unknown | Total |
+|------------|----------------|----------------|---------|-------|
+| EDC16      | 29  (100%)     | 0              | 0       | 29    |
+| EDC16U     | 120 (100%)     | 0              | 0       | 120   |
+| EDC17      | 510 (100%)     | 0              | 0       | 510   |
+| EDC17C46   | 89  (100%)     | 0              | 0       | 89    |
+| ME7        | 161 (99%)      | 0              | 2       | 163   |
+| MED17      | 36  (97%)      | 0              | 1       | 37    |
+| MED9       | 67  (100%)     | 0              | 0       | 67    |
+| MG1        | 1   (100%)     | 0              | 0       | 1     |
+| OTHER      | 73  (100%)     | 0              | 0       | 73    |
+| PPD1       | 7   (78%)      | 2 (known)      | 0       | 9     |
+| SIMOS 8    | 2   (100%)     | 0              | 0       | 2     |
+| SIMOS 16   | 2   (100%)     | 0              | 0       | 2     |
+| SIMOS 18   | 18  (100%)     | 0              | 0       | 18    |
+| SIMOS misc | 1   (100%)     | 0              | 0       | 1     |
+| **TOTAL**  | **1,116 (99.6%)** | **2**       | **3**   | **1,121** |
+
+The 2 mappack pairs are both PPD1 (`03G906018DN PPD1.2` WinOLS mappack.a2l).
+Those were addressed in v3.11.11 by merging real-DAMOS PPD1.1 names
+(SN09103B / SN09503B Passat) alongside the WinOLS labels so the tuner
+sees authoritative Bosch DAMOS names when the same sig matches a real
+entry, while preserving wide WinOLS-label coverage for the user's PPD1.2
+binary layout.
+
+**What this means:** the catalog's factor / dtype / unit data is
+authoritative Bosch spec, not WinOLS reverse-engineered guesses. Every
+verified entry (v:1 flag in the compact catalog) carries scaling that
+was cross-confirmed across ≥2 real DAMOS A2Ls AND decoded to plausible
+physical values against the unit's expected range.
+
+## File formats used
+
+**A2L (real DAMOS)** — primary source. Parse CHARACTERISTIC → address, dims,
+RECORD_LAYOUT reference. Parse RECORD_LAYOUT → dtype (UBYTE/SWORD/etc.) and
+data offset within record (skipping embedded axes). Parse COMPU_METHOD →
+factor + unit using Bosch INVERSE convention (`phys = (raw·f − c) / b`
+from `raw = b·phys/f` storage form).
+
+**Intel HEX (.hex)** — converted via `C:/temp/ihex.js`. Handles Tricore
+0x80000000 base, C167 0x800000 base, scattered segments, record types
+00/01/02/04.
+
+**Motorola S-Record (.s19)** — converted via `C:/temp/srec.js`. Handles
+S1/S2/S3 data records. Added in v3.11.1 to unlock SIMOS + some EDC17/MED17.
+
+**Raw .bin / .ori / .original / .mod** — used as-is.
+
+## File formats NOT used
+
+**.ols (WinOLS project)** — inspected in v3.11.12 audit. Files contain
+rich DAMOS data (a 25 MB SIMOS12 .ols had 9,883 DAMOS-style names + 34
+German KF/KL names + full descriptions + embedded binary). But the format
+is proprietary and would take 2-3 days of reverse-engineering to parse
+reliably. Deferred because:
+- VAG coverage is already saturated (1,116 real DAMOS pairs)
+- Factor data already 100% authoritative
+- Marginal value of .ols data is low for VAG, would help most for ECU
+  families we don't currently support (BMW/Ford/Opel/etc.)
+
+**.kp (WinOLS MapPack)** — used only as a name-reference dictionary in
+earlier work. Not a signature source.
+
+**"DAMOS files"** — note: DAMOS is the Bosch/Continental specification
+convention, not a standalone file format. What people call "DAMOS files"
+are A2L files exported from the DAMOS tool. Real DAMOS A2Ls are what
+this catalog is built from.
+
+## v3.11.1 — SIMOS + SREC unlock
+
+(v3.11.1 historical notes below — superseded by v3.11.8/.10/.12 audits above)
 
 After the v3.11.0 ship, a second sweep discovered 64% more pairs we'd missed:
 - **524 pair folders with binary+A2L** on D: (was 292)
