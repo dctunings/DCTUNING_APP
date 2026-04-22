@@ -751,7 +751,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   // sigs whose scaling was cross-confirmed by ≥2 training pairs (safer default).
   const [smartStageVerifiedOnly, setSmartStageVerifiedOnly] = useState(true)
   const [smartStageBusy, setSmartStageBusy] = useState(false)
-  const [smartStageSummary, setSmartStageSummary] = useState<{ applied: number; total: number; clamped: number; skipped: number } | null>(null)
+  const [smartStageSummary, setSmartStageSummary] = useState<{ applied: number; total: number; clamped: number; skipped: number; reverted: number } | null>(null)
 
   // Library search state
   const [libSearch, setLibSearch] = useState('')
@@ -799,7 +799,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     setHexPreview(hex)
 
     // Auto-detect ECU — binary first, filename fallback for encrypted/proprietary files
-    const det = detectEcu(buf) ?? detectEcuFromFilename(name)
+    const det = detectEcu(buf) ?? detectEcuFromFilename(name, buf.byteLength)
     setDetected(det)
     if (det) {
       setSelectedEcuId(det.def.id)
@@ -827,6 +827,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     // Reset signature scan state for the new binary
     setSigScanResult(null); setSigScanBusy(false); setSigScanError(''); setShowSigMaps(false)
     setAdoptedSigOffsets(new Set()); setSigExpandedOffset(null); setSigMapSearch('')
+    // v3.11.17: clear stale Smart Stage summary from previous file (prevented ME7.5 run
+    // from showing its own stats because the strip was displaying the prior EDC16U run).
+    setSmartStageSummary(null)
 
     // VAG DAMOS-name signature scan — runs in parallel with the Kf_ scanner.
     // Uses main-process IPC because the 152K-signature catalog lives on disk
@@ -1385,6 +1388,7 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         total: ss.totalMatches,
         clamped: ss.mapsClamped,
         skipped: ss.skipped.length,
+        reverted: ss.mapsReverted,
       })
 
       // Same post-processing as manual remap
@@ -2244,6 +2248,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                 <span style={{ fontSize: 10, color: 'var(--text-muted)', width: '100%' }}>
                   Last run: <strong style={{ color: '#22c55e' }}>{smartStageSummary.applied}</strong> applied ·{' '}
                   <strong style={{ color: smartStageSummary.clamped > 0 ? '#eab308' : 'var(--text-muted)' }}>{smartStageSummary.clamped}</strong> hit safety clamp ·{' '}
+                  {smartStageSummary.reverted > 0 && (
+                    <><strong style={{ color: '#ef4444' }} title="Maps reverted because a cell would have changed by >60% — usually mis-classified sensor-cal or tiny-value flag map.">{smartStageSummary.reverted}</strong> reverted (runaway) · </>
+                  )}
                   <strong style={{ color: 'var(--text-muted)' }}>{smartStageSummary.skipped}</strong> skipped (of {smartStageSummary.total} total)
                 </span>
               )}

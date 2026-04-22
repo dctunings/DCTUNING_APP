@@ -134,7 +134,7 @@ export function extractPartNumberFromBinary(buffer: ArrayBuffer): string | null 
 // Used when binary content detection fails (encrypted/proprietary/tool-format files).
 // Parses the filename for ECU family keywords and returns a low-confidence match.
 // Keyword list covers common naming conventions from WinOLS, ECM Titanium, KESS, CMD etc.
-export function detectEcuFromFilename(filename: string): DetectedEcu | null {
+export function detectEcuFromFilename(filename: string, fileSize: number = 0): DetectedEcu | null {
   // Normalise: lowercase, then collapse all spaces/underscores/hyphens/dots so
   // "EDC 16", "EDC_16", "EDC-16", "edc16" all become "edc16" for matching.
   const lower = filename.toLowerCase()
@@ -207,7 +207,7 @@ export function detectEcuFromFilename(filename: string): DetectedEcu | null {
             def,
             confidence: 0.35,   // low confidence — filename hint only
             matchedStrings: [kw],
-            fileSize: 0,
+            fileSize,   // v3.11.17: pass through from caller so UI doesn't show "0 KB"
           }
         }
       }
@@ -1372,16 +1372,39 @@ export function syntheticMapDefFromSignature(match: SignatureMatch): MapDef {
 
   // Category heuristic — name first, description fallback. Purely cosmetic (colored badge)
   // but also drives the stage default multipliers below, so worth getting right.
+  //
+  // v3.11.17: two critical additions found via the Audi A4 1.8T ME7.5 Stage 1 test run:
+  //   1. SENSOR-CAL BLACKLIST — MAF linearization curves, lambda linearization tables, and
+  //      other sensor-calibration maps must NEVER be auto-multiplied. They're hardware-
+  //      specific calibrations; altering them makes the ECU read wrong sensor values and
+  //      causes lean/rich running, DTCs, or worse. Skip with category='misc' (multiplier=1).
+  //   2. ME7 GERMAN TORQUE NAMES — MXMOMI, MXMOM, KFMIOP, KFMIRL, MDBAS, MDMAX don't match
+  //      the English-biased torque regex. ME7 1.8T files ended up with category='misc' on
+  //      every torque map, so torque multiplier never applied. Added German patterns.
   const n = match.name.toLowerCase()
   const d = match.desc.toLowerCase()
+
+  // HARD BLACKLIST: sensor linearization / calibration maps — hardware-calibrated, never tune.
+  // MLHFM = MAF sensor linearization (Messung Luftmassenmesser).
+  // KRKTE = injector constant (hardware-specific, tuned via logger not stage multiplier).
+  // Lambda/AFS linearization curves, rail-pressure sensor linearization, temp sensor cal —
+  // all of these are physical sensor responses that the ECU uses to decode raw sensor data.
+  // Multiplying them 1.18× breaks the sensor reading.
+  const SENSOR_CAL_BLACKLIST = /mlhfm|mlfm|afscd_m|lsucd|krkte|krkt\b|linearization|linear_|_lin$|_lin_|sensorcal|compusensor|rail.?press.?lin|thermistor|_bos$|_comp\b|lambda.*lin|lsh_|sensocal/
+  const isSensorCal = SENSOR_CAL_BLACKLIST.test(n) || SENSOR_CAL_BLACKLIST.test(d)
+
   let category: MapCategory = 'misc'
-  if (/boost|map_sp|map_lim|turbo|tcha|prs_boost|pv_grd|charger/.test(n) || /boost|turbo|charger|map.?lim|precontrol|n75/.test(d)) category = 'boost'
-  else if (/smoke|rauch|soot/.test(n) || /smoke|rauch|soot/.test(d)) category = 'smoke'
-  else if (/tqi|torque|trq|tq_lim|pow_max|drivers?.?wish|driver.?req/.test(n) || /torque|torq|drivers?.?wish|pedal.?map/.test(d)) category = 'torque'
-  else if (/iga|igni|spark|knk|knock|soi|ang_inj/.test(n) || /ignition|spark|knock|timing|soi/.test(d)) category = 'ignition'
-  else if (/\binj\b|iq_|mff|mf_|fuel|rail|maf_|quant|menge|t_close|t_doi/.test(n) || /inject|fuel|rail|quantity|menge/.test(d)) category = 'fuel'
-  else if (/lim|max_|min_|ceil/.test(n) || /limit|ceiling/.test(d)) category = 'limiter'
-  else if (/egr|dpf|sa_|lamb|lnt|urea|adblue|regen|rgn/.test(n) || /egr|dpf|lambda|catalyst|nox|regen/.test(d)) category = 'emission'
+  if (isSensorCal) {
+    // Leave as 'misc' → no stage multiplier applied, user must edit manually if needed
+    category = 'misc'
+  } else if (/boost|map_sp|map_lim|turbo|tcha|prs_boost|pv_grd|charger|kfldr|ldrxn|ldsol|kfldhbn/.test(n) || /boost|turbo|charger|map.?lim|precontrol|n75|wastegate|charge.?press/.test(d)) category = 'boost'
+  else if (/smoke|rauch|soot|afscd.*smoke|rauchmenge/.test(n) || /smoke|rauch|soot|rauchmenge/.test(d)) category = 'smoke'
+  // v3.11.17: extended torque regex for ME7/MED9/MED17 German DAMOS names
+  else if (/tqi|torque|trq|tq_lim|pow_max|drivers?.?wish|driver.?req|mxmom|mdbas|mdmax|kfmiop|kfmirl|mdfaw|moment/.test(n) || /torque|torq|drivers?.?wish|pedal.?map|moment|drehmoment|md_max|md_lim/.test(d)) category = 'torque'
+  else if (/iga|igni|spark|knk|knock|soi|ang_inj|kfzw|wdkba|sdatf/.test(n) || /ignition|spark|knock|timing|soi|zündung|zundung/.test(d)) category = 'ignition'
+  else if (/\binj\b|iq_|mff|mf_|fuel|rail|quant|menge|t_close|t_doi|menzk|kffkk/.test(n) || /inject|fuel|rail|quantity|menge|einspritz/.test(d)) category = 'fuel'
+  else if (/nmax|vmax|nll|dmax|vfzgmax|vehsp.*max|rpm.*lim|speed.*lim/.test(n) || /limiter|begrenzung|maximum|ceiling/.test(d)) category = 'limiter'
+  else if (/egr|dpf|sa_|lamb|lnt|urea|adblue|regen|rgn|lamfa|lamzsl/.test(n) || /egr|dpf|lambda|catalyst|nox|regen|abgas/.test(d)) category = 'emission'
   // "Pressure" alone lands in boost — most pressure maps in an ECU are manifold/rail pressure, which behave like boost.
   else if (/prs_|press|_sp_/.test(n) || /pressure|druck/.test(d)) category = 'boost'
 
