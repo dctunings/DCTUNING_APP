@@ -1,5 +1,5 @@
 export type DataType = 'uint8' | 'int8' | 'uint16' | 'int16' | 'float32'
-export type ChecksumAlgo = 'bosch-crc32' | 'bosch-me7' | 'bosch-simple' | 'continental-crc' | 'none' | 'unknown'
+export type ChecksumAlgo = 'bosch-crc32' | 'bosch-me7' | 'bosch-simple' | 'continental-crc' | 'ppd1-crc32' | 'none' | 'unknown'
 export type MapCategory = 'boost' | 'fuel' | 'torque' | 'ignition' | 'limiter' | 'emission' | 'smoke' | 'misc'
 
 export interface StageParams {
@@ -4529,7 +4529,16 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     //   bypass — only custom code injection (launch control, flat-foot) requires RSA bypass.
     // Bypass: SIMOS18 CBOOT state machine exploit (bri3d/VW_Flash) — CBOOT security header excludes
     //   itself from checked ranges, allowing a forged CBOOT that disables ASW signature checking.
-    // checksumAlgo: 'none' → file passed through unchanged (safe; use VW_Flash for all SIMOS18 writes).
+    // v3.11.13 CHECKSUM STATUS: verified via probe of 5G0906259B.bin (DAMOS-2021-2022 sample) that
+    //   the on-disk ORI file has AES-encrypted ASW blocks (first 256 bytes high-entropy noise, CBOOT
+    //   at 0x080000 high-entropy, ASW1 at 0x100000 mixed) — only CAL zone (~0x200000+) is plaintext.
+    //   We cannot recompute the ASW CRC/RSA from the encrypted-on-disk form. The correct architecture:
+    //     1. DCTuning edits CAL zone bytes in the ORI file (plaintext region)
+    //     2. Export modified file
+    //     3. Flash via VW_Flash (open source MIT, bri3d/VW_Flash) — handles CBOOT exploit + cal CRC
+    //   A future version could add cal-zone-only CRC32 (poly 0x04C11DB7 per existing comment above)
+    //   once we have a SIMOS18 ORI+Stage1 pair to verify the algorithm/range against stored csum.
+    // Intentional: checksumAlgo: 'none' → file passed through unchanged (safe for VW_Flash workflow).
     checksumAlgo: 'none',
     checksumOffset: 0xFFFF8,
     checksumLength: 8,
@@ -5759,8 +5768,14 @@ export const ECU_DEFINITIONS: EcuDef[] = [
       'Audi A4 B6/B7 1.9/2.0 TDI 115/130/140ps',
       'Seat Leon/Toledo 1.9 TDI 100/130ps',
     ],
-    checksumAlgo: 'bosch-crc32',
-    checksumOffset: 0,
+    // PPD1 header checksum — verified v3.11.13 via ORI/Stage1 diff across 4 pairs:
+    //   CRC32 forward (poly 0x04C11DB7, init=0, xorOut=0) over the 5 flash blocks
+    //   listed in the descriptor table at 0x0402C8. Stored big-endian at 0x0402C4.
+    //   Block table layout: [csum:u32 BE][count:u32 BE][start:u32 BE, end:u32 BE]×count
+    //   Flash base = 0x00800000 (file offset = addr - 0x00800000).
+    //   Test vector (03G906018DH SN100L8 BC52.ori): stored=0x0C1D2D63 ✓
+    checksumAlgo: 'ppd1-crc32',
+    checksumOffset: 0x0402C4,
     checksumLength: 4,
     maps: [
       {
@@ -5802,9 +5817,14 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 0,
         fixedOffset: 0x07B954,   // 03G906018DH
         rows: 5, cols: 8, dtype: 'uint16', le: false,
-        // factor 1/32, bias -32768: phys = (raw + offsetVal) * factor
-        factor: 0.03125, offsetVal: -32768, unit: 'Nm',
-        // Values are stored as (raw - 32768) then scaled — multiplier on physical Nm
+        // Bosch encoding: phys = (raw - 32768) / 32. Converted to forward form
+        // (phys = raw * factor + offsetVal) for the decode engine:
+        //   factor = 1/32 = 0.03125
+        //   offsetVal = -32768 * 0.03125 = -1024 (in Nm, phys-space)
+        // Verify: raw 38888 → 38888*0.03125 + (-1024) = 1215.25 - 1024 = 191.25 Nm ✓
+        factor: 0.03125, offsetVal: -1024, unit: 'Nm',
+        // Stage multipliers apply to RAW values (before factor/offset), so they stay
+        // the same under either convention. clampMax 65000 is raw-space (~1007 Nm).
         stage1: { multiplier: 1.30 },   // 191 → 248 Nm at low-end, 559 at peak
         stage2: { multiplier: 1.55 },
         stage3: { multiplier: 1.80, clampMax: 65000 },
@@ -5819,8 +5839,9 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 0,
         fixedOffset: 0x05C7FA,   // 03G906018DH
         rows: 1, cols: 2688, dtype: 'uint16', le: false,
-        factor: 0.03125, offsetVal: -32768, unit: 'Nm',
-        stage1: { multiplier: 1.0, addend: 0, clampMax: 55415 },   // pin to ~707 Nm
+        // Bosch (raw-32768)/32 Nm. Forward form: factor 1/32, offsetVal -32768*1/32 = -1024.
+        factor: 0.03125, offsetVal: -1024, unit: 'Nm',
+        stage1: { multiplier: 1.0, addend: 0, clampMax: 55415 },   // pin to ~707 Nm (raw-space)
         stage2: { multiplier: 1.0, addend: 0, clampMax: 55415 },
         stage3: { multiplier: 1.0, addend: 0, clampMax: 55415 },
         critical: false, showPreview: false,
@@ -5849,9 +5870,10 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         sigOffset: 0,
         fixedOffset: 0x07C27C,   // 03G906018DH — Stage 2+ territory
         rows: 1, cols: 256, dtype: 'uint16', le: false,
-        factor: 0.03125, offsetVal: -32768, unit: 'Nm',
+        // Bosch (raw-32768)/32 Nm. Forward form: factor 1/32, offsetVal -32768*1/32 = -1024.
+        factor: 0.03125, offsetVal: -1024, unit: 'Nm',
         stage1: { multiplier: 1.0 },    // untouched by Stage 1
-        stage2: { multiplier: 1.0, addend: 0, clampMax: 50000 },   // ~540 Nm ceiling
+        stage2: { multiplier: 1.0, addend: 0, clampMax: 50000 },   // ~540 Nm ceiling (raw-space)
         stage3: { multiplier: 1.0, addend: 0, clampMax: 55000 },   // ~700 Nm ceiling
         critical: false, showPreview: false,
       },
@@ -5893,9 +5915,13 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         signatures: [],
         sigOffset: 0,
         rows: 16, cols: 16, dtype: 'uint16', le: false,
-        factor: 0.0234, offsetVal: -32768, unit: '°BTDC',   // 3/128 with +32768 bias
+        // Bosch (raw-32768)*(3/128) °BTDC. Forward form: factor = 3/128 = 0.0234375 (exact),
+        // offsetVal = -32768 * 3/128 = -768 (°BTDC, phys-space).
+        // Old values factor=0.0234 (approximate) + offsetVal=-32768 (raw-space) were both wrong.
+        // Verify: raw 32768 → 32768*0.0234375 + (-768) = 768 - 768 = 0° (stock TDC) ✓
+        factor: 0.0234375, offsetVal: -768, unit: '°BTDC',
         stage1: { multiplier: 1.0 },
-        stage2: { addend: 85, clampMax: 65535 },   // ~+2° (85 * 3/128 ≈ 2°)
+        stage2: { addend: 85, clampMax: 65535 },   // ~+2° (85 * 3/128 ≈ 2°) — addend is raw-space
         stage3: { addend: 128, clampMax: 65535 },  // ~+3°
         critical: false, showPreview: true,
       },
@@ -6064,7 +6090,22 @@ export const ECU_DEFINITIONS: EcuDef[] = [
       'VW Arteon R 320ps (2021+)',
       'Cupra Formentor VZ2 310ps / VZ5 390ps (2021+)',
     ],
-    checksumAlgo: 'bosch-crc32',
+    // v3.11.13 CHECKSUM STATUS: MG1CS011 is RSA-signed (same security class as SIMOS18).
+    // Verified via probe of two MG1 pairs (ORI + tuned):
+    //   1. A3 MG1CS011 8MB OBD dump — first 4K is 99.1% non-fill bytes = AES-encrypted.
+    //      MG1CS plaintext string only appears at 0x3A7DD4 (deep in file, cal zone).
+    //   2. RS5 MG1CS002 2MB bench dump — first 4K is 100% 0xFF = partial cal-only slice
+    //      (ECU-memory snippet, not full flash).
+    // Neither form exposes a block descriptor table with computable CRCs. No isolated
+    // small byte cluster exists in the ORI→Stage1 diff that looks like a stored checksum.
+    // Meaning: MG1 tuning requires external flasher (MG-Flasher, KESS v2, Autotuner) —
+    //   • OBD: exploit-based flash, flasher recomputes all checksums/signatures
+    //   • Bench: boot-mode flash, checksum bypass handled by the bench tool's bootloader
+    // Like SIMOS18, DCTuning's role is: edit cal bytes → export → flash via external tool.
+    // Setting 'none' prevents writing a wrong checksum that would brick the ECU.
+    // A future version could implement cal-zone CRC for bench-dump workflow once we have
+    // a confirmed ORI+Stage1 bench pair with a visible stored-csum field to validate against.
+    checksumAlgo: 'none',
     checksumOffset: 0,
     checksumLength: 4,
     maps: [

@@ -6,6 +6,8 @@ import type { SignatureMatch } from '../lib/binaryParser'
 import type { DetectedEcu, DetectedCatalogEcu, ExtractedMap, A2LValidationResult } from '../lib/binaryParser'
 import { buildRemap, buildFilename } from '../lib/remapEngine'
 import type { Stage, AddonId, RemapResult } from '../lib/remapEngine'
+import { buildSmartStage } from '../lib/smartStageEngine'
+import type { SmartStageResult } from '../lib/smartStageEngine'
 import { verifyChecksum, correctChecksum, correctBlockChecksums } from '../lib/checksumEngine'
 import type { BlockCorrectionResult } from '../lib/checksumEngine'
 import { parseA2L, extractMapsFromA2L, detectBaseAddress, guessEcuFamily, ECU_BASE_ADDRESSES } from '../lib/a2lParser'
@@ -728,6 +730,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       type: 'MAP' | 'CURVE' | 'VALUE' | 'VAL_BLK'; desc: string; portable: boolean;
       // v6 verified scaling from A2L COMPU_METHOD
       factor?: number; offsetVal?: number; unit?: string; scalingVerified?: boolean;
+      // v7 verified dtype + axis data offset within record (for Smart Stage)
+      dtype?: 'uint8' | 'int8' | 'uint16' | 'int16' | 'uint32' | 'int32' | 'float32';
+      dataOffset?: number;
     }>
   } | null>(null)
   const [sigScanBusy, setSigScanBusy] = useState(false)
@@ -740,6 +745,13 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   // Keeps the button state consistent — once you've opened a map in Step 3
   // we show "✓ Added" instead of "Open in Stage Editor" and disable re-adding.
   const [adoptedSigOffsets, setAdoptedSigOffsets] = useState<Set<number>>(new Set())
+
+  // Smart Stage — v3.11.14. Takes all scanner-identified maps and auto-applies
+  // stage multipliers with physical-unit safety clamps. "Verified-only" gates to
+  // sigs whose scaling was cross-confirmed by ≥2 training pairs (safer default).
+  const [smartStageVerifiedOnly, setSmartStageVerifiedOnly] = useState(true)
+  const [smartStageBusy, setSmartStageBusy] = useState(false)
+  const [smartStageSummary, setSmartStageSummary] = useState<{ applied: number; total: number; clamped: number; skipped: number } | null>(null)
 
   // Library search state
   const [libSearch, setLibSearch] = useState('')
@@ -1346,6 +1358,60 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     }
     setRemapResult({ ...result, modifiedBuffer: finalBuffer })
     setStep(4)
+  }
+
+  // ─── Smart Stage: auto-tune every scanner-identified map ───────────────────
+  // Uses buildSmartStage (loops signature matches → category-driven multipliers
+  // with physical-unit clamps) instead of the manual wired-maps-only path. The
+  // rest of the flow (checksum correction, DTC suppression, step-4 results UI)
+  // is identical — we just swap the remap source.
+  const handleSmartStage = async () => {
+    if (!fileBuffer || !selectedEcu || !sigScanResult) return
+    setSmartStageBusy(true)
+    try {
+      // selectedEcu family must be one the scanner detected — otherwise sig
+      // offsets won't resolve to valid map data. Guard against mismatch.
+      const ss: SmartStageResult = buildSmartStage(
+        fileBuffer,
+        selectedEcu,
+        sigScanResult.matches as SignatureMatch[],
+        stage,
+        addons,
+        { verifiedOnly: smartStageVerifiedOnly },
+      )
+
+      setSmartStageSummary({
+        applied: ss.applied,
+        total: ss.totalMatches,
+        clamped: ss.mapsClamped,
+        skipped: ss.skipped.length,
+      })
+
+      // Same post-processing as manual remap
+      const corrected = correctChecksum(ss.remap.modifiedBuffer, selectedEcu)
+      const blockRes = correctBlockChecksums(corrected)
+      setBlockResult(blockRes)
+
+      const emissionAddons = ['egr_dtcs', 'dpf_sensors', 'cat', 'sai', 'evap', 'adblue']
+      const activeDtcAddons = addons.filter(a => emissionAddons.includes(a))
+      let finalBuffer = corrected
+      if (activeDtcAddons.length > 0) {
+        const { modifiedBuffer, results, suppressedCount } = suppressDTCs(corrected, activeDtcAddons, selectedEcuId)
+        finalBuffer = modifiedBuffer
+        setDtcResults(results)
+        setDtcSuppressedCount(suppressedCount)
+      } else {
+        setDtcResults([])
+        setDtcSuppressedCount(0)
+      }
+
+      setRemapResult({ ...ss.remap, modifiedBuffer: finalBuffer })
+      setStep(4)
+    } catch (err) {
+      console.error('Smart Stage failed:', err)
+    } finally {
+      setSmartStageBusy(false)
+    }
   }
 
   // ─── Download ─────────────────────────────────────────────────────────────
@@ -2103,6 +2169,54 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
             ) : null}
             <span style={{ fontSize: 10, color: 'var(--text-muted)', transform: showSigMaps ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
           </div>
+
+          {/* Smart Stage strip — auto-tune every identified map with category-driven multipliers + physical-unit clamps */}
+          {sigScanResult && sigScanResult.matches.length > 0 && (
+            <div style={{
+              padding: '10px 16px', background: 'rgba(234, 179, 8, 0.05)',
+              borderBottom: showSigMaps ? '1px solid rgba(34,197,94,0.2)' : 'none',
+              display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+            }}>
+              <span style={{ fontSize: 14 }}>⚡</span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: '#eab308', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                SMART STAGE
+              </span>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1, minWidth: 200 }}>
+                Auto-tune <strong style={{ color: '#eab308' }}>{sigScanResult.matches.filter(m => !smartStageVerifiedOnly || m.scalingVerified).length}</strong>
+                {' '}maps with category defaults + physical-unit safety clamps. Checksum auto-corrected.
+              </span>
+              <label style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <input
+                  type="checkbox"
+                  checked={smartStageVerifiedOnly}
+                  onChange={e => setSmartStageVerifiedOnly(e.target.checked)}
+                  style={{ cursor: 'pointer' }}
+                />
+                Verified scaling only
+              </label>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleSmartStage() }}
+                disabled={smartStageBusy || !selectedEcu}
+                style={{
+                  padding: '6px 14px', fontSize: 11, fontWeight: 700,
+                  background: smartStageBusy ? 'rgba(234,179,8,0.3)' : '#eab308',
+                  color: smartStageBusy ? 'var(--text-muted)' : '#000',
+                  border: 'none', borderRadius: 6,
+                  cursor: (smartStageBusy || !selectedEcu) ? 'not-allowed' : 'pointer',
+                  textTransform: 'uppercase', letterSpacing: '0.5px',
+                }}
+              >
+                {smartStageBusy ? 'Applying…' : `⚡ Apply Stage ${stage}`}
+              </button>
+              {smartStageSummary && !smartStageBusy && (
+                <span style={{ fontSize: 10, color: 'var(--text-muted)', width: '100%' }}>
+                  Last run: <strong style={{ color: '#22c55e' }}>{smartStageSummary.applied}</strong> applied ·{' '}
+                  <strong style={{ color: smartStageSummary.clamped > 0 ? '#eab308' : 'var(--text-muted)' }}>{smartStageSummary.clamped}</strong> hit safety clamp ·{' '}
+                  <strong style={{ color: 'var(--text-muted)' }}>{smartStageSummary.skipped}</strong> skipped (of {smartStageSummary.total} total)
+                </span>
+              )}
+            </div>
+          )}
 
           {showSigMaps && sigScanResult && (() => {
             // Group matches by offset — Bosch ECUs often have many related A2L names

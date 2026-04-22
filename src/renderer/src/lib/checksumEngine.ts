@@ -70,6 +70,58 @@ function boschWordChecksum(bytes: Uint8Array, endOffset: number): number {
   return (~sum + 1) & 0xFFFF  // two's complement of low 16 bits
 }
 
+// ─── Siemens/Continental PPD1 CRC32 (forward, poly 0x04C11DB7) ───────────────
+// Used on Siemens PPD1.1/PPD1.2/PPD1.3/PPD1.5 VAG PD-TDI ECUs (03G906018*, 2MB flash).
+// Algorithm (reverse-engineered from 03G906018DH SN100L8 ORI/Stage1 pair, verified
+// against 3 additional pairs — SN100K5300000 0271/A213 and SN100L8 8DE3):
+//   1. Read block descriptor table at (checksumOffset + 4):
+//        [count:u32 BE][start_addr:u32 BE, end_addr:u32 BE] × count
+//   2. For each block, file offset = addr − 0x00800000 (flash base).
+//   3. Compute CRC32 forward (non-reflected) with poly 0x04C11DB7, init = 0,
+//      final XOR = 0, MSB-first byte feeding, over all block bytes concatenated.
+//   4. Stored big-endian at checksumOffset.
+// Reference binary 03G906018DH SN100L8 BC52.ori: 5 blocks, 248,384 bytes, csum 0x0C1D2D63.
+const CRC32_FWD_TABLE = (() => {
+  const POLY = 0x04C11DB7
+  const t = new Uint32Array(256)
+  for (let i = 0; i < 256; i++) {
+    let c = (i << 24) >>> 0
+    for (let j = 0; j < 8; j++) c = (c & 0x80000000) ? ((c << 1) ^ POLY) >>> 0 : (c << 1) >>> 0
+    t[i] = c >>> 0
+  }
+  return t
+})()
+
+interface Ppd1Block { fileStart: number; fileEnd: number }
+
+function parsePpd1Blocks(view: DataView, fileSize: number, csumOffset: number): Ppd1Block[] | null {
+  const FLASH_BASE = 0x00800000
+  if (csumOffset + 8 > fileSize) return null
+  const count = view.getUint32(csumOffset + 4, false) // big-endian
+  if (count === 0 || count > 32) return null
+  if (csumOffset + 8 + count * 8 > fileSize) return null
+  const blocks: Ppd1Block[] = []
+  for (let i = 0; i < count; i++) {
+    const s = view.getUint32(csumOffset + 8 + i * 8,     false)
+    const e = view.getUint32(csumOffset + 8 + i * 8 + 4, false)
+    if (s < FLASH_BASE || e < FLASH_BASE || e < s) return null
+    const fs = s - FLASH_BASE, fe = e - FLASH_BASE
+    if (fs >= fileSize || fe >= fileSize) return null
+    blocks.push({ fileStart: fs, fileEnd: fe })
+  }
+  return blocks
+}
+
+function ppd1Crc32(bytes: Uint8Array, blocks: Ppd1Block[]): number {
+  let crc = 0
+  for (const b of blocks) {
+    for (let i = b.fileStart; i <= b.fileEnd; i++) {
+      crc = (CRC32_FWD_TABLE[((crc >>> 24) ^ bytes[i]) & 0xFF] ^ (crc << 8)) >>> 0
+    }
+  }
+  return crc >>> 0
+}
+
 // ─── Bosch simple BYTE additive checksum (EDC15 / BMW MS43) ──────────────────
 // Used on older platforms (M78/M797 processor) where 8-bit byte accumulation is correct.
 // Note: calling convention uses checksumOffset+2 so the internal -2 lands correctly:
@@ -237,6 +289,29 @@ export function verifyChecksum(buffer: ArrayBuffer, ecuDef: EcuDef): ChecksumInf
     // checksumOffset+2 ensures the internal -2 lands at checksumOffset-1 exactly.
     stored     = view.getUint16(ecuDef.checksumOffset, false)
     calculated = boschSimple(bytes, 0, ecuDef.checksumOffset + 2)
+
+  } else if (algo === 'ppd1-crc32') {
+    // Siemens PPD1.x VAG PD-TDI: CRC32 forward over block table. Stored big-endian.
+    // We need to zero the csum field before computing IF it falls inside any block —
+    // for real PPD1 binaries the csum at 0x402C4 is OUTSIDE the 5 blocks (block 1 ends
+    // at 0x402BF, block 2 starts at 0x41100), so no zeroing is needed. But we check
+    // defensively in case a variant has a different block layout.
+    stored = view.getUint32(ecuDef.checksumOffset, false)  // big-endian
+    const blocks = parsePpd1Blocks(view, bytes.length, ecuDef.checksumOffset)
+    if (!blocks) {
+      calculated = 0  // unparseable block table — return non-match
+    } else {
+      const csInBlock = blocks.some(b =>
+        ecuDef.checksumOffset >= b.fileStart && ecuDef.checksumOffset + 3 <= b.fileEnd
+      )
+      if (csInBlock) {
+        const tmp = new Uint8Array(buffer.slice(0))
+        for (let i = 0; i < 4; i++) tmp[ecuDef.checksumOffset + i] = 0x00
+        calculated = ppd1Crc32(tmp, blocks)
+      } else {
+        calculated = ppd1Crc32(bytes, blocks)
+      }
+    }
   }
 
   return { algo, offset: ecuDef.checksumOffset, stored, calculated, valid: stored === calculated }
@@ -277,6 +352,26 @@ export function correctChecksum(buffer: ArrayBuffer, ecuDef: EcuDef): ArrayBuffe
       // Write bitwise inverse immediately after checksum word (v + ~v sanity pair).
       view.setUint16(ecuDef.checksumOffset + 2, (~checksum) & 0xFFFF, false)
     }
+
+  } else if (algo === 'ppd1-crc32') {
+    // Siemens PPD1.x VAG PD-TDI: CRC32 forward over 5-block descriptor table.
+    // Zero the stored csum field first if it falls inside any block (defensive).
+    const blocks = parsePpd1Blocks(view, bytes.length, ecuDef.checksumOffset)
+    if (blocks) {
+      const csInBlock = blocks.some(b =>
+        ecuDef.checksumOffset >= b.fileStart && ecuDef.checksumOffset + 3 <= b.fileEnd
+      )
+      let newCRC: number
+      if (csInBlock) {
+        const tmp = new Uint8Array(copy.slice(0))
+        for (let i = 0; i < 4; i++) tmp[ecuDef.checksumOffset + i] = 0x00
+        newCRC = ppd1Crc32(tmp, blocks)
+      } else {
+        newCRC = ppd1Crc32(bytes, blocks)
+      }
+      view.setUint32(ecuDef.checksumOffset, newCRC, false)  // big-endian
+    }
+    // If block table unparseable, leave unchanged — safer than writing garbage.
   }
   // algo === 'none': do not touch — SIMOS18 and other complex-checksum ECUs
 

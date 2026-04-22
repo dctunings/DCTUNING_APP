@@ -1,7 +1,8 @@
-import type { EcuDef, MapDef, DataType } from './ecuDefinitions'
+import type { EcuDef, MapDef, DataType, MapCategory } from './ecuDefinitions'
 import { ECU_DEFINITIONS } from './ecuDefinitions'
 import type { A2LMapDef } from './a2lParser'
 import { ECU_CATALOG, type EcuCatalogEntry } from './ecuCatalog'
+import { getPhysicalClamps, physicalToRawClamps } from './categoryClamps'
 
 export interface DetectedEcu {
   def: EcuDef
@@ -1395,6 +1396,14 @@ export function syntheticMapDefFromSignature(match: SignatureMatch): MapDef {
   else if (category === 'boost')   { stage1Mul = 1.06; stage2Mul = 1.12; stage3Mul = 1.18 }
   else if (category === 'smoke')   { stage1Mul = 1.10; stage2Mul = 1.20; stage3Mul = 1.35 }
 
+  // v3.11.14: physical-unit safety clamps. If the catalog gave us a verified factor+unit,
+  // we translate a category-specific physical ceiling (e.g. boost ≤ 3000 hPa, fuel ≤ 120 mg/stk)
+  // into a raw-storage clamp. This protects against the multiplier pushing a map past a safe
+  // physical limit — even on Stage 3, boost can't exceed 3 bar abs, fuel can't exceed 120 mg/stk.
+  // Without verified scaling we apply no clamp (fall back to multiplier only, matches pre-v3.11.14).
+  const physClamps = scaling ? getPhysicalClamps(category, scaling.unit) : undefined
+  const rawClamps  = physicalToRawClamps(physClamps, scaling?.factor, scaling?.offsetVal, match.dtype ?? 'uint16')
+
   const id = `sig_${match.family}_${match.offset.toString(16)}_${match.name.replace(/[^a-z0-9_]/gi, '_')}`.slice(0, 120)
 
   // Generic numbered axis values so the Zone Editor has something to label with.
@@ -1426,9 +1435,9 @@ export function syntheticMapDefFromSignature(match: SignatureMatch): MapDef {
     factor: scaling?.factor ?? 1,
     offsetVal: scaling?.offsetVal ?? 0,
     unit: scaling?.unit ?? '',
-    stage1: { multiplier: stage1Mul },
-    stage2: { multiplier: stage2Mul },
-    stage3: { multiplier: stage3Mul },
+    stage1: { multiplier: stage1Mul, clampMax: rawClamps.clampMax, clampMin: rawClamps.clampMin },
+    stage2: { multiplier: stage2Mul, clampMax: rawClamps.clampMax, clampMin: rawClamps.clampMin },
+    stage3: { multiplier: stage3Mul, clampMax: rawClamps.clampMax, clampMin: rawClamps.clampMin },
     axisXValues,
     axisYValues,
     critical: false,
