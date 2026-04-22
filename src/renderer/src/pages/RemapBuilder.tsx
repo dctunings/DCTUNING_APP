@@ -846,6 +846,22 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           const res = await api.vagScanSignatures(arr)
           if (res?.ok) {
             setSigScanResult(res.result)
+            // v3.11.18 auto-select EcuDef from scanner family when header-based detection failed.
+            // Fixes the PPD1 case: binary is identified as Siemens/Continental PPD1.2 via the
+            // WinOLS catalog (50% confidence) and the scanner finds 805 PPD1 signatures, but
+            // detectEcu() returns null because the EcuDef's identStrings don't match the specific
+            // part number in the binary. Without auto-selection, the Smart Stage button is
+            // disabled because selectedEcu is undefined.
+            const fam = res.result.detectedFamily
+            if (fam && fam !== 'UNKNOWN') {
+              setSelectedEcuId(prev => {
+                if (prev) return prev // don't override an existing choice
+                // Find an EcuDef whose family string matches (case-insensitive)
+                const famUpper = fam.toUpperCase()
+                const match = ECU_DEFINITIONS.find(d => d.family.toUpperCase() === famUpper)
+                return match?.id ?? ''
+              })
+            }
           } else {
             setSigScanError(res?.error || 'Signature scan failed')
           }
