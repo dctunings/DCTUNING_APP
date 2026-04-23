@@ -135,19 +135,50 @@ export function buildSmartStage(
   //    the UI can show "N maps reverted for safety" to the user.
   let workingBuffer = remap.modifiedBuffer
   let mapsReverted = 0
+
+  // v3.11.19: read actual post-write buffer bytes at each map's offset. This catches
+  // cross-map clobbering — when multiple sig matches overlap, later writes overwrite
+  // earlier ones, producing final bytes that don't match the per-map `afterRaw` we
+  // computed. Comparing afterRaw alone missed these cases.
+  const readMapBytes = (buf: ArrayBuffer, offset: number, rows: number, cols: number, dtype: string, le: boolean): number[] => {
+    const view = new DataView(buf)
+    const elSize = dtype === 'uint8' || dtype === 'int8' ? 1
+                 : dtype === 'float32' || dtype === 'uint32' || dtype === 'int32' ? 4
+                 : 2
+    const cells: number[] = []
+    const total = rows * cols
+    for (let i = 0; i < total; i++) {
+      const off = offset + i * elSize
+      if (off + elSize > buf.byteLength) break
+      switch (dtype) {
+        case 'uint8':   cells.push(view.getUint8(off)); break
+        case 'int8':    cells.push(view.getInt8(off)); break
+        case 'int16':   cells.push(view.getInt16(off, le)); break
+        case 'float32': cells.push(view.getFloat32(off, le)); break
+        default:        cells.push(view.getUint16(off, le)) // uint16 default
+      }
+    }
+    return cells
+  }
+
   for (const c of remap.changes) {
     if (!c.found || c.skippedUniform || c.avgChangePct === 0) continue
 
-    // Flatten before/after grids for stats. Skip empty maps.
+    // Flatten before values (from extract-time) and read actual after values from the
+    // current working buffer — this reflects the true state, including any cross-map
+    // clobbering from overlapping sig writes.
     const before: number[] = []
-    const after: number[] = []
     for (let r = 0; r < c.beforeRaw.length; r++) {
       for (let col = 0; col < c.beforeRaw[r].length; col++) {
         before.push(c.beforeRaw[r][col])
-        after.push(c.afterRaw[r][col])
       }
     }
-    if (before.length < 4) continue // too small to reason about
+    if (before.length < 4) continue
+
+    const realOffset = extractedOffsetByMapId.get(c.mapDef.id) ?? c.mapDef.fixedOffset ?? -1
+    if (realOffset < 0) continue
+    const after = readMapBytes(workingBuffer, realOffset, c.mapDef.rows, c.mapDef.cols, c.mapDef.dtype, c.mapDef.le)
+    if (after.length !== before.length) continue
 
     // Check 1 (v3.11.17): per-cell change >60% OR small-value absolute delta >60
     let runaway = false
@@ -199,8 +230,8 @@ export function buildSmartStage(
 
     if (runaway) {
       // Revert using the ACTUAL extracted offset (may differ from mapDef.fixedOffset when
-      // extractMap fell back to signature/calSearch — v3.11.19 fix).
-      const realOffset = extractedOffsetByMapId.get(c.mapDef.id)
+      // extractMap fell back to signature/calSearch — v3.11.19 fix). realOffset already
+      // computed above when reading post-write buffer bytes.
       workingBuffer = revertMapInBuffer(workingBuffer, buffer, c, realOffset)
       const m = matches.find(mm => {
         const synthId = `sig_${mm.family}_${mm.offset.toString(16)}_${mm.name.replace(/[^a-z0-9_]/gi, '_')}`.slice(0, 120)
