@@ -16,40 +16,36 @@
 //     generatedAt: ISO-8601 timestamp
 //   }
 
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
+import fs from 'node:fs'
+import path from 'node:path'
+import crypto from 'node:crypto'
 
+// v3.12.1: walk ALL of Damo's pair sources recursively. Earlier version only hit
+// one brand folder under Tuning_DB_BIN — missed D:/audi-package, DAMOS packs,
+// ECU Dumps and EEPROMs, VW tuning collection, 2017.2019 archive, and the
+// Desktop-side DATABASE copy. This covers every source documented in memory.
 const ROOTS = [
-  'D:/DATABASE/Tuning_DB_BIN/Audi',
-  'D:/DATABASE/Tuning_DB_BIN/VW',
-  'D:/DATABASE/Tuning_DB_BIN/Seat',
-  'D:/DATABASE/Tuning_DB_BIN/Skoda',
-  'D:/DATABASE/Tuning_DB_BIN/BMW',
-  'D:/DATABASE/Tuning_DB_BIN/Mercedes Benz',
-  'D:/DATABASE/Tuning_DB_BIN/Ford',
-  'D:/DATABASE/Tuning_DB_BIN/Opel',
-  'D:/DATABASE/Tuning_DB_BIN/Volvo',
-  'D:/DATABASE/Tuning_DB_BIN/Porsche',
-  'D:/DATABASE/Tuning_DB_BIN/Mini',
-  'D:/DATABASE/Tuning_DB_BIN/Land Rover',
-  'D:/DATABASE/Tuning_DB_BIN/Jaguar',
-  'D:/DATABASE/Tuning_DB_BIN/Peugeot',
-  'D:/DATABASE/Tuning_DB_BIN/Renault',
-  'D:/DATABASE/Tuning_DB_BIN/Citroen',
-  'D:/DATABASE/Tuning_DB_BIN/Fiat',
-  'D:/DATABASE/Tuning_DB_BIN/Alfa',
-  'D:/DATABASE/Tuning_DB_BIN/Nissan',
-  'D:/DATABASE/Tuning_DB_BIN/Toyota',
-  'D:/DATABASE/Tuning_DB_BIN/Honda',
-  'D:/DATABASE/Tuning_DB_BIN/Mazda',
-  'D:/DATABASE/Tuning_DB_BIN/MAZDA',
-  'D:/DATABASE/Tuning_DB_BIN/Hyundai',
-  'D:/DATABASE/Tuning_DB_BIN/Kia',
-  'D:/DATABASE/Tuning_DB_BIN/Mitsubishi',
-  'D:/DATABASE/Tuning_DB_BIN/Subaru',
+  'D:/DATABASE/Tuning_DB_BIN',                                 // recurses into all 35 brand subfolders
+  'D:/audi-package',                                           // Audi-focused pairs + DAMOS
+  'D:/DAMOS 2020',                                             // older DAMOS packs with bundled pairs
+  'D:/DAMOS-2021-2022',                                        // newer DAMOS packs (A2L + pairs)
+  'D:/ECU Dumps and EEPROMs',                                  // scattered ECU dumps
+  'D:/ECU maps',                                               // tuner-share pair collections
+  'D:/Vw VOLKSWAGEN  ECU Map Tuning Files Stage 1 + Stage 2  Remap Files Collection TESTED',
+  'D:/2017.2019',                                              // 2017-2019 pair archive
+  'C:/Users/damoc/Desktop/DATABASE/Tuning_DB_BIN',             // Desktop copy (if present)
 ]
-const OUT_ROOT = 'C:/temp/recipes';
+// Files under this size aren't ECU binaries worth recipe-ing (need at least 64KB
+// for a meaningful tune). Also caps at 12 MB to skip .ols/.zip/.odx archives.
+const MIN_SIZE = 64 * 1024
+const MAX_SIZE = 12 * 1024 * 1024
+// Skip these file extensions outright — not ECU binaries
+const SKIP_EXT = new Set(['.pdf', '.txt', '.doc', '.docx', '.xls', '.xlsx', '.zip', '.rar',
+                           '.7z', '.odx', '.pdx', '.a2l', '.dll', '.exe', '.xml', '.json',
+                           '.png', '.jpg', '.jpeg', '.gif', '.msi', '.lnk', '.ini', '.cfg'])
+// Output straight into the app's resources folder — no intermediate staging.
+// .gitignore keeps per-partnumber subdirs out of git (manifest.json is committed).
+const OUT_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\//, '')), '..', 'resources', 'recipes')
 
 function sha256File(p) {
   const h = crypto.createHash('sha256');
@@ -125,28 +121,58 @@ function buildRecipe(oriPath, tunedPath, stage) {
   return recipe;
 }
 
-// ───── Main: group files, find pairs, extract recipes ──────────────────────
-// Group by (partNumber + swNumber) as the variant identifier
-const groups = new Map(); // key → { originals: [], tunes: [{ path, stage }] }
-let skippedSizeMismatch = 0;
-for (const root of ROOTS) {
-  let files;
-  try { files = fs.readdirSync(root); } catch { continue; }
-  for (const name of files) {
-    const full = path.join(root, name);
-  try {
-    const stat = fs.statSync(full);
-    if (!stat.isFile() || stat.size < 100000) continue; // skip tiny files
-  } catch { continue; }
-  const info = parseFilename(name);
-  if (!info.partNumber) continue; // need a part number to be useful
-  const key = `${info.partNumber}__${info.swNumber || 'unknown'}`;
-  let g = groups.get(key);
-  if (!g) { g = { originals: [], tunes: [] }; groups.set(key, g); }
-    if (info.stage === 0) g.originals.push(full);
-    else g.tunes.push({ path: full, stage: info.stage });
+// ───── RECURSIVE walker — visits every file under every ROOT ─────────────
+// Previous version was non-recursive so it missed pairs nested in subfolders.
+// D:/audi-package and the DAMOS packs have pairs 3-5 levels deep.
+let filesVisited = 0, filesSkipped = 0
+function walk(dir, callback, depth = 0) {
+  if (depth > 10) return // sanity cap against symlink loops
+  let entries
+  try { entries = fs.readdirSync(dir, { withFileTypes: true }) } catch { return }
+  for (const entry of entries) {
+    // Skip system/junk folders
+    if (entry.name === 'System Volume Information' || entry.name.startsWith('$')
+        || entry.name === '.git' || entry.name === 'node_modules') continue
+    const full = path.join(dir, entry.name)
+    try {
+      if (entry.isDirectory()) {
+        walk(full, callback, depth + 1)
+      } else if (entry.isFile()) {
+        filesVisited++
+        callback(full, entry.name)
+      }
+    } catch { filesSkipped++ }
   }
 }
+
+// ───── Main: walk all roots, group files, find pairs, extract recipes ────
+// Group by (partNumber + swNumber) as the variant identifier
+const groups = new Map() // key → { originals: [], tunes: [{ path, stage }] }
+let skippedSizeMismatch = 0
+
+for (const root of ROOTS) {
+  if (!fs.existsSync(root)) {
+    console.log(`  ⚠ skipping (not found): ${root}`)
+    continue
+  }
+  console.log(`  → scanning ${root} ...`)
+  walk(root, (full, name) => {
+    // Fast-path filter: skip by extension before stat
+    const ext = path.extname(name).toLowerCase()
+    if (SKIP_EXT.has(ext)) return
+    let size
+    try { size = fs.statSync(full).size } catch { return }
+    if (size < MIN_SIZE || size > MAX_SIZE) return
+    const info = parseFilename(name)
+    if (!info.partNumber) return
+    const key = `${info.partNumber}__${info.swNumber || 'unknown'}`
+    let g = groups.get(key)
+    if (!g) { g = { originals: [], tunes: [] }; groups.set(key, g) }
+    if (info.stage === 0) g.originals.push(full)
+    else g.tunes.push({ path: full, stage: info.stage })
+  })
+}
+console.log(`\nTotal files visited: ${filesVisited}, variant groups formed: ${groups.size}`)
 
 let pairsFound = 0, recipesWritten = 0;
 for (const [key, g] of groups) {
