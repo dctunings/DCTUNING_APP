@@ -95,24 +95,58 @@ export function buildSmartStage(
   }
   const skipped: SmartStageSkip[] = []
   const extractedMaps: ExtractedMap[] = []
-  // v3.11.19: track actual extraction offsets per mapDef id. extractMap can fall back
-  // from fixedOffset to signature search or calSearch, and the real write location
-  // ends up in extracted.offset. revertMapInBuffer needs THIS offset, not mapDef.fixedOffset,
-  // to accurately undo the write.
   const extractedOffsetByMapId = new Map<string, number>()
 
-  for (const match of matches) {
+  // v3.11.23: SORT matches by offset before iterating, so we can enforce
+  // non-overlapping writes. The cascade-clobbering problem in v3.11.22 was:
+  // two sigs at offsets A and B where A+size extends past B's start. Write A
+  // lands in B's territory. Later, when we check B's stats, they look OK
+  // because B's own small write didn't change much — but the file on disk
+  // shows B's region was trashed by A.
+  //
+  // Fix: accept sigs greedily by offset, track accepted byte ranges, skip
+  // any sig whose byte range overlaps an already-accepted range.
+  const sortedMatches = [...matches].sort((a, b) => a.offset - b.offset)
+  const acceptedRanges: Array<{ start: number; end: number }> = []
+
+  // Byte size of a single cell by dtype code (v7 compact: u1/s1/u2/s2/u4/s4/f4)
+  const byteSize = (dt?: string): number => {
+    if (!dt) return 2
+    if (dt === 'u1' || dt === 's1') return 1
+    if (dt === 'u4' || dt === 's4' || dt === 'f4') return 4
+    return 2 // default uint16
+  }
+
+  for (const match of sortedMatches) {
     // 1. Verified-scaling gate (default-on safety)
     if (opts.verifiedOnly && !match.scalingVerified) {
       skipped.push({ match, reason: 'unverified' })
       continue
     }
 
-    // 1a. v3.11.21: oversized-map filter — skip maps claiming >512 cells. These cause
-    // cascade clobbering through adjacent map regions when auto-multiplied.
+    // 1a. v3.11.21+v3.11.23: cell + byte-size cap. Converted to BYTE-level check
+    // because a 512-cell float32 map writes 2048 bytes — clobbering ~1000 cells
+    // of adjacent maps. Limit: 1024 bytes per auto-tuned map.
     const cellCount = match.rows * match.cols
-    if (cellCount > MAX_AUTO_TUNE_CELLS) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const matchDt = (match as any).dtype as string | undefined
+    const dtBytes = matchDt === 'uint8' || matchDt === 'int8' ? 1
+                 : matchDt === 'uint32' || matchDt === 'int32' || matchDt === 'float32' ? 4
+                 : 2
+    const byteCount = cellCount * dtBytes
+    if (cellCount > MAX_AUTO_TUNE_CELLS || byteCount > 1024) {
       skipped.push({ match, reason: 'oversized' })
+      continue
+    }
+
+    // 1b. v3.11.23: overlap detection. Skip any sig whose write range would overlap
+    // a previously-accepted sig's range. Since we iterate in sorted order, we only
+    // need to check against the most recently accepted range.
+    const matchStart = match.offset
+    const matchEnd = match.offset + byteCount - 1
+    const lastAccepted = acceptedRanges[acceptedRanges.length - 1]
+    if (lastAccepted && matchStart <= lastAccepted.end) {
+      skipped.push({ match, reason: 'oversized' })  // reason covers both size AND overlap
       continue
     }
 
@@ -140,6 +174,10 @@ export function buildSmartStage(
 
     extractedMaps.push(extracted)
     extractedOffsetByMapId.set(mapDef.id, extracted.offset)
+    // Record the accepted range so subsequent overlapping sigs get rejected.
+    // Use the ACTUAL extracted offset (may differ from match.offset if fallback search ran).
+    const acceptEnd = extracted.offset + byteCount - 1
+    acceptedRanges.push({ start: extracted.offset, end: acceptEnd })
   }
 
   // 6. Hand off to the existing remap engine — which applies the stage params,
@@ -217,7 +255,42 @@ export function buildSmartStage(
       }
     }
 
-    // Check 2 (v3.11.19): mean-value shift beyond any reasonable stage multiplier
+    // v3.11.23: Check 2 — compute stats ONLY over cells that actually changed.
+    // The previous whole-map checks missed pathologies when only a subset of cells
+    // went wild (other cells staying at their originals diluted the mean).
+    const changedBefore: number[] = []
+    const changedAfter: number[] = []
+    for (let i = 0; i < before.length; i++) {
+      if (before[i] !== after[i]) { changedBefore.push(before[i]); changedAfter.push(after[i]) }
+    }
+    if (!runaway && changedBefore.length >= 2) {
+      const meanB = changedBefore.reduce((s, v) => s + v, 0) / changedBefore.length
+      const meanA = changedAfter.reduce((s, v) => s + v, 0) / changedAfter.length
+      if (meanB > 100 && (meanA / meanB > MEAN_BLOWOUT_RATIO || meanA / meanB < (1 / MEAN_BLOWOUT_RATIO))) {
+        runaway = true; reason = 'changed-mean-blowout'
+      }
+    }
+
+    // v3.11.23: Check 3 — count individual cells changing more than 2× the
+    // intended stage multiplier (torque 1.22 * 2 = 2.44). If >5% of cells
+    // changed beyond that, something non-multiplicative is happening (clobber,
+    // dtype mismatch, etc.).
+    if (!runaway && changedBefore.length >= 4) {
+      let wildCells = 0
+      for (let i = 0; i < changedBefore.length; i++) {
+        const b = changedBefore[i], a = changedAfter[i]
+        if (Math.abs(b) < 100) {
+          if (Math.abs(a - b) > 200) wildCells++  // absolute delta cap for small values
+        } else if (Math.abs((a - b) / b) > 1.2) {  // >120% change = catastrophic
+          wildCells++
+        }
+      }
+      if (wildCells / changedBefore.length > 0.05) {
+        runaway = true; reason = 'wild-cell-cluster'
+      }
+    }
+
+    // Check 4: original whole-map mean blowout (less aggressive — unchanged by v3.11.23)
     if (!runaway) {
       const meanB = before.reduce((s, v) => s + v, 0) / before.length
       const meanA = after.reduce((s, v) => s + v, 0) / after.length
@@ -226,7 +299,7 @@ export function buildSmartStage(
       }
     }
 
-    // Check 3 (v3.11.19): >20% of cells pinned at dtype-max (saturation cluster)
+    // Check 5 (v3.11.19): >20% of cells pinned at dtype-max (saturation cluster)
     if (!runaway) {
       const dtypeMax = c.mapDef.dtype === 'uint8'  ? 255
                      : c.mapDef.dtype === 'uint16' ? 65535
@@ -242,7 +315,7 @@ export function buildSmartStage(
       }
     }
 
-    // Check 4 (v3.11.19): dynamic range collapsed — map lost its shape
+    // Check 6 (v3.11.19): dynamic range collapsed — map lost its shape
     if (!runaway) {
       const rangeB = Math.max(...before) - Math.min(...before)
       const rangeA = Math.max(...after) - Math.min(...after)
