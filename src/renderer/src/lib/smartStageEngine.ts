@@ -185,6 +185,35 @@ export function buildSmartStage(
   //    the modified bytes, and reports summary stats.
   const remap = buildRemap(buffer, ecuDef, stage, addons, extractedMaps)
 
+  // v3.11.24: FINAL CLEANUP — revert any modified byte that's outside an
+  // explicitly-accepted map's region. This catches cascade damage from sigs
+  // whose writes spilled past their declared dimensions into neighbouring
+  // bytes. After this pass the file ONLY differs from ORI inside regions we
+  // consciously chose to tune.
+  // Build a flat byte-level "is-accepted" bitmap using the same ranges the
+  // extract loop recorded (extracted offsets + actual byte sizes). Doing it
+  // here (not during the loop) keeps the logic isolated and testable.
+  {
+    const oriBytes = new Uint8Array(buffer)
+    const workBytes = new Uint8Array(remap.modifiedBuffer)
+    const accepted = new Uint8Array(workBytes.length) // 0 = outside, 1 = inside
+    for (const r of acceptedRanges) {
+      const s = Math.max(0, r.start)
+      const e = Math.min(workBytes.length - 1, r.end)
+      for (let i = s; i <= e; i++) accepted[i] = 1
+    }
+    let revertedBytes = 0
+    for (let i = 0; i < workBytes.length; i++) {
+      if (workBytes[i] !== oriBytes[i] && accepted[i] === 0) {
+        workBytes[i] = oriBytes[i]
+        revertedBytes++
+      }
+    }
+    if (revertedBytes > 0) {
+      console.warn(`[SmartStage] cascade-cleanup: reverted ${revertedBytes} bytes outside accepted map regions`)
+    }
+  }
+
   // 7. RUNAWAY SANITY CAP (v3.11.17)
   //    For every applied map, check whether any single cell changed by more than
   //    RUNAWAY_CHANGE_THRESHOLD (60%) vs its original raw value. If yes, revert
@@ -241,17 +270,25 @@ export function buildSmartStage(
     const after = readMapBytes(workingBuffer, realOffset, c.mapDef.rows, c.mapDef.cols, c.mapDef.dtype, c.mapDef.le)
     if (after.length !== before.length) continue
 
-    // Check 1 (v3.11.17): per-cell change >60% OR small-value absolute delta >60
+    // Check 1 (v3.11.17+v3.11.24): per-cell change. Now checks BOTH absolute-delta
+    // AND ratio. v3.11.22-23 missed cells going from 5 → 61 (delta 56, just under
+    // the delta threshold, but ratio 12× is catastrophic).
     let runaway = false
     let reason = ''
     for (let i = 0; i < before.length && !runaway; i++) {
       if (before[i] === after[i]) continue
-      if (Math.abs(before[i]) < 100) {
-        if (Math.abs(after[i] - before[i]) > 60) { runaway = true; reason = 'per-cell-blowout' }
-      } else {
-        if (Math.abs((after[i] - before[i]) / before[i]) > RUNAWAY_CHANGE_THRESHOLD) {
-          runaway = true; reason = 'per-cell-blowout'
-        }
+      const delta = Math.abs(after[i] - before[i])
+      const absBefore = Math.max(1, Math.abs(before[i]))
+      const ratio = delta / absBefore
+      // Catastrophic ratio change (small→huge flip): ratio ≥ 3× with at least
+      // 10 units of absolute movement. Allows Stage 3 (≤1.5×) to pass but
+      // catches any order-of-magnitude jump.
+      if (ratio >= 3.0 && delta >= 10) { runaway = true; reason = 'per-cell-ratio-blowout' }
+      // Big absolute delta on any-size value (torque 30k→65k = delta 35k fine for S3,
+      // but delta on small values stands out)
+      else if (Math.abs(before[i]) < 100 && delta > 60) { runaway = true; reason = 'per-cell-blowout' }
+      else if (Math.abs(before[i]) >= 100 && ratio > RUNAWAY_CHANGE_THRESHOLD) {
+        runaway = true; reason = 'per-cell-blowout'
       }
     }
 
