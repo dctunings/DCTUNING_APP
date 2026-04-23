@@ -350,6 +350,26 @@ app.whenReady().then(() => {
       return { ok: false, error: (e as Error).message }
     }
   })
+  // v3.13.0: Map-name multiplier library — learned-from-corpus Stage N multipliers
+  // keyed by DAMOS map name. Tier 2 of the Stage Engine when no exact recipe exists.
+  ipcMain.handle('load-map-multipliers', async () => {
+    try {
+      const candidates = [
+        join(process.resourcesPath || '', 'map-multipliers.json'),
+        join(__dirname, '..', '..', 'resources', 'map-multipliers.json'),
+        join(__dirname, '..', '..', '..', 'resources', 'map-multipliers.json'),
+      ]
+      for (const p of candidates) {
+        if (fs.existsSync(p)) {
+          const entries = JSON.parse(fs.readFileSync(p, 'utf8'))
+          return { ok: true, entries }
+        }
+      }
+      return { ok: true, entries: [] }
+    } catch (e) {
+      return { ok: false, error: (e as Error).message }
+    }
+  })
   ipcMain.handle('load-recipe', async (_, relativePath: string) => {
     try {
       // Basic path-traversal guard — only allow paths inside the recipes/ folder

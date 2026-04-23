@@ -762,6 +762,12 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [recipeBusy, setRecipeBusy] = useState(false)
   const [recipeApplyingPath, setRecipeApplyingPath] = useState<string | null>(null)
 
+  // v3.13.0 — unified Stage Engine state. Single path for Apply Stage 1/2/3:
+  // Tier 1 recipe (bit-exact) → Tier 2 learned multipliers → Tier 3 category default.
+  const [unifiedBusy, setUnifiedBusy] = useState<Stage | null>(null)
+  const [unifiedTier, setUnifiedTier] = useState<import('../lib/stageEngine').StageTier | null>(null)
+  const [unifiedSource, setUnifiedSource] = useState<string>('')
+
   // Library search state
   const [libSearch, setLibSearch] = useState('')
   const [libResults, setLibResults] = useState<DefinitionEntry[]>([])
@@ -1474,6 +1480,53 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       console.error('Smart Stage failed:', err)
     } finally {
       setSmartStageBusy(false)
+    }
+  }
+
+  // ─── v3.13.0 Unified Stage apply — the "one button, always works" flow ───
+  // Tier 1: bit-exact recipe if we have one for this variant+stage
+  // Tier 2: learned multipliers per-map-name from the full recipe corpus
+  // Tier 3: category defaults (last-resort fallback)
+  const handleUnifiedStage = async (stage: Stage) => {
+    if (!fileBuffer || !selectedEcu) return
+    setUnifiedBusy(stage)
+    setUnifiedTier(null)
+    setUnifiedSource('')
+    try {
+      const { applyStageUnified } = await import('../lib/stageEngine')
+      const result = await applyStageUnified({
+        buffer: fileBuffer,
+        ecuDef: selectedEcu,
+        stage,
+        addons,
+        sigMatches: (sigScanResult?.matches ?? []) as SignatureMatch[],
+        recipeMatches: recipeMatches ?? [],
+      })
+      setUnifiedTier(result.tier)
+      setUnifiedSource(result.sourceDescription)
+
+      // Post-process: checksum correction (same as existing paths)
+      const corrected = correctChecksum(result.remap.modifiedBuffer, selectedEcu)
+      const blockRes = correctBlockChecksums(corrected)
+      setBlockResult(blockRes)
+      const emissionAddons = ['egr_dtcs', 'dpf_sensors', 'cat', 'sai', 'evap', 'adblue']
+      const activeDtcAddons = addons.filter(a => emissionAddons.includes(a))
+      let finalBuffer = corrected
+      if (activeDtcAddons.length > 0) {
+        const { modifiedBuffer, results, suppressedCount } = suppressDTCs(corrected, activeDtcAddons, selectedEcuId)
+        finalBuffer = modifiedBuffer
+        setDtcResults(results)
+        setDtcSuppressedCount(suppressedCount)
+      } else {
+        setDtcResults([])
+        setDtcSuppressedCount(0)
+      }
+      setRemapResult({ ...result.remap, modifiedBuffer: finalBuffer })
+      setStep(4)
+    } catch (err) {
+      console.error('Unified Stage apply failed:', err)
+    } finally {
+      setUnifiedBusy(null)
     }
   }
 
@@ -2283,6 +2336,70 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           1,126 ORI+A2L pairs. Produces real map names like AccPed_trqEng0_MAP
           instead of generic Kf_0xOFFSET markers. Validated on 21 held-out
           binaries: 86% find real maps. */}
+      {/* v3.13.0 UNIFIED APPLY STAGE — single prominent button set at the very top.
+           Tier 1 (recipe), Tier 2 (learned multipliers), Tier 3 (category) — the
+           engine picks whichever path produces the best tune for this ECU. This
+           replaces the previous two-path design (separate Recipe Library purple
+           buttons + Smart Stage yellow buttons) with one obvious flow. */}
+      {sigScanResult && selectedEcu && (
+        <div style={{
+          marginTop: 16,
+          padding: '16px 20px',
+          background: 'linear-gradient(135deg, rgba(34,197,94,0.08), rgba(139,92,246,0.08))',
+          border: '1px solid rgba(34,197,94,0.35)',
+          borderRadius: 12,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 12 }}>
+            <span style={{ fontSize: 16 }}>🎯</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.3px' }}>
+              APPLY STAGE
+            </span>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
+              {recipeMatches && recipeMatches.some(m => m.confidence === 'exact')
+                ? <>✓ <strong style={{ color: '#22c55e' }}>Proven tune available</strong> — bit-exact reproduction</>
+                : recipeMatches && recipeMatches.length > 0
+                  ? <>Same-variant tune available — high confidence</>
+                  : <>Learned from the full tune corpus — maps tuned by name</>}
+            </span>
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            {([1, 2, 3] as const).map(stage => {
+              const busy = unifiedBusy === stage
+              const hasRecipeForStage = recipeMatches?.some(m => m.stage === stage) ?? false
+              const hint = hasRecipeForStage
+                ? 'Proven tune'
+                : (recipeMatches && recipeMatches.length > 0 ? 'Variant tune' : 'Learned multipliers')
+              return (
+                <button
+                  key={stage}
+                  onClick={() => handleUnifiedStage(stage)}
+                  disabled={busy || unifiedBusy !== null}
+                  style={{
+                    flex: 1, padding: '14px 0',
+                    background: busy ? 'rgba(34,197,94,0.25)' : '#22c55e',
+                    color: busy ? 'var(--text-muted)' : '#000',
+                    border: 'none', borderRadius: 8,
+                    cursor: (busy || unifiedBusy !== null) ? 'not-allowed' : 'pointer',
+                    fontSize: 16, fontWeight: 900, textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                  }}
+                >
+                  {busy ? 'Applying…' : `Stage ${stage}`}
+                  <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.4px', opacity: 0.7, marginTop: 3 }}>
+                    {hint}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+          {unifiedTier && (
+            <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text-muted)', textAlign: 'center' }}>
+              Last tune used: <strong style={{ color: '#22c55e' }}>{unifiedTier}</strong> — {unifiedSource}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* v3.12.0 Recipe Library panel — shown FIRST (above Signature Scanner) when
            the loaded ORI matches a pre-extracted tuner recipe. One-click applies
            the proven tune bit-exactly. This is the primary flow — Smart Stage

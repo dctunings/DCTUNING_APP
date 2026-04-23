@@ -39,6 +39,8 @@ const api = {
   // static-served /recipes/* files; these IPC handlers are desktop equivalent.
   loadRecipeManifest: () => ipcRenderer.invoke('load-recipe-manifest'),
   loadRecipe: (relativePath: string) => ipcRenderer.invoke('load-recipe', relativePath),
+  // v3.13.0 map-name multiplier library (Tier 2 of unified Stage Engine)
+  loadMapMultipliers: () => ipcRenderer.invoke('load-map-multipliers'),
 
   // ─── J2534 registry scan ─────────────────────────────────────────────────
   scanJ2534: () => ipcRenderer.invoke('scan-j2534'),
