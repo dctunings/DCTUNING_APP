@@ -30,8 +30,23 @@ export interface SmartStageOptions {
 
 export interface SmartStageSkip {
   match: SignatureMatch
-  reason: 'unverified' | 'low-quality' | 'category-excluded' | 'user-excluded' | 'extract-failed' | 'uniform' | 'runaway-change'
+  reason: 'unverified' | 'low-quality' | 'category-excluded' | 'user-excluded' | 'extract-failed' | 'uniform' | 'runaway-change' | 'oversized'
 }
+
+// v3.11.21 — maximum map size (rows × cols) that Smart Stage will auto-tune.
+// Most real ECU tunable maps are 2×2 to 32×32 (≤1024 cells). Sigs claiming more
+// than 512 cells are almost always one of:
+//   • Large torque-monitor ceiling arrays (pinned to constant, not meant to multiply)
+//   • Catalog parsing errors (rows/cols swapped or inflated)
+//   • Concatenated data blocks spanning multiple logical maps
+// Auto-multiplying these produces cascade clobbering: a 2000-cell write landing over
+// regions where smaller, legitimate maps live, corrupting them in ways that slip past
+// the per-map runaway checks (since the damage is technically OUTSIDE the affected
+// map's declared region).
+// PPD1 torque-monitor ceiling (2688 cells in ecuDefinitions.ts) is a known case —
+// it's wired with a fixed clampMax 55415 in the hand-wired def, not a multiplier.
+// Auto-tune path shouldn't try to scale it.
+const MAX_AUTO_TUNE_CELLS = 512
 
 export interface SmartStageResult {
   remap: RemapResult              // same shape as manual Stage 1/2/3 — ready for download
@@ -90,6 +105,14 @@ export function buildSmartStage(
     // 1. Verified-scaling gate (default-on safety)
     if (opts.verifiedOnly && !match.scalingVerified) {
       skipped.push({ match, reason: 'unverified' })
+      continue
+    }
+
+    // 1a. v3.11.21: oversized-map filter — skip maps claiming >512 cells. These cause
+    // cascade clobbering through adjacent map regions when auto-multiplied.
+    const cellCount = match.rows * match.cols
+    if (cellCount > MAX_AUTO_TUNE_CELLS) {
+      skipped.push({ match, reason: 'oversized' })
       continue
     }
 
