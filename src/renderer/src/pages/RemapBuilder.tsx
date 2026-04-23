@@ -839,11 +839,22 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const api = (window as any).api
-        if (api?.vagScanSignatures) {
+        // v3.11.22: browser-mode fallback. When running in the web version (app.dctuning.ie)
+        // there's no Electron main process, so window.api.vagScanSignatures doesn't exist.
+        // Use the pure-JS web scanner that fetches catalogs via HTTP instead.
+        const scanFn: ((arr: number[]) => Promise<{ ok: boolean; result?: unknown; error?: string }>) | null =
+          api?.vagScanSignatures
+            ? api.vagScanSignatures
+            : (async (arr: number[]) => {
+                const { webScanSignatures } = await import('../lib/webVagScanner')
+                return webScanSignatures(arr)
+              })
+        if (scanFn) {
           // Transfer the buffer as an Array to avoid IPC cloning a DetachedArrayBuffer —
           // main side converts back to Buffer. OK for ≤8MB binaries.
           const arr = Array.from(new Uint8Array(buf))
-          const res = await api.vagScanSignatures(arr)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const res: any = await scanFn(arr)
           if (res?.ok) {
             setSigScanResult(res.result)
             // v3.11.18 auto-select EcuDef from scanner family when header-based detection failed.

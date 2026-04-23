@@ -3,6 +3,10 @@ out
 web-dist
 dist
 *.local
+# v3.11.22: VAG signature catalogs are copied into public/vag-signatures/ at web-build time
+# by scripts/copy-web-catalogs.mjs (from resources/vag-signatures/ which IS checked in).
+# Don't commit the copies — they're build artifacts, not source.
+src/renderer/public/vag-signatures/
 .env
 .env.*
 !.env.example

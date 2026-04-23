@@ -1,6 +1,6 @@
 {
   "name": "dctuning-desktop",
-  "version": "3.11.21",
+  "version": "3.11.22",
   "description": "DCTuning Ireland — Professional ECU Tuning Suite",
   "main": "out/main/index.js",
   "scripts": {
@@ -8,8 +8,8 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "build:win": "npm run build && electron-builder --win",
-    "build:web": "vite build --config vite.web.config.ts",
-    "dev:web": "vite --config vite.web.config.ts"
+    "build:web": "node scripts/copy-web-catalogs.mjs && vite build --config vite.web.config.ts",
+    "dev:web": "node scripts/copy-web-catalogs.mjs && vite --config vite.web.config.ts"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
