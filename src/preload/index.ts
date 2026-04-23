@@ -32,6 +32,14 @@ const api = {
     ipcRenderer.invoke('vag-scan-signatures', buffer, forceFamily),
   vagCatalogStats: () => ipcRenderer.invoke('vag-catalog-stats'),
 
+  // ─── Recipe library (v3.12.0) ────────────────────────────────────────────
+  // Recipe = byte-level delta extracted from an ORI → real-tuner Stage1 pair.
+  // Manifest indexes recipes by (partNumber, swNumber, oriHash). Individual
+  // recipes are fetched on-demand when the user applies one. Web version uses
+  // static-served /recipes/* files; these IPC handlers are desktop equivalent.
+  loadRecipeManifest: () => ipcRenderer.invoke('load-recipe-manifest'),
+  loadRecipe: (relativePath: string) => ipcRenderer.invoke('load-recipe', relativePath),
+
   // ─── J2534 registry scan ─────────────────────────────────────────────────
   scanJ2534: () => ipcRenderer.invoke('scan-j2534'),
 

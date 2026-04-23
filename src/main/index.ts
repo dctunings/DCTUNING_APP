@@ -328,6 +328,43 @@ app.whenReady().then(() => {
     }
   })
 
+  // v3.12.0: Recipe library — serves the 389KB manifest (of ~2,231 tune recipes)
+  // and individual recipe JSON files from resources/recipes/. Web version does the
+  // equivalent via HTTP fetch from static-served /recipes/manifest.json.
+  const resolveRecipePath = (rel = ''): string => {
+    const candidates = [
+      join(process.resourcesPath || '', 'recipes', rel),
+      join(__dirname, '..', '..', 'resources', 'recipes', rel),
+      join(__dirname, '..', '..', '..', 'resources', 'recipes', rel),
+    ]
+    for (const p of candidates) if (fs.existsSync(p)) return p
+    return candidates[candidates.length - 1]
+  }
+  ipcMain.handle('load-recipe-manifest', async () => {
+    try {
+      const p = resolveRecipePath('manifest.json')
+      if (!fs.existsSync(p)) return { ok: true, manifest: [] }
+      const manifest = JSON.parse(fs.readFileSync(p, 'utf8'))
+      return { ok: true, manifest }
+    } catch (e) {
+      return { ok: false, error: (e as Error).message }
+    }
+  })
+  ipcMain.handle('load-recipe', async (_, relativePath: string) => {
+    try {
+      // Basic path-traversal guard — only allow paths inside the recipes/ folder
+      if (typeof relativePath !== 'string' || relativePath.includes('..') || relativePath.startsWith('/') || relativePath.startsWith('\\')) {
+        return { ok: false, error: 'invalid recipe path' }
+      }
+      const p = resolveRecipePath(relativePath)
+      if (!fs.existsSync(p)) return { ok: false, error: 'recipe not found' }
+      const recipe = JSON.parse(fs.readFileSync(p, 'utf8'))
+      return { ok: true, recipe }
+    } catch (e) {
+      return { ok: false, error: (e as Error).message }
+    }
+  })
+
   // Open a URL in the system default browser
   ipcMain.handle('open-external', async (_, url: string) => {
     if (typeof url === 'string' && (url.startsWith('https://') || url.startsWith('http://'))) {

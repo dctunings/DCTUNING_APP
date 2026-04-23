@@ -753,6 +753,15 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [smartStageBusy, setSmartStageBusy] = useState(false)
   const [smartStageSummary, setSmartStageSummary] = useState<{ applied: number; total: number; clamped: number; skipped: number; reverted: number } | null>(null)
 
+  // v3.12.0 Recipe Library — tuning by example.
+  // When an ORI is loaded, the app computes its SHA-256 hash + extracts part/SW
+  // number. Matches against the recipe manifest (list of extracted tuner Stage1/2/3
+  // deltas). If a match is found, one-click "Apply Recipe" reproduces the proven
+  // tune bit-exactly. No signatures, no safety nets — the recipe IS the tune.
+  const [recipeMatches, setRecipeMatches] = useState<import('../lib/recipeEngine').RecipeMatch[] | null>(null)
+  const [recipeBusy, setRecipeBusy] = useState(false)
+  const [recipeApplyingPath, setRecipeApplyingPath] = useState<string | null>(null)
+
   // Library search state
   const [libSearch, setLibSearch] = useState('')
   const [libResults, setLibResults] = useState<DefinitionEntry[]>([])
@@ -881,6 +890,29 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
         setSigScanError(String(e))
       }
       setSigScanBusy(false)
+    }, 100)
+
+    // v3.12.0 — Recipe Library lookup. Runs in parallel with the scanner.
+    // Compute SHA-256 hash of the ORI, extract part/SW number, look up matching
+    // recipes from the 2,200+ recipe manifest. If matches found, user can one-click
+    // apply the proven tuner delta — bit-exact reproduction, no inference.
+    setRecipeMatches(null)
+    setRecipeBusy(true)
+    setTimeout(async () => {
+      try {
+        const { sha256Buffer, extractIdentsFromBinary, findMatchingRecipes, loadManifest } = await import('../lib/recipeEngine')
+        const [hash, manifest] = await Promise.all([
+          sha256Buffer(buf),
+          loadManifest(),
+        ])
+        const idents = extractIdentsFromBinary(buf)
+        const matches = findMatchingRecipes(manifest, hash, idents, buf.byteLength)
+        setRecipeMatches(matches)
+      } catch {
+        setRecipeMatches([])
+      } finally {
+        setRecipeBusy(false)
+      }
     }, 100)
 
     // Run binary map scanner in background
@@ -1442,6 +1474,56 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       console.error('Smart Stage failed:', err)
     } finally {
       setSmartStageBusy(false)
+    }
+  }
+
+  // ─── v3.12.0 Recipe apply: bit-exact reproduction of a proven tuner file ───
+  // Fetches the recipe JSON by its relative path, applies byte-level deltas to
+  // the ORI buffer, then runs the same post-processing as manual remap
+  // (checksum correction, DTC suppression if addons active).
+  const handleApplyRecipe = async (match: import('../lib/recipeEngine').RecipeMatch) => {
+    if (!fileBuffer || !selectedEcu) return
+    setRecipeApplyingPath(match.entry.path)
+    try {
+      const { loadRecipe, applyRecipe } = await import('../lib/recipeEngine')
+      const recipe = await loadRecipe(match.entry.path)
+      if (!recipe) {
+        console.error('[Recipe] failed to load', match.entry.path)
+        return
+      }
+      // Apply deltas to a fresh copy of the ORI
+      const tuned = applyRecipe(fileBuffer, recipe)
+      // Post-process: checksum correction (engine + block if applicable).
+      // For 'exact' matches the checksums are already correct in the recipe
+      // bytes, but running correctChecksum() is harmless and makes the flow
+      // identical to manual/Smart Stage output.
+      const corrected = correctChecksum(tuned, selectedEcu)
+      const blockRes = correctBlockChecksums(corrected)
+      setBlockResult(blockRes)
+      // Build a minimal RemapResult so the existing Step 4 UI can render the output.
+      // We don't have per-map changes (recipes are byte-level), so summary stays zeroes
+      // and the UI just shows "Applied proven tune · N regions · source: <tuner file>".
+      setRemapResult({
+        ecuDef: selectedEcu,
+        stage: (match.stage as 1 | 2 | 3) || 1,
+        addons: [],
+        changes: [],
+        modifiedBuffer: corrected,
+        checksumWarning: false,
+        summary: {
+          boostChangePct: 0,
+          fuelChangePct: 0,
+          torqueChangePct: 0,
+          mapsModified: recipe.regions.length,
+          mapsNotFound: 0,
+          mapsBlockedUniform: 0,
+        },
+      })
+      setStep(4)
+    } catch (err) {
+      console.error('Recipe apply failed:', err)
+    } finally {
+      setRecipeApplyingPath(null)
     }
   }
 
@@ -2201,6 +2283,81 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
           1,126 ORI+A2L pairs. Produces real map names like AccPed_trqEng0_MAP
           instead of generic Kf_0xOFFSET markers. Validated on 21 held-out
           binaries: 86% find real maps. */}
+      {/* v3.12.0 Recipe Library panel — shown FIRST (above Signature Scanner) when
+           the loaded ORI matches a pre-extracted tuner recipe. One-click applies
+           the proven tune bit-exactly. This is the primary flow — Smart Stage
+           becomes the fallback for variants with no recipe match. */}
+      {(recipeMatches !== null || recipeBusy) && (
+        <div style={{ marginTop: 16, border: '1px solid rgba(139,92,246,0.4)', borderRadius: 10, overflow: 'hidden', background: 'rgba(139,92,246,0.04)' }}>
+          <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: (recipeMatches && recipeMatches.length > 0) ? '1px solid rgba(139,92,246,0.25)' : 'none' }}>
+            <span style={{ fontSize: 14 }}>📚</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Recipe Library
+            </span>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>
+              {recipeBusy ? 'Looking up variant…' : recipeMatches && recipeMatches.length > 0
+                ? <><strong style={{ color: '#a78bfa' }}>{recipeMatches.length}</strong> proven tune{recipeMatches.length === 1 ? '' : 's'} match this ORI</>
+                : 'No recipe for this variant — use Smart Stage below'}
+            </span>
+          </div>
+          {recipeMatches && recipeMatches.length > 0 && (
+            <div style={{ padding: '10px 16px 14px' }}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10, lineHeight: 1.5 }}>
+                Each recipe is the byte-level delta from this exact ORI (or a close variant) to a real tuner's
+                Stage N file. Apply = bit-exact reproduction of a proven tune. No multipliers, no safety nets,
+                no guessing — the recipe <em>is</em> the tune.
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {recipeMatches.slice(0, 8).map((m, i) => {
+                  const confColor = m.confidence === 'exact' ? '#22c55e'
+                                 : m.confidence === 'variant' ? '#eab308' : '#f59e0b'
+                  const confLabel = m.confidence === 'exact' ? 'BIT-EXACT MATCH'
+                                 : m.confidence === 'variant' ? 'SAME VARIANT' : 'SAME ECU'
+                  const applying = recipeApplyingPath === m.entry.path
+                  return (
+                    <div key={`${m.entry.path}-${i}`} style={{
+                      padding: '10px 12px', background: 'rgba(139,92,246,0.06)',
+                      border: '1px solid rgba(139,92,246,0.2)', borderRadius: 6,
+                      display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+                    }}>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: confColor, padding: '2px 6px', border: `1px solid ${confColor}40`, borderRadius: 4, letterSpacing: '0.4px' }}>
+                        {confLabel}
+                      </span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)' }}>
+                        Stage {m.stage}
+                      </span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono, monospace)' }}>
+                        {m.entry.partNumber} · {m.entry.swNumber}
+                      </span>
+                      <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                        {m.entry.regions} regions, {m.entry.totalBytesChanged.toLocaleString()}B modified
+                      </span>
+                      <button
+                        onClick={() => handleApplyRecipe(m)}
+                        disabled={applying || !selectedEcu}
+                        style={{
+                          marginLeft: 'auto', padding: '6px 14px', fontSize: 11, fontWeight: 700,
+                          background: applying ? 'rgba(139,92,246,0.3)' : '#a78bfa',
+                          color: applying ? 'var(--text-muted)' : '#000',
+                          border: 'none', borderRadius: 6,
+                          cursor: applying || !selectedEcu ? 'not-allowed' : 'pointer',
+                          textTransform: 'uppercase', letterSpacing: '0.4px',
+                        }}
+                      >
+                        {applying ? 'Applying…' : `Apply Stage ${m.stage}`}
+                      </button>
+                      <div style={{ fontSize: 9, color: 'var(--text-muted)', width: '100%', marginTop: 2 }}>
+                        source: <code>{m.entry.sourceTunedFile}</code>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {(sigScanResult || sigScanBusy || sigScanError) && (
         <div style={{ marginTop: 16, border: '1px solid rgba(34,197,94,0.25)', borderRadius: 10, overflow: 'hidden' }}>
           <div
