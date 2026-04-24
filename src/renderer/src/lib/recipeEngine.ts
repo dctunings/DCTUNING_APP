@@ -209,6 +209,19 @@ export async function loadManifest(): Promise<RecipeManifestEntry[]> {
 }
 
 // ─── Fetch a specific recipe by its relative path ───────────────────────────
+// Desktop: IPC pulls from bundled resources/recipes/ (works offline, instant).
+// Web (v3.15.4): Supabase Storage public bucket (single source of truth across
+//   builds; no need to bundle 231 MB of JSON into every web deploy).
+//
+// Storage URL pattern:
+//   {SUPABASE_URL}/storage/v1/object/public/recipes/{relativePath}
+// The bucket is public-read (RLS policy "recipes_public_read"), so no auth
+// header is needed — anyone with the URL can fetch.
+const SUPABASE_RECIPES_BASE = (() => {
+  const url = import.meta.env.VITE_SUPABASE_URL || 'https://eqfmeavkefflwmzihqkd.supabase.co'
+  return `${url.replace(/\/$/, '')}/storage/v1/object/public/recipes`
+})()
+
 export async function loadRecipe(relativePath: string): Promise<Recipe | null> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -217,7 +230,8 @@ export async function loadRecipe(relativePath: string): Promise<Recipe | null> {
       const res = await api.loadRecipe(relativePath)
       if (res?.ok && res.recipe) return res.recipe as Recipe
     }
-    const res = await fetch(`./recipes/${relativePath}`, { cache: 'force-cache' })
+    // Web fallback — Supabase Storage CDN
+    const res = await fetch(`${SUPABASE_RECIPES_BASE}/${relativePath}`, { cache: 'force-cache' })
     if (!res.ok) return null
     return (await res.json()) as Recipe
   } catch {

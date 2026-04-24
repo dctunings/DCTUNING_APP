@@ -7,7 +7,7 @@
 // behave inconsistently with symlinks. A copy is boring and portable.
 // The copies in public/ are gitignored to avoid committing 43MB twice.
 
-import { readdirSync, copyFileSync, mkdirSync, existsSync, statSync, cpSync } from 'node:fs'
+import { readdirSync, copyFileSync, mkdirSync, existsSync, statSync } from 'node:fs'
 import { join, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -43,27 +43,19 @@ if (existsSync(MULTS_SRC)) {
   console.warn(`[copy-web-catalogs] map-multipliers.json missing — Tier 2 will fall back to category defaults in the web build`)
 }
 
-// 3. Copy recipe library (manifest + ~2,200 per-variant recipes, ~215 MB).
-// Uses cpSync recursive for the per-partnumber subdirectories.
-const RECIPES_SRC = resolve(__dirname, '..', 'resources', 'recipes')
-const RECIPES_DST = resolve(__dirname, '..', 'src', 'renderer', 'public', 'recipes')
-if (existsSync(RECIPES_SRC)) {
-  mkdirSync(RECIPES_DST, { recursive: true })
-  cpSync(RECIPES_SRC, RECIPES_DST, { recursive: true, force: true })
-  // Approximate count+size for logging
-  let recipeCount = 0, recipeBytes = 0
-  function walk(dir) {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const p = join(dir, entry.name)
-      if (entry.isDirectory()) walk(p)
-      else if (entry.isFile() && entry.name.endsWith('.json')) {
-        recipeCount++
-        recipeBytes += statSync(p).size
-      }
-    }
-  }
-  walk(RECIPES_DST)
-  console.log(`[copy-web-catalogs] copied ${recipeCount} recipe files (${(recipeBytes / 1024 / 1024).toFixed(1)} MB) → ${RECIPES_DST}`)
+// 3. Copy ONLY the recipe manifest (~560 KB) — full recipe tree lives in
+// Supabase Storage `recipes` bucket since v3.15.4 (no longer bundled in the
+// web build). The manifest still needs to be bundled because the app loads
+// it on startup to populate the variant lookup, and shipping it as a static
+// asset is faster than another Supabase round-trip.
+const MANIFEST_SRC = resolve(__dirname, '..', 'resources', 'recipes', 'manifest.json')
+const MANIFEST_DST_DIR = resolve(__dirname, '..', 'src', 'renderer', 'public', 'recipes')
+const MANIFEST_DST = join(MANIFEST_DST_DIR, 'manifest.json')
+if (existsSync(MANIFEST_SRC)) {
+  mkdirSync(MANIFEST_DST_DIR, { recursive: true })
+  copyFileSync(MANIFEST_SRC, MANIFEST_DST)
+  const kb = (statSync(MANIFEST_SRC).size / 1024).toFixed(1)
+  console.log(`[copy-web-catalogs] copied recipe manifest (${kb} KB) → ${MANIFEST_DST}`)
 } else {
-  console.warn(`[copy-web-catalogs] recipes missing: ${RECIPES_SRC}`)
+  console.warn(`[copy-web-catalogs] recipe manifest missing: ${MANIFEST_SRC}`)
 }
