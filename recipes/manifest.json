@@ -401,10 +401,10 @@
     "stage": 1,
     "oriHash": "aa19c9035fee0c3780070b9139892583bf238558a38d554d58a02c63de6d8340",
     "oriSize": 1048576,
-    "regions": 45,
-    "totalBytesChanged": 2269,
+    "regions": 1913,
+    "totalBytesChanged": 735024,
     "path": "022906032BF/null_stage1.json",
-    "sourceTunedFile": "VW_Touareg_3.2L_V6_2002_Benzin___161.8KWKW_Bosch_0261207566_022906032BF_387682_59BE.Stage1"
+    "sourceTunedFile": "VW_Touareg_3.2i V6_ME7.1.1_022906032BF_378850_stage1_E2.bin"
   },
   {
     "partNumber": "022906032BF",
@@ -3118,10 +3118,10 @@
     "stage": 1,
     "oriHash": "4ccda7e0f83a765a894e2f4680449ff75e0b19acacdeb3cb7ef2f6ab84d0fbeb",
     "oriSize": 1048576,
-    "regions": 268,
-    "totalBytesChanged": 2855,
+    "regions": 233,
+    "totalBytesChanged": 5448,
     "path": "038906016M/null_stage1.json",
-    "sourceTunedFile": "VW_Transporter_T5_2002_Turbodiesel___77.2KWKW_Bosch_0281011856_038906016M__371272_6E0F.Stage1"
+    "sourceTunedFile": "VW_Transporter_1.9 TDI PD_EDC16U1_038906016M _371272_stage1_noEGR.bin"
   },
   {
     "partNumber": "038906016T",
@@ -4141,10 +4141,10 @@
     "stage": 1,
     "oriHash": "34eece20598d9e9ddcbf23d244cc47385a70f4eb1143bb47f5b25a71f2f277aa",
     "oriSize": 524288,
-    "regions": 133,
-    "totalBytesChanged": 2972,
+    "regions": 132,
+    "totalBytesChanged": 2620,
     "path": "038906019CJ/null_stage1.json",
-    "sourceTunedFile": "VW_Golf_19TDI_2000_Turbodiesel___84.6KWKW_Bosch_0281010302_038906019CJ_354461_5B8B.Stage1"
+    "sourceTunedFile": "VW Bora 1.9TDI AJM 115HP 038906019CJ 0281010302 352930.stage1"
   },
   {
     "partNumber": "038906019CJ",
@@ -8266,10 +8266,10 @@
     "stage": 1,
     "oriHash": "e410b72e4e217225e3e6c9f251301147939020e5b2358f30d433c059e2567165",
     "oriSize": 2097152,
-    "regions": 282,
-    "totalBytesChanged": 1174796,
+    "regions": 263,
+    "totalBytesChanged": 1175536,
     "path": "03G906021AN/null_stage1.json",
-    "sourceTunedFile": "VW_Passat_1.9_TDI_2005_Turbodiesel___77.2KWKW_Bosch_0281012085_03G906021AN_374452_BB94.Stage1"
+    "sourceTunedFile": "VW_Passat_1.9 TDI PD_EDC16U31_03G906021AN_382088_stage1_noegr.bin"
   },
   {
     "partNumber": "03G906021AN",
@@ -10939,10 +10939,10 @@
     "stage": 1,
     "oriHash": "7b87f58de785dff82cdfec195a3dc4d67472ba10cde99d7d5634dc30c5f621ff",
     "oriSize": 2097152,
-    "regions": 748,
-    "totalBytesChanged": 341290,
+    "regions": 285,
+    "totalBytesChanged": 4753,
     "path": "03L906022B/null_stage1.json",
-    "sourceTunedFile": "Audi_A4_2.0_TDI_CR_2017_Turbo-Diesel__105.2KWKW_Bosch__03L906022B__516684_A45A.Stage1+++"
+    "sourceTunedFile": "Audi_A4_2.0 TDI PD_EDC17CP14_03L906022B _396484_stage1_nodpf_noegr.bin"
   },
   {
     "partNumber": "03L906022B",
@@ -11082,10 +11082,10 @@
     "stage": 1,
     "oriHash": "aaef92461f2a1adb238bd44fa0835dfaeba65c6eb080979f93e85bb044f881b5",
     "oriSize": 2097152,
-    "regions": 641,
-    "totalBytesChanged": 7264,
+    "regions": 4955,
+    "totalBytesChanged": 1553673,
     "path": "03L906022CC/null_stage1.json",
-    "sourceTunedFile": "VW_Transporter_2.0_TDI_CR_DPF__Turbo-Diesel___75KWKW_Bosch__03L906022CC_518130_ED0B.Stage1"
+    "sourceTunedFile": "VW_Transporter_2.0 TDI CR_EDC17CP20_03L906022CC_535349_stage1_noEGR.bin"
   },
   {
     "partNumber": "03L906022CD",
@@ -11093,10 +11093,10 @@
     "stage": 1,
     "oriHash": "a395b1489292ccd65acb9e91c02bfe0ce166956e8a91e8b60671476c6b47e0e5",
     "oriSize": 2097152,
-    "regions": 210,
-    "totalBytesChanged": 1718207,
+    "regions": 5008,
+    "totalBytesChanged": 1617831,
     "path": "03L906022CD/null_stage1.json",
-    "sourceTunedFile": "VW_Transporter_2.0_TDI_CR___2011_Turbo-Diesel__75KWKW_Bosch__03L906022CD_518131_60A6.Stage1"
+    "sourceTunedFile": "VW_Transporter_2.0 TDI CR DPF_EDC17CP20_03L906022CD_535350_stage1_noDPF_noEGR.bin"
   },
   {
     "partNumber": "03L906022CD",
@@ -14668,10 +14668,10 @@
     "stage": 1,
     "oriHash": "f3bdf6cb0a1bb31fd81a4f12ad28a84990fc38c56fbd169a7624399584adc007",
     "oriSize": 2097152,
-    "regions": 90,
-    "totalBytesChanged": 1545,
+    "regions": 1296,
+    "totalBytesChanged": 1505172,
     "path": "06F906056FB/null_stage1.json",
-    "sourceTunedFile": "VW_Passat_2.0_FSI__Benzin___110.3KWKW_Bosch_0261S02261_06F906056FB_380534_EC48.Stage1"
+    "sourceTunedFile": "VW_Passat_2.0 FSI_MED9.5.10_06F906056FB_395043_stage1_noCAT_noSAP_noEGR_NOxoff.bin"
   },
   {
     "partNumber": "06J906026AB",
@@ -15427,10 +15427,10 @@
     "stage": 1,
     "oriHash": "bdb2da0c15db975749ff6a5d54ee8833a320dd55a00369a9c7003b98ae95472d",
     "oriSize": 524288,
-    "regions": 79,
-    "totalBytesChanged": 1756,
+    "regions": 61,
+    "totalBytesChanged": 737,
     "path": "074906018B/null_stage1.json",
-    "sourceTunedFile": "VW_Transporter_T4_2002_Turbodiesel___64.7KWKW_Bosch_0281010084_074906018B___F9B9.Stage1"
+    "sourceTunedFile": "VW_Transporter_2.5 TDI_EDC15V_074906018B _stage1_noEGR.bin"
   },
   {
     "partNumber": "074906018BG",
