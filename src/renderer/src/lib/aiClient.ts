@@ -22,6 +22,8 @@ const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages'
 const ANTHROPIC_VERSION = '2023-06-01'
 const DEFAULT_MODEL = 'claude-sonnet-4-5'
 const DEFAULT_MAX_TOKENS = 1024
+// v3.15.1: match aiService.ts — prevents hung UI when Anthropic is slow/unreachable.
+const FETCH_TIMEOUT_MS = 60_000
 
 // ── Types (mirror src/main/aiService.ts so the shape stays identical) ────
 export type AIRole = 'user' | 'assistant'
@@ -135,6 +137,8 @@ async function askFromBrowser(params: AskParams): Promise<AskResult> {
     return { ok: false, error: 'At least one user message is required.' }
   }
 
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
   try {
     const res = await fetch(ANTHROPIC_URL, {
       method: 'POST',
@@ -153,6 +157,7 @@ async function askFromBrowser(params: AskParams): Promise<AskResult> {
         messages: safeMessages,
         ...(params.tools && params.tools.length > 0 ? { tools: params.tools } : {}),
       }),
+      signal: controller.signal,
     })
 
     if (!res.ok) {
@@ -183,8 +188,14 @@ async function askFromBrowser(params: AskParams): Promise<AskResult> {
         : undefined,
     }
   } catch (e: unknown) {
+    // AbortError fires when the timeout trips; distinguish from other failures
+    if (e instanceof Error && (e.name === 'AbortError' || e.message.toLowerCase().includes('abort'))) {
+      return { ok: false, error: `Request timed out after ${FETCH_TIMEOUT_MS / 1000}s. Check your connection, or try again with a smaller question.` }
+    }
     const msg = e instanceof Error ? e.message : 'Request failed.'
     return { ok: false, error: msg }
+  } finally {
+    clearTimeout(timeoutId)
   }
 }
 

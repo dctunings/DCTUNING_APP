@@ -108,6 +108,10 @@ function getApiKey(): string | null {
 // ── Claude Messages API call ──────────────────────────────────────────────
 const DEFAULT_MODEL = 'claude-sonnet-4-5'   // good balance of quality + cost for tuning Q&A
 const DEFAULT_MAX_TOKENS = 1024
+// v3.15.1: hard ceiling on a single Claude API call. Without this, a stuck
+// connection hangs the chat spinner indefinitely. 60s is comfortably above
+// typical latency (tool-use turns land in 3-10s) but below "user rage-quit".
+const FETCH_TIMEOUT_MS = 60_000
 
 export async function ask(params: AskParams): Promise<AskResult> {
   const key = getApiKey()
@@ -124,6 +128,8 @@ export async function ask(params: AskParams): Promise<AskResult> {
     return { ok: false, error: 'At least one user message is required.' }
   }
 
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -139,6 +145,7 @@ export async function ask(params: AskParams): Promise<AskResult> {
         messages: safeMessages,
         ...(params.tools && params.tools.length > 0 ? { tools: params.tools } : {}),
       }),
+      signal: controller.signal,
     })
 
     if (!res.ok) {
@@ -169,7 +176,13 @@ export async function ask(params: AskParams): Promise<AskResult> {
         : undefined,
     }
   } catch (e: unknown) {
+    // AbortError fires when the timeout trips; distinguish from other failures
+    if (e instanceof Error && (e.name === 'AbortError' || e.message.toLowerCase().includes('abort'))) {
+      return { ok: false, error: `Request timed out after ${FETCH_TIMEOUT_MS / 1000}s. Check your connection, or try again with a smaller question.` }
+    }
     const msg = e instanceof Error ? e.message : 'Request failed.'
     return { ok: false, error: msg }
+  } finally {
+    clearTimeout(timeoutId)
   }
 }
