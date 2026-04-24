@@ -7,6 +7,9 @@ dist
 # by scripts/copy-web-catalogs.mjs (from resources/vag-signatures/ which IS checked in).
 # Don't commit the copies — they're build artifacts, not source.
 src/renderer/public/vag-signatures/
+# v3.14: map-multipliers.json gets copied to public/ by copy-web-catalogs for web build.
+# Real source lives in resources/map-multipliers.json (committed); public/ copy is build artifact.
+src/renderer/public/map-multipliers.json
 # v3.12.0: recipe library. ~215 MB total of per-variant tune deltas. Too big to commit.
 # Only the manifest.json (~460KB) is committed — it indexes recipes by (partNumber, hash).
 # Individual recipe files are built from C:/temp/extract_recipes.js and deployed via

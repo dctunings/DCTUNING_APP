@@ -20,10 +20,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 
-// v3.12.1: walk ALL of Damo's pair sources recursively. Earlier version only hit
-// one brand folder under Tuning_DB_BIN — missed D:/audi-package, DAMOS packs,
-// ECU Dumps and EEPROMs, VW tuning collection, 2017.2019 archive, and the
-// Desktop-side DATABASE copy. This covers every source documented in memory.
+// v3.12.1+v3.14.1: all of Damo's pair sources + the Damos-Big-Archive (desktop +
+// its RAR-extracted contents). See memory/stage_engine.md for the full list of
+// sources covered.
 const ROOTS = [
   'D:/DATABASE/Tuning_DB_BIN',                                 // recurses into all 35 brand subfolders
   'D:/audi-package',                                           // Audi-focused pairs + DAMOS
@@ -34,6 +33,8 @@ const ROOTS = [
   'D:/Vw VOLKSWAGEN  ECU Map Tuning Files Stage 1 + Stage 2  Remap Files Collection TESTED',
   'D:/2017.2019',                                              // 2017-2019 pair archive
   'C:/Users/damoc/Desktop/DATABASE/Tuning_DB_BIN',             // Desktop copy (if present)
+  'C:/Users/damoc/Desktop/Damos-Big-Archive',                  // v3.14.1 — added Apr 24 2026
+  'D:/dctuning-scan/damos_rar_extract',                        // extracted contents of 2,305 RAR archives
 ]
 // Files under this size aren't ECU binaries worth recipe-ing (need at least 64KB
 // for a meaningful tune). Also caps at 12 MB to skip .ols/.zip/.odx archives.

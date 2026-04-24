@@ -158,6 +158,8 @@ const ROOTS = [
   'D:/Vw VOLKSWAGEN  ECU Map Tuning Files Stage 1 + Stage 2  Remap Files Collection TESTED',
   'D:/2017.2019',
   'C:/Users/damoc/Desktop/DATABASE/Tuning_DB_BIN',
+  'C:/Users/damoc/Desktop/Damos-Big-Archive',      // v3.14.1 — added Apr 24 2026
+  'D:/dctuning-scan/damos_rar_extract',             // extracted RAR contents
 ]
 const MIN_SIZE = 64 * 1024
 const MAX_SIZE = 12 * 1024 * 1024
@@ -213,7 +215,12 @@ for (const root of ROOTS) {
 console.log(`[multipliers] ${groups.size} variant groups formed`)
 
 // ───────── Process each pair: scan ORI, compute per-map multipliers for tuned ─────────
-// Structure: { mapName: { stage1: [1.12, 1.15, ...], stage2: [...], stage3: [...] } }
+// v3.14: per-family partition fixes cross-family pollution.
+// Old behaviour: key on mapName only, so LADSOLL from EDC16 and LADSOLL from ME7
+//   merged into one bucket. Their actual tuning behaviour differs.
+// New behaviour: key on (family, name). At the end we also emit a cross-family
+//   aggregate per name (family = '*') as a safety fallback for stage engine.
+// Structure: Map<`${family}::${name}`, { family, name, stage1[], stage2[], stage3[] }>
 const multipliers = new Map()
 
 let pairsProcessed = 0
@@ -265,10 +272,11 @@ for (const [key, g] of groups) {
       if (!isFinite(mult) || mult < 0.3 || mult > 3.0) continue
 
       mapsSeen++
-      let entry = multipliers.get(name)
+      const famKey = `${detectedFam}::${name}`
+      let entry = multipliers.get(famKey)
       if (!entry) {
         entry = { name, family: detectedFam, stage1: [], stage2: [], stage3: [] }
-        multipliers.set(name, entry)
+        multipliers.set(famKey, entry)
       }
       if (t.stage >= 1 && t.stage <= 3) {
         entry[`stage${t.stage}`].push(mult)
@@ -278,7 +286,7 @@ for (const [key, g] of groups) {
 }
 
 console.log(`[multipliers] processed ${pairsProcessed} tuned files, ${mapsSeen} (map, tune) observations`)
-console.log(`[multipliers] ${multipliers.size} unique map names`)
+console.log(`[multipliers] ${multipliers.size} unique (family, name) pairs`)
 
 // ───────── Compute statistics per (mapName, stage) ─────────
 function median(arr) {
@@ -295,6 +303,7 @@ function percentile(arr, p) {
 }
 
 const out = []
+// Per-family entries (one per (family, name) pair)
 for (const { name, family, stage1, stage2, stage3 } of multipliers.values()) {
   const entry = { name, family, count: { s1: stage1.length, s2: stage2.length, s3: stage3.length } }
   if (stage1.length >= 2) entry.stage1 = { median: median(stage1), p25: percentile(stage1, 0.25), p75: percentile(stage1, 0.75), n: stage1.length }
@@ -303,8 +312,28 @@ for (const { name, family, stage1, stage2, stage3 } of multipliers.values()) {
   // Only include maps with at least one stage having n>=2 (statistical significance floor)
   if (entry.stage1 || entry.stage2 || entry.stage3) out.push(entry)
 }
-// Sort by name for stable diffs
-out.sort((a, b) => a.name.localeCompare(b.name))
+
+// v3.14: also emit cross-family aggregates (family = '*') so the stage engine
+// can fall back to them when a user's family doesn't have enough observations
+// for a specific map name. Same statistical floor (n>=2 per stage).
+const crossFamily = new Map() // name -> { stage1[], stage2[], stage3[] }
+for (const { name, stage1, stage2, stage3 } of multipliers.values()) {
+  let agg = crossFamily.get(name)
+  if (!agg) { agg = { name, stage1: [], stage2: [], stage3: [] }; crossFamily.set(name, agg) }
+  agg.stage1.push(...stage1)
+  agg.stage2.push(...stage2)
+  agg.stage3.push(...stage3)
+}
+for (const { name, stage1, stage2, stage3 } of crossFamily.values()) {
+  const entry = { name, family: '*', count: { s1: stage1.length, s2: stage2.length, s3: stage3.length } }
+  if (stage1.length >= 2) entry.stage1 = { median: median(stage1), p25: percentile(stage1, 0.25), p75: percentile(stage1, 0.75), n: stage1.length }
+  if (stage2.length >= 2) entry.stage2 = { median: median(stage2), p25: percentile(stage2, 0.25), p75: percentile(stage2, 0.75), n: stage2.length }
+  if (stage3.length >= 2) entry.stage3 = { median: median(stage3), p25: percentile(stage3, 0.25), p75: percentile(stage3, 0.75), n: stage3.length }
+  if (entry.stage1 || entry.stage2 || entry.stage3) out.push(entry)
+}
+
+// Sort by (name, family) for stable diffs. '*' comes before real families (asterisk < letters in ASCII).
+out.sort((a, b) => a.name.localeCompare(b.name) || a.family.localeCompare(b.family))
 
 fs.writeFileSync(OUT_PATH, JSON.stringify(out, null, 1))
 const sizeKb = (fs.statSync(OUT_PATH).size / 1024).toFixed(1)
