@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import fs from 'fs'
-import { spawn } from 'child_process'
+import { spawn, execSync } from 'child_process'
 
 // NOTE: previously here was a block that auto-relaunched the app as Administrator on
 // every startup (net session check → PowerShell Start-Process -Verb RunAs → app.quit()).

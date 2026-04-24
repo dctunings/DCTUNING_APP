@@ -1,5 +1,13 @@
 /**
  * classify-drts.mjs
+ *
+ * ⚠️  COMPLETED ONE-SHOT — DO NOT RE-RUN ON PRODUCTION.
+ * This script finished its task (classifying ~300+ NULL-family DRT files) in v3.15.
+ * Re-running would re-download and re-upsert rows that are already correct and could
+ * thrash the rate limiter. Kept in source tree for audit/reproducibility only.
+ * If you genuinely need to re-run, first verify which rows are still NULL with:
+ *   SELECT COUNT(*) FROM definitions_index WHERE ecu_family IS NULL;
+ *
  * One-time background indexer — classifies all NULL-family DRT files in Supabase
  * by downloading each file, parsing its map codes and address range, and updating
  * the definitions_index table with the correct ECU family.
