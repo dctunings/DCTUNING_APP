@@ -22,6 +22,7 @@ import SubscriptionGate from './components/SubscriptionGate'
 import WebLanding from './pages/WebLanding'
 import LoginScreen from './components/LoginScreen'
 import WebOnlyBanner, { isWebMode } from './components/WebOnlyBanner'
+import AIChatSidebar, { type ChatContext } from './components/AIChatSidebar'
 import type { ActiveVehicle } from './lib/vehicleContext'
 import { useAuth } from './lib/useAuth'
 import { useSubscription } from './lib/useSubscription'
@@ -99,6 +100,43 @@ export default function App() {
   const [activeVehicle, setActiveVehicle] = useState<ActiveVehicle | null>(null)
   const [ecuFile, setEcuFile] = useState<EcuFileState | null>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  // v3.14 Phase B: AI chat sidebar state. The panel is global so it follows the
+  // user across pages — context is assembled from the currently-loaded ECU file
+  // and the last tune applied in RemapBuilder.
+  const [aiChatOpen, setAiChatOpen] = useState(false)
+  const [lastTuneSummary, setLastTuneSummary] =
+    useState<import('./pages/RemapBuilder').RemapTuneSummary | null>(null)
+  // Phase B.3 / B.6 — pending quick-prompt or custom-prompt action. Set when a
+  // child component (RemapBuilder tile, Zone Editor) asks the chat to run a
+  // prompt; the chat consumes + clears it on open.
+  const [pendingAIAction, setPendingAIAction] =
+    useState<'explain' | 'warnings' | 'safety' | { prompt: string } | null>(null)
+
+  const aiContext: ChatContext = {
+    fileName: ecuFile?.fileName,
+    ecuDef: null,  // TODO: lift ecuDef from RemapBuilder on Phase B.4
+    stage: lastTuneSummary?.stage ?? null,
+    tier: lastTuneSummary?.tier ?? null,
+    mapsModified: lastTuneSummary?.mapsModified,
+    remapSummary: lastTuneSummary ? {
+      boostChangePct: lastTuneSummary.boostChangePct,
+      fuelChangePct: lastTuneSummary.fuelChangePct,
+      torqueChangePct: lastTuneSummary.torqueChangePct,
+      perMap: lastTuneSummary.perMap,
+      validationWarnings: lastTuneSummary.validationWarnings,
+      sourceDescription: lastTuneSummary.sourceDescription,
+    } : undefined,
+  }
+
+  const handleAskAI = (action: 'explain' | 'warnings' | 'safety') => {
+    setPendingAIAction(action)
+    setAiChatOpen(true)
+  }
+  // Phase B.6 — custom prompt path used by the Zone Editor "Ask AI" button
+  const handleAskAICustom = (prompt: string) => {
+    setPendingAIAction({ prompt })
+    setAiChatOpen(true)
+  }
   const { user, loading: authLoading, signIn, signUp, signOut, resetPassword } = useAuth()
 
   const {
@@ -143,7 +181,7 @@ export default function App() {
       case 'unlock':       return <ECUUnlock connected={connected} activeVehicle={activeVehicle} />
       case 'devices':      return <DeviceLibrary />
       case 'driversetup':  return <DriverSetupPage />
-      case 'remap':        return <RemapBuilder onEcuLoaded={setEcuFile} />
+      case 'remap':        return <RemapBuilder onEcuLoaded={setEcuFile} onTuneApplied={setLastTuneSummary} onAskAI={handleAskAI} onAskAICustom={handleAskAICustom} />
       case 'ecuflash':     return <ECUFlashManager connected={connected} activeVehicle={activeVehicle} />
       case 'pricing':
         return (
@@ -282,6 +320,30 @@ export default function App() {
           </SubscriptionGate>
         </div>
       </div>
+
+      {/* v3.14 Phase B.1 — AI Copilot. Floating trigger + right-docked panel. */}
+      {!aiChatOpen && (
+        <button
+          onClick={() => setAiChatOpen(true)}
+          aria-label="Open AI tuning copilot"
+          style={{
+            position: 'fixed', right: 18, bottom: 18, zIndex: 999,
+            width: 54, height: 54, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #00aec8, #7c3aed)',
+            color: '#000', border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 6px 18px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.08)',
+            fontSize: 14, fontWeight: 900, letterSpacing: 0.5,
+          }}
+        >AI</button>
+      )}
+      <AIChatSidebar
+        open={aiChatOpen}
+        onClose={() => setAiChatOpen(false)}
+        context={aiContext}
+        pendingAction={pendingAIAction}
+        onActionConsumed={() => setPendingAIAction(null)}
+      />
     </div>
   )
 }

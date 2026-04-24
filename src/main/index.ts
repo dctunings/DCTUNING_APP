@@ -39,6 +39,7 @@ import {
   type ECUIdentification,
 } from './j2534Manager'
 import { scanSignatures, getCatalogStats } from './vagSignatureScanner'
+import { ask as aiAsk, hasApiKey as aiHasKey, setApiKey as aiSetKey, clearApiKey as aiClearKey } from './aiService'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -80,6 +81,14 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
+
+  // ── AI copilot (v3.14 Phase B.2) ───────────────────────────────────────
+  // Key is encrypted with Electron safeStorage and lives in userData. Renderer
+  // never sees it — only invokes the verbs below.
+  ipcMain.handle('ai-ask', async (_e, params) => aiAsk(params))
+  ipcMain.handle('ai-has-key', () => aiHasKey())
+  ipcMain.handle('ai-set-key', (_e, key: string) => aiSetKey(key))
+  ipcMain.handle('ai-clear-key', () => aiClearKey())
 
   // IPC: Open file dialog for ECU files
   ipcMain.handle('open-ecu-file', async () => {

@@ -73,6 +73,24 @@ const api = {
   // ─── File Utilities ───────────────────────────────────────────────────────
   readFileBytes: (filePath: string, maxBytes: number) => ipcRenderer.invoke('read-file-bytes', filePath, maxBytes),
 
+  // ─── AI copilot (v3.14 Phase B.2) ────────────────────────────────────────
+  // Thin IPC shims. Renderer can ask the LLM, manage the API key, but never
+  // sees the key itself — it lives encrypted in main via safeStorage.
+  ai: {
+    // Note: content can be a string (simple text) or an array of content blocks
+    // (for tool-use turns). Renderer builds the blocks; main just proxies.
+    ask: (params: {
+      messages: { role: 'user' | 'assistant'; content: unknown }[]
+      system?: string
+      model?: string
+      maxTokens?: number
+      tools?: { name: string; description: string; input_schema: Record<string, unknown> }[]
+    }) => ipcRenderer.invoke('ai-ask', params),
+    hasKey: () => ipcRenderer.invoke('ai-has-key'),
+    setKey: (key: string) => ipcRenderer.invoke('ai-set-key', key),
+    clearKey: () => ipcRenderer.invoke('ai-clear-key'),
+  },
+
   // ─── Memory store (scanner fingerprint DB) ───────────────────────────────
   // Local SQLite DB of confirmed map fingerprints. Scanner queries it on every
   // load so confirmed maps auto-identify on future binaries. Default location

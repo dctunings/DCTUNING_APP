@@ -31,7 +31,19 @@ if (existsSync(CATALOGS_SRC)) {
   console.warn(`[copy-web-catalogs] VAG catalogs missing: ${CATALOGS_SRC}`)
 }
 
-// 2. Copy recipe library (manifest + ~2,200 per-variant recipes, ~215 MB).
+// 2. Copy map-multipliers.json (v3.14 Tier 2 library). ~3.3 MB. Web loader
+// fetches this at /map-multipliers.json when the Electron IPC path is absent.
+const MULTS_SRC = resolve(__dirname, '..', 'resources', 'map-multipliers.json')
+const MULTS_DST = resolve(__dirname, '..', 'src', 'renderer', 'public', 'map-multipliers.json')
+if (existsSync(MULTS_SRC)) {
+  copyFileSync(MULTS_SRC, MULTS_DST)
+  const kb = (statSync(MULTS_SRC).size / 1024).toFixed(1)
+  console.log(`[copy-web-catalogs] copied map-multipliers.json (${kb} KB) → ${MULTS_DST}`)
+} else {
+  console.warn(`[copy-web-catalogs] map-multipliers.json missing — Tier 2 will fall back to category defaults in the web build`)
+}
+
+// 3. Copy recipe library (manifest + ~2,200 per-variant recipes, ~215 MB).
 // Uses cpSync recursive for the per-partnumber subdirectories.
 const RECIPES_SRC = resolve(__dirname, '..', 'resources', 'recipes')
 const RECIPES_DST = resolve(__dirname, '..', 'src', 'renderer', 'public', 'recipes')

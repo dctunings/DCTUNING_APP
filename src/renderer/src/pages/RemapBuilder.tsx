@@ -219,6 +219,62 @@ function CatBadge({ cat }: { cat: string }) {
   )
 }
 
+// v3.14 Phase B.6 — Build a rich, self-contained prompt for the AI copilot
+// describing the currently-open map in the Zone Editor. Produces the exact
+// user-message text that the chat sidebar will run on open.
+function buildZoneAIPrompt(args: {
+  mapName: string
+  mapCategory: string
+  unit: string
+  factor: number
+  offsetVal: number
+  tuningMode: 'multiplier' | 'addend'
+  rows: number
+  cols: number
+  physData: number[][]
+  edits: Record<string, number>
+  stageMul: number
+  selection: { r1: number; r2: number; c1: number; c2: number } | null
+  axisXLabel?: string
+  axisYLabel?: string
+  axisXVals?: number[]
+  axisYVals?: number[]
+}): string {
+  // Compute phys-value min/max from the original data
+  let pMin = Infinity, pMax = -Infinity, sum = 0, count = 0
+  for (const row of args.physData) for (const v of row) {
+    if (!isFinite(v)) continue
+    if (v < pMin) pMin = v
+    if (v > pMax) pMax = v
+    sum += v; count++
+  }
+  const pMean = count > 0 ? sum / count : 0
+  const editCount = Object.keys(args.edits).length
+  const selLabel = args.selection
+    ? `Selection: rows ${args.selection.r1}-${args.selection.r2}, cols ${args.selection.c1}-${args.selection.c2}`
+    : 'No selection'
+
+  const lines: string[] = []
+  lines.push(`I'm editing a map in the Zone Editor. Advise me — what does this map do, which cells matter most, and what's risky to change?`)
+  lines.push('')
+  lines.push('## Map details')
+  lines.push(`- Name: ${args.mapName}`)
+  lines.push(`- Category: ${args.mapCategory}`)
+  lines.push(`- Shape: ${args.rows} rows × ${args.cols} cols`)
+  lines.push(`- Unit: ${args.unit || '(raw)'}`)
+  lines.push(`- Tuning mode: ${args.tuningMode}`)
+  if (args.axisXLabel || args.axisYLabel) {
+    lines.push(`- Axes: Y=${args.axisYLabel ?? '?'}, X=${args.axisXLabel ?? '?'}`)
+  }
+  if (isFinite(pMin) && isFinite(pMax)) {
+    lines.push(`- Physical value range: ${pMin.toFixed(2)} to ${pMax.toFixed(2)} ${args.unit || ''} (mean ${pMean.toFixed(2)})`)
+  }
+  lines.push(`- Stage default: ${args.tuningMode === 'multiplier' ? `×${args.stageMul.toFixed(3)}` : `+${args.stageMul} raw`}`)
+  lines.push(`- User edits: ${editCount} cell${editCount === 1 ? '' : 's'} overridden`)
+  lines.push(`- ${selLabel}`)
+  return lines.join('\n')
+}
+
 // ─── Zone Editor: ECM Titanium-style drag-select + Pg+/Pg- staircase ─────────
 // Each cell stores an absolute multiplier override. Drag to select a rectangle,
 // then Pg+ / Pg- applies the step% to every selected cell cumulatively.
@@ -256,9 +312,15 @@ interface ZoneEditorProps {
   tuningMode?: 'multiplier' | 'addend'
   // Default step size in the native unit (% for multiplier, physical unit for addend)
   defaultStep?: number
+  // v3.14 Phase B.6 — map metadata for AI copilot context
+  mapName?: string
+  mapCategory?: string
+  // v3.14 Phase B.6 — copilot trigger. When called with a prompt string, App opens
+  // the chat sidebar and runs that prompt as a pending action.
+  onAskAI?: (prompt: string) => void
 }
 
-function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, unit, axisXLabel, axisYLabel, axisXVals, axisYVals, onApply, onClearAll, tuningMode = 'multiplier', defaultStep }: ZoneEditorProps) {
+function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, unit, axisXLabel, axisYLabel, axisXVals, axisYVals, onApply, onClearAll, tuningMode = 'multiplier', defaultStep, mapName, mapCategory, onAskAI }: ZoneEditorProps) {
   const isAddendMode = tuningMode === 'addend'
   // ─── VIEW TRANSPOSE: ECM Titanium / WinOLS convention ─────────────────────
   // Binary Kf_ stores data as rows=Load/IQ (Y), cols=RPM (X). But professional
@@ -448,6 +510,33 @@ function ZoneEditor({ rows, cols, edits, stageMul, physData, factor, offsetVal, 
               ✕ Reset All
             </button>
           </>
+        )}
+        {/* v3.14 Phase B.6 — Ask AI copilot about this map */}
+        {onAskAI && (
+          <button
+            onClick={() => onAskAI(buildZoneAIPrompt({
+              mapName: mapName ?? '(unknown map)',
+              mapCategory: mapCategory ?? 'unknown',
+              unit, factor, offsetVal,
+              tuningMode: isAddendMode ? 'addend' : 'multiplier',
+              rows, cols,
+              physData,
+              edits,
+              stageMul,
+              selection: sel,
+              axisXLabel, axisYLabel, axisXVals, axisYVals,
+            }))}
+            style={{
+              marginLeft: editCount > 0 ? 0 : 'auto',
+              fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
+              border: '1px solid rgba(124,58,237,0.4)',
+              background: 'rgba(124,58,237,0.1)',
+              color: '#c4b5fd', cursor: 'pointer',
+            }}
+            title="Ask the AI copilot about this map"
+          >
+            💬 Ask AI
+          </button>
         )}
       </div>
 
@@ -646,8 +735,27 @@ function StepBar({ current }: { current: number }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-interface RemapBuilderProps { onEcuLoaded?: (state: EcuFileState) => void }
-export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
+// v3.14 Phase B.3 — summary shape shared with the AI chat sidebar. Keep minimal
+// and shippable (no binary data) so it's cheap to send on every change.
+export interface RemapTuneSummary {
+  stage: Stage
+  tier: import('../lib/stageEngine').StageTier
+  sourceDescription: string
+  boostChangePct: number
+  fuelChangePct: number
+  torqueChangePct: number
+  mapsModified: number
+  perMap: { name: string; category: string; avgChangePct: number; unit?: string }[]
+  validationWarnings: string[]
+}
+
+interface RemapBuilderProps {
+  onEcuLoaded?: (state: EcuFileState) => void
+  onTuneApplied?: (summary: RemapTuneSummary | null) => void
+  onAskAI?: (action: 'explain' | 'warnings' | 'safety') => void          // opens chat + runs quick-prompt
+  onAskAICustom?: (prompt: string) => void                                // opens chat + runs custom prompt (Zone Editor)
+}
+export default function RemapBuilder({ onEcuLoaded, onTuneApplied, onAskAI, onAskAICustom }: RemapBuilderProps) {
   const [step, setStep] = useState(0)
 
   // Step 0 state
@@ -767,6 +875,10 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
   const [unifiedBusy, setUnifiedBusy] = useState<Stage | null>(null)
   const [unifiedTier, setUnifiedTier] = useState<import('../lib/stageEngine').StageTier | null>(null)
   const [unifiedSource, setUnifiedSource] = useState<string>('')
+  // v3.14 refuse-if-unknown: surfaces the safety-gate message when a tune is declined
+  const [unifiedRefusal, setUnifiedRefusal] = useState<string | null>(null)
+  // v3.14 shape validator: surfaces warnings when the tune output looks off
+  const [unifiedValidation, setUnifiedValidation] = useState<import('../lib/stageEngine').ShapeValidation | null>(null)
 
   // Library search state
   const [libSearch, setLibSearch] = useState('')
@@ -1492,6 +1604,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
     setUnifiedBusy(stage)
     setUnifiedTier(null)
     setUnifiedSource('')
+    setUnifiedRefusal(null)
+    setUnifiedValidation(null)
     try {
       const { applyStageUnified } = await import('../lib/stageEngine')
       const result = await applyStageUnified({
@@ -1504,6 +1618,46 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
       })
       setUnifiedTier(result.tier)
       setUnifiedSource(result.sourceDescription)
+
+      // v3.14 safety gate: if the engine refused (not enough signal), short-circuit
+      // before checksum / DTC / download. remap is null on refuse.
+      if (result.tier === 'refused' || !result.remap) {
+        setUnifiedRefusal(result.refusalReason ?? 'Unsupported variant — no safe tune available.')
+        setRemapResult(null)
+        onTuneApplied?.(null)  // clear AI chat context — nothing to explain
+        return
+      }
+
+      // v3.14 shape validator: surface warnings if the output doesn't look like
+      // a typical Stage N tune. Hard severity → likely wrong; soft → worth a look.
+      if (result.validation && result.validation.severity !== 'ok') {
+        setUnifiedValidation(result.validation)
+      }
+
+      // v3.14 Phase B.3 — publish a shippable summary to the AI chat so "Explain
+      // this tune" has real context. Truncate per-map list to 30 (plenty for
+      // context without blowing token budget).
+      const remap = result.remap
+      const perMap = remap.changes
+        .filter(c => c.found && !c.skippedUniform && isFinite(c.avgChangePct) && c.avgChangePct !== 0)
+        .slice(0, 30)
+        .map(c => ({
+          name: c.mapDef.name,
+          category: c.mapDef.category,
+          avgChangePct: c.avgChangePct,
+          unit: c.mapDef.unit,
+        }))
+      onTuneApplied?.({
+        stage,
+        tier: result.tier,
+        sourceDescription: result.sourceDescription,
+        boostChangePct: remap.summary.boostChangePct,
+        fuelChangePct: remap.summary.fuelChangePct,
+        torqueChangePct: remap.summary.torqueChangePct,
+        mapsModified: remap.summary.mapsModified,
+        perMap,
+        validationWarnings: result.validation?.warnings ?? [],
+      })
 
       // Post-process: checksum correction (same as existing paths)
       const corrected = correctChecksum(result.remap.modifiedBuffer, selectedEcu)
@@ -2392,11 +2546,90 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
               )
             })}
           </div>
-          {unifiedTier && (
+          {unifiedTier && unifiedTier !== 'refused' && (
             <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text-muted)', textAlign: 'center' }}>
               Last tune used: <strong style={{ color: '#22c55e' }}>{unifiedTier}</strong> — {unifiedSource}
             </div>
           )}
+          {/* v3.14 Phase B.3 — Ask Copilot buttons appear after a successful tune */}
+          {unifiedTier && unifiedTier !== 'refused' && onAskAI && (
+            <div style={{ marginTop: 10, display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => onAskAI('explain')}
+                style={{
+                  fontSize: 11, padding: '5px 10px', borderRadius: 5,
+                  background: 'rgba(124,58,237,0.12)',
+                  border: '1px solid rgba(124,58,237,0.35)',
+                  color: '#c4b5fd', cursor: 'pointer', fontWeight: 600,
+                }}
+              >💬 Explain this tune</button>
+              {unifiedValidation && unifiedValidation.severity !== 'ok' && (
+                <button
+                  onClick={() => onAskAI('warnings')}
+                  style={{
+                    fontSize: 11, padding: '5px 10px', borderRadius: 5,
+                    background: 'rgba(234,179,8,0.12)',
+                    border: '1px solid rgba(234,179,8,0.35)',
+                    color: '#fde68a', cursor: 'pointer', fontWeight: 600,
+                  }}
+                >⚠ Explain warnings</button>
+              )}
+              <button
+                onClick={() => onAskAI('safety')}
+                style={{
+                  fontSize: 11, padding: '5px 10px', borderRadius: 5,
+                  background: 'rgba(0,174,200,0.12)',
+                  border: '1px solid rgba(0,174,200,0.35)',
+                  color: '#7dd3fc', cursor: 'pointer', fontWeight: 600,
+                }}
+              >🛡 Safety check</button>
+            </div>
+          )}
+          {unifiedRefusal && (
+            <div
+              style={{
+                marginTop: 12,
+                padding: 12,
+                background: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.35)',
+                borderRadius: 6,
+                fontSize: 12,
+                color: '#fca5a5',
+                lineHeight: 1.45,
+              }}
+            >
+              <div style={{ fontWeight: 700, marginBottom: 4, color: '#ef4444' }}>
+                Tune refused — unsupported variant
+              </div>
+              <div>{unifiedRefusal}</div>
+            </div>
+          )}
+          {unifiedValidation && unifiedValidation.severity !== 'ok' && (() => {
+            const hard = unifiedValidation.severity === 'hard'
+            return (
+              <div
+                style={{
+                  marginTop: 12,
+                  padding: 12,
+                  background: hard ? 'rgba(239, 68, 68, 0.08)' : 'rgba(234, 179, 8, 0.08)',
+                  border: `1px solid ${hard ? 'rgba(239, 68, 68, 0.35)' : 'rgba(234, 179, 8, 0.35)'}`,
+                  borderRadius: 6,
+                  fontSize: 12,
+                  color: hard ? '#fca5a5' : '#fde68a',
+                  lineHeight: 1.45,
+                }}
+              >
+                <div style={{ fontWeight: 700, marginBottom: 6, color: hard ? '#ef4444' : '#eab308' }}>
+                  {hard ? 'Tune shape warning — review before using' : 'Tune shape notice'}
+                </div>
+                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                  {unifiedValidation.warnings.map((w, i) => (
+                    <li key={i} style={{ marginBottom: 2 }}>{w}</li>
+                  ))}
+                </ul>
+              </div>
+            )
+          })()}
         </div>
       )}
 
@@ -3655,6 +3888,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                           axisYVals={yVals}
                           tuningMode={m.mapDef.tuningMode ?? 'multiplier'}
                           defaultStep={m.mapDef.zoneStep}
+                          mapName={m.mapDef.name}
+                          mapCategory={m.mapDef.category}
+                          onAskAI={onAskAICustom}
                           onApply={newEdits => setCellAnchors(prev => ({ ...prev, [m.mapDef.id]: newEdits }))}
                           onClearAll={() => setCellAnchors(prev => { const n = { ...prev }; delete n[m.mapDef.id]; return n })}
                         />
@@ -3843,6 +4079,9 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
                                         unit={m.mapDef.unit}
                                         axisXLabel="X"
                                         axisYLabel="Y"
+                                        mapName={m.mapDef.name}
+                                        mapCategory={m.mapDef.category}
+                                        onAskAI={onAskAICustom}
                                         onApply={(next) => setCellAnchors({ ...cellAnchors, [id]: next })}
                                         onClearAll={() => { const c = { ...cellAnchors }; delete c[id]; setCellAnchors(c); const cm = { ...customMultipliers }; delete cm[id]; setCustomMultipliers(cm) }}
                                       />
@@ -4066,6 +4305,8 @@ export default function RemapBuilder({ onEcuLoaded }: RemapBuilderProps) {
               // Clear library search state
               setLibSearch(''); setLibResults([]); setLibTotal(0); setLibPage(0)
               setLibFallbackNote(''); setLibOriginalNum(''); setLibLoadError('')
+              // v3.14: clear stage engine tier/refusal state so previous file's verdict doesn't bleed through
+              setUnifiedTier(null); setUnifiedSource(''); setUnifiedRefusal(null); setUnifiedValidation(null)
             }}
           >
             New File
