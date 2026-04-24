@@ -384,7 +384,9 @@ export function buildSmartStage(
   remap.modifiedBuffer = workingBuffer
 
   // 8. Count how many of the applied maps hit a physical clamp
-  const mapsClamped = countClampedMaps(remap.changes)
+  //    v3.15.2: pass the actual applied stage so clamp detection uses the right multiplier
+  //    instead of always assuming Stage 1. Previously Stage 2/3 tunes showed wrong counts.
+  const mapsClamped = countClampedMaps(remap.changes, stage)
 
   // 9. Anything the engine safety-gated out as uniform ends up in remap.summary.mapsBlockedUniform
   //    — we translate those back into skipped[] for a single unified diagnostics list.
@@ -440,13 +442,19 @@ function revertMapInBuffer(working: ArrayBuffer, original: ArrayBuffer, change: 
 // ─── Detect maps that saturated against their physical clamp ─────────────────
 // A map is "clamped" if any cell in the after-grid exactly equals clampMax (or clampMin)
 // AND that cell would have exceeded the clamp without capping (i.e. before*multiplier > clampMax).
-function countClampedMaps(changes: MapChange[]): number {
+// v3.15.2 — now takes the actual applied Stage so we check against the right stage's
+// multiplier + clampMax/clampMin. Previously hardcoded to stage1 which produced false
+// negatives on Stage 2/3 tunes (cells that saturated under Stage 3's 1.5× wouldn't
+// register because we were checking against Stage 1's 1.15× threshold).
+function countClampedMaps(changes: MapChange[], stage: Stage): number {
+  const stageKey = `stage${stage}` as 'stage1' | 'stage2' | 'stage3'
   let n = 0
   for (const c of changes) {
     if (!c.found || c.skippedUniform) continue
-    const mul = c.mapDef.stage1.multiplier ?? 1 // approx — we'd need the actual applied stage to be exact
-    const cmax = c.mapDef.stage1.clampMax
-    const cmin = c.mapDef.stage1.clampMin
+    const params = c.mapDef[stageKey] ?? c.mapDef.stage1
+    const mul = params.multiplier ?? 1
+    const cmax = params.clampMax
+    const cmin = params.clampMin
     if (cmax === undefined && cmin === undefined) continue
     let hit = false
     outer: for (let r = 0; r < c.afterRaw.length; r++) {

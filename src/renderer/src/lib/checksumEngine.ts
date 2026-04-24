@@ -415,6 +415,47 @@ export function correctChecksum(buffer: ArrayBuffer, ecuDef: EcuDef): ArrayBuffe
     // If block table unparseable, leave unchanged — safer than writing garbage.
   }
   // algo === 'none': do not touch — SIMOS18 and other complex-checksum ECUs
+  // algo === 'unknown': caller should have checked isChecksumSupported() first and surfaced
+  //                    a warning. We still return the buffer unchanged; producing garbage
+  //                    would be worse than an unchecksummed file.
 
   return copy
+}
+
+// ─── v3.15.2 — classify checksum algo support ────────────────────────────────
+// Lets callers (RemapBuilder) surface a warning BEFORE the user flashes when the
+// ECU's checksum algo isn't implemented. Without this, the buffer comes back
+// unchanged from correctChecksum() and the user has no idea.
+export type ChecksumSupport =
+  | { supported: true }
+  | { supported: false; reason: string; requiresExternalTool: boolean }
+
+export function checksumSupportInfo(algo: string | undefined): ChecksumSupport {
+  switch (algo) {
+    case 'bosch-crc32':
+    case 'continental-crc':
+    case 'bosch-me7':
+    case 'bosch-simple':
+    case 'ppd1-crc32':
+      return { supported: true }
+    case 'none':
+      // Deliberate passthrough — SIMOS18, PCR21, MG1 etc. flashed via external tool
+      return {
+        supported: false,
+        reason: 'This ECU uses a checksum scheme flashed externally (VW_Flash / boot-mode). The file passes through unchanged — do not flash directly.',
+        requiresExternalTool: true,
+      }
+    case 'unknown':
+      return {
+        supported: false,
+        reason: 'Checksum algorithm for this ECU is not yet reverse-engineered in this app. The file is returned unchanged and will likely be rejected by the ECU. Contact support before flashing.',
+        requiresExternalTool: true,
+      }
+    default:
+      return {
+        supported: false,
+        reason: `Unrecognised checksum algorithm "${algo}". The file is returned unchanged.`,
+        requiresExternalTool: true,
+      }
+  }
 }

@@ -3080,6 +3080,12 @@ export const ECU_DEFINITIONS: EcuDef[] = [
     identStrings: ['SM2F0L9500000', '03L906023PJ', '03L906023ND', 'CAYC'],
     fileSizeRange: [2097152, 2097152],
     vehicles: ['VW Touran 1.6 TDI CR 77kW (03L906023ND/PJ CAYC engine, 2010-2012)'],
+    // Checksum: PCR21 uses a complex Siemens scheme not reverse-engineered in this codebase.
+    // Passing through unchanged is safer than writing garbage. Flash via VW_Flash / boot-mode
+    // tool that handles PCR21 checksum repair externally (same pattern used for SIMOS18).
+    checksumAlgo: 'none',
+    checksumOffset: 0,
+    checksumLength: 0,
     maps: [
       {
         id: 'pcr21_touran_18ce5a_iq_unlock_a',

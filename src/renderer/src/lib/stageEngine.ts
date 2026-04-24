@@ -278,27 +278,48 @@ export async function applyStageUnified(params: {
     const { loadRecipe, applyRecipe } = await import('./recipeEngine')
     const recipe = await loadRecipe(recipeMatch.entry.path)
     if (recipe) {
-      const tuned = applyRecipe(buffer, recipe)
+      const applied = applyRecipe(buffer, recipe)
       const tier: StageTier = recipeMatch.confidence === 'exact' ? 'recipe-exact' : 'recipe-variant'
+      // v3.15.2 — surface any recipe regions that were skipped because they
+      // overran the user's buffer. Rare (usually means file-size mismatch on a
+      // 'part-only' confidence match) but critical to flag — a partial recipe
+      // apply is NOT a bit-exact reproduction.
+      const skippedCount = applied.skipped.length
+      const partialDesc = skippedCount > 0
+        ? ` (⚠ ${skippedCount}/${recipe.regions.length} regions skipped — out of bounds; output is PARTIAL, not bit-exact)`
+        : ''
+      const partialValidation = skippedCount > 0
+        ? {
+            severity: 'hard' as const,
+            warnings: [
+              `${skippedCount} of ${recipe.regions.length} recipe regions fell outside the buffer and were skipped. ` +
+              `Likely cause: the ORI file size differs from what the recipe was extracted against (variant/part-only match). ` +
+              `The output is NOT a faithful reproduction — do not flash without manual verification.`,
+            ],
+          }
+        : undefined
       return {
         tier,
         remap: {
           ecuDef, stage, addons, changes: [],
-          modifiedBuffer: tuned,
+          modifiedBuffer: applied.buffer,
           checksumWarning: false,
           summary: {
             boostChangePct: 0, fuelChangePct: 0, torqueChangePct: 0,
-            mapsModified: recipe.regions.length, mapsNotFound: 0, mapsBlockedUniform: 0,
+            mapsModified: recipe.regions.length - skippedCount,
+            mapsNotFound: 0,
+            mapsBlockedUniform: 0,
           },
         },
-        sourceDescription: `Applied proven tune from ${recipeMatch.entry.sourceTunedFile}`,
-        mapsModified: recipe.regions.length,
+        sourceDescription: `Applied proven tune from ${recipeMatch.entry.sourceTunedFile}${partialDesc}`,
+        mapsModified: recipe.regions.length - skippedCount,
         recipeRegions: recipe.regions.length,
         confidence: {
           verifiedMatches: verifiedMatches.length,
           libraryHits: 0,  // not computed on recipe path
           recipeAvailable: true,
         },
+        validation: partialValidation,
       }
     }
   }

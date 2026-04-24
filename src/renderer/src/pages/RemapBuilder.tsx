@@ -8,7 +8,7 @@ import { buildRemap, buildFilename } from '../lib/remapEngine'
 import type { Stage, AddonId, RemapResult } from '../lib/remapEngine'
 import { buildSmartStage } from '../lib/smartStageEngine'
 import type { SmartStageResult } from '../lib/smartStageEngine'
-import { verifyChecksum, correctChecksum, correctBlockChecksums } from '../lib/checksumEngine'
+import { verifyChecksum, correctChecksum, correctBlockChecksums, checksumSupportInfo, type ChecksumSupport } from '../lib/checksumEngine'
 import type { BlockCorrectionResult } from '../lib/checksumEngine'
 import { parseA2L, extractMapsFromA2L, detectBaseAddress, guessEcuFamily, ECU_BASE_ADDRESSES } from '../lib/a2lParser'
 import type { A2LParseResult, A2LMapDef } from '../lib/a2lParser'
@@ -802,6 +802,10 @@ export default function RemapBuilder({ onEcuLoaded, onTuneApplied, onAskAI, onAs
   // Step 4 state
   const [remapResult, setRemapResult] = useState<RemapResult | null>(null)
   const [blockResult, setBlockResult] = useState<BlockCorrectionResult | null>(null)
+  // v3.15.2 — surfaces checksum support info for the selected ECU so users on
+  // 'none' / 'unknown' algos see a clear "do not flash directly" warning instead
+  // of silently getting an uncorrected file.
+  const [checksumSupport, setChecksumSupport] = useState<ChecksumSupport | null>(null)
 
   // A2L state
   const [a2lResult, setA2lResult] = useState<A2LParseResult | null>(null)
@@ -903,6 +907,13 @@ export default function RemapBuilder({ onEcuLoaded, onTuneApplied, onAskAI, onAs
   const [scannerFallbackCount, setScannerFallbackCount] = useState(0)
 
   const selectedEcu: EcuDef | undefined = ECU_DEFINITIONS.find(e => e.id === selectedEcuId)
+
+  // v3.15.2 — recompute checksum support when the user-selected ECU changes so
+  // the UI can warn before the user hits "Apply Stage" on an ECU we can't checksum.
+  useEffect(() => {
+    if (selectedEcu) setChecksumSupport(checksumSupportInfo(selectedEcu.checksumAlgo))
+    else setChecksumSupport(null)
+  }, [selectedEcuId])
 
   // ─── File loading ─────────────────────────────────────────────────────────
   const processFile = useCallback((buf: ArrayBuffer, name: string) => {
@@ -1699,12 +1710,16 @@ export default function RemapBuilder({ onEcuLoaded, onTuneApplied, onAskAI, onAs
         return
       }
       // Apply deltas to a fresh copy of the ORI
-      const tuned = applyRecipe(fileBuffer, recipe)
+      const applied = applyRecipe(fileBuffer, recipe)
+      // v3.15.2: surface partial-apply warnings before checksum/UI render
+      if (applied.skipped.length > 0) {
+        console.warn(`[Recipe] ${applied.skipped.length}/${recipe.regions.length} regions skipped (out of bounds). Output is partial.`, applied.skipped)
+      }
       // Post-process: checksum correction (engine + block if applicable).
       // For 'exact' matches the checksums are already correct in the recipe
       // bytes, but running correctChecksum() is harmless and makes the flow
       // identical to manual/Smart Stage output.
-      const corrected = correctChecksum(tuned, selectedEcu)
+      const corrected = correctChecksum(applied.buffer, selectedEcu)
       const blockRes = correctBlockChecksums(corrected)
       setBlockResult(blockRes)
       // Build a minimal RemapResult so the existing Step 4 UI can render the output.
@@ -1716,13 +1731,13 @@ export default function RemapBuilder({ onEcuLoaded, onTuneApplied, onAskAI, onAs
         addons: [],
         changes: [],
         modifiedBuffer: corrected,
-        checksumWarning: false,
+        checksumWarning: applied.skipped.length > 0,  // v3.15.2: any partial apply = warn
         summary: {
           boostChangePct: 0,
           fuelChangePct: 0,
           torqueChangePct: 0,
-          mapsModified: recipe.regions.length,
-          mapsNotFound: 0,
+          mapsModified: recipe.regions.length - applied.skipped.length,  // reflect the partial count
+          mapsNotFound: applied.skipped.length,                          // surface as "not found"
           mapsBlockedUniform: 0,
         },
       })
@@ -2630,6 +2645,28 @@ export default function RemapBuilder({ onEcuLoaded, onTuneApplied, onAskAI, onAs
               </div>
             )
           })()}
+          {/* v3.15.2 — checksum-unsupported warning. Shown whenever the selected
+              ECU has algo 'none' or 'unknown' so the user knows the output cannot
+              be flashed directly without an external tool. */}
+          {checksumSupport && !checksumSupport.supported && (
+            <div
+              style={{
+                marginTop: 12,
+                padding: 12,
+                background: 'rgba(234, 179, 8, 0.08)',
+                border: '1px solid rgba(234, 179, 8, 0.35)',
+                borderRadius: 6,
+                fontSize: 12,
+                color: '#fde68a',
+                lineHeight: 1.45,
+              }}
+            >
+              <div style={{ fontWeight: 700, marginBottom: 4, color: '#eab308' }}>
+                ⚠ Checksum not auto-corrected for this ECU
+              </div>
+              <div>{checksumSupport.reason}</div>
+            </div>
+          )}
         </div>
       )}
 

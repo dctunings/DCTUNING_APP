@@ -127,33 +127,51 @@ export function findMatchingRecipes(
       }
     }
   }
-  // Sort: exact > variant > part-only; within each, stage 1 before 2 before 3
+  // Sort: exact > variant > part-only; within each, stage 1 before 2 before 3.
+  // v3.15.2: add stable tie-break on (partNumber, swNumber, path) so identical inputs
+  // ALWAYS produce identical outputs regardless of manifest JSON key order.
   const order: Record<RecipeMatch['confidence'], number> = { exact: 0, variant: 1, 'part-only': 2 }
   out.sort((a, b) => {
     if (order[a.confidence] !== order[b.confidence]) return order[a.confidence] - order[b.confidence]
-    return a.stage - b.stage
+    if (a.stage !== b.stage) return a.stage - b.stage
+    const ka = `${a.entry.partNumber}|${a.entry.swNumber}|${a.entry.path}`
+    const kb = `${b.entry.partNumber}|${b.entry.swNumber}|${b.entry.path}`
+    return ka.localeCompare(kb)
   })
   return out
 }
 
 // ─── Apply a recipe to an ORI buffer ────────────────────────────────────────
-// Returns a fresh ArrayBuffer with the tuner's Stage N transformation applied.
-// When confidence === 'exact', this produces bit-exact reproduction of the
-// source tuner file. For 'variant' / 'part-only' matches the user has been
-// warned; we still apply but output may differ from the original reference
-// tuner file if the calibration content differs between the two variants.
-export function applyRecipe(oriBuffer: ArrayBuffer, recipe: Recipe): ArrayBuffer {
+// Returns a fresh ArrayBuffer with the tuner's Stage N transformation applied,
+// plus any regions that were SKIPPED because they fell outside the buffer.
+// When confidence === 'exact' AND skipped is empty, this produces bit-exact
+// reproduction of the source tuner file. If regions were skipped the output
+// is PARTIAL — caller MUST surface a warning before flashing.
+//
+// v3.15.2: previously this function silently `continue`'d on bad regions,
+// producing a degraded tune with no caller feedback. Now the skipped list is
+// returned so the UI can flag it.
+export interface ApplyRecipeResult {
+  buffer: ArrayBuffer
+  skipped: RecipeRegion[]    // regions dropped because offset+size overran the buffer
+}
+
+export function applyRecipe(oriBuffer: ArrayBuffer, recipe: Recipe): ApplyRecipeResult {
   const out = oriBuffer.slice(0)
   const bytes = new Uint8Array(out)
+  const skipped: RecipeRegion[] = []
   for (const region of recipe.regions) {
-    if (region.offset < 0 || region.offset + region.size > bytes.length) continue
+    if (region.offset < 0 || region.offset + region.size > bytes.length) {
+      skipped.push(region)
+      continue
+    }
     // Decode hex → bytes, write at offset
     for (let i = 0; i < region.size; i++) {
       const byte = parseInt(region.bytesHex.substr(i * 2, 2), 16)
       if (!isNaN(byte)) bytes[region.offset + i] = byte
     }
   }
-  return out
+  return { buffer: out, skipped }
 }
 
 // ─── Fetch the recipe library manifest ──────────────────────────────────────
