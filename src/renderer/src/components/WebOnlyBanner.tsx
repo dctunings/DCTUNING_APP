@@ -30,8 +30,8 @@ export default function WebOnlyBanner({
   if (!isWebMode()) return null
 
   const bridgeAbsent = bridgeStatus === 'absent' || bridgeStatus === 'unknown'
-  // v0.1.0: bridge ships as source — installer arrives in v0.2.0. README has run-from-source instructions.
-  const bridgeDownloadUrl = 'https://github.com/dctunings/DCTUNING_APP/blob/main/dctuning-desktop/bridge/README.md'
+  // v0.1.0 ships as a bare .exe ZIP. v0.2.0 will replace this URL with an NSIS installer.
+  const bridgeDownloadUrl = 'https://raw.githubusercontent.com/dctunings/DCTUNING_APP/main/dctuning-desktop/bridge/releases/DCTuningBridge-v0.1.0-win-x64.zip'
 
   return (
     <div style={{

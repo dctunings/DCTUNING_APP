@@ -3,6 +3,7 @@ import VehicleStrip from '../components/VehicleStrip'
 import type { ActiveVehicle } from '../lib/vehicleContext'
 import { elm327 } from '../lib/elm327WebSerial'
 import { scanmatik, PROTOCOL as SM_PROTOCOL } from '../lib/scanmatikWebSerial'
+import { bridge } from '../lib/bridgeClient'
 
 interface Props {
   connected: boolean
@@ -105,6 +106,8 @@ export default function J2534PassThru({ connected, setConnected, activeVehicle }
     addLog('Scanning for serial ports and J2534 devices...', 'info')
     const api = (window as any).api
 
+    // Serial ports — Electron only (Web Serial doesn't enumerate ports
+    // until requestPort() shows the picker, which is a different UX path)
     const portsRaw: SerialPort[] = (await api?.listSerialPorts()) || []
     setSerialPorts(portsRaw)
 
@@ -114,11 +117,26 @@ export default function J2534PassThru({ connected, setConnected, activeVehicle }
         const mfr = p.manufacturer ? ` (${p.manufacturer})` : ''
         addLog(`  ${p.path}${mfr}`, 'info')
       }
-    } else {
+    } else if (api?.listSerialPorts) {
       addLog('No serial ports detected', 'warn')
     }
 
-    const j2534Raw: J2534Device[] = (await api?.scanJ2534()) || []
+    // J2534 devices — try Electron IPC first, fall back to local Bridge
+    let j2534Raw: J2534Device[] = []
+    if (api?.scanJ2534) {
+      j2534Raw = (await api.scanJ2534()) || []
+    } else if (bridge.isConnected()) {
+      // Web mode + bridge is up — same registry scan, just routed via WS
+      try {
+        const result = await bridge.request<J2534Device[]>('scan-devices')
+        j2534Raw = result || []
+        addLog('(Devices enumerated via local Bridge service)', 'info')
+      } catch (e) {
+        addLog(`Bridge scan failed: ${e instanceof Error ? e.message : String(e)}`, 'error')
+      }
+    } else {
+      addLog('J2534 device scan requires the desktop app or DCTuning Bridge', 'warn')
+    }
     setJ2534Devices(j2534Raw)
 
     if (j2534Raw.length > 0) {
@@ -128,7 +146,7 @@ export default function J2534PassThru({ connected, setConnected, activeVehicle }
         const exists = d.exists ? 'DLL OK' : 'DLL MISSING'
         addLog(`  ${id} — ${exists}`, d.exists ? 'info' : 'warn')
       }
-    } else {
+    } else if (api?.scanJ2534 || bridge.isConnected()) {
       addLog('No J2534 DLLs found in Windows registry (PassThruSupport.04.04)', 'info')
     }
 
@@ -147,21 +165,37 @@ export default function J2534PassThru({ connected, setConnected, activeVehicle }
     addLog(`DLL: ${device.dll}`, 'info')
 
     const api = (window as any).api
+    // Pick I/O backend: Electron IPC (desktop) → Bridge WebSocket (web with
+    // local Bridge service) → fail. The bridge gives web users full hardware
+    // access without needing the full desktop app — same code path under
+    // the hood since both end up calling j2534helper.exe.
+    const useElectron = !!api?.j2534Open
+    const useBridge   = !useElectron && bridge.isConnected()
+    if (!useElectron && !useBridge) {
+      addLog('No backend available — install the desktop app or run DCTuning Bridge', 'error')
+      setConnectingDll(null)
+      return
+    }
 
-    const openResult = await api?.j2534Open(device.dll)
+    const openResult = useElectron
+      ? await api.j2534Open(device.dll)
+      : await bridge.j2534Open(device.dll)
     if (!openResult?.ok) {
       addLog(`Open failed: ${openResult?.error || 'Unknown error'}`, 'error')
       setConnectingDll(null)
       return
     }
-    addLog(`Device opened — ${openResult.info}`, 'success')
+    addLog(`Device opened — ${openResult.info} (${useElectron ? 'desktop' : 'bridge'})`, 'success')
     setJ2534DeviceInfo(openResult.info || '')
 
     addLog(`Connecting channel: ${proto.label} (protocol ${proto.protocolId}, ${proto.baud} baud)`, 'info')
-    const connResult = await api?.j2534Connect(proto.protocolId, proto.baud)
+    const connResult = useElectron
+      ? await api.j2534Connect(proto.protocolId, proto.baud)
+      : await bridge.j2534Connect(proto.protocolId, proto.baud)
     if (!connResult?.ok) {
       addLog(`Channel connect failed: ${connResult?.error || 'Unknown error'}`, 'error')
-      await api?.j2534Close()
+      if (useElectron) await api.j2534Close()
+      else await bridge.j2534Close()
       setConnectingDll(null)
       return
     }
