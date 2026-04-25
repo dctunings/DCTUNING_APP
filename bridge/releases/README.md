@@ -68,12 +68,24 @@ Open `http://127.0.0.1:8765` in a browser — you should see:
 
 If you don't see this, the bridge isn't running. Restart it.
 
+## Known limitations (v0.1.0)
+
+- **Default Node.js icon** (the green hexagon) instead of DCTuning logo. The
+  packager (`pkg`) and Windows resource editor (`rcedit`) are incompatible —
+  rcedit's PE modifications corrupt pkg's payload integrity check. Switching
+  to Node SEA in v0.2.0 will fix this cleanly.
+- **Console window stays visible** while the bridge is running. v0.2.0 will
+  hide it and put the bridge in the system tray.
+- **Windows SmartScreen warning** on download — unsigned binaries trigger
+  "Windows protected your PC". Click "More info → Run anyway". Code-signing
+  cert in v0.4.0 will eliminate this.
+
 ## Roadmap
 
 | Version | Improvement |
 |---|---|
-| v0.1.0 (current) | Single .exe, manual launch, console window |
-| v0.2.0 | NSIS installer, system tray icon, hide console |
+| v0.1.0 (current) | Single .exe, manual launch, console window, Node icon |
+| v0.2.0 | Switch pkg → Node SEA: DCTuning icon, NSIS installer, tray icon, hidden console |
 | v0.3.0 | Auto-update from GitHub Releases |
 | v0.4.0 | Code-signed binary (no Windows SmartScreen warning) |
 
