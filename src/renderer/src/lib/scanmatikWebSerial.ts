@@ -276,9 +276,11 @@ class ScanmatikDriver {
       if (!('serial' in navigator)) {
         return { ok: false, error: 'Web Serial API not supported. Use Chrome, Edge or Brave.' }
       }
-      // Filter to FTDI VID — narrows the picker to Scanmatik-compatible devices
+      // No filter — show ALL serial ports. Scanmatik clones use a variety of USB
+      // chips (FTDI 0x0403, CH340 0x1A86, CP2102 0x10C4 — varies by manufacturer).
+      // We identify which chip after connect by reading port.getInfo().
       this.port = await (navigator as unknown as { serial: { requestPort: (opts?: { filters?: { usbVendorId: number }[] }) => Promise<SerialPort> } })
-        .serial.requestPort({ filters: [{ usbVendorId: 0x0403 }] })
+        .serial.requestPort()
       if (!this.port) return { ok: false, error: 'No port selected.' }
 
       await this.port.open({ baudRate, dataBits: 8, stopBits: 1, parity: 'none', flowControl: 'none' })
@@ -293,14 +295,21 @@ class ScanmatikDriver {
         this._info = 'Scanmatik 2 / PCMTuner (unresponsive — protocol bytes need calibration)'
       }
 
-      // Port label from USB info
+      // Port label from USB info — identify the USB-serial chip
       try {
         const info = await (this.port as { getInfo(): Promise<{ usbVendorId?: number; usbProductId?: number }> }).getInfo()
-        if (info.usbVendorId === 0x0403) {
-          const pid = info.usbProductId?.toString(16).padStart(4, '0').toUpperCase() ?? '?'
-          this._portLabel = `FTDI VID:0403 PID:${pid}`
+        if (info.usbVendorId !== undefined) {
+          const vid = info.usbVendorId.toString(16).padStart(4, '0').toUpperCase()
+          const pid = info.usbProductId?.toString(16).padStart(4, '0').toUpperCase() ?? '????'
+          const chip =
+            info.usbVendorId === 0x0403 ? 'FTDI' :
+            info.usbVendorId === 0x1a86 ? 'WCH (CH340/CH341)' :
+            info.usbVendorId === 0x10c4 ? 'Silicon Labs (CP210x)' :
+            info.usbVendorId === 0x067b ? 'Prolific (PL2303)' :
+            'Unknown'
+          this._portLabel = `${chip} VID:${vid} PID:${pid}`
         } else {
-          this._portLabel = 'Web Serial Port'
+          this._portLabel = 'Web Serial Port (no USB info)'
         }
       } catch { this._portLabel = 'Web Serial Port' }
 

@@ -848,7 +848,7 @@ export default function J2534PassThru({ connected, setConnected, activeVehicle }
                 {smBusy === 'connect' ? 'Connecting…' : 'Connect Scanmatik (Web Serial)'}
               </button>
               <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                Browser will show port picker filtered to FTDI devices (VID 0x0403)
+                Browser shows all serial ports — pick your Scanmatik (typically labelled 'USB Serial Port' or 'Scanmatik 2 USB')
               </span>
             </div>
           ) : (
