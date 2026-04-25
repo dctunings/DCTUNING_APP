@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import VehicleStrip from '../components/VehicleStrip'
 import type { ActiveVehicle } from '../lib/vehicleContext'
 import { elm327 } from '../lib/elm327WebSerial'
+import { scanmatik, PROTOCOL as SM_PROTOCOL } from '../lib/scanmatikWebSerial'
 
 interface Props {
   connected: boolean
@@ -83,6 +84,18 @@ export default function J2534PassThru({ connected, setConnected, activeVehicle }
   const [deviceInfo, setDeviceInfo]         = useState<Record<string, string>>({})
   const [scanning, setScanning]             = useState(false)
   const [j2534DeviceInfo, setJ2534DeviceInfo] = useState<string>('')
+
+  // ── Scanmatik Web Serial Lab (v3.16.0 WIP) ──────────────────────────────
+  // Direct-to-device test panel for filling in the Scanmatik wire protocol
+  // bytes. Connect → run an op → compare TX/RX log against captured bytes
+  // from the desktop DLL path. Once verified, the same driver replaces the
+  // J2534-DLL dependency for web users.
+  const [smConnected, setSmConnected]     = useState(false)
+  const [smInfo, setSmInfo]               = useState('')
+  const [smBusy, setSmBusy]               = useState<string | null>(null)
+  const [smLogTick, setSmLogTick]         = useState(0)  // forces re-render when log grows
+  const [smCustomReq, setSmCustomReq]     = useState('22 F1 90')
+  const smLogTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const addLog = (msg: string, type = 'info') =>
     setLog((l) => [...l, { msg: `[${new Date().toLocaleTimeString()}] ${msg}`, type }])
@@ -240,6 +253,84 @@ export default function J2534PassThru({ connected, setConnected, activeVehicle }
     setJ2534DeviceInfo('')
     addLog('Disconnected from device', 'warn')
   }
+
+  // ── Scanmatik Web Serial Lab handlers ───────────────────────────────────
+  const smConnect = async () => {
+    setSmBusy('connect')
+    addLog('Scanmatik Lab: requesting Web Serial port (FTDI VID 0x0403)...', 'info')
+    scanmatik.enableLog(true)
+    const r = await scanmatik.connect(115200)
+    if (r.ok) {
+      setSmConnected(true)
+      setSmInfo(`${r.info} · ${scanmatik.getPortLabel()}`)
+      addLog(`Scanmatik Lab: connected — ${r.info}`, 'success')
+      // Refresh log view every 250ms while connected
+      smLogTimerRef.current = setInterval(() => setSmLogTick(t => t + 1), 250)
+    } else {
+      addLog(`Scanmatik Lab: ${r.error}`, r.error?.includes('cancelled') ? 'warn' : 'error')
+    }
+    setSmBusy(null)
+  }
+
+  const smDisconnect = async () => {
+    setSmBusy('disconnect')
+    if (smLogTimerRef.current) { clearInterval(smLogTimerRef.current); smLogTimerRef.current = null }
+    await scanmatik.disconnect()
+    setSmConnected(false)
+    setSmInfo('')
+    addLog('Scanmatik Lab: disconnected', 'warn')
+    setSmBusy(null)
+  }
+
+  const smConfigChannel = async () => {
+    setSmBusy('config')
+    addLog('Scanmatik Lab: configuring ISO15765 @ 500 kbaud...', 'info')
+    const r = await scanmatik.configChannel({ protocol: SM_PROTOCOL.ISO15765, baud: 500000 })
+    addLog(r.ok ? 'Scanmatik Lab: channel configured (TX=0x7E0 RX=0x7E8)'
+                : `Scanmatik Lab: configChannel failed — ${r.error}`,
+           r.ok ? 'success' : 'error')
+    setSmBusy(null)
+  }
+
+  const smReadEcuId = async () => {
+    setSmBusy('readid')
+    addLog('Scanmatik Lab: reading ECU ID via UDS 0x22...', 'info')
+    const r = await scanmatik.readECUIdentification()
+    if (r.ok && r.id) {
+      addLog(`Scanmatik Lab: Part=${r.id.partNumber || '—'} SW=${r.id.swVersion || '—'} HW=${r.id.hwVersion || '—'} VIN=${r.id.vin || '—'}`, 'success')
+    } else {
+      addLog(`Scanmatik Lab: readECUIdentification failed — ${r.error}`, 'error')
+    }
+    setSmBusy(null)
+  }
+
+  const smSendCustom = async () => {
+    setSmBusy('custom')
+    const bytes = smCustomReq.replace(/\s+/g, '').match(/.{2}/g)?.map(h => parseInt(h, 16)) ?? []
+    if (bytes.length === 0) { addLog('Scanmatik Lab: invalid hex', 'error'); setSmBusy(null); return }
+    addLog(`Scanmatik Lab: TX UDS [${smCustomReq}]`, 'info')
+    const r = await scanmatik.sendUDS(bytes, 3000)
+    if (r.ok) {
+      addLog(`Scanmatik Lab: RX positive 0x${r.serviceId?.toString(16)} ${r.raw}`, 'success')
+    } else if (r.nrcCode !== undefined) {
+      addLog(`Scanmatik Lab: RX negative ${r.error}`, 'warn')
+    } else {
+      addLog(`Scanmatik Lab: ${r.error}`, 'error')
+    }
+    setSmBusy(null)
+  }
+
+  const smCopyLog = () => {
+    const lines = scanmatik.getLog().map(e => {
+      const hex = e.bytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ')
+      return `${e.dir} ${new Date(e.ts).toISOString().slice(11, 23)}  ${hex}`
+    })
+    void navigator.clipboard?.writeText(lines.join('\n'))
+    addLog(`Scanmatik Lab: copied ${lines.length} log lines to clipboard`, 'info')
+  }
+
+  // Reference to silence "smLogTick declared but never read" — used by re-renders
+  void smLogTick
 
   const ecuOp = async (op: string) => {
     if (!connected) { addLog(`${op}: not connected`, 'error'); return }
@@ -736,6 +827,101 @@ export default function J2534PassThru({ connected, setConnected, activeVehicle }
           </tbody>
         </table>
       </div>
+
+      {/* ── Scanmatik Web Serial Lab (v3.16.0 WIP) ── */}
+      {hasWebSerial() && (
+        <div className="card" style={{ marginBottom: 20, borderColor: 'rgba(168,85,247,0.35)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <div style={{ fontWeight: 700 }}>Scanmatik Web Serial — Protocol Capture Lab</div>
+            <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: 'rgba(168,85,247,0.18)', color: '#c4b5fd', letterSpacing: 0.5 }}>BETA · v3.16.0</span>
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 14, lineHeight: 1.6 }}>
+            Direct browser-to-device path that bypasses the J2534 DLL. Connect a Scanmatik 2 / PCMTuner clone
+            (FTDI USB driver must be installed) and run the test ops below. The TX/RX log captures every byte
+            for protocol verification — copy it and diff against the same ops run through the desktop DLL path
+            to fill in the unverified Scanmatik wire-protocol commands.
+          </div>
+
+          {!smConnected ? (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button className="btn btn-primary" onClick={smConnect} disabled={smBusy !== null}>
+                {smBusy === 'connect' ? 'Connecting…' : 'Connect Scanmatik (Web Serial)'}
+              </button>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                Browser will show port picker filtered to FTDI devices (VID 0x0403)
+              </span>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 14, padding: '8px 12px', background: 'rgba(168,85,247,0.08)', borderRadius: 6, fontSize: 12 }}>
+                <span style={{ color: '#c4b5fd', fontWeight: 700 }}>● Connected</span>
+                <span style={{ color: 'var(--text-muted)' }}>{smInfo}</span>
+                <button className="btn btn-ghost" style={{ marginLeft: 'auto', fontSize: 11, padding: '4px 10px' }} onClick={smDisconnect} disabled={smBusy !== null}>
+                  Disconnect
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+                <button className="btn btn-secondary" onClick={smConfigChannel} disabled={smBusy !== null}>
+                  ① Configure CAN/ISO15765
+                </button>
+                <button className="btn btn-secondary" onClick={smReadEcuId} disabled={smBusy !== null}>
+                  ② Read ECU ID (DIDs F187/F189/F191/F190)
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 14 }}>
+                <input
+                  type="text"
+                  value={smCustomReq}
+                  onChange={e => setSmCustomReq(e.target.value)}
+                  placeholder="UDS hex e.g. 22 F1 90"
+                  style={{ flex: 1, padding: 8, borderRadius: 6, background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border)', color: 'var(--text)', fontFamily: 'monospace', fontSize: 12 }}
+                  disabled={smBusy !== null}
+                />
+                <button className="btn btn-secondary" onClick={smSendCustom} disabled={smBusy !== null || !smCustomReq.trim()}>
+                  Send UDS
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>
+                  Wire log — {scanmatik.getLog().length} entries
+                </span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button className="btn btn-ghost" style={{ fontSize: 10, padding: '3px 8px' }} onClick={smCopyLog}>
+                    Copy to Clipboard
+                  </button>
+                  <button className="btn btn-ghost" style={{ fontSize: 10, padding: '3px 8px' }} onClick={() => { scanmatik.clearLog(); setSmLogTick(t => t + 1) }}>
+                    Clear
+                  </button>
+                </div>
+              </div>
+              <div style={{
+                fontFamily: 'monospace', fontSize: 10, lineHeight: 1.6,
+                background: 'rgba(0,0,0,0.4)', padding: 10, borderRadius: 6,
+                border: '1px solid var(--border)', maxHeight: 200, overflowY: 'auto',
+              }}>
+                {scanmatik.getLog().length === 0 ? (
+                  <span style={{ color: 'var(--text-muted)', opacity: 0.5 }}>No bytes captured yet — run an op above</span>
+                ) : (
+                  scanmatik.getLog().slice(-200).map((e, i) => {
+                    const hex = e.bytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ')
+                    const ts = new Date(e.ts).toISOString().slice(14, 23)
+                    return (
+                      <div key={i} style={{ color: e.dir === 'TX' ? '#7dd3fc' : '#86efac', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                        <span style={{ opacity: 0.55 }}>{ts}</span>{' '}
+                        <span style={{ fontWeight: 700, opacity: 0.85 }}>{e.dir}</span>{' '}
+                        {hex}
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* ── Activity Log ── */}
       <div>
