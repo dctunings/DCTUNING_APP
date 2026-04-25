@@ -20,19 +20,10 @@ const ArrowDown = (
 
 interface Props {
   downloadUrl?: string
-  bridgeStatus?: 'unknown' | 'present' | 'absent' | 'connected'
 }
 
-export default function WebOnlyBanner({
-  downloadUrl = 'https://github.com/dctunings/DCTUNING_APP/releases/latest',
-  bridgeStatus = 'unknown',
-}: Props) {
+export default function WebOnlyBanner({ downloadUrl = 'https://github.com/dctunings/DCTUNING_APP/releases/latest' }: Props) {
   if (!isWebMode()) return null
-
-  // Choose copy + CTA based on whether the local bridge is detected.
-  const bridgeAbsent = bridgeStatus === 'absent' || bridgeStatus === 'unknown'
-  // v0.1.0: bridge ships as source — installer arrives in v0.2.0. README has run-from-source instructions.
-  const bridgeDownloadUrl = 'https://github.com/dctunings/DCTUNING_APP/tree/main/dctuning-desktop/bridge#readme'
 
   return (
     <div style={{
@@ -64,20 +55,17 @@ export default function WebOnlyBanner({
       {/* Text */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b', marginBottom: 2 }}>
-          {bridgeAbsent
-            ? 'Install DCTuning Bridge for J2534 hardware in browser'
-            : 'DCTuning Bridge detected — connecting...'}
+          Full features require the desktop app
         </div>
         <div style={{ fontSize: 12, color: 'rgba(245,158,11,0.65)', lineHeight: 1.5 }}>
-          {bridgeAbsent
-            ? 'Tiny ~30 MB local helper that lets the web app use your J2534 hardware (Scanmatik, Tactrix, etc.) — no full desktop app needed.'
-            : 'The bridge service was found on localhost:8765. Establishing WebSocket connection to enable J2534 features.'}
+          J2534 PassThru flashing/unlock/cloning needs Windows DLL drivers. File-based
+          features (browse, calculate, checksum) still work here.
         </div>
       </div>
 
       {/* CTA */}
       <a
-        href={bridgeAbsent ? bridgeDownloadUrl : downloadUrl}
+        href={downloadUrl}
         target="_blank"
         rel="noopener noreferrer"
         style={{
@@ -107,7 +95,7 @@ export default function WebOnlyBanner({
         }}
       >
         {ArrowDown}
-        {bridgeAbsent ? 'Download Bridge' : 'Reconnecting…'}
+        Download Desktop App
       </a>
     </div>
   )
