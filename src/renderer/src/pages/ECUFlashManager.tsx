@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import VehicleStrip from '../components/VehicleStrip'
 import type { ActiveVehicle } from '../lib/vehicleContext'
+import { bridge } from '../lib/bridgeClient'
 
 interface Props { connected: boolean; activeVehicle: ActiveVehicle | null }
 
@@ -145,9 +146,12 @@ export default function ECUFlashManager({ connected, activeVehicle }: Props) {
     if (!connected) { addLog('Not connected — connect a J2534 device first', 'error'); return }
     setPhase('reading-id')
     setEcuId(null)
-    addLog('Reading ECU identification DIDs...', 'info')
     const api = (window as any).api
-    const result = await api?.j2534ReadECUID?.()
+    const useBridge = !api?.j2534ReadECUID && bridge.isConnected()
+    addLog(`Reading ECU identification DIDs... (${api?.j2534ReadECUID ? 'desktop' : useBridge ? 'bridge' : 'no backend'})`, 'info')
+    const result = api?.j2534ReadECUID
+      ? await api.j2534ReadECUID()
+      : useBridge ? await bridge.j2534ReadECUID() : { ok: false, error: 'Install desktop app or DCTuning Bridge' }
     if (result?.ok && result.id) {
       setEcuId(result.id)
       addLog('ECU identification complete', 'success')
@@ -180,12 +184,22 @@ export default function ECUFlashManager({ connected, activeVehicle }: Props) {
     addLog(`Address: ${fmtHex(selectedEcu.flashStartAddr)} → ${fmtHex(selectedEcu.flashStartAddr + selectedEcu.flashSize)} (${fmtSize(selectedEcu.flashSize)})`, 'info')
 
     const api = (window as any).api
-    const result = await api?.j2534ReadECUFlash?.(
-      selectedEcu.flashStartAddr,
-      selectedEcu.flashSize,
-      selectedEcu.chunkSize,
-      selectedEcu.protocol
-    )
+    const useBridge = !api?.j2534ReadECUFlash && bridge.isConnected()
+    const result = api?.j2534ReadECUFlash
+      ? await api.j2534ReadECUFlash(
+          selectedEcu.flashStartAddr,
+          selectedEcu.flashSize,
+          selectedEcu.chunkSize,
+          selectedEcu.protocol
+        )
+      : useBridge
+        ? await bridge.j2534ReadFlash(
+            selectedEcu.flashStartAddr,
+            selectedEcu.flashSize,
+            selectedEcu.chunkSize,
+            selectedEcu.protocol
+          )
+        : { ok: false, error: 'Install desktop app or DCTuning Bridge' }
 
     if (result?.ok && result.data) {
       const bytes = new Uint8Array(result.data)

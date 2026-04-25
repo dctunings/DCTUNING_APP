@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import VehicleStrip from '../components/VehicleStrip'
 import type { ActiveVehicle } from '../lib/vehicleContext'
+import { bridge } from '../lib/bridgeClient'
 
 interface Props {
   connected: boolean
@@ -95,13 +96,20 @@ export default function ECUCloning({ connected, activeVehicle }: Props) {
   const busy = ['identifying', 'reading', 'writing'].includes(step)
 
   // ── ECU Identification ──────────────────────────────────────────────────────
+  // I/O routing: try Electron IPC first (desktop app), fall back to local
+  // Bridge service (web users with DCTuningBridge.exe running). Same J2534
+  // backend either way — both end up calling j2534helper.exe + the DLL.
+  const useBridge = () => !api?.j2534ReadECUID && bridge.isConnected()
+
   const handleIdentify = async () => {
     if (!connected) return
     setStep('identifying')
     setEcuId(null)
-    addLog('Reading ECU identification DIDs via UDS...', 'info')
+    addLog(`Reading ECU identification DIDs via UDS... (${api?.j2534ReadECUID ? 'desktop' : 'bridge'})`, 'info')
     try {
-      const result = await api.j2534ReadECUID()
+      const result = api?.j2534ReadECUID
+        ? await api.j2534ReadECUID()
+        : useBridge() ? await bridge.j2534ReadECUID() : { ok: false, error: 'No backend (install desktop app or DCTuning Bridge)' }
       if (result.ok && result.id) {
         setEcuId(result.id)
         const found = Object.keys(result.id.raw ?? {}).length
@@ -137,7 +145,11 @@ export default function ECUCloning({ connected, activeVehicle }: Props) {
     addLog(`Starting ECU read: 0x${startAddr.toString(16).toUpperCase()} → 0x${endAddr.toString(16).toUpperCase()} (${formatSize(totalLength)})`, 'info')
 
     try {
-      const result = await api.j2534ReadECUFlash(startAddr, totalLength, readChunk, readProtocol)
+      const result = api?.j2534ReadECUFlash
+        ? await api.j2534ReadECUFlash(startAddr, totalLength, readChunk, readProtocol)
+        : useBridge()
+          ? await bridge.j2534ReadFlash(startAddr, totalLength, readChunk, readProtocol)
+          : { ok: false, error: 'No backend (install desktop app or DCTuning Bridge)' }
       if (result.ok && result.data) {
         // result.data arrives as a plain object (IPC serialisation), reconstruct as Uint8Array
         const arr = result.data instanceof Uint8Array

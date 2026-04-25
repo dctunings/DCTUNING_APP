@@ -170,30 +170,99 @@ export default function ECUUnlock({ connected, activeVehicle }: Props) {
             security: 'Locked',
           })
         }
+        // ── Real SecurityAccess flow (UDS 0x27) ────────────────────────────
+        // 1) Request seed via UDS 0x27 0x01.
+        //    Positive response: 0x67 0x01 [seed bytes...]
+        //    Negative: 0x7F 0x27 [NRC]
+        // 2) Calculate key from seed using ECU-family algorithm.
+        // 3) Send key via UDS 0x27 0x02 [key bytes].
+        //    Positive response: 0x67 0x02
+        //    Negative: 0x7F 0x27 0x35 (invalid key) or 0x36 (too many attempts)
+        //
+        // For desktop we lack a generic UDS-send IPC (only j2534CalcKey is
+        // exposed) so we keep the placeholder there. Bridge supports j2534UDS
+        // so it does the real exchange.
         setProgress(35)
         addLog('Sending SecurityAccess requestSeed (0x27 01)...', 'info')
-        setProgress(55)
-        addLog('Seed received — calculating access key...', 'info')
-        // Bridge v0.1.0+ ships ecuSeedKey.ts so the algorithms work for web
-        // users too. Same code path either way — just routed through different
-        // transport. The placeholder seed '00000000' here is illustrative;
-        // the real flow reads the seed from UDS 0x27 01 response and feeds it.
         const ecuId = model.split(' ')[0]
+        let seedHex = '00 00 00 00'  // fallback placeholder if no real seed available
+        let seedBytes: number[] = [0, 0, 0, 0]
+        let realSeedExchange = false
+
+        if (useBridge) {
+          // Real seed exchange via bridge UDS
+          try {
+            const seedRes = await bridge.j2534UDS(6, [0x27, 0x01], 2000)
+            if (seedRes?.ok && seedRes.bytes && seedRes.bytes.length >= 3 && seedRes.bytes[0] === 0x67) {
+              // Strip 0x67 (positive response) + 0x01 (sub-function echo)
+              seedBytes = seedRes.bytes.slice(2)
+              seedHex = seedBytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ')
+              addLog(`Seed received: ${seedHex}`, 'success')
+              realSeedExchange = true
+              // All-zero seed = ECU already unlocked
+              if (seedBytes.every(b => b === 0)) {
+                addLog('Seed is all-zero — ECU is already unlocked', 'info')
+              }
+            } else if (seedRes?.bytes && seedRes.bytes[0] === 0x7F) {
+              const nrc = seedRes.bytes[2]
+              addLog(`requestSeed rejected by ECU: NRC 0x${nrc.toString(16).toUpperCase()}`, 'error')
+              setUnlocking(false); return
+            } else {
+              addLog(`No seed response — ECU may not be powered or not responding (using placeholder for demo)`, 'warn')
+            }
+          } catch (e) {
+            addLog(`Seed request failed: ${e instanceof Error ? e.message : String(e)} (using placeholder)`, 'warn')
+          }
+        } else {
+          addLog('Desktop path: real seed exchange not yet wired — using placeholder', 'info')
+        }
+        setProgress(55)
+        addLog('Calculating access key...', 'info')
+
         const keyResult = useElectron
-          ? await api.j2534CalcKey(ecuId, '00000000')
-          : await bridge.j2534CalcKey(ecuId, '00000000')
+          ? await api.j2534CalcKey(ecuId, seedHex)
+          : await bridge.j2534CalcKey(ecuId, seedHex)
         if (keyResult?.ok && keyResult.key) {
-          addLog(`Key: ${keyResult.key.map((b: number) => b.toString(16).padStart(2,'0').toUpperCase()).join(' ')}`, 'info')
+          const keyHex = keyResult.key.map((b: number) => b.toString(16).padStart(2,'0').toUpperCase()).join(' ')
+          addLog(`Key: ${keyHex}`, 'info')
+
+          if (realSeedExchange && useBridge) {
+            // Send the calculated key back to the ECU
+            setProgress(75)
+            addLog('Sending SecurityAccess sendKey (0x27 02)...', 'info')
+            try {
+              const sendKeyRes = await bridge.j2534UDS(6, [0x27, 0x02, ...keyResult.key], 2000)
+              if (sendKeyRes?.ok && sendKeyRes.bytes && sendKeyRes.bytes[0] === 0x67) {
+                addLog('✓ ECU accepted key — security access granted', 'success')
+                setEcuInfo(prev => prev ? { ...prev, security: 'Unlocked' } : null)
+              } else if (sendKeyRes?.bytes && sendKeyRes.bytes[0] === 0x7F) {
+                const nrc = sendKeyRes.bytes[2]
+                const reason = nrc === 0x35 ? 'invalid key (algorithm mismatch?)'
+                             : nrc === 0x36 ? 'too many attempts — wait or restart ECU'
+                             : `NRC 0x${nrc.toString(16).toUpperCase()}`
+                addLog(`ECU rejected key: ${reason}`, 'error')
+                setUnlocking(false); return
+              } else {
+                addLog('No response from ECU after sendKey', 'error')
+                setUnlocking(false); return
+              }
+            } catch (e) {
+              addLog(`sendKey failed: ${e instanceof Error ? e.message : String(e)}`, 'error')
+              setUnlocking(false); return
+            }
+          }
         } else if (keyResult?.error) {
           addLog(`Key calc: ${keyResult.error}`, 'warn')
         }
-        setProgress(75)
-        addLog('Sending SecurityAccess sendKey (0x27 02)...', 'info')
         setProgress(90)
         if (opts.disableWriteProtect) addLog('Write protection disabled via ECU-specific routine', 'warn')
         if (opts.autoChecksum)        addLog('Auto-checksum correction enabled', 'info')
         setProgress(100)
-        addLog('✓ Security access granted — ECU is ready for programming', 'success')
+        if (!realSeedExchange) {
+          addLog('✓ Demo unlock complete — connect a powered ECU to perform a real unlock', 'success')
+        } else {
+          addLog('✓ Security access granted — ECU is ready for programming', 'success')
+        }
         setEcuInfo(prev => prev ? { ...prev, security: 'Unlocked' } : null)
       } catch (e: any) {
         addLog(`Error: ${e?.message || String(e)}`, 'error')
