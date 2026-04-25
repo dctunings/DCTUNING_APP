@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
 import Dashboard from './pages/Dashboard'
@@ -23,6 +23,7 @@ import WebLanding from './pages/WebLanding'
 import LoginScreen from './components/LoginScreen'
 import WebOnlyBanner, { isWebMode } from './components/WebOnlyBanner'
 import AIChatSidebar, { type ChatContext } from './components/AIChatSidebar'
+import { bridge } from './lib/bridgeClient'
 import type { ActiveVehicle } from './lib/vehicleContext'
 import { useAuth } from './lib/useAuth'
 import { useSubscription } from './lib/useSubscription'
@@ -114,6 +115,37 @@ export default function App() {
   // prompt; the chat consumes + clears it on open.
   const [pendingAIAction, setPendingAIAction] =
     useState<'explain' | 'warnings' | 'safety' | { prompt: string } | null>(null)
+
+  // v3.16.0 — Local J2534 bridge detection. Probes localhost:8765 on mount;
+  // when present, the desktop-required banner switches off and J2534 pages
+  // can use the bridge for hardware access. Wrapped in try/catch and effect
+  // cleanup is defensive — the previous attempt at this caused a blank page
+  // due to a missing useEffect import (now fixed at line 1).
+  const [bridgeStatus, setBridgeStatus] = useState<'unknown' | 'present' | 'absent' | 'connected'>('unknown')
+  useEffect(() => {
+    if (!isWebMode()) { setBridgeStatus('absent'); return }
+    let cancelled = false
+    let unsub: (() => void) | null = null
+    try {
+      bridge.probe().then(async (present) => {
+        if (cancelled) return
+        if (!present) { setBridgeStatus('absent'); return }
+        setBridgeStatus('present')
+        try {
+          const ok = await bridge.connect()
+          if (!cancelled) setBridgeStatus(ok ? 'connected' : 'present')
+        } catch { if (!cancelled) setBridgeStatus('present') }
+      }).catch(() => { if (!cancelled) setBridgeStatus('absent') })
+      unsub = bridge.onStateChange((connected) => {
+        if (cancelled) return
+        setBridgeStatus(connected ? 'connected' : 'present')
+      })
+    } catch {
+      // Defensive: any throw here must not crash the app render tree
+      setBridgeStatus('absent')
+    }
+    return () => { cancelled = true; if (unsub) try { unsub() } catch { /* ignore */ } }
+  }, [])
 
   const aiContext: ChatContext = {
     fileName: ecuFile?.fileName,
@@ -318,7 +350,24 @@ export default function App() {
             createCheckoutSession={createCheckoutSession}
             openCustomerPortal={openCustomerPortal}
           >
-            {isWebMode() && J2534_DLL_PAGES.includes(page) && <WebOnlyBanner />}
+            {isWebMode() && J2534_DLL_PAGES.includes(page) && bridgeStatus !== 'connected' && (
+              <WebOnlyBanner bridgeStatus={bridgeStatus} />
+            )}
+            {isWebMode() && bridgeStatus === 'connected' && J2534_DLL_PAGES.includes(page) && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '10px 14px', marginBottom: 16,
+                background: 'rgba(34,197,94,0.08)',
+                border: '1px solid rgba(34,197,94,0.3)',
+                borderRadius: 8, fontSize: 13,
+              }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px #22c55e' }} />
+                <span style={{ color: '#86efac', fontWeight: 700 }}>Local Bridge Connected</span>
+                <span style={{ color: 'rgba(134,239,172,0.65)' }}>
+                  · J2534 hardware accessible · ws://127.0.0.1:8765
+                </span>
+              </div>
+            )}
             {renderPage()}
           </SubscriptionGate>
         </div>
