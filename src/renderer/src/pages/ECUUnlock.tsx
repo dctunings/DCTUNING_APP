@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import VehicleStrip from '../components/VehicleStrip'
 import type { ActiveVehicle } from '../lib/vehicleContext'
+import { bridge } from '../lib/bridgeClient'
 
 interface Props { connected: boolean; activeVehicle: ActiveVehicle | null }
 
@@ -92,19 +93,46 @@ export default function ECUUnlock({ connected, activeVehicle }: Props) {
   const addLog = (msg: string, type = 'info') =>
     setLog((l) => [...l, { msg: `[${new Date().toLocaleTimeString()}] ${msg}`, type }])
 
-  // Read real ECU info whenever we become connected
+  // Bridge availability — probed on mount, lets web users see if the local
+  // J2534 bridge service is running before they try an unlock op.
+  const [bridgeStatus, setBridgeStatus] = useState<'unknown' | 'present' | 'absent'>('unknown')
+  useEffect(() => {
+    let cancelled = false
+    const electronApi = (window as any).api
+    if (electronApi?.j2534ReadECUID) {
+      // Desktop — bridge irrelevant
+      setBridgeStatus('absent')
+      return
+    }
+    bridge.probe().then(present => {
+      if (cancelled) return
+      setBridgeStatus(present ? 'present' : 'absent')
+      if (present) bridge.connect().catch(() => {})
+    })
+    return () => { cancelled = true }
+  }, [])
+
+  // Read real ECU info whenever we become connected. Tries Electron IPC first,
+  // then falls back to the local bridge service, then gives up.
   useEffect(() => {
     if (!connected) { setEcuInfo(null); return }
     const api = (window as any).api
-    if (!api?.j2534ReadECUID) return
-    api.j2534ReadECUID().then((id: any) => {
-      if (id) setEcuInfo({
+
+    const handleId = (id: any) => {
+      if (!id) return
+      setEcuInfo({
         flashSize: id.flashSize ? `${Math.round(id.flashSize / 1024)} KB` : '—',
         swVersion: id.swVersion || id.ecuPart || '—',
         hwVersion: id.hwVersion || '—',
         security:  id.securityLevel ? `Level ${id.securityLevel}` : 'Locked',
       })
-    }).catch(() => {})
+    }
+
+    if (api?.j2534ReadECUID) {
+      api.j2534ReadECUID().then(handleId).catch(() => {})
+    } else if (bridge.isConnected()) {
+      bridge.j2534ReadECUID().then(r => { if (r.ok) handleId(r.id) }).catch(() => {})
+    }
   }, [connected])
 
   const startUnlock = async () => {
@@ -115,12 +143,24 @@ export default function ECUUnlock({ connected, activeVehicle }: Props) {
     setLog([])
     addLog(`Initiating security bypass for ${model}...`, 'warn')
 
-    if (api?.j2534ReadECUID && api?.j2534CalcKey) {
-      // ── Real path (desktop app + J2534 connected) ──────────────────────────
+    // Pick the I/O backend: Electron IPC (desktop) → Bridge WS (web with local
+    // bridge service) → simulation fallback. The bridge gives web users full
+    // hardware access without needing the desktop app.
+    const useElectron = !!api?.j2534ReadECUID && !!api?.j2534CalcKey
+    const useBridge   = !useElectron && bridge.isConnected()
+
+    if (useElectron || useBridge) {
+      // ── Real path (desktop app OR web + local bridge) ──────────────────────
       try {
-        addLog('Reading ECU identity via UDS 0x22...', 'info')
+        addLog(`Reading ECU identity via UDS 0x22... (${useElectron ? 'desktop' : 'bridge'})`, 'info')
         setProgress(15)
-        const id = await api.j2534ReadECUID()
+        let id: any = null
+        if (useElectron) {
+          id = await api.j2534ReadECUID()
+        } else {
+          const r = await bridge.j2534ReadECUID()
+          if (r.ok) id = r.id
+        }
         if (id) {
           addLog(`ECU Part: ${id.ecuPart || '?'}  SW: ${id.swVersion || '?'}  HW: ${id.hwVersion || '?'}`, 'success')
           setEcuInfo({
@@ -134,9 +174,16 @@ export default function ECUUnlock({ connected, activeVehicle }: Props) {
         addLog('Sending SecurityAccess requestSeed (0x27 01)...', 'info')
         setProgress(55)
         addLog('Seed received — calculating access key...', 'info')
-        const keyResult = await api.j2534CalcKey(model.split(' ')[0], '00000000')
-        if (keyResult?.ok) {
-          addLog(`Key: ${Array.from(keyResult.key as number[]).map((b: number) => b.toString(16).padStart(2,'0').toUpperCase()).join(' ')}`, 'info')
+        // Note: j2534CalcKey is desktop-only for now (uses ECU-specific algorithms
+        // bundled with the main process). Bridge users get a placeholder until
+        // we extract the key algorithms into the bridge service.
+        if (useElectron) {
+          const keyResult = await api.j2534CalcKey(model.split(' ')[0], '00000000')
+          if (keyResult?.ok) {
+            addLog(`Key: ${Array.from(keyResult.key as number[]).map((b: number) => b.toString(16).padStart(2,'0').toUpperCase()).join(' ')}`, 'info')
+          }
+        } else {
+          addLog('Key calculation: pending bridge support — desktop required for now', 'warn')
         }
         setProgress(75)
         addLog('Sending SecurityAccess sendKey (0x27 02)...', 'info')

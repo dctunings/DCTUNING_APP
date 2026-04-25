@@ -257,7 +257,7 @@ export default function J2534PassThru({ connected, setConnected, activeVehicle }
   // ── Scanmatik Web Serial Lab handlers ───────────────────────────────────
   const smConnect = async () => {
     setSmBusy('connect')
-    addLog('Scanmatik Lab: requesting Web Serial port (FTDI VID 0x0403)...', 'info')
+    addLog('Scanmatik Lab: requesting Web Serial port (showing all serial ports)...', 'info')
     scanmatik.enableLog(true)
     const r = await scanmatik.connect(115200)
     if (r.ok) {

@@ -1,0 +1,27 @@
+{
+  "name": "dctuning-bridge",
+  "version": "0.1.0",
+  "description": "DCTuning Bridge — local J2534 WebSocket service for app.dctuning.ie web users",
+  "main": "dist/index.js",
+  "bin": {
+    "dctuning-bridge": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch",
+    "package": "pkg dist/index.js --targets node20-win-x64 --output build/DCTuningBridge.exe"
+  },
+  "keywords": ["dctuning", "j2534", "ecu", "passthru", "websocket"],
+  "author": "DCTuning Ireland",
+  "license": "Proprietary",
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/ws": "^8.5.13",
+    "pkg": "^5.8.1",
+    "typescript": "^5.0.0"
+  }
+}
