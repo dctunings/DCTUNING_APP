@@ -31,7 +31,8 @@ export default function WebOnlyBanner({
 
   const bridgeAbsent = bridgeStatus === 'absent' || bridgeStatus === 'unknown'
   // v0.1.0 ships as a bare .exe ZIP. v0.2.0 will replace this URL with an NSIS installer.
-  const bridgeDownloadUrl = 'https://raw.githubusercontent.com/dctunings/DCTUNING_APP/main/dctuning-desktop/bridge/releases/DCTuningBridge-v0.1.0-win-x64.zip'
+  // Note: GitHub repo DCTUNING_APP is rooted at dctuning-desktop/, so bridge/ sits at repo root
+  const bridgeDownloadUrl = 'https://raw.githubusercontent.com/dctunings/DCTUNING_APP/main/bridge/releases/DCTuningBridge-v0.1.0-win-x64.zip'
 
   return (
     <div style={{

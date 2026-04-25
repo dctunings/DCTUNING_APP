@@ -18,7 +18,7 @@ Contents (extract both files to the same folder):
 ## Install (end users)
 
 1. Download the ZIP from
-   `https://raw.githubusercontent.com/dctunings/DCTUNING_APP/main/dctuning-desktop/bridge/releases/DCTuningBridge-v0.1.0-win-x64.zip`
+   `https://raw.githubusercontent.com/dctunings/DCTUNING_APP/main/bridge/releases/DCTuningBridge-v0.1.0-win-x64.zip`
 2. Extract anywhere — Desktop, Documents, wherever (~38 MB)
 3. Double-click `DCTuningBridge.exe`
 4. A console window opens showing:
