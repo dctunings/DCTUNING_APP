@@ -27,7 +27,9 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/ws": "^8.5.13",
+    "esbuild": "^0.28.0",
     "pkg": "^5.8.1",
+    "postject": "^1.0.0-alpha.6",
     "rcedit": "^4.0.1",
     "typescript": "^5.0.0"
   }

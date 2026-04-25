@@ -174,16 +174,18 @@ export default function ECUUnlock({ connected, activeVehicle }: Props) {
         addLog('Sending SecurityAccess requestSeed (0x27 01)...', 'info')
         setProgress(55)
         addLog('Seed received — calculating access key...', 'info')
-        // Note: j2534CalcKey is desktop-only for now (uses ECU-specific algorithms
-        // bundled with the main process). Bridge users get a placeholder until
-        // we extract the key algorithms into the bridge service.
-        if (useElectron) {
-          const keyResult = await api.j2534CalcKey(model.split(' ')[0], '00000000')
-          if (keyResult?.ok) {
-            addLog(`Key: ${Array.from(keyResult.key as number[]).map((b: number) => b.toString(16).padStart(2,'0').toUpperCase()).join(' ')}`, 'info')
-          }
-        } else {
-          addLog('Key calculation: pending bridge support — desktop required for now', 'warn')
+        // Bridge v0.1.0+ ships ecuSeedKey.ts so the algorithms work for web
+        // users too. Same code path either way — just routed through different
+        // transport. The placeholder seed '00000000' here is illustrative;
+        // the real flow reads the seed from UDS 0x27 01 response and feeds it.
+        const ecuId = model.split(' ')[0]
+        const keyResult = useElectron
+          ? await api.j2534CalcKey(ecuId, '00000000')
+          : await bridge.j2534CalcKey(ecuId, '00000000')
+        if (keyResult?.ok && keyResult.key) {
+          addLog(`Key: ${keyResult.key.map((b: number) => b.toString(16).padStart(2,'0').toUpperCase()).join(' ')}`, 'info')
+        } else if (keyResult?.error) {
+          addLog(`Key calc: ${keyResult.error}`, 'warn')
         }
         setProgress(75)
         addLog('Sending SecurityAccess sendKey (0x27 02)...', 'info')

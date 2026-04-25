@@ -22,6 +22,7 @@ import { WebSocketServer, WebSocket } from 'ws'
 import * as http from 'http'
 import * as driver from './j2534-driver'
 import { scanJ2534Devices } from './registry-scan'
+import { calculateKey } from './ecuSeedKey'
 import type { BridgeRequest, BridgeResponse, BridgeEvent, PingResponse } from './types'
 
 // Origins allowed to connect. Localhost variants are for development only.
@@ -143,6 +144,26 @@ async function dispatch(req: BridgeRequest): Promise<unknown> {
         }
       }
       return { ok: true, id: { ...result, ecuPart: result.partNumber, raw } }
+    }
+
+    case 'j2534-calc-key': {
+      // SecurityAccess seed → key. Pure JS, no hardware needed. Lets the
+      // browser do the full unlock flow: requestSeed → calc-key (here) →
+      // sendKey, all over the bridge.
+      const ecuId = String(params.ecuId || '')
+      const seedHex = String(params.seedHex || '')
+      const level = Number(params.level || 1)
+      if (!ecuId) throw new Error('ecuId is required')
+      // Accept seed as either hex string ("12 34 AB CD") or array of bytes
+      let seedBytes: number[]
+      if (Array.isArray(params.seedBytes)) {
+        seedBytes = params.seedBytes as number[]
+      } else if (seedHex) {
+        seedBytes = seedHex.replace(/\s+/g, '').match(/.{2}/g)?.map(h => parseInt(h, 16)) ?? []
+      } else {
+        throw new Error('seedHex or seedBytes is required')
+      }
+      return calculateKey(ecuId, seedBytes, level)
     }
 
     case 'j2534-read-flash': {

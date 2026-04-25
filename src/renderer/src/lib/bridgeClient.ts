@@ -186,6 +186,9 @@ class BridgeClient {
   j2534Connect(protocol: number, baud: number) { return this.request<{ ok: boolean; channelId?: number; error?: string }>('j2534-connect', { protocol, baud }) }
   j2534UDS(protocol: number, data: number[], timeout?: number) { return this.request<{ ok: boolean; hex?: string; bytes?: number[]; error?: string }>('j2534-uds', { protocol, data, timeout }) }
   j2534ReadDTCs(protocol = 6) { return this.request<{ ok: boolean; responses?: string[]; error?: string }>('j2534-read-dtcs', { protocol }) }
+  j2534CalcKey(ecuId: string, seedHex: string, level = 1) {
+    return this.request<{ ok: boolean; key?: number[]; error?: string }>('j2534-calc-key', { ecuId, seedHex, level })
+  }
   j2534ClearDTCs(protocol = 6) { return this.request<{ ok: boolean; error?: string }>('j2534-clear-dtcs', { protocol }) }
   j2534ReadECUID() { return this.request<{ ok: boolean; id?: Record<string, unknown>; error?: string }>('j2534-read-ecu-id') }
   j2534ReadFlash(startAddr: number, totalLen: number, chunkSize?: number, protocol?: number) {
