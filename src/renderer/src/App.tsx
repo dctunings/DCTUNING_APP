@@ -59,8 +59,11 @@ export type Page =
   | 'pricing'
   | 'account'
 
-// Pages that require a live OBD2/J2534 hardware connection
-const OBD2_PAGES: Page[] = ['scanner', 'voltage', 'j2534', 'cloning', 'unlock', 'ecuflash']
+// Pages that require a J2534 PassThru DLL bridge (Windows desktop only).
+// scanner/voltage/j2534 work in web via Web Serial API (ELM327 over USB), so
+// they're NOT gated. Only the J2534-DLL-bridge features (ECU read/write/unlock
+// via PassThru) genuinely require the desktop app.
+const J2534_DLL_PAGES: Page[] = ['cloning', 'unlock', 'ecuflash']
 
 // Pages that require at least the Pro plan
 const PRO_ONLY_PAGES: Page[] = ['tunes', 'j2534', 'unlock', 'cloning', 'emissions', 'ecuflash']
@@ -315,7 +318,7 @@ export default function App() {
             createCheckoutSession={createCheckoutSession}
             openCustomerPortal={openCustomerPortal}
           >
-            {isWebMode() && OBD2_PAGES.includes(page) && <WebOnlyBanner />}
+            {isWebMode() && J2534_DLL_PAGES.includes(page) && <WebOnlyBanner />}
             {renderPage()}
           </SubscriptionGate>
         </div>

@@ -55,10 +55,11 @@ export default function WebOnlyBanner({ downloadUrl = 'https://github.com/dctuni
       {/* Text */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b', marginBottom: 2 }}>
-          This feature requires the desktop app
+          Full features require the desktop app
         </div>
         <div style={{ fontSize: 12, color: 'rgba(245,158,11,0.65)', lineHeight: 1.5 }}>
-          Live OBD2 scanning needs a direct device connection
+          J2534 PassThru flashing/unlock/cloning needs Windows DLL drivers. File-based
+          features (browse, calculate, checksum) still work here.
         </div>
       </div>
 
