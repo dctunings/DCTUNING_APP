@@ -31,7 +31,7 @@ export default function WebOnlyBanner({
 
   const bridgeAbsent = bridgeStatus === 'absent' || bridgeStatus === 'unknown'
   // v0.1.0: bridge ships as source — installer arrives in v0.2.0. README has run-from-source instructions.
-  const bridgeDownloadUrl = 'https://github.com/dctunings/DCTUNING_APP/tree/main/dctuning-desktop/bridge#readme'
+  const bridgeDownloadUrl = 'https://github.com/dctunings/DCTUNING_APP/blob/main/dctuning-desktop/bridge/README.md'
 
   return (
     <div style={{

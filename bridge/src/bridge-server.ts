@@ -181,8 +181,31 @@ function broadcast(_clients: Set<WebSocket>, _evt: BridgeEvent): void {
 }
 
 export function startBridgeServer(): void {
-  const httpServer = http.createServer((_req, res) => {
-    // Provide a tiny health page so a curl/browser hit shows the bridge is up
+  const httpServer = http.createServer((req, res) => {
+    // CORS — browsers at https://app.dctuning.ie probe http://127.0.0.1:8765
+    // to detect the bridge. The health endpoint returns only public bridge
+    // metadata (no secrets), so allowing the request is safe. The WebSocket
+    // itself still enforces a strict origin allowlist on upgrade.
+    const origin = req.headers.origin
+    if (origin && isOriginAllowed(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin)
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', '*')
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    // Chrome's Private Network Access (PNA) — required when an HTTPS page on
+    // the public internet hits a private IP (127.0.0.1). Without this header,
+    // recent Chrome versions block the request before even checking CORS.
+    res.setHeader('Access-Control-Allow-Private-Network', 'true')
+
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204)
+      res.end()
+      return
+    }
+
+    // Health endpoint — browser client uses this to detect bridge is up
     res.writeHead(200, { 'content-type': 'application/json' })
     res.end(JSON.stringify({
       service: 'dctuning-bridge',
