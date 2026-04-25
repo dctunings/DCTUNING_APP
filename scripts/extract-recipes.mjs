@@ -20,9 +20,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 
-// v3.12.1+v3.14.1: all of Damo's pair sources + the Damos-Big-Archive (desktop +
-// its RAR-extracted contents). See memory/stage_engine.md for the full list of
-// sources covered.
+// v3.12.1+v3.14.1+v3.14.3: all of Damo's pair sources + the Damos-Big-Archive
+// + new Desktop/Damos + Desktop/ECU FILES TEST (added Apr 25 2026).
 const ROOTS = [
   'D:/DATABASE/Tuning_DB_BIN',                                 // recurses into all 35 brand subfolders
   'D:/audi-package',                                           // Audi-focused pairs + DAMOS
@@ -35,6 +34,10 @@ const ROOTS = [
   'C:/Users/damoc/Desktop/DATABASE/Tuning_DB_BIN',             // Desktop copy (if present)
   'C:/Users/damoc/Desktop/Damos-Big-Archive',                  // v3.14.1 — added Apr 24 2026
   'D:/dctuning-scan/damos_rar_extract',                        // extracted contents of 2,305 RAR archives
+  'C:/Users/damoc/Desktop/Damos',                              // v3.14.3 — multi-brand DAMOS; VAG subfolders only via VAG_PREFIX guard below
+  'C:/Users/damoc/Desktop/ECU FILES TEST',                     // v3.14.3 — Damo's curated reference set (DCTuning_Stage1 pairs)
+  'D:/dctuning-scan/new_vag_extract/from_hex_s19',             // v3.14.3 — converted HEX→BIN from new DAMOS folder
+  'D:/dctuning-scan/new_vag_extract/from_archives',            // v3.14.3 — extracted ZIPs (mostly .dat reference data, will be ext-skipped)
 ]
 // Files under this size aren't ECU binaries worth recipe-ing (need at least 64KB
 // for a meaningful tune). Also caps at 12 MB to skip .ols/.zip/.odx archives.
@@ -55,24 +58,38 @@ function sha256File(p) {
 }
 
 // Extract (partNumber, swNumber) identifier from filename. Returns null if cannot identify.
+// v3.14.3: extended to recognize Bosch part numbers (0261207939) and Siemens part
+// numbers (5WS40060I-T) as fallbacks when no VW part-number is present, plus
+// decimal SW numbers (363573, 389289) when no SN/SA/SM/SG-prefixed code appears.
+// This unlocks pairing for files like "Audi A4 1.8T ME7.5 0261207939 363573 ORI_n.bin"
+// + "..._DCTuning_Stage1.bin" which lack canonical VW identifiers.
+const FALSE_DEC_SW = new Set(['100000', '200000', '300000', '400000', '500000', '600000',
+                               '700000', '800000', '900000', '1000000', '2000000', '4000000']);
 function parseFilename(name) {
   const base = path.basename(name);
-  // Part number patterns (VW/Audi): 3 digits + 1 letter + 6 digits + 1-2 letters
-  const partMatch = base.match(/(0[0-9][0-9A-Z][0-9]{6}[A-Z]{1,3})/);
-  // SW number patterns: SN/SA/SM/SG + version + '000000'
-  const swMatch = base.match(/(S[NAMG][0-9A-Z]{3}[0-9A-Z]{8})/);
-  // Stage detection: .Stage1, .Stage1+++, .Stage2, _Stage1, _Stage1.bin
+  // Part number priority: VW/Audi → Bosch → Siemens
+  const vwMatch     = base.match(/(0[0-9][0-9A-Z][0-9]{6}[A-Z]{1,3})/);
+  const boschMatch  = base.match(/(02[6-8]\d{7})/);
+  const siemensMatch= base.match(/(5WS\d{5}[A-Z]?-?[A-Z]?)/);
+  const partNumber  = vwMatch?.[1] || boschMatch?.[1] || siemensMatch?.[1] || null;
+  // SW number priority: SN/SA/SM/SG-prefixed → decimal 6-7 digit (excluding round-number false positives)
+  const snMatch = base.match(/(S[NAMG][0-9A-Z]{3}[0-9A-Z]{8})/);
+  let swNumber = snMatch?.[1] || null;
+  if (!swNumber) {
+    const decMatches = [...base.matchAll(/\b(\d{6,7})\b/g)].map(m => m[1])
+                          .filter(d => !FALSE_DEC_SW.has(d) && !/^0(0|1)/.test(d))  // skip round-number ECU sizes + leading-zero false hits
+                          .sort((a, b) => b.length - a.length);
+    swNumber = decMatches[0] || null;
+  }
+  // Stage detection — extended with DCTuning_Stage1 / _ori_DCTuning / _ORI_n suffix patterns
+  // and " MOD." / "_MOD" / WINOLS .MOD-extension patterns (regression-test caught
+  // these were being mis-classified as ORI in v3.14.2 and earlier).
   let stage = 0;
   if (/(?:^|[\._])Stage\s?3/i.test(base)) stage = 3;
   else if (/(?:^|[\._])Stage\s?2/i.test(base)) stage = 2;
-  else if (/(?:^|[\._])Stage\s?1/i.test(base)) stage = 1;
-  else if (/(?:^|[\._])(Original|\.ori|_ori)/i.test(base) || base.toLowerCase().endsWith('.ori')) stage = 0;
-  return {
-    partNumber: partMatch ? partMatch[1] : null,
-    swNumber: swMatch ? swMatch[1] : null,
-    stage,
-    base,
-  };
+  else if (/(?:^|[\._\s])Stage\s?1|DCTuning[_-]Stage1|\bstg1\b|(?:[\s_])MOD(?:[\.\s_]|$)|\.MOD$/i.test(base)) stage = 1;
+  else if (/(?:^|[\._\s])(Original|\.ori|_ori|_ORI_n|ORI_n)/i.test(base) || base.toLowerCase().endsWith('.ori')) stage = 0;
+  return { partNumber, swNumber, stage, base };
 }
 
 // Cluster diff bytes into regions (gaps ≤8 bytes belong to same region)

@@ -160,6 +160,10 @@ const ROOTS = [
   'C:/Users/damoc/Desktop/DATABASE/Tuning_DB_BIN',
   'C:/Users/damoc/Desktop/Damos-Big-Archive',      // v3.14.1 — added Apr 24 2026
   'D:/dctuning-scan/damos_rar_extract',             // extracted RAR contents
+  'C:/Users/damoc/Desktop/Damos',                   // v3.14.3 — new DAMOS folder (multi-brand, VAG subfolders only matter)
+  'C:/Users/damoc/Desktop/ECU FILES TEST',          // v3.14.3 — Damo's curated reference set
+  'D:/dctuning-scan/new_vag_extract/from_hex_s19',  // v3.14.3 — converted HEX/S19 → BIN
+  'D:/dctuning-scan/new_vag_extract/from_archives', // v3.14.3 — extracted ZIPs (mostly .dat reference)
 ]
 const MIN_SIZE = 64 * 1024
 const MAX_SIZE = 12 * 1024 * 1024

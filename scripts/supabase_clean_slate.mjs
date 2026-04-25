@@ -1,33 +1,29 @@
 #!/usr/bin/env node
 /**
- * supabase_clean_slate.mjs — v3.15.3 Phase 3 companion
- * ────────────────────────────────────────────────────
- * Finishes the Supabase clean-slate started via MCP migrations:
- *   1. Deletes 5 retired buckets (tune-files / library-files / tune-library /
- *      tunes / remap-files) and all their contents.
- *   2. Removes the 18,998 DRT orphan files from `definition-files` (their
- *      indexed rows in `definitions_index` were already dropped via SQL).
- *   3. Uploads all local recipes (`resources/recipes/`) to the new `recipes`
- *      bucket so web BYOK users can fetch Tier 1 reproductions.
+ * supabase_clean_slate.mjs — v3.15.3 Phase 3 companion (v2)
+ * ─────────────────────────────────────────────────────────
+ * v1 tried to walk each bucket recursively and remove paths in 1000-batches.
+ * That blew the call stack on the 285K-file tune-files bucket and hit Gateway
+ * timeouts on deeply-nested paths. v2 uses `emptyBucket()` which is a single
+ * server-side call — Supabase does the iteration internally.
  *
- * Requires SERVICE ROLE key (not anon) — bucket delete + insert need admin rights.
+ * Operations:
+ *   1. emptyBucket + deleteBucket for 5 retired buckets
+ *   2. DRT orphan cleanup in `definition-files` (query storage.objects via
+ *      service-role schema access, then batch-remove)
+ *   3. Upload recipes from `resources/recipes/` → `recipes` bucket
  *
  * Usage:
  *   SUPABASE_URL=https://xxx.supabase.co \
- *   SUPABASE_SERVICE_KEY=eyJ... \
- *   node scripts/supabase_clean_slate.mjs [--dry-run]
+ *   SUPABASE_SERVICE_KEY=sb_secret_... \
+ *   node scripts/supabase_clean_slate.mjs [--execute] [--skip-drop] [--skip-drt] [--skip-upload]
  *
- * Flags:
- *   --dry-run      preview only, no writes/deletes (DEFAULT if DRY_RUN env missing)
- *   --execute      actually perform the operations
- *   --skip-drop    skip bucket drops (if already done via dashboard)
- *   --skip-drt     skip DRT file cleanup
- *   --skip-upload  skip recipes upload
+ * Defaults to dry-run. Use --execute to actually do it.
  */
 
 import { createClient } from '@supabase/supabase-js'
 import { readdir, readFile, stat } from 'fs/promises'
-import { join, dirname, resolve, relative } from 'path'
+import { join, dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -38,171 +34,186 @@ const SUPABASE_URL = process.env.SUPABASE_URL
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY
 
 const argv = process.argv.slice(2)
-const EXECUTE    = argv.includes('--execute')
-const SKIP_DROP  = argv.includes('--skip-drop')
-const SKIP_DRT   = argv.includes('--skip-drt')
-const SKIP_UPLOAD = argv.includes('--skip-upload')
-const DRY_RUN    = !EXECUTE
+const EXECUTE      = argv.includes('--execute')
+const SKIP_DROP    = argv.includes('--skip-drop')
+const SKIP_DRT     = argv.includes('--skip-drt')
+const SKIP_UPLOAD  = argv.includes('--skip-upload')
+const DRY_RUN      = !EXECUTE
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-  console.error('✗ Missing env vars.')
-  console.error('  Required:')
-  console.error('    SUPABASE_URL          (e.g. https://xxx.supabase.co)')
-  console.error('    SUPABASE_SERVICE_KEY  (Supabase dashboard → Project Settings → API → service_role key)')
-  console.error('  WARNING: service_role key bypasses RLS. Never commit it.')
+  console.error('✗ Missing env vars. Required: SUPABASE_URL, SUPABASE_SERVICE_KEY')
   process.exit(1)
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
+  // Enable cross-schema access (storage.objects) via REST
+  db: { schema: 'public' },
 })
 
 console.log('━'.repeat(66))
-console.log(`DCTuning Supabase clean-slate — ${DRY_RUN ? 'DRY RUN' : '⚠  EXECUTE MODE'}`)
+console.log(`DCTuning Supabase clean-slate v2 — ${DRY_RUN ? 'DRY RUN' : '⚠  EXECUTE MODE'}`)
 console.log('━'.repeat(66))
+
+// ─── Retry helper for transient 5xx errors ────────────────────────────────
+async function withRetry(label, fn, maxAttempts = 5) {
+  let lastErr
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const res = await fn()
+      if (res && res.error) {
+        lastErr = res.error
+        const transient = /gateway|timeout|unavailable|503|502|504/i.test(res.error.message || '')
+        if (!transient) return res
+        const wait = 1000 * Math.pow(2, attempt - 1)
+        console.log(`    ${label}: ${res.error.message} — retrying in ${wait / 1000}s (${attempt}/${maxAttempts})`)
+        await new Promise(r => setTimeout(r, wait))
+        continue
+      }
+      return res
+    } catch (e) {
+      lastErr = e
+      const wait = 1000 * Math.pow(2, attempt - 1)
+      console.log(`    ${label}: ${e.message} — retrying in ${wait / 1000}s (${attempt}/${maxAttempts})`)
+      await new Promise(r => setTimeout(r, wait))
+    }
+  }
+  return { error: lastErr }
+}
 
 // ─── 1. Drop 5 retired buckets ────────────────────────────────────────────
 const BUCKETS_TO_DROP = ['tune-files', 'library-files', 'tune-library', 'tunes', 'remap-files']
 
 async function dropBucket(name) {
-  // Step 1: empty the bucket using storage API remove() in pages of 1000.
   console.log(`\n• ${name}`)
-  let totalRemoved = 0
-  let more = true
-  let page = 0
-
-  while (more) {
-    const { data: files, error: listErr } = await supabase.storage
-      .from(name)
-      .list('', { limit: 1000, sortBy: { column: 'name', order: 'asc' } })
-    if (listErr) {
-      console.error(`    list error: ${listErr.message}`)
-      return
-    }
-    if (!files || files.length === 0) { more = false; break }
-
-    // list returns only top-level. For recursive listing we need to walk
-    // — but for 5-bucket cleanup, the simpler approach is just use the
-    // management API delete-bucket endpoint, which recursively wipes.
-    // However that endpoint requires a PAT (personal access token), not
-    // service role. So we fall back to Supabase JS's .remove() per path.
-    //
-    // For top-level files (no slashes), .remove() works directly.
-    // For deep paths we need to walk the prefix tree.
-    const paths = await walkPaths(name, '')
-    if (paths.length === 0) { more = false; break }
-
-    console.log(`    removing ${paths.length} objects in batches of 1000…`)
-    for (let i = 0; i < paths.length; i += 1000) {
-      const batch = paths.slice(i, i + 1000)
-      if (DRY_RUN) {
-        totalRemoved += batch.length
-        continue
-      }
-      const { error: rmErr } = await supabase.storage.from(name).remove(batch)
-      if (rmErr) console.error(`    remove batch ${i}: ${rmErr.message}`)
-      else totalRemoved += batch.length
-    }
-    page++
-    more = false  // walkPaths returned all; no next page
+  if (DRY_RUN) {
+    console.log('    would empty + delete bucket')
+    return
   }
-
-  console.log(`    ${DRY_RUN ? 'would remove' : 'removed'} ${totalRemoved} objects`)
-
-  // Step 2: drop the bucket itself
-  if (!DRY_RUN) {
-    const { error } = await supabase.storage.deleteBucket(name)
-    if (error) console.error(`    deleteBucket: ${error.message}`)
-    else console.log(`    ✓ bucket '${name}' deleted`)
-  } else {
-    console.log(`    would delete bucket '${name}'`)
+  // emptyBucket returns quickly but the server-side op may take minutes for
+  // a 100-GB bucket. Supabase handles it async — repeat call until reports empty.
+  const tStart = Date.now()
+  const { error: emptyErr } = await withRetry(
+    `empty ${name}`,
+    () => supabase.storage.emptyBucket(name),
+    3,  // empty itself has internal pagination, no need for many retries
+  )
+  if (emptyErr) {
+    console.error(`    ✗ empty failed: ${emptyErr.message}`)
+    return
   }
+  console.log(`    ✓ emptied (${((Date.now() - tStart) / 1000).toFixed(1)}s)`)
+
+  const { error: delErr } = await withRetry(
+    `delete ${name}`,
+    () => supabase.storage.deleteBucket(name),
+  )
+  if (delErr) {
+    console.error(`    ✗ delete failed: ${delErr.message}`)
+    return
+  }
+  console.log(`    ✓ bucket '${name}' deleted`)
 }
 
-async function walkPaths(bucket, prefix) {
-  // Recursive walker using storage .list() with pagination.
-  const all = []
-  let offset = 0
-  while (true) {
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .list(prefix, { limit: 1000, offset, sortBy: { column: 'name', order: 'asc' } })
-    if (error) { console.error(`    walk ${prefix}: ${error.message}`); break }
-    if (!data || data.length === 0) break
-    for (const entry of data) {
-      const full = prefix ? `${prefix}/${entry.name}` : entry.name
-      if (entry.id === null || entry.metadata === null) {
-        // folder — recurse
-        const sub = await walkPaths(bucket, full)
-        all.push(...sub)
-      } else {
-        all.push(full)
-      }
-    }
-    if (data.length < 1000) break
-    offset += data.length
-  }
-  return all
-}
-
-// ─── 2. DRT orphan cleanup in definition-files ────────────────────────────
+// ─── 2. DRT orphan cleanup ────────────────────────────────────────────────
+// Service role can read storage.objects directly via the REST API when we
+// pass schema: 'storage'. Query DRT paths, then batch-remove.
 async function cleanupDrtOrphans() {
   console.log('\n━ DRT orphan cleanup in definition-files ━'.padEnd(66, '━'))
-  const paths = (await walkPaths('definition-files', '')).filter(p => /\.drt$/i.test(p))
-  console.log(`  found ${paths.length} .drt files`)
-  if (paths.length === 0) return
 
-  let removed = 0
-  for (let i = 0; i < paths.length; i += 1000) {
-    const batch = paths.slice(i, i + 1000)
-    if (DRY_RUN) { removed += batch.length; continue }
-    const { error } = await supabase.storage.from('definition-files').remove(batch)
-    if (error) console.error(`  batch ${i}: ${error.message}`)
+  // Query all DRT paths in batches of 1000 (Supabase REST default page size)
+  const allPaths = []
+  let from = 0
+  const pageSize = 1000
+  while (true) {
+    const { data, error } = await supabase
+      .schema('storage')
+      .from('objects')
+      .select('name')
+      .eq('bucket_id', 'definition-files')
+      .ilike('name', '%.drt')
+      .range(from, from + pageSize - 1)
+    if (error) {
+      console.error(`  query page ${from}: ${error.message}`)
+      break
+    }
+    if (!data || data.length === 0) break
+    allPaths.push(...data.map(r => r.name))
+    process.stdout.write(`\r  querying… ${allPaths.length} paths`)
+    if (data.length < pageSize) break
+    from += pageSize
+  }
+  console.log(`\n  ${allPaths.length} .drt files to remove`)
+  if (allPaths.length === 0) return
+
+  if (DRY_RUN) { console.log('  would remove ' + allPaths.length + ' files'); return }
+
+  let removed = 0, failed = 0
+  for (let i = 0; i < allPaths.length; i += 1000) {
+    const batch = allPaths.slice(i, i + 1000)
+    const { error } = await withRetry(
+      `remove batch ${i}`,
+      () => supabase.storage.from('definition-files').remove(batch),
+    )
+    if (error) { console.error(`\n  batch ${i}: ${error.message}`); failed += batch.length }
     else removed += batch.length
-    process.stdout.write(`\r  ${DRY_RUN ? 'would remove' : 'removed'} ${removed}/${paths.length}`)
+    process.stdout.write(`\r  removed ${removed}/${allPaths.length} (${failed} failed)`)
   }
   console.log()
 }
 
 // ─── 3. Recipes upload ────────────────────────────────────────────────────
 async function uploadRecipes() {
-  console.log('\n━ Uploading recipes to recipes bucket ━'.padEnd(66, '━'))
+  console.log('\n━ Uploading recipes → recipes bucket ━'.padEnd(66, '━'))
   try { await stat(RECIPES_DIR) }
-  catch { console.error(`  ✗ ${RECIPES_DIR} not found — nothing to upload`); return }
+  catch { console.error(`  ✗ ${RECIPES_DIR} not found`); return }
 
-  // Walk local folder
+  // Walk local folder iteratively (no recursion — stack-safe)
   const files = []
-  async function walk(dir, rel = '') {
+  const queue = [{ dir: RECIPES_DIR, rel: '' }]
+  while (queue.length > 0) {
+    const { dir, rel } = queue.shift()
     const entries = await readdir(dir, { withFileTypes: true })
     for (const e of entries) {
       const full = join(dir, e.name)
       const r = rel ? `${rel}/${e.name}` : e.name
-      if (e.isDirectory()) await walk(full, r)
+      if (e.isDirectory()) queue.push({ dir: full, rel: r })
       else if (e.isFile() && e.name.endsWith('.json')) files.push({ full, rel: r })
     }
   }
-  await walk(RECIPES_DIR)
-  console.log(`  ${files.length} recipe files found locally`)
+  console.log(`  ${files.length} recipe .json files found locally`)
+  if (files.length === 0) return
 
-  let uploaded = 0
-  let skipped = 0
-  let failed = 0
-  for (const { full, rel } of files) {
-    if (DRY_RUN) { uploaded++; continue }
-    const data = await readFile(full)
-    const { error } = await supabase.storage
-      .from('recipes')
-      .upload(rel, data, { contentType: 'application/json', upsert: true })
-    if (error) {
-      if (error.message.includes('already exists')) skipped++
-      else { console.error(`  ✗ ${rel}: ${error.message}`); failed++ }
-    } else uploaded++
-    if ((uploaded + skipped + failed) % 50 === 0) {
-      process.stdout.write(`\r  ${uploaded} uploaded, ${skipped} skipped, ${failed} failed`)
+  if (DRY_RUN) { console.log(`  would upload ${files.length} files`); return }
+
+  let uploaded = 0, skipped = 0, failed = 0
+  // Concurrency-limited upload — 8 parallel saves API load
+  const CONCURRENT = 8
+  let cursor = 0
+  const workers = Array.from({ length: CONCURRENT }, async () => {
+    while (cursor < files.length) {
+      const idx = cursor++
+      const { full, rel } = files[idx]
+      const data = await readFile(full)
+      const { error } = await withRetry(
+        `upload ${rel}`,
+        () => supabase.storage.from('recipes').upload(rel, data, {
+          contentType: 'application/json',
+          upsert: true,
+        }),
+        3,
+      )
+      if (error) {
+        if (/already exists/i.test(error.message)) skipped++
+        else { console.error(`\n  ✗ ${rel}: ${error.message}`); failed++ }
+      } else uploaded++
+      if ((uploaded + skipped + failed) % 25 === 0) {
+        process.stdout.write(`\r  ${uploaded} up, ${skipped} skip, ${failed} fail / ${files.length}`)
+      }
     }
-  }
-  console.log()
-  console.log(`  ${DRY_RUN ? 'would upload' : 'uploaded'} ${uploaded}, skipped ${skipped}, failed ${failed}`)
+  })
+  await Promise.all(workers)
+  console.log(`\n  uploaded ${uploaded}, skipped ${skipped}, failed ${failed}`)
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────
@@ -218,13 +229,8 @@ async function uploadRecipes() {
   if (!SKIP_UPLOAD) await uploadRecipes()
   else console.log('\n(skip-upload)')
 
-  console.log('\n━'.repeat(66))
-  if (DRY_RUN) {
-    console.log('DRY RUN complete. Nothing was changed.')
-    console.log('Review the output above, then re-run with --execute to perform the operations.')
-  } else {
-    console.log('✓ Done.')
-  }
+  console.log('\n' + '━'.repeat(66))
+  console.log(DRY_RUN ? 'DRY RUN complete.' : '✓ Done.')
 })().catch(err => {
   console.error('\nFatal:', err)
   process.exit(1)
