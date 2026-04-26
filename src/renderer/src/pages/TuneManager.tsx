@@ -3,6 +3,7 @@ import VehicleStrip from '../components/VehicleStrip'
 import type { ActiveVehicle } from '../lib/vehicleContext'
 import { useAuth } from '../lib/useAuth'
 import LoginScreen from '../components/LoginScreen'
+import RecipeBrowserTab from '../components/RecipeBrowserTab'
 import { supabase } from '../lib/supabase'
 
 interface TuneRecord {
@@ -94,13 +95,13 @@ export default function TuneManager({ activeVehicle, onOpenInRemap }: TuneManage
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState<TuneRecord | null>(null)
   const [search, setSearch] = useState('')
-  // v3.16: Library + Cloud tabs are removed in v3.16 — both pulled from
-  // Supabase tables (`library_entries`, `tunes`) that referenced files in
-  // buckets wiped during the v3.15.3 clean slate. Default is now 'watch'
-  // since that's the actual working flow (AutoTuner-style integration).
-  // 'local' is kept for one-off file uploads. The hex inspector lives in
-  // the Watch tab.
-  const [tab, setTab] = useState<'local' | 'watch'>('watch')
+  // v3.16: Cloud tab removed (Supabase `tunes` table referenced wiped buckets).
+  // Library tab repurposed as the Recipe Browser — same name, completely new
+  // implementation that loads the recipe manifest (~3,138 recipes across
+  // ~2,247 part numbers) and lets customers browse + search the catalog.
+  // Default is 'watch' (AutoTuner workflow); 'local' for one-off files;
+  // 'library' for "what can DCTuning tune?" discovery.
+  const [tab, setTab] = useState<'local' | 'watch' | 'library'>('watch')
   const [localFiles, setLocalFiles] = useState<{ name: string; size: number; path: string }[]>([])
   const [downloading, setDownloading] = useState<string | null>(null)
   const [error, setError] = useState('')
@@ -417,7 +418,7 @@ export default function TuneManager({ activeVehicle, onOpenInRemap }: TuneManage
       {/* Tabs + controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: 4 }}>
-          {(['watch', 'local'] as const).map((t) => (
+          {(['watch', 'local', 'library'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -436,6 +437,8 @@ export default function TuneManager({ activeVehicle, onOpenInRemap }: TuneManage
             >
               {t === 'local'
                 ? `Local (${localFiles.length})`
+                : t === 'library'
+                ? 'Recipe Library'
                 : <>
                     Watch Folder ({watchedFiles.length})
                     {watching && <span style={{
@@ -506,104 +509,7 @@ CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id
       <div className="grid-2" style={{ gap: 20, alignItems: 'start' }}>
         {/* File list */}
         <div>
-          {tab === 'library' && (
-            <>
-              {/* Stage filter pills */}
-              <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
-                {STAGE_FILTERS.map(s => {
-                  const stageColors: Record<string, string> = {
-                    stage1: '#00aec8', stage2: '#ff9500', stage3: '#ff4500',
-                    emissions: '#888', original: '#666', all: 'var(--accent)',
-                  }
-                  const active = libStage === s.value
-                  const col = stageColors[s.value] || '#888'
-                  return (
-                    <button
-                      key={s.value}
-                      onClick={() => { setLibStage(s.value); setLibPage(0) }}
-                      style={{
-                        padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700,
-                        border: `1px solid ${active ? col : 'rgba(255,255,255,0.1)'}`,
-                        background: active ? `${col}22` : 'transparent',
-                        color: active ? col : 'rgba(255,255,255,0.4)',
-                        cursor: 'pointer', fontFamily: 'Manrope, sans-serif',
-                        transition: 'all .15s',
-                      }}
-                    >
-                      {s.label}
-                    </button>
-                  )
-                })}
-              </div>
-
-              {/* Stats bar */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, fontSize: 12, color: 'var(--text-muted)' }}>
-                <span>{libTotal.toLocaleString()} entries{libStage !== 'all' ? ` · ${STAGE_FILTERS.find(s => s.value === libStage)?.label}` : ''}</span>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  {libPage > 0 && (
-                    <button className="btn btn-ghost" style={{ fontSize: 11, padding: '4px 10px' }} onClick={() => searchLibrary(libPage - 1)}>← Prev</button>
-                  )}
-                  <span>Page {libPage + 1} of {Math.ceil(libTotal / LIB_PAGE_SIZE)}</span>
-                  {(libPage + 1) * LIB_PAGE_SIZE < libTotal && (
-                    <button className="btn btn-ghost" style={{ fontSize: 11, padding: '4px 10px' }} onClick={() => searchLibrary(libPage + 1)}>Next →</button>
-                  )}
-                </div>
-              </div>
-
-              {libLoading && (
-                <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)', fontSize: 13 }}>
-                  ⏳ Searching library...
-                </div>
-              )}
-
-              {!libLoading && libResults.length === 0 && (
-                <div className="card" style={{ textAlign: 'center', padding: 40 }}>
-                  <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
-                  <div style={{ fontWeight: 700, marginBottom: 6 }}>No results</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Try a different make or model</div>
-                </div>
-              )}
-
-              {!libLoading && libResults.map((entry) => (
-                <div key={entry.id} className="card" style={{ marginBottom: 6, padding: '10px 14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13 }}>
-                        {fmtVehicle(entry.vehicle_make, entry.vehicle_model)}
-                        {entry.vehicle_fuel && <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: 12 }}> · {entry.vehicle_fuel}</span>}
-                      </div>
-                      <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 3, fontFamily: 'monospace', opacity: 0.85 }}>
-                        {extractEntrySubInfo(entry)}
-                      </div>
-                    </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                      <span style={{
-                        fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
-                        background: 'var(--accent-dim)', color: 'var(--accent)',
-                        border: '1px solid rgba(0,174,200,0.2)',
-                        display: 'inline-block',
-                      }}>
-                        {entry.remap_type || 'Tune'}
-                      </span>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                        {entry.original_file_size ? `${Math.round(entry.original_file_size / 1024)} KB` : '—'}
-                      </div>
-                      {(entry.storage_uploaded || isAdmin) && (
-                        <button
-                          className="btn btn-primary"
-                          style={{ fontSize: 10, padding: '3px 10px', marginTop: 2 }}
-                          onClick={() => downloadLibraryFile(entry)}
-                          disabled={downloading === entry.id}
-                        >
-                          {downloading === entry.id ? '⏳' : '⬇ Download'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </>
-          )}
+          {tab === 'library' && <RecipeBrowserTab />}
 
           {tab === 'cloud' && (
             <>
