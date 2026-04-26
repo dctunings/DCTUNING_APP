@@ -38,7 +38,7 @@ export default function WebOnlyBanner({
   // v0.2.0: NSIS installer. Customer downloads → wizard installs to Program Files,
   // adds Add/Remove Programs entry, optionally enables Windows auto-start, hides
   // the console window. Replaces the bare-ZIP approach used in v0.1.0.
-  const bridgeDownloadUrl = 'https://raw.githubusercontent.com/dctunings/DCTUNING_APP/main/bridge/releases/DCTuningBridge_Setup_v0.2.0.exe'
+  const bridgeDownloadUrl = 'https://raw.githubusercontent.com/dctunings/DCTUNING_APP/main/bridge/releases/DCTuningBridge_Setup_v0.2.1.exe'
 
   return (
     <div style={{

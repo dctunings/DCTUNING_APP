@@ -88,8 +88,29 @@ export interface OpenResult {
 }
 
 export async function j2534Open(dllPath: string): Promise<OpenResult> {
-  // Close any existing bridge before opening a new one
-  await j2534Close()
+  // Reuse path — if a helper is already running with the same DLL and just
+  // had its device closed, send Open to it instead of spawning a new helper.
+  // This is the fast path (~50ms vs ~2s for cold spawn) and avoids the
+  // "DEVICE_IN_USE_BY_ANOTHER_PROCESS" error caused by killing the helper
+  // before the kernel released the device.
+  if (bridge && !bridge.process.killed && bridge.dllPath === dllPath) {
+    try {
+      const result = await sendBridgeCommand({ action: 'open' }, 25000)
+      const parsed = JSON.parse(result)
+      if (parsed.ok) {
+        bridge.deviceId = parsed.deviceId
+        return {
+          ok: true,
+          deviceId: parsed.deviceId,
+          info: `FW ${parsed.fw || '?'} | DLL ${parsed.dllVer || '?'} | API ${parsed.api || '?'}`,
+        }
+      }
+      // Open failed — fall through to fresh-spawn path
+    } catch { /* ignore — fall through */ }
+  }
+
+  // Fresh spawn — different DLL path, helper crashed, or first-ever open
+  await forceKillHelper()
 
   const helperExe = locateHelperExe()
   if (!helperExe) {
@@ -163,6 +184,16 @@ export async function j2534Open(dllPath: string): Promise<OpenResult> {
   }
 }
 
+/**
+ * Soft close — releases the device + channel handles inside the helper but
+ * keeps helper.exe alive for the next open. Killing the helper between cycles
+ * was causing PassThruOpen to fail with "DEVICE_IN_USE_BY_ANOTHER_PROCESS"
+ * because the kernel-side device handle hadn't released yet by the time the
+ * new helper tried to grab it.
+ *
+ * forceKillHelper() (below) is the previous behavior, used when we need a
+ * fresh helper (e.g. switching to a different DLL path).
+ */
 export async function j2534Close(): Promise<void> {
   if (!bridge) return
   try {
@@ -170,8 +201,22 @@ export async function j2534Close(): Promise<void> {
       await sendBridgeCommand({ action: 'close' }, 3000).catch(() => null)
     }
   } catch { /* ignore */ }
+  // Reset state but keep helper.exe running — next j2534Open on the same DLL
+  // can re-use it without restarting the process. Reduces reconnect time
+  // from ~2s (spawn + DLL load) to ~50ms (just send open command).
+  if (bridge) {
+    bridge.deviceId = 0
+    bridge.channelId = 0
+  }
+}
+
+async function forceKillHelper(): Promise<void> {
+  if (!bridge) return
   try { bridge.process.kill() } catch { /* ignore */ }
   bridge = null
+  // Tiny delay — give Windows a moment to release the device handle on the
+  // kernel side. Not strictly required but cheap insurance against races.
+  await new Promise(r => setTimeout(r, 100))
 }
 
 export function j2534IsOpen(): boolean {

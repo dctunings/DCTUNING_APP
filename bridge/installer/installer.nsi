@@ -18,7 +18,7 @@
 !define DESCRIPTION   "Local J2534 hardware service for app.dctuning.ie"
 !define VERSIONMAJOR  0
 !define VERSIONMINOR  2
-!define VERSIONBUILD  0
+!define VERSIONBUILD  1
 !define HELPURL       "https://dctuning.ie"
 !define UPDATEURL     "https://github.com/dctunings/DCTUNING_APP/releases"
 !define ABOUTURL      "https://app.dctuning.ie"

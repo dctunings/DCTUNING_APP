@@ -127,14 +127,31 @@ export default function ECUFlashManager({ connected, activeVehicle, onConnect }:
   }
 
   // Load ECU definitions from main process
+  // Load ECU flash definitions from main process (desktop) or bridge (web).
+  // Used to populate ECU family dropdowns in Checksum / Read / Write tabs.
   useEffect(() => {
-    const api = (window as any).api
-    api?.j2534GetECUDefinitions?.().then((defs: ECUFlashDef[]) => {
+    let cancelled = false
+    const load = async () => {
+      const api = (window as any).api
+      let defs: ECUFlashDef[] = []
+      if (api?.j2534GetECUDefinitions) {
+        defs = await api.j2534GetECUDefinitions().catch(() => [] as ECUFlashDef[])
+      } else if (bridge.isConnected()) {
+        try {
+          const res = await bridge.j2534GetECUDefinitions()
+          defs = (res as ECUFlashDef[]) || []
+        } catch { defs = [] }
+      }
+      if (cancelled) return
       if (defs?.length) {
         setEcuDefs(defs)
         setSelectedEcu(defs[0])
       }
-    })
+    }
+    void load()
+    // Re-load when bridge connection changes (e.g. user installs bridge mid-session)
+    const unsub = bridge.onStateChange(() => { void load() })
+    return () => { cancelled = true; unsub() }
   }, [])
 
   // Subscribe to J2534 progress events

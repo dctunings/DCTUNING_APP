@@ -1,6 +1,6 @@
 {
   "name": "dctuning-bridge",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "DCTuning Bridge — local J2534 WebSocket service for app.dctuning.ie web users",
   "main": "dist/index.js",
   "bin": {

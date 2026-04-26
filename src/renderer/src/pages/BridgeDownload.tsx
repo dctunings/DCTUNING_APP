@@ -17,8 +17,8 @@ interface Props {
   setPage: (p: Page) => void
 }
 
-const INSTALLER_VERSION = 'v0.2.0'
-const INSTALLER_URL = 'https://raw.githubusercontent.com/dctunings/DCTUNING_APP/main/bridge/releases/DCTuningBridge_Setup_v0.2.0.exe'
+const INSTALLER_VERSION = 'v0.2.1'
+const INSTALLER_URL = 'https://raw.githubusercontent.com/dctunings/DCTUNING_APP/main/bridge/releases/DCTuningBridge_Setup_v0.2.1.exe'
 const INSTALLER_SIZE = '26 MB'
 
 export default function BridgeDownload({ setPage }: Props) {

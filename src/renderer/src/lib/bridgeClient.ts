@@ -189,6 +189,9 @@ class BridgeClient {
   j2534CalcKey(ecuId: string, seedHex: string, level = 1) {
     return this.request<{ ok: boolean; key?: number[]; error?: string }>('j2534-calc-key', { ecuId, seedHex, level })
   }
+  j2534GetECUDefinitions() {
+    return this.request<unknown[]>('j2534-get-ecu-definitions')
+  }
   j2534ClearDTCs(protocol = 6) { return this.request<{ ok: boolean; error?: string }>('j2534-clear-dtcs', { protocol }) }
   j2534ReadECUID() { return this.request<{ ok: boolean; id?: Record<string, unknown>; error?: string }>('j2534-read-ecu-id') }
   j2534ReadFlash(startAddr: number, totalLen: number, chunkSize?: number, protocol?: number) {

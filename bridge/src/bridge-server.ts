@@ -22,7 +22,7 @@ import { WebSocketServer, WebSocket } from 'ws'
 import * as http from 'http'
 import * as driver from './j2534-driver'
 import { scanJ2534Devices } from './registry-scan'
-import { calculateKey } from './ecuSeedKey'
+import { calculateKey, ECU_FLASH_DEFINITIONS } from './ecuSeedKey'
 import type { BridgeRequest, BridgeResponse, BridgeEvent, PingResponse } from './types'
 
 // Origins allowed to connect. Localhost variants are for development only.
@@ -35,7 +35,7 @@ const ALLOWED_ORIGINS = new Set([
 ])
 
 const PORT = 8765
-const VERSION = '0.2.0'
+const VERSION = '0.2.1'
 const startedAt = Date.now()
 
 function isOriginAllowed(origin: string | undefined): boolean {
@@ -145,6 +145,12 @@ async function dispatch(req: BridgeRequest): Promise<unknown> {
       }
       return { ok: true, id: { ...result, ecuPart: result.partNumber, raw } }
     }
+
+    case 'j2534-get-ecu-definitions':
+      // Returns the bundled ECU flash definitions list — same data as the
+      // desktop's IPC equivalent. Web UI uses it to populate ECU family
+      // dropdowns (Checksum tool, Read/Write Flash, Seed/Key, etc.).
+      return ECU_FLASH_DEFINITIONS
 
     case 'j2534-calc-key': {
       // SecurityAccess seed → key. Pure JS, no hardware needed. Lets the

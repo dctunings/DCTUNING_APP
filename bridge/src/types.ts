@@ -85,6 +85,7 @@ export type BridgeAction =
   | 'j2534-calc-key'
   | 'j2534-uds'                 // raw UDS request
   | 'j2534-calc-key'            // SecurityAccess seed → key (pure JS, ECU-specific)
+  | 'j2534-get-ecu-definitions' // returns bundled ECUFlashDef[] for UI dropdowns
 
 export interface PingResponse {
   version: string
