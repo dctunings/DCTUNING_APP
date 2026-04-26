@@ -20,15 +20,21 @@ type StageFilter = 'all' | 1 | 2 | 3
 
 const PAGE_SIZE = 80
 
-// Try to extract a vehicle hint from the original tuner filename.
+// Try to extract a vehicle hint from the original tuner filename + parent folder.
 // Filenames look like: "Audi_A4_1.8T__Benzin___96.4KWKW_Bosch_0261207939_..."
-function vehicleHint(sourceTunedFile: string): string {
+// Folder names like:   "Golf 7 2.0 TFSI Stage 1 Sw SC800H6300000 Hw 5G0906259E"
+// Folder is preferred when present because it usually has cleaner vehicle naming.
+function vehicleHint(sourceTunedFile: string, sourceFolder?: string): string {
+  // Folder first — usually has the cleanest vehicle description
+  if (sourceFolder && sourceFolder.length > 3 && !/^[0-9a-f]{8,}$/i.test(sourceFolder)) {
+    // Strip tuner-internal prefixes like "[B&C Consulting]"
+    const cleaned = sourceFolder.replace(/^\[[^\]]*\]\s*/, '').trim()
+    if (cleaned) return cleaned.length > 60 ? cleaned.slice(0, 60) + '…' : cleaned
+  }
   if (!sourceTunedFile) return ''
-  // Take everything before the first numeric/code-like token
   const cleaned = sourceTunedFile
-    .replace(/^[a-zA-Z]+_/, '')               // strip obvious prefix (rare)
+    .replace(/^[a-zA-Z]+_/, '')
     .replace(/\.(Stage[0-9]+\+?\+?\+?|bin|ori|mod)$/i, '')
-  // Extract first 3 underscore-separated tokens that look like make/model/trim
   const tokens = cleaned.split('_').filter(t => t.trim() && !/^\d+\.\d+$/.test(t))
   if (tokens.length === 0) return ''
   return tokens.slice(0, 3).join(' ').replace(/\s+/g, ' ').trim()
@@ -72,8 +78,13 @@ export default function RecipeBrowserTab() {
       g.variants.push(entry)
       if (entry.swNumber) g.swNumbers.add(entry.swNumber)
       g.stages.add(entry.stage)
-      if (!g.vehicleHint && entry.sourceTunedFile) {
-        g.vehicleHint = vehicleHint(entry.sourceTunedFile)
+      // Pick the best vehicle hint we can find across all variants of this part.
+      // Folder-based hints win over filename-based ones.
+      if (entry.sourceFolder || entry.sourceTunedFile) {
+        const candidate = vehicleHint(entry.sourceTunedFile, entry.sourceFolder)
+        if (candidate && (!g.vehicleHint || (entry.sourceFolder && !g.vehicleHint.match(/^\w+ \w+/)))) {
+          g.vehicleHint = candidate
+        }
       }
     }
     return Array.from(map.values()).sort((a, b) => a.partNumber.localeCompare(b.partNumber))
@@ -90,6 +101,7 @@ export default function RecipeBrowserTab() {
       for (const sw of g.swNumbers) if (sw.toLowerCase().includes(q)) return true
       for (const v of g.variants) {
         if (v.sourceTunedFile?.toLowerCase().includes(q)) return true
+        if (v.sourceFolder?.toLowerCase().includes(q)) return true   // v3.16: search folder context
       }
       return false
     })

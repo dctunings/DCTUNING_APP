@@ -23,6 +23,7 @@ export interface RecipeManifestEntry {
   totalBytesChanged: number          // total bytes differing from ORI (metadata)
   path: string                       // relative path to the full recipe file: e.g. '03G906018DH/SN100L8000000_stage1.json'
   sourceTunedFile: string            // original filename of the tuner's Stage file
+  sourceFolder?: string              // v3.16 — parent folder name (e.g. "Golf 7 GTI 220cv Simos18.1"). Enables vehicle-name search.
 }
 
 // ─── Full recipe (loaded on-demand when applying) ────────────────────────────

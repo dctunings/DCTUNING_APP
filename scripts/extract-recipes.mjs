@@ -157,12 +157,22 @@ function buildRecipe(oriPath, tunedPath, stage) {
   const oriInfo = parseFilename(oriPath);
   const tunedInfo = parseFilename(tunedPath);
 
+  // Capture the parent folder name so the Recipe Library search picks up
+  // vehicle context that's encoded in the folder structure rather than the
+  // filename. e.g. "Golf 7 2.0 TFSI Stage 1 Sw SC800H6300000 Hw 5G0906259E
+  // 300Hp DSG250 Simos18" — searching "Golf 7" should find this even though
+  // the .bin filename inside has no "Golf 7" string.
+  const tunedDir = path.dirname(tunedPath)
+  const oriDir = path.dirname(oriPath)
+  const sourceFolder = path.basename(tunedDir) || path.basename(oriDir) || ''
+
   const recipe = {
     schemaVersion: 1,
     sourcePartNumber: oriInfo.partNumber || tunedInfo.partNumber,
     sourceSwNumber: oriInfo.swNumber || tunedInfo.swNumber,
     sourceOriFile: path.basename(oriPath),
     sourceTunedFile: path.basename(tunedPath),
+    sourceFolder,                                                        // NEW v3.16
     sourceOriHash: (() => { try { return sha256File(oriPath) } catch { return '' } })(),
     sourceOriSize: ori.length,
     stage,
@@ -291,6 +301,7 @@ function walkRecipes(dir) {
           totalBytesChanged: recipe.totalBytesChanged,
           path: path.relative(OUT_ROOT, full).replace(/\\/g, '/'),
           sourceTunedFile: recipe.sourceTunedFile,
+          sourceFolder: recipe.sourceFolder || '',  // v3.16: enables vehicle-name search ("Golf 7", "Audi A3", etc.)
         });
       } catch {}
     }
