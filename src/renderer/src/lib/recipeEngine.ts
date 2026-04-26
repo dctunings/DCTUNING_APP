@@ -195,8 +195,16 @@ export async function loadManifest(): Promise<RecipeManifestEntry[]> {
           return res.manifest
         }
       }
-      // Fall back to HTTP fetch (web mode — served as static asset)
-      const res = await fetch('./recipes/manifest.json', { cache: 'force-cache' })
+      // Fall back to HTTP fetch (web mode — served as static asset).
+      // cache: 'no-cache' forces revalidation against the server (using ETag /
+      // If-Modified-Since), so when we ship a new manifest the browser picks
+      // it up immediately. The previous 'force-cache' setting trapped users
+      // on whichever manifest they got the first time they ever visited the
+      // app — Damo saw 1,446 entries on a build that has 3,138.
+      // Bust the bandwidth concern with the BUILD_ID query string — same JSON
+      // re-served means the browser still gets a 304 Not Modified.
+      const url = `./recipes/manifest.json?v=${__APP_VERSION__}`
+      const res = await fetch(url, { cache: 'no-cache' })
       if (!res.ok) return []
       const manifest = (await res.json()) as RecipeManifestEntry[]
       cachedManifest = manifest
