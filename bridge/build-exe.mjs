@@ -28,7 +28,7 @@
 //   - https://github.com/nodejs/postject
 
 import { execSync } from 'node:child_process'
-import { copyFileSync, existsSync, mkdirSync, statSync, writeFileSync, rmSync, chmodSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdirSync, statSync, writeFileSync, rmSync, chmodSync, readFileSync, openSync, writeSync, closeSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import rcedit from 'rcedit'
@@ -48,6 +48,53 @@ const SEA_CONFIG   = resolve(BUILD_DIR, 'sea-config.json')
 const SEA_BLOB     = resolve(BUILD_DIR, 'sea-prep.blob')
 const EXE_PATH     = resolve(BUILD_DIR, 'DCTuningBridge.exe')
 const ZIP_PATH     = resolve(RELEASES_DIR, `DCTuningBridge-v${VERSION}-win-x64.zip`)
+const INSTALLER_NSI = resolve(root, 'installer', 'installer.nsi')
+const NSIS_PATH    = 'C:\\Program Files (x86)\\NSIS\\makensis.exe'
+
+// ─── PE Subsystem patcher ────────────────────────────────────────────────
+//
+// Switches a Windows PE binary from Console subsystem (3) to GUI subsystem
+// (2), which hides the console window when the exe runs. Two bytes change
+// at a known offset.
+//
+// PE structure:
+//   DOS header → e_lfanew (offset 0x3C) → file offset of PE signature
+//   PE signature: 4 bytes "PE\0\0"
+//   COFF header: 20 bytes
+//   Optional header: 68 bytes before Subsystem field (same for PE32 + PE32+)
+//   ⇒ Subsystem byte is at file offset (e_lfanew + 4 + 20 + 68) = e_lfanew + 92
+//
+// Subsystem values:
+//   2 = IMAGE_SUBSYSTEM_WINDOWS_GUI  ← no console window
+//   3 = IMAGE_SUBSYSTEM_WINDOWS_CUI  ← console window (default for node.exe)
+
+function setSubsystemToGUI(exePath) {
+  const fd = openSync(exePath, 'r+')
+  try {
+    const dosHeader = Buffer.alloc(64)
+    const { bytesRead } = (() => {
+      const buf = readFileSync(exePath).slice(0, 64)
+      dosHeader.set(buf)
+      return { bytesRead: buf.length }
+    })()
+    if (bytesRead < 64) throw new Error('Not a valid PE file (header too short)')
+
+    // e_lfanew at offset 0x3C — file offset of PE signature
+    const peOffset = dosHeader.readUInt32LE(0x3C)
+
+    // Verify PE signature
+    const peSigBuf = Buffer.alloc(4)
+    readFileSync(exePath).copy(peSigBuf, 0, peOffset, peOffset + 4)
+    if (peSigBuf.toString('ascii', 0, 2) !== 'PE') throw new Error(`No PE signature at offset 0x${peOffset.toString(16)}`)
+
+    // Subsystem is 2 bytes at peOffset + 92
+    const subsystemOffset = peOffset + 92
+    const newSubsystem = Buffer.from([0x02, 0x00])  // IMAGE_SUBSYSTEM_WINDOWS_GUI, little-endian
+    writeSync(fd, newSubsystem, 0, 2, subsystemOffset)
+  } finally {
+    closeSync(fd)
+  }
+}
 
 console.log('━'.repeat(60))
 console.log(`  Building DCTuning Bridge v${VERSION} (Node SEA)`)
@@ -149,6 +196,15 @@ execSync(
 )
 console.log(`  ✓ Blob injected`)
 
+// ── 8b. PE Subsystem → GUI (no console window) ────────────────────────────
+console.log('\n• PE patch — switching Subsystem to WINDOWS_GUI')
+try {
+  setSubsystemToGUI(EXE_PATH)
+  console.log(`  ✓ Console window will be hidden when exe runs`)
+} catch (e) {
+  console.warn(`  ✗ PE patch failed: ${e.message} — exe will still show console window`)
+}
+
 // ── 9. Bundle j2534helper.exe alongside ──────────────────────────────────
 console.log('\n• Bundling j2534helper.exe')
 if (existsSync(HELPER_SRC)) {
@@ -168,6 +224,31 @@ execSync(
   { cwd: root, stdio: 'inherit' }
 )
 
+// ── 11. NSIS installer (optional — only if NSIS is on PATH) ──────────────
+let installerPath = null
+console.log('\n• makensis — building NSIS installer')
+if (existsSync(NSIS_PATH) && existsSync(INSTALLER_NSI)) {
+  try {
+    execSync(
+      `"${NSIS_PATH}" /V2 "${INSTALLER_NSI}"`,
+      { cwd: root, stdio: 'inherit' }
+    )
+    // installer.nsi writes to ../releases/DCTuningBridge_Setup_v0.2.0.exe
+    const candidates = [
+      resolve(RELEASES_DIR, `DCTuningBridge_Setup_v${VERSION}.exe`),
+      resolve(RELEASES_DIR, 'DCTuningBridge_Setup_v0.2.0.exe'),
+    ]
+    installerPath = candidates.find(p => existsSync(p)) ?? null
+    if (installerPath) {
+      console.log(`  ✓ ${installerPath} (${(statSync(installerPath).size / 1024 / 1024).toFixed(1)} MB)`)
+    }
+  } catch (e) {
+    console.warn(`  ✗ NSIS build failed: ${e.message}`)
+  }
+} else {
+  console.log(`  (NSIS not installed at ${NSIS_PATH} — skipping installer)`)
+}
+
 const exeSize = (statSync(EXE_PATH).size / 1024 / 1024).toFixed(1)
 const zipSize = (statSync(ZIP_PATH).size / 1024 / 1024).toFixed(1)
 
@@ -175,4 +256,7 @@ console.log('\n' + '━'.repeat(60))
 console.log(`  ✓ Build complete`)
 console.log(`    DCTuningBridge.exe                       ${exeSize} MB`)
 console.log(`    DCTuningBridge-v${VERSION}-win-x64.zip   ${zipSize} MB`)
+if (installerPath) {
+  console.log(`    DCTuningBridge_Setup_v${VERSION}.exe       ${(statSync(installerPath).size / 1024 / 1024).toFixed(1)} MB`)
+}
 console.log('━'.repeat(60))

@@ -4,54 +4,63 @@ Pre-built Windows binaries of the DCTuning Bridge service. Customers download
 these to use J2534 hardware (Scanmatik, Tactrix, MagicMotorSport, etc.) from
 the web app at `app.dctuning.ie` — no full desktop app required.
 
-## Latest
+## Latest — v0.2.0
 
-**`DCTuningBridge-v0.1.0-win-x64.zip`** (14.5 MB)
+**Recommended for end users**:
 
-Contents (extract both files to the same folder):
+📦 **[`DCTuningBridge_Setup_v0.2.0.exe`](DCTuningBridge_Setup_v0.2.0.exe)** (26 MB)
 
-| File | Size | Purpose |
-|---|---|---|
-| `DCTuningBridge.exe` | 38 MB | Bridge service (Node + bridge code, single file) |
-| `j2534helper.exe`    | 13 KB | 32-bit J2534 DLL loader (PInvoke into PassThruXxx) |
+Proper Windows installer — wizard, Add/Remove Programs entry, optional
+auto-start on Windows boot, hidden console window. Same install experience
+as the desktop app.
 
-## Install (end users)
+**For advanced users** (manual extract, no installer):
 
-1. Download the ZIP from
-   `https://raw.githubusercontent.com/dctunings/DCTUNING_APP/main/bridge/releases/DCTuningBridge-v0.1.0-win-x64.zip`
-2. Extract anywhere — Desktop, Documents, wherever (~38 MB)
-3. Double-click `DCTuningBridge.exe`
-4. A console window opens showing:
+📦 [`DCTuningBridge-v0.2.0-win-x64.zip`](DCTuningBridge-v0.2.0-win-x64.zip) (26 MB)
+
+ZIP containing the bare `.exe` + helper. Extract anywhere, double-click to run.
+No registry entries, no auto-start, no shortcuts — just the binaries.
+
+## Install (Setup.exe — recommended)
+
+1. Download `DCTuningBridge_Setup_v0.2.0.exe` from the link above.
+2. **Windows SmartScreen** will warn "Windows protected your PC". Click
+   **More info → Run anyway**. (This goes away with code-signing in v0.4.0.)
+3. The installer wizard opens. Click through:
+   - **License** — DCTuning EULA
+   - **Install location** — default `C:\Program Files\DCTuning Bridge`
+   - **Components** — three checkboxes:
+     - ✅ Bridge service (required, can't uncheck)
+     - ✅ Start automatically on Windows login (recommended)
+     - ✅ Start Menu shortcut
+     - ☐ Desktop shortcut (off by default)
+   - Click **Install**
+4. On the final wizard page, leave **"Start DCTuning Bridge now"** checked
+   and click **Finish**.
+5. The bridge starts as a hidden background service. **No console window
+   visible** (changed from v0.1.0). You can't see it directly — verify it's
+   running by opening `http://127.0.0.1:8765` in any browser:
+   ```json
+   {"service":"dctuning-bridge","version":"0.2.0","uptime":42,...}
    ```
-   DCTuning Bridge v0.1.0
-   Listening on ws://127.0.0.1:8765
-   Helper: <path>/j2534helper.exe
-   ```
-5. Open `app.dctuning.ie` in Chrome / Edge / Brave
-6. Visit ECU Unlock / Cloning / Flash — green pill says
-   **"Local Bridge Connected"**
+6. Open `app.dctuning.ie` → ECU Unlock / Cloning / Flash should show the
+   green **"Local Bridge Connected"** pill.
 
-The bridge must stay running while you use J2534 features. Close the console
-window when you're done.
+From now on, the bridge starts automatically every time Windows logs in.
+Customer doesn't have to think about it.
+
+## Uninstall
+
+Standard Windows: **Settings → Apps → Installed apps → DCTuning Bridge →
+Uninstall**. Or **Control Panel → Programs and Features → DCTuning Bridge**.
+Cleanly removes all files, registry entries, and the auto-start hook.
 
 ## Prerequisites
 
-- Windows 10 / 11 (the J2534 DLLs are Windows-only)
-- Your J2534 device's official driver installed (e.g. Scanmatik 2.21.21/22 for
-  Scanmatik 2 PRO and PCMTuner clones)
-- Chrome / Edge / Brave browser
-
-## Auto-start on boot (optional, until v0.2.0 ships an installer)
-
-To make the bridge start automatically when Windows logs in:
-
-1. Press `Win+R`, type `shell:startup`, press Enter
-2. Right-click → New → Shortcut
-3. Target: full path to `DCTuningBridge.exe`
-4. Name it "DCTuning Bridge"
-
-Now it runs every login. Right-click the console window → Properties → Layout
-to make it minimise on start if you don't want it visible.
+- Windows 10 / 11 (J2534 DLLs are Windows-only)
+- Your J2534 device's official driver installed (e.g. Scanmatik 2.21.21/22
+  for Scanmatik 2 PRO and PCMTuner clones)
+- Chrome / Edge / Brave browser for `app.dctuning.ie`
 
 ## Verifying the bridge is up
 
@@ -60,36 +69,55 @@ Open `http://127.0.0.1:8765` in a browser — you should see:
 ```json
 {
   "service": "dctuning-bridge",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "uptime": 42,
   "endpoint": "ws://127.0.0.1:8765"
 }
 ```
 
-If you don't see this, the bridge isn't running. Restart it.
+If you don't see this, the bridge isn't running. From the Start Menu launch
+**DCTuning Ireland → DCTuning Bridge** to start it manually, or reboot if
+auto-start is enabled.
 
-## Known limitations (v0.1.0)
+## What's new in v0.2.0 vs v0.1.0
 
-- **Default Node.js icon** (the green hexagon) instead of DCTuning logo. The
-  packager (`pkg`) and Windows resource editor (`rcedit`) are incompatible —
-  rcedit's PE modifications corrupt pkg's payload integrity check. Switching
-  to Node SEA in v0.2.0 will fix this cleanly.
-- **Console window stays visible** while the bridge is running. v0.2.0 will
-  hide it and put the bridge in the system tray.
-- **Windows SmartScreen warning** on download — unsigned binaries trigger
-  "Windows protected your PC". Click "More info → Run anyway". Code-signing
-  cert in v0.4.0 will eliminate this.
+| Change | v0.1.0 | v0.2.0 |
+|---|---|---|
+| Distribution | bare ZIP | **NSIS installer** (setup wizard) |
+| Icon | default Node hex | **DCTuning logo** |
+| Console window | visible | **hidden** (subsystem GUI) |
+| Auto-start on boot | manual shortcut | **installer checkbox** |
+| Add/Remove Programs entry | none | **proper uninstaller** |
+| Version metadata in Properties | none | DCTuning Ireland + product info |
+| Bundler | pkg | Node SEA + postject + rcedit |
+
+## Known limitations (v0.2.0)
+
+- **Windows SmartScreen warning** on first run — unsigned binary. Fix in
+  v0.4.0 with a code-signing cert (~$200/yr).
+- **No system tray icon** — bridge runs invisibly. Right now, the only way
+  to verify it's running is to hit `http://127.0.0.1:8765` in a browser.
+  Tray icon ships in v0.3.0.
+- **Logs go nowhere** — with the console hidden, `console.log` output is
+  discarded. v0.3.0 will redirect logs to `%LOCALAPPDATA%\DCTuning Bridge\bridge.log`.
 
 ## Roadmap
 
 | Version | Improvement |
 |---|---|
-| v0.1.0 (current) | Single .exe, manual launch, console window, Node icon |
-| v0.2.0 | Switch pkg → Node SEA: DCTuning icon, NSIS installer, tray icon, hidden console |
-| v0.3.0 | Auto-update from GitHub Releases |
-| v0.4.0 | Code-signed binary (no Windows SmartScreen warning) |
+| v0.1.0 | Single .exe, manual launch, console window, Node icon |
+| **v0.2.0 (current)** | NSIS installer, DCTuning icon, hidden console, auto-start option |
+| v0.3.0 | System tray icon, log file, status menu |
+| v0.4.0 | Code-signed binary (no SmartScreen warning) |
+| v0.5.0 | Auto-update from GitHub Releases |
 
 ## Build from source
 
-See parent README: `../README.md`. Run `npm run package` to rebuild the .exe
-and the ZIP.
+```bash
+cd bridge
+npm install
+npm run package
+```
+
+Outputs to `releases/`. Requires NSIS 3.x installed at
+`C:\Program Files (x86)\NSIS\makensis.exe` for the installer build.

@@ -35,7 +35,7 @@ const ALLOWED_ORIGINS = new Set([
 ])
 
 const PORT = 8765
-const VERSION = '0.1.0'
+const VERSION = '0.2.0'
 const startedAt = Date.now()
 
 function isOriginAllowed(origin: string | undefined): boolean {

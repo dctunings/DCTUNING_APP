@@ -1,0 +1,21 @@
+DCTuning Bridge — End User License Agreement
+
+Copyright (c) 2026 DCTuning Ireland. All rights reserved.
+
+This software is provided as part of the DCTuning Ireland ECU tuning suite.
+Use is subject to the terms of your DCTuning subscription.
+
+PROFESSIONAL USE ONLY
+
+The DCTuning Bridge enables direct hardware access to J2534 PassThru devices
+for ECU diagnostics, reading, writing and unlocking. Misuse can permanently
+damage ECUs (€1000+ replacement cost typical). The user assumes all risk.
+
+DCTuning Ireland makes no warranty regarding fitness for any particular
+purpose. Use of this software is entirely at your own risk.
+
+By clicking "I Agree", you accept these terms and acknowledge that you are
+a professional ECU tuner using this software in a professional capacity.
+
+For commercial license terms or support, visit https://dctuning.ie or
+email support@dctuning.ie.
