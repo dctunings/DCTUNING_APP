@@ -1,85 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import VehicleStrip from '../components/VehicleStrip'
 import type { ActiveVehicle } from '../lib/vehicleContext'
 import { useAuth } from '../lib/useAuth'
 import LoginScreen from '../components/LoginScreen'
 import RecipeBrowserTab from '../components/RecipeBrowserTab'
-import { supabase } from '../lib/supabase'
-
-interface TuneRecord {
-  id: string
-  filename: string
-  vehicle_make: string
-  vehicle_model: string
-  vehicle_variant: string
-  engine_code: string
-  ecu: string
-  tune_type: string
-  notes: string
-  file_path: string
-  file_size: number
-  created_at: string
-}
-
-const TYPE_COLORS: Record<string, string> = {
-  stage1:  'var(--accent)',
-  stage2:  '#ff9500',
-  stage3:  '#ff4500',
-  dpf:     '#888',
-  egr:     '#888',
-  adblue:  '#888',
-  custom:  '#88aaff',
-  stock:   'var(--text-muted)',
-}
-
-const TYPE_LABELS: Record<string, string> = {
-  stage1: 'Stage 1', stage2: 'Stage 2', stage3: 'Stage 3',
-  dpf: 'DPF Delete', egr: 'EGR Delete', adblue: 'AdBlue Delete',
-  custom: 'Custom', stock: 'Stock Backup',
-}
-
-const ENGINE_ACRONYMS = new Set(['TDI','TFSI','TSI','GTI','GTE','CDI','HDI','JTD','CDTI','DTI','CRDI','MHEV','PHEV','OBD'])
-function fmtVehicle(make: string, model: string): string {
-  const capWord = (w: string) => {
-    const u = w.toUpperCase()
-    if (ENGINE_ACRONYMS.has(u)) return u
-    // e.g. "1600tdi" → "1600 TDI", "1400tb" → "1400 TB", "90kw" → "90kW"
-    const engMatch = w.match(/^(\d+)(tdi|tfsi|tsi|gti|cdi|hdi|jtd|cdti|dti|crdi|tb|t)$/i)
-    if (engMatch) return engMatch[1] + ' ' + engMatch[2].toUpperCase()
-    const kwMatch = w.match(/^(\d+)kw$/i)
-    if (kwMatch) return kwMatch[1] + 'kW'
-    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
-  }
-  const fmt = (s: string) => s.split(/[\s\-_]+/).filter(Boolean).map(capWord).join(' ')
-  return [make, model].filter(Boolean).map(fmt).join(' ')
-}
-
-// Extract a meaningful sub-line for a library entry card:
-// priority: ecu_type → parent folder from path (part number / variant) → filename without extension
-function extractEntrySubInfo(entry: any): string {
-  if (entry.ecu_type) return entry.ecu_type
-
-  // Parent folder often has "Model-ECU-PartNumber" e.g. "E.270cdi-edc16-0281010835"
-  const rawPath: string = entry.original_file_path || ''
-  if (rawPath) {
-    const parts = rawPath.replace(/\\/g, '/').split('/')
-    // second-to-last segment is the variant/part folder (last is filename)
-    const folder = parts.length >= 2 ? parts[parts.length - 2] : ''
-    // Only use if it looks like a variant/part reference (not same as model, not generic)
-    const modelNorm = (entry.vehicle_model || '').toLowerCase().replace(/[\s_\-]/g, '')
-    const folderNorm = folder.toLowerCase().replace(/[\s_\-]/g, '')
-    if (folder && folderNorm !== modelNorm && folder.length > 3 && !folder.toLowerCase().includes('ecu map')) {
-      // Truncate very long folder names
-      return folder.length > 50 ? folder.slice(0, 50) + '…' : folder
-    }
-  }
-
-  // Fall back: filename without extension (part number is often embedded)
-  const fname: string = entry.original_file_name || ''
-  if (fname) return fname.replace(/\.[^.]+$/, '')
-
-  return '—'
-}
 
 interface TuneManagerProps {
   activeVehicle: ActiveVehicle | null
@@ -90,30 +14,14 @@ interface TuneManagerProps {
 }
 
 export default function TuneManager({ activeVehicle, onOpenInRemap }: TuneManagerProps) {
-  const { user, isAdmin, loading: authLoading, signIn, signUp, signOut } = useAuth()
-  const [tunes, setTunes] = useState<TuneRecord[]>([])
-  const [loading, setLoading] = useState(false)
-  const [selected, setSelected] = useState<TuneRecord | null>(null)
+  const { user, loading: authLoading, signIn, signUp, signOut } = useAuth()
   const [search, setSearch] = useState('')
-  // v3.16: Cloud tab removed (Supabase `tunes` table referenced wiped buckets).
-  // Library tab repurposed as the Recipe Browser — same name, completely new
-  // implementation that loads the recipe manifest (~3,138 recipes across
-  // ~2,247 part numbers) and lets customers browse + search the catalog.
-  // Default is 'watch' (AutoTuner workflow); 'local' for one-off files;
-  // 'library' for "what can DCTuning tune?" discovery.
+  // v3.16: tab union narrowed to the live tabs only.
+  //   'watch'   — Watch Folder for AutoTuner-style integrations (default flow)
+  //   'local'   — one-off file uploads
+  //   'library' — Recipe Browser (3,138-recipe catalog, see RecipeBrowserTab)
   const [tab, setTab] = useState<'local' | 'watch' | 'library'>('watch')
   const [localFiles, setLocalFiles] = useState<{ name: string; size: number; path: string }[]>([])
-  const [downloading, setDownloading] = useState<string | null>(null)
-  const [error, setError] = useState('')
-  // Library state
-  const [libResults, setLibResults] = useState<any[]>([])
-  const [libLoading, setLibLoading] = useState(false)
-  const [libSearch, setLibSearch] = useState('')
-  const [libMake, setLibMake] = useState('')
-  const [libStage, setLibStage] = useState<string>('all')
-  const [libTotal, setLibTotal] = useState(0)
-  const [libPage, setLibPage] = useState(0)
-  const LIB_PAGE_SIZE = 50
   // Watch folder state
   const [watchFolder, setWatchFolder] = useState<string | null>(null)
   const [watchedFiles, setWatchedFiles] = useState<{ name: string; path: string; size: number; mtime: string }[]>([])
@@ -124,35 +32,6 @@ export default function TuneManager({ activeVehicle, onOpenInRemap }: TuneManage
   // Hex inspector state
   const [hexInspect, setHexInspect] = useState<{ name: string; bytes: number[]; size: number } | null>(null)
   const [hexInspecting, setHexInspecting] = useState<string | null>(null) // path currently loading
-
-  const fetchTunes = useCallback(async () => {
-    if (!user) return
-    setLoading(true)
-    setError('')
-
-    // Try to fetch from tunes table
-    const { data, error: dbError } = await supabase
-      .from('tunes')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-
-    if (dbError) {
-      // Table may not exist yet — show helpful message
-      if (dbError.code === '42P01') {
-        setError('tunes_table_missing')
-      } else {
-        setError(dbError.message)
-      }
-    } else {
-      setTunes(data || [])
-    }
-    setLoading(false)
-  }, [user])
-
-  useEffect(() => {
-    if (user) fetchTunes()
-  }, [user, fetchTunes])
 
   const ECU_EXTS = new Set(['bin', 'hex', 'ori', 'sgo', 'damos', 'kp', 'frf', 'mot', 'srec'])
 
@@ -239,50 +118,6 @@ export default function TuneManager({ activeVehicle, onOpenInRemap }: TuneManage
     setWatchedFiles(files)
   }
 
-  const STAGE_FILTERS: { label: string; value: string; remap_types?: string[] }[] = [
-    { label: 'All',     value: 'all' },
-    { label: 'Stage 1', value: 'stage1', remap_types: ['Stage 1'] },
-    { label: 'Stage 2', value: 'stage2', remap_types: ['Stage 2'] },
-    { label: 'Stage 3', value: 'stage3', remap_types: ['Stage 3'] },
-    { label: 'Emissions', value: 'emissions', remap_types: ['DPF Off','EGR Off','Adblue Off','Pop & Bang'] },
-    { label: 'Original', value: 'original', remap_types: ['Original'] },
-  ]
-
-  const searchLibrary = useCallback(async (page = 0) => {
-    setLibLoading(true)
-    let query = supabase
-      .from('library_entries')
-      .select('id,vehicle_make,vehicle_model,vehicle_fuel,remap_type,original_file_name,original_file_path,original_file_size,ecu_type,storage_path,storage_uploaded', { count: 'exact' })
-      .eq('storage_uploaded', true)
-      .eq('is_visible', true)
-      .gte('original_file_size', 131072)
-      .range(page * LIB_PAGE_SIZE, (page + 1) * LIB_PAGE_SIZE - 1)
-
-    if (libMake) query = query.ilike('vehicle_make', `%${libMake}%`)
-    if (libSearch) {
-      query = query.or(
-        `vehicle_make.ilike.%${libSearch}%,vehicle_model.ilike.%${libSearch}%,original_file_name.ilike.%${libSearch}%,remap_type.ilike.%${libSearch}%,ecu_type.ilike.%${libSearch}%`
-      )
-    }
-    const activeStage = STAGE_FILTERS.find(s => s.value === libStage)
-    if (activeStage?.remap_types) {
-      query = query.in('remap_type', activeStage.remap_types)
-    }
-    query = query.order('vehicle_make').order('vehicle_model')
-
-    const { data, count, error } = await query
-    if (!error) {
-      setLibResults(data || [])
-      setLibTotal(count || 0)
-      setLibPage(page)
-    }
-    setLibLoading(false)
-  }, [libSearch, libMake, libStage])
-
-  useEffect(() => {
-    if (tab === 'library') searchLibrary(0)
-  }, [tab, libSearch, libMake, libStage])
-
   const clearWatchFolder = () => {
     if (watchIntervalRef.current) clearInterval(watchIntervalRef.current)
     watchFolderHandleRef.current = null
@@ -298,74 +133,11 @@ export default function TuneManager({ activeVehicle, onOpenInRemap }: TuneManage
     return () => { if (watchIntervalRef.current) clearInterval(watchIntervalRef.current) }
   }, [watchFolder])
 
-  const downloadTune = async (tune: TuneRecord) => {
-    if (!tune.file_path) return
-    setDownloading(tune.id)
-    try {
-      const { data, error } = await supabase.storage
-        .from('tunes')
-        .download(tune.file_path)
-      if (error) throw error
-      const buffer = await data.arrayBuffer()
-      const api = (window as any).api
-      if (api?.saveEcuFile) {
-        await api.saveEcuFile({ defaultName: tune.filename, buffer: Array.from(new Uint8Array(buffer)) })
-      } else {
-        const blob = new Blob([buffer], { type: 'application/octet-stream' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url; a.download = tune.filename; a.click()
-        URL.revokeObjectURL(url)
-      }
-    } catch (e: any) {
-      alert(`Download failed: ${e.message}`)
-    }
-    setDownloading(null)
-  }
-
-  const downloadLibraryFile = async (entry: any) => {
-    const storagePath = entry.storage_path || entry.original_file_name
-    if (!storagePath) return
-    setDownloading(entry.id)
-    try {
-      const { data, error } = await supabase.storage
-        .from('tune-files')
-        .download(storagePath)
-      if (error) throw error
-      const arrayBuf = await data.arrayBuffer()
-      const filename = entry.original_file_name || entry.storage_path
-      const api = (window as any).api
-      if (api?.saveEcuFile) {
-        // Pass buffer as plain number array (safe across IPC boundary)
-        const result = await api.saveEcuFile({
-          defaultName: filename,
-          buffer: Array.from(new Uint8Array(arrayBuf)),
-        })
-        if (!result?.ok) return // user cancelled
-      } else {
-        // Web fallback
-        const blob = new Blob([arrayBuf], { type: 'application/octet-stream' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url; a.download = filename; a.click()
-        URL.revokeObjectURL(url)
-      }
-    } catch (e: any) {
-      alert(`Download failed: ${e.message}`)
-    }
-    setDownloading(null)
-  }
-
   const formatSize = (bytes: number) => {
     if (!bytes) return '—'
     if (bytes < 1024) return `${bytes} B`
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`
-  }
-
-  const formatDate = (iso: string) => {
-    if (!iso) return '—'
-    return new Date(iso).toLocaleDateString('en-IE', { day: '2-digit', month: 'short', year: 'numeric' })
   }
 
   // Auth loading
@@ -383,14 +155,6 @@ export default function TuneManager({ activeVehicle, onOpenInRemap }: TuneManage
     return <LoginScreen signIn={signIn} signUp={signUp} />
   }
 
-  // Admin badge shown in header
-
-  const filteredCloud = tunes.filter((t) =>
-    [t.filename, t.vehicle_make, t.vehicle_model, t.ecu, t.notes].some((v) =>
-      v?.toLowerCase().includes(search.toLowerCase())
-    )
-  )
-
   return (
     <div>
       <div className="page-header">
@@ -400,11 +164,6 @@ export default function TuneManager({ activeVehicle, onOpenInRemap }: TuneManage
         </div>
         {/* User info */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {isAdmin && (
-            <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 4, background: 'rgba(184,240,42,0.15)', color: 'var(--accent)', border: '1px solid rgba(184,240,42,0.3)', letterSpacing: '0.5px' }}>
-              ADMIN
-            </span>
-          )}
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 12, fontWeight: 600 }}>{user.user_metadata?.full_name || user.email}</div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{user.email}</div>
@@ -482,92 +241,10 @@ export default function TuneManager({ activeVehicle, onOpenInRemap }: TuneManage
         )}
       </div>
 
-      {/* Error states */}
-      {error === 'tunes_table_missing' && (
-        <div className="banner banner-warning" style={{ marginBottom: 16 }}>
-          <strong>Tunes table not set up yet.</strong> Run the following SQL in your Supabase dashboard to create it:
-          <pre style={{ marginTop: 10, fontSize: 11, background: '#1a1a1a', padding: 12, borderRadius: 6, overflowX: 'auto' }}>{`CREATE TABLE tunes (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
-  filename text NOT NULL,
-  vehicle_make text, vehicle_model text, vehicle_variant text,
-  engine_code text, ecu text,
-  tune_type text DEFAULT 'custom',
-  notes text,
-  file_path text,
-  file_size bigint,
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE tunes ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id);`}</pre>
-        </div>
-      )}
-      {error && error !== 'tunes_table_missing' && (
-        <div className="banner banner-danger" style={{ marginBottom: 16 }}>⚠ {error}</div>
-      )}
-
       <div className="grid-2" style={{ gap: 20, alignItems: 'start' }}>
         {/* File list */}
         <div>
           {tab === 'library' && <RecipeBrowserTab />}
-
-          {tab === 'cloud' && (
-            <>
-              {loading && (
-                <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)', fontSize: 13 }}>
-                  ⏳ Loading tunes from Supabase...
-                </div>
-              )}
-
-              {!loading && filteredCloud.length === 0 && !error && (
-                <div className="card" style={{ textAlign: 'center', padding: 40 }}>
-                  <div style={{ fontSize: 32, marginBottom: 12 }}>📭</div>
-                  <div style={{ fontWeight: 700, marginBottom: 6 }}>No tunes found</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                    Tunes uploaded to your account will appear here
-                  </div>
-                </div>
-              )}
-
-              {filteredCloud.map((t) => (
-                <div
-                  key={t.id}
-                  className="card"
-                  onClick={() => setSelected(t)}
-                  style={{
-                    marginBottom: 8, cursor: 'pointer',
-                    borderColor: selected?.id === t.id ? 'var(--accent)' : 'var(--border)',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600 }}>
-                        {fmtVehicle(t.vehicle_make, t.vehicle_model)}
-                        {t.vehicle_variant ? <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: 12 }}> {t.vehicle_variant}</span> : null}
-                      </div>
-                      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                        {t.engine_code && <span style={{ fontFamily: 'monospace' }}>{t.engine_code} · </span>}
-                        {t.ecu}
-                      </div>
-                      {t.notes && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{t.notes}</div>}
-                    </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <span className="badge" style={{
-                        background: 'var(--bg-secondary)',
-                        color: TYPE_COLORS[t.tune_type] || 'var(--text-muted)',
-                        border: `1px solid ${TYPE_COLORS[t.tune_type] || 'var(--border)'}`,
-                        display: 'block', marginBottom: 6,
-                      }}>
-                        {TYPE_LABELS[t.tune_type] || t.tune_type}
-                      </span>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{formatSize(t.file_size)}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{formatDate(t.created_at)}</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </>
-          )}
 
           {tab === 'local' && (
             <>
@@ -798,51 +475,15 @@ CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id
           )}
         </div>
 
-        {/* Detail panel */}
-        {selected && tab === 'cloud' ? (
-          <div className="card card-accent" style={{ position: 'sticky', top: 0 }}>
-            <div style={{ fontWeight: 700, marginBottom: 16, fontSize: 15 }}>Tune Details</div>
-
-            {[
-              { label: 'Filename',  value: selected.filename,                     mono: true },
-              { label: 'Vehicle',   value: `${selected.vehicle_make} ${selected.vehicle_model} ${selected.vehicle_variant}` },
-              { label: 'Engine',    value: selected.engine_code || '—',            mono: true },
-              { label: 'ECU',       value: selected.ecu || '—' },
-              { label: 'Type',      value: TYPE_LABELS[selected.tune_type] || selected.tune_type },
-              { label: 'Size',      value: formatSize(selected.file_size) },
-              { label: 'Uploaded',  value: formatDate(selected.created_at) },
-              { label: 'Notes',     value: selected.notes || '—' },
-            ].map((f) => (
-              <div key={f.label} style={{ marginBottom: 12 }}>
-                <label>{f.label}</label>
-                <div style={{ marginTop: 4, fontSize: 13, color: 'var(--text-primary)', fontFamily: f.mono ? 'monospace' : undefined, wordBreak: 'break-all' }}>
-                  {f.value}
-                </div>
-              </div>
-            ))}
-
-            <div className="divider" />
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                className="btn btn-primary"
-                style={{ flex: 1 }}
-                onClick={() => downloadTune(selected)}
-                disabled={!!downloading}
-              >
-                {downloading === selected.id ? '⏳ Downloading...' : '⬇ Download'}
-              </button>
-              <button className="btn btn-secondary" onClick={() => setSelected(null)}>✕</button>
-            </div>
+        {/* Detail panel — placeholder for future hex viewer / file actions */}
+        <div className="card" style={{ minHeight: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
+          <div style={{ fontSize: 32 }}>📁</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+            {tab === 'library' ? 'Browse the recipe catalog' :
+             tab === 'watch'   ? 'Watch Folder auto-imports new tune files' :
+                                 'Open a local .bin / .hex file using the button above'}
           </div>
-        ) : (
-          <div className="card" style={{ minHeight: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
-            <div style={{ fontSize: 32 }}>📁</div>
-            <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>Select a tune to view details</div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', maxWidth: 200 }}>
-              Or open a local .bin / .hex file using the button above
-            </div>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* ── HEX INSPECTOR MODAL ─────────────────────────────────────────────── */}
