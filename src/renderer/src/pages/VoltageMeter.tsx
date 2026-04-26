@@ -102,6 +102,22 @@ export default function VoltageMeter({ connected }: Props) {
           ⚠ Connect an OBD2 device via J2534 PassThru to read live voltage data.
         </div>
       )}
+      {connected && source === 'sim' && (
+        <div style={{
+          marginBottom: 20, padding: '10px 14px',
+          background: 'rgba(245,158,11,0.08)',
+          border: '1px solid rgba(245,158,11,0.3)',
+          borderRadius: 8,
+          fontSize: 12, color: '#fbbf24', fontWeight: 600,
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          <span>◌</span>
+          <span>
+            Showing <strong>simulated values</strong> — no OBD2 device responding.
+            Plug in an ELM327 (or open J2534 PassThru) for real readings.
+          </span>
+        </div>
+      )}
 
       <div className="grid-2" style={{ marginBottom: 20 }}>
         {/* Main gauge */}

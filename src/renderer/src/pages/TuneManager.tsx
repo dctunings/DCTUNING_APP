@@ -699,12 +699,32 @@ CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id
                         disabled={hexInspecting === f.path}
                         onClick={async () => {
                           const api = (window as any).api
-                          if (!api?.readFileBytes) return
                           setHexInspecting(f.path)
-                          const res = await api.readFileBytes(f.path, 1024)
-                          setHexInspecting(null)
-                          if (res?.ok) {
-                            setHexInspect({ name: f.name, bytes: res.bytes, size: res.size })
+                          try {
+                            // Desktop path — IPC reads first N bytes from disk by path
+                            if (api?.readFileBytes) {
+                              const res = await api.readFileBytes(f.path, 1024)
+                              if (res?.ok) {
+                                setHexInspect({ name: f.name, bytes: res.bytes, size: res.size })
+                              }
+                              return
+                            }
+                            // Web path — re-resolve the File from the watch folder handle
+                            // (plain HTML file picker doesn't give us a re-readable handle,
+                            //  but File System Access API directory handles do)
+                            const dirHandle = watchFolderHandleRef.current
+                            if (!dirHandle) return
+                            try {
+                              const fh = await dirHandle.getFileHandle(f.name)
+                              const file = await fh.getFile()
+                              const buf = await file.slice(0, 1024).arrayBuffer()
+                              const bytes = Array.from(new Uint8Array(buf))
+                              setHexInspect({ name: f.name, bytes, size: file.size })
+                            } catch {
+                              // File no longer in folder, or permission lapsed
+                            }
+                          } finally {
+                            setHexInspecting(null)
                           }
                         }}
                       >

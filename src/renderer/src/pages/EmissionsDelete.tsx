@@ -157,6 +157,36 @@ export default function EmissionsDelete({ activeVehicle, ecuFile, setPage }: Pro
 
       <VehicleStrip vehicle={activeVehicle} />
 
+      {/* Clarify this is a planning tool — actual tune modification happens
+          in Remap Builder. Without this banner, customers expect the Generate
+          button to modify a binary, but it just creates a reference config. */}
+      <div style={{
+        marginBottom: 16, padding: '12px 16px',
+        background: 'rgba(0,174,200,0.06)',
+        border: '1px solid rgba(0,174,200,0.25)',
+        borderRadius: 8,
+        display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+      }}>
+        <span style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 700 }}>ℹ️ Planning tool</span>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)', flex: 1, lineHeight: 1.6 }}>
+          Select the emissions modifications you want — this generates a downloadable config
+          reference. To apply the changes to a tune file, use{' '}
+          <strong style={{ color: 'var(--accent)' }}>Remap Builder</strong>.
+        </span>
+        {setPage && (
+          <button
+            onClick={() => setPage('remap')}
+            style={{
+              padding: '6px 12px', borderRadius: 6, border: '1px solid var(--accent)',
+              background: 'transparent', color: 'var(--accent)',
+              fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            Open Remap Builder →
+          </button>
+        )}
+      </div>
+
       <div className="banner banner-danger" style={{ marginBottom: 20 }}>
         <strong>⚠ FOR OFF-ROAD / COMPETITION USE ONLY</strong>
         <div style={{ marginTop: 6, fontSize: 12 }}>
