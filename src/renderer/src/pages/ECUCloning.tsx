@@ -3,9 +3,12 @@ import VehicleStrip from '../components/VehicleStrip'
 import type { ActiveVehicle } from '../lib/vehicleContext'
 import { bridge } from '../lib/bridgeClient'
 
+interface ConnectResult { ok: boolean; error?: string }
+
 interface Props {
   connected: boolean
   activeVehicle: ActiveVehicle | null
+  onConnect?: () => Promise<ConnectResult>
 }
 
 type Step = 'idle' | 'identifying' | 'reading' | 'read-done' | 'writing' | 'write-done' | 'error'
@@ -41,8 +44,17 @@ function formatSize(bytes: number): string {
   return `${(bytes / 1024).toFixed(1)} KB`
 }
 
-export default function ECUCloning({ connected, activeVehicle }: Props) {
+export default function ECUCloning({ connected, activeVehicle, onConnect }: Props) {
   const api = (window as any).api
+  const [connecting, setConnecting] = useState(false)
+  const [connectError, setConnectError] = useState<string | null>(null)
+  const handleQuickConnect = async () => {
+    if (!onConnect) return
+    setConnecting(true); setConnectError(null)
+    const r = await onConnect()
+    setConnecting(false)
+    if (!r.ok) setConnectError(r.error || 'Connect failed')
+  }
 
   // ── Shared state ────────────────────────────────────────────────────────────
   const [step, setStep] = useState<Step>('idle')
@@ -292,10 +304,26 @@ export default function ECUCloning({ connected, activeVehicle }: Props) {
       <VehicleStrip vehicle={activeVehicle} />
 
       {!connected && (
-        <div className="banner banner-warning">
-          {bridge.isConnected()
-            ? 'Bridge running but no J2534 device opened. Go to J2534 PassThru and click Connect to open your device.'
-            : 'No J2534 device connected. Install DCTuning Bridge or use the desktop app to access J2534 hardware.'}
+        <div className="banner banner-warning" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <span style={{ flex: 1, minWidth: 200 }}>
+            {bridge.isConnected()
+              ? (connectError ? `Connect failed: ${connectError}` : 'Bridge running but no J2534 device opened.')
+              : 'No J2534 device connected. Install DCTuning Bridge or use the desktop app to access J2534 hardware.'}
+          </span>
+          {bridge.isConnected() && onConnect && (
+            <button
+              onClick={handleQuickConnect}
+              disabled={connecting}
+              style={{
+                padding: '8px 16px', borderRadius: 6, border: 'none',
+                background: 'var(--accent)', color: '#000',
+                fontWeight: 800, fontSize: 12, cursor: connecting ? 'wait' : 'pointer',
+                fontFamily: 'inherit', whiteSpace: 'nowrap',
+              }}
+            >
+              {connecting ? 'Connecting…' : '🔌 Connect Device'}
+            </button>
+          )}
         </div>
       )}
 

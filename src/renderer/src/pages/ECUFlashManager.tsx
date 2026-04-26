@@ -3,7 +3,12 @@ import VehicleStrip from '../components/VehicleStrip'
 import type { ActiveVehicle } from '../lib/vehicleContext'
 import { bridge } from '../lib/bridgeClient'
 
-interface Props { connected: boolean; activeVehicle: ActiveVehicle | null }
+interface ConnectResult { ok: boolean; error?: string }
+interface Props {
+  connected: boolean
+  activeVehicle: ActiveVehicle | null
+  onConnect?: () => Promise<ConnectResult>
+}
 
 interface ECUFlashDef {
   id: string
@@ -88,8 +93,17 @@ function fmtSize(bytes: number): string {
   return bytes + ' B'
 }
 
-export default function ECUFlashManager({ connected, activeVehicle }: Props) {
+export default function ECUFlashManager({ connected, activeVehicle, onConnect }: Props) {
   const [tab, setTab] = useState<Tab>('select')
+  const [connecting, setConnecting] = useState(false)
+  const [connectError, setConnectError] = useState<string | null>(null)
+  const handleQuickConnect = async () => {
+    if (!onConnect) return
+    setConnecting(true); setConnectError(null)
+    const r = await onConnect()
+    setConnecting(false)
+    if (!r.ok) setConnectError(r.error || 'Connect failed')
+  }
   const [ecuDefs, setEcuDefs] = useState<ECUFlashDef[]>([])
   const [selectedEcu, setSelectedEcu] = useState<ECUFlashDef | null>(null)
   const [phase, setPhase] = useState<Phase>('idle')
@@ -370,10 +384,26 @@ export default function ECUFlashManager({ connected, activeVehicle }: Props) {
       <VehicleStrip vehicle={activeVehicle} />
 
       {!connected && (
-        <div className="banner banner-warning" style={{ marginBottom: 16 }}>
-          {bridge.isConnected()
-            ? <>Bridge running but no J2534 device opened. Go to <strong>J2534 PassThru</strong> and click Connect to open your device.</>
-            : <>⚠ No J2534 device connected. Install <strong>DCTuning Bridge</strong> or use the desktop app to access J2534 hardware.</>}
+        <div className="banner banner-warning" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <span style={{ flex: 1, minWidth: 200 }}>
+            {bridge.isConnected()
+              ? (connectError ? `Connect failed: ${connectError}` : 'Bridge running but no J2534 device opened.')
+              : <>⚠ No J2534 device connected. Install <strong>DCTuning Bridge</strong> or use the desktop app to access J2534 hardware.</>}
+          </span>
+          {bridge.isConnected() && onConnect && (
+            <button
+              onClick={handleQuickConnect}
+              disabled={connecting}
+              style={{
+                padding: '8px 16px', borderRadius: 6, border: 'none',
+                background: 'var(--accent)', color: '#000',
+                fontWeight: 800, fontSize: 12, cursor: connecting ? 'wait' : 'pointer',
+                fontFamily: 'inherit', whiteSpace: 'nowrap',
+              }}
+            >
+              {connecting ? 'Connecting…' : '🔌 Connect Device'}
+            </button>
+          )}
         </div>
       )}
 

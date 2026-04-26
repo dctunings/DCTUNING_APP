@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
 import Dashboard from './pages/Dashboard'
@@ -149,41 +149,43 @@ export default function App() {
     return () => { cancelled = true; if (unsub) try { unsub() } catch { /* ignore */ } }
   }, [])
 
-  // v3.16.0 — Auto-open the J2534 device when bridge becomes connected.
-  // Without this, customers see "Local Bridge Connected" but ALSO "No J2534
-  // device connected" on every page that needs a device, which is confusing.
-  // We scan for installed J2534 DLLs via the bridge — if exactly one exists
-  // on disk, open it + configure the standard CAN/ISO15765 channel and flip
-  // the global `connected` state. User can still go to J2534 PassThru to
-  // disconnect or pick a different device manually.
+  // v3.16.0 — Bridge-aware Quick Connect. Without this, customers see
+  // "Local Bridge Connected" but ALSO "No J2534 device connected" on every
+  // page that needs a device, with no obvious way back from a disconnect.
+  //
+  // connectBridgeDevice() scans for installed J2534 DLLs, picks the only
+  // valid one, opens it + configures the standard CAN/ISO15765 channel, and
+  // flips the global `connected` flag. Used by:
+  //   - the auto-open useEffect (fires when bridge first becomes connected)
+  //   - the Quick Connect button shown in the warning banner on each J2534 page
+  //   - (future) explicit user re-connect after manual disconnect
+  const connectBridgeDevice = useCallback(async (): Promise<{ ok: boolean; error?: string }> => {
+    if (!bridge.isConnected()) return { ok: false, error: 'Bridge not running' }
+    try {
+      const devices = await bridge.scanDevices() as Array<{ name: string; dll: string; exists: boolean }>
+      const valid = devices.filter(d => d.exists)
+      if (valid.length === 0) return { ok: false, error: 'No J2534 driver installed on this PC' }
+      if (valid.length > 1)  return { ok: false, error: `${valid.length} adapters found — pick one in J2534 PassThru` }
+      const dev = valid[0]
+      const openRes = await bridge.j2534Open(dev.dll)
+      if (!openRes?.ok) return { ok: false, error: openRes?.error || 'Open failed' }
+      const connRes = await bridge.j2534Connect(6, 500000)  // ISO15765 @ 500 kbaud
+      if (!connRes?.ok) {
+        await bridge.j2534Close().catch(() => null)
+        return { ok: false, error: connRes?.error || 'Channel connect failed' }
+      }
+      setConnected(true)
+      return { ok: true }
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) }
+    }
+  }, [])
+
+  // Auto-fire connectBridgeDevice when bridge first becomes available
   useEffect(() => {
     if (bridgeStatus !== 'connected' || connected) return
-    let cancelled = false
-    ;(async () => {
-      try {
-        const devices = await bridge.scanDevices() as Array<{
-          name: string
-          dll: string
-          exists: boolean
-        }>
-        if (cancelled) return
-        const valid = devices.filter(d => d.exists)
-        if (valid.length !== 1) return  // 0 = no device installed; >1 = ambiguous, let user pick
-        const dev = valid[0]
-        const openRes = await bridge.j2534Open(dev.dll)
-        if (cancelled || !openRes?.ok) return
-        const connRes = await bridge.j2534Connect(6, 500000)  // ISO15765 @ 500 kbaud (modern CAN)
-        if (cancelled || !connRes?.ok) {
-          await bridge.j2534Close().catch(() => null)
-          return
-        }
-        setConnected(true)
-      } catch {
-        // Silent — manual connect path still works via J2534 PassThru page
-      }
-    })()
-    return () => { cancelled = true }
-  }, [bridgeStatus, connected])
+    void connectBridgeDevice()
+  }, [bridgeStatus, connected, connectBridgeDevice])
 
   const aiContext: ChatContext = {
     fileName: ecuFile?.fileName,
@@ -247,15 +249,15 @@ export default function App() {
       case 'voltage':      return <VoltageMeter connected={connected} />
       case 'wiring':       return <WiringDiagrams activeVehicle={activeVehicle} />
       case 'tunes':        return <TuneManager activeVehicle={activeVehicle} />
-      case 'cloning':      return <ECUCloning connected={connected} activeVehicle={activeVehicle} />
+      case 'cloning':      return <ECUCloning connected={connected} activeVehicle={activeVehicle} onConnect={connectBridgeDevice} />
       case 'performance':  return <Performance activeVehicle={activeVehicle} ecuFile={ecuFile} setPage={setPage} />
       case 'emissions':    return <EmissionsDelete activeVehicle={activeVehicle} ecuFile={ecuFile} setPage={setPage} />
       case 'j2534':        return <J2534PassThru connected={connected} setConnected={setConnected} activeVehicle={activeVehicle} />
-      case 'unlock':       return <ECUUnlock connected={connected} activeVehicle={activeVehicle} />
+      case 'unlock':       return <ECUUnlock connected={connected} activeVehicle={activeVehicle} onConnect={connectBridgeDevice} />
       case 'devices':      return <DeviceLibrary />
       case 'driversetup':  return <DriverSetupPage />
       case 'remap':        return <RemapBuilder onEcuLoaded={setEcuFile} onTuneApplied={setLastTuneSummary} onAskAI={handleAskAI} onAskAICustom={handleAskAICustom} />
-      case 'ecuflash':     return <ECUFlashManager connected={connected} activeVehicle={activeVehicle} />
+      case 'ecuflash':     return <ECUFlashManager connected={connected} activeVehicle={activeVehicle} onConnect={connectBridgeDevice} />
       case 'pricing':
         return (
           <PricingPage
