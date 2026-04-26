@@ -248,7 +248,17 @@ export default function App() {
       case 'scanner':      return <ECUScanner connected={connected} activeVehicle={activeVehicle} />
       case 'voltage':      return <VoltageMeter connected={connected} />
       case 'wiring':       return <WiringDiagrams activeVehicle={activeVehicle} />
-      case 'tunes':        return <TuneManager activeVehicle={activeVehicle} />
+      case 'tunes':        return <TuneManager
+                                    activeVehicle={activeVehicle}
+                                    onOpenInRemap={(fileName, fileBuffer) => {
+                                      // AutoTuner workflow: file picked up by Watch Folder,
+                                      // customer clicks "Tune in Remap Builder" → file is
+                                      // pushed into the global ecuFile state and we navigate.
+                                      // RemapBuilder reads from ecuFile on mount.
+                                      setEcuFile({ fileName, fileBuffer, detected: null, a2lMaps: [] })
+                                      setPage('remap')
+                                    }}
+                                  />
       case 'cloning':      return <ECUCloning connected={connected} activeVehicle={activeVehicle} onConnect={connectBridgeDevice} />
       case 'performance':  return <Performance activeVehicle={activeVehicle} ecuFile={ecuFile} setPage={setPage} />
       case 'emissions':    return <EmissionsDelete activeVehicle={activeVehicle} ecuFile={ecuFile} setPage={setPage} />

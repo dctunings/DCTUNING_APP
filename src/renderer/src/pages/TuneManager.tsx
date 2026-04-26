@@ -80,13 +80,27 @@ function extractEntrySubInfo(entry: any): string {
   return '—'
 }
 
-export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVehicle | null }) {
+interface TuneManagerProps {
+  activeVehicle: ActiveVehicle | null
+  // v3.16: lift watched files into Remap Builder so the AutoTuner workflow
+  // is one click. Customer's tool drops file in folder → Watch Folder picks
+  // it up → "Tune" button → Remap Builder loads it → apply Stage 1 → done.
+  onOpenInRemap?: (fileName: string, buffer: ArrayBuffer) => void
+}
+
+export default function TuneManager({ activeVehicle, onOpenInRemap }: TuneManagerProps) {
   const { user, isAdmin, loading: authLoading, signIn, signUp, signOut } = useAuth()
   const [tunes, setTunes] = useState<TuneRecord[]>([])
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState<TuneRecord | null>(null)
   const [search, setSearch] = useState('')
-  const [tab, setTab] = useState<'cloud' | 'library' | 'local' | 'watch'>('library')
+  // v3.16: Library + Cloud tabs are removed in v3.16 — both pulled from
+  // Supabase tables (`library_entries`, `tunes`) that referenced files in
+  // buckets wiped during the v3.15.3 clean slate. Default is now 'watch'
+  // since that's the actual working flow (AutoTuner-style integration).
+  // 'local' is kept for one-off file uploads. The hex inspector lives in
+  // the Watch tab.
+  const [tab, setTab] = useState<'local' | 'watch'>('watch')
   const [localFiles, setLocalFiles] = useState<{ name: string; size: number; path: string }[]>([])
   const [downloading, setDownloading] = useState<string | null>(null)
   const [error, setError] = useState('')
@@ -403,7 +417,7 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
       {/* Tabs + controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: 4 }}>
-          {(['library', 'cloud', 'local', 'watch'] as const).map((t) => (
+          {(['watch', 'local'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -420,18 +434,15 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
                 position: 'relative' as const,
               }}
             >
-              {t === 'library'
-                ? `Library (${libTotal > 0 ? libTotal.toLocaleString() : '…'})`
-                : t === 'cloud'
-                ? `My Tunes (${tunes.length})`
-                : t === 'local'
+              {t === 'local'
                 ? `Local (${localFiles.length})`
                 : <>
-                    Watch Folder
+                    Watch Folder ({watchedFiles.length})
                     {watching && <span style={{
                       display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
                       background: 'var(--accent)', marginLeft: 6, verticalAlign: 'middle',
                       boxShadow: '0 0 6px var(--accent)',
+                      animation: 'pulse 1.6s ease-in-out infinite',
                     }} />}
                   </>
               }
@@ -439,35 +450,13 @@ export default function TuneManager({ activeVehicle }: { activeVehicle: ActiveVe
           ))}
         </div>
 
-        {tab === 'library' ? (
-          <>
-            <input
-              value={libMake}
-              onChange={(e) => { setLibMake(e.target.value); setLibPage(0) }}
-              placeholder="Make (VW / Audi / Skoda / Seat)"
-              style={{ width: 130, height: 34 }}
-            />
-            <input
-              value={libSearch}
-              onChange={(e) => { setLibSearch(e.target.value); setLibPage(0) }}
-              placeholder="Model / ECU / filename..."
-              style={{ flex: 1, minWidth: 120, height: 34 }}
-            />
-          </>
-        ) : (
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search tunes..."
-            style={{ flex: 1, minWidth: 120, height: 34 }}
-          />
-        )}
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search files..."
+          style={{ flex: 1, minWidth: 120, height: 34 }}
+        />
 
-        {tab === 'cloud' && (
-          <button className="btn btn-secondary" style={{ fontSize: 12 }} onClick={fetchTunes} disabled={loading}>
-            Refresh
-          </button>
-        )}
         {tab === 'local' && (
           <button className="btn btn-primary" style={{ fontSize: 12 }} onClick={openLocalFile}>
             Open File
@@ -850,15 +839,30 @@ CREATE POLICY "Users see own tunes" ON tunes FOR ALL USING (auth.uid() = user_id
                               <button
                                 className="btn btn-primary"
                                 style={{ flex: 1, fontSize: 11 }}
-                                onClick={() => {
-                                  setLocalFiles((prev) => {
-                                    if (prev.some((lf) => lf.path === f.path)) return prev
-                                    return [...prev, { name: f.name, size: f.size, path: f.path }]
-                                  })
-                                  setTab('local')
+                                onClick={async () => {
+                                  // Load the file content + ship to Remap Builder.
+                                  // Web-mode uses File System Access API to re-resolve;
+                                  // Electron uses readFileBytes via IPC.
+                                  if (!onOpenInRemap) return
+                                  const api = (window as any).api
+                                  let buf: ArrayBuffer | null = null
+                                  if (api?.readFileBytes) {
+                                    const r = await api.readFileBytes(f.path, f.size)
+                                    if (r?.ok) buf = new Uint8Array(r.bytes).buffer
+                                  } else {
+                                    const dirHandle = watchFolderHandleRef.current
+                                    if (dirHandle) {
+                                      try {
+                                        const fh = await dirHandle.getFileHandle(f.name)
+                                        const file = await fh.getFile()
+                                        buf = await file.arrayBuffer()
+                                      } catch { /* permission lapsed */ }
+                                    }
+                                  }
+                                  if (buf) onOpenInRemap(f.name, buf)
                                 }}
                               >
-                                Open in Local
+                                🚀 Tune in Remap Builder
                               </button>
                               <button
                                 className="btn btn-secondary"
