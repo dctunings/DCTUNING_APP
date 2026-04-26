@@ -149,6 +149,42 @@ export default function App() {
     return () => { cancelled = true; if (unsub) try { unsub() } catch { /* ignore */ } }
   }, [])
 
+  // v3.16.0 — Auto-open the J2534 device when bridge becomes connected.
+  // Without this, customers see "Local Bridge Connected" but ALSO "No J2534
+  // device connected" on every page that needs a device, which is confusing.
+  // We scan for installed J2534 DLLs via the bridge — if exactly one exists
+  // on disk, open it + configure the standard CAN/ISO15765 channel and flip
+  // the global `connected` state. User can still go to J2534 PassThru to
+  // disconnect or pick a different device manually.
+  useEffect(() => {
+    if (bridgeStatus !== 'connected' || connected) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const devices = await bridge.scanDevices() as Array<{
+          name: string
+          dll: string
+          exists: boolean
+        }>
+        if (cancelled) return
+        const valid = devices.filter(d => d.exists)
+        if (valid.length !== 1) return  // 0 = no device installed; >1 = ambiguous, let user pick
+        const dev = valid[0]
+        const openRes = await bridge.j2534Open(dev.dll)
+        if (cancelled || !openRes?.ok) return
+        const connRes = await bridge.j2534Connect(6, 500000)  // ISO15765 @ 500 kbaud (modern CAN)
+        if (cancelled || !connRes?.ok) {
+          await bridge.j2534Close().catch(() => null)
+          return
+        }
+        setConnected(true)
+      } catch {
+        // Silent — manual connect path still works via J2534 PassThru page
+      }
+    })()
+    return () => { cancelled = true }
+  }, [bridgeStatus, connected])
+
   const aiContext: ChatContext = {
     fileName: ecuFile?.fileName,
     ecuDef: null,  // TODO: lift ecuDef from RemapBuilder on Phase B.4

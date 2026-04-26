@@ -293,7 +293,9 @@ export default function ECUCloning({ connected, activeVehicle }: Props) {
 
       {!connected && (
         <div className="banner banner-warning">
-          No J2534 device connected. Connect via J2534 PassThru before using ECU read/write.
+          {bridge.isConnected()
+            ? 'Bridge running but no J2534 device opened. Go to J2534 PassThru and click Connect to open your device.'
+            : 'No J2534 device connected. Install DCTuning Bridge or use the desktop app to access J2534 hardware.'}
         </div>
       )}
 

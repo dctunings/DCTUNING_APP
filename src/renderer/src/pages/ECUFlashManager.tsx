@@ -371,7 +371,9 @@ export default function ECUFlashManager({ connected, activeVehicle }: Props) {
 
       {!connected && (
         <div className="banner banner-warning" style={{ marginBottom: 16 }}>
-          ⚠ No J2534 device connected. Go to <strong>J2534 PassThru</strong> and connect your device first.
+          {bridge.isConnected()
+            ? <>Bridge running but no J2534 device opened. Go to <strong>J2534 PassThru</strong> and click Connect to open your device.</>
+            : <>⚠ No J2534 device connected. Install <strong>DCTuning Bridge</strong> or use the desktop app to access J2534 hardware.</>}
         </div>
       )}
 
