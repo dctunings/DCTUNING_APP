@@ -20,8 +20,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 
-// v3.12.1+v3.14.1+v3.14.3: all of Damo's pair sources + the Damos-Big-Archive
-// + new Desktop/Damos + Desktop/ECU FILES TEST (added Apr 25 2026).
+// v3.12.1+v3.14.1+v3.14.3+v3.16.0: all of Damo's pair sources.
 const ROOTS = [
   'D:/DATABASE/Tuning_DB_BIN',                                 // recurses into all 35 brand subfolders
   'D:/audi-package',                                           // Audi-focused pairs + DAMOS
@@ -38,15 +37,26 @@ const ROOTS = [
   'C:/Users/damoc/Desktop/ECU FILES TEST',                     // v3.14.3 — Damo's curated reference set (DCTuning_Stage1 pairs)
   'D:/dctuning-scan/new_vag_extract/from_hex_s19',             // v3.14.3 — converted HEX→BIN from new DAMOS folder
   'D:/dctuning-scan/new_vag_extract/from_archives',            // v3.14.3 — extracted ZIPs (mostly .dat reference data, will be ext-skipped)
+  // v3.16.0 (Apr 26 2026) — discovered via folder audit; these were never
+  // scanned despite living right next to the other configured roots.
+  // Together they account for almost all of Damo's modern Golf 7 / GTI / R /
+  // Audi A3 8V era content (5G0906*, 8V0906*, 06K906*, 04E906*).
+  'D:/last tuner files',                                        // 16,345 files — modern Golf 7 / Simos18 / GTI heaven
+  'D:/tuning files',                                            //    830 files — assorted pair archives
+  'D:/remap DVD3',                                              //     13 files — small but VAG content
 ]
 // Files under this size aren't ECU binaries worth recipe-ing (need at least 64KB
 // for a meaningful tune). Also caps at 12 MB to skip .ols/.zip/.odx archives.
 const MIN_SIZE = 64 * 1024
 const MAX_SIZE = 12 * 1024 * 1024
-// Skip these file extensions outright — not ECU binaries
+// Skip these file extensions outright — not raw ECU binaries.
+// .frf = Flash Robot File (wrapped binary with header — VAG OEM format).
+// .ols = WinOLS project file (proprietary container, not raw bytes).
+// .set = WinOLS metadata (companion file). .dlcnt = download counter.
 const SKIP_EXT = new Set(['.pdf', '.txt', '.doc', '.docx', '.xls', '.xlsx', '.zip', '.rar',
                            '.7z', '.odx', '.pdx', '.a2l', '.dll', '.exe', '.xml', '.json',
-                           '.png', '.jpg', '.jpeg', '.gif', '.msi', '.lnk', '.ini', '.cfg'])
+                           '.png', '.jpg', '.jpeg', '.gif', '.msi', '.lnk', '.ini', '.cfg',
+                           '.frf', '.ols', '.set', '.dlcnt'])
 // Output straight into the app's resources folder — no intermediate staging.
 // .gitignore keeps per-partnumber subdirs out of git (manifest.json is committed).
 const OUT_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\//, '')), '..', 'resources', 'recipes')
@@ -67,13 +77,26 @@ const FALSE_DEC_SW = new Set(['100000', '200000', '300000', '400000', '500000', 
                                '700000', '800000', '900000', '1000000', '2000000', '4000000']);
 function parseFilename(name) {
   const base = path.basename(name);
-  // Part number priority: VW/Audi → Bosch → Siemens
-  const vwMatch     = base.match(/(0[0-9][0-9A-Z][0-9]{6}[A-Z]{1,3})/);
+  // Part number priority: VW/Audi (legacy) → VW/Audi (modern chassis) → Bosch → Siemens.
+  //
+  // VW/Audi part numbers come in two formats:
+  //   Legacy (engine ECU, "06K906026A"): starts with 0X then [0-9A-Z], 6 digits, 1-3 letters
+  //   Modern chassis ("5G0906259H", "8V0906259B", "4F0906560CL"): platform code XXX
+  //                  followed by '906' (engine ECU class) + 3 digits + 0-3 letters.
+  //   Modern catches: 5G0/5G6 (Golf 7), 5K0 (Golf 6), 5N0 (Tiguan), 5Q0 (Golf 7 wagon),
+  //                   8V0/8V (Audi A3 8V), 8R0 (Q5 8R), 4F/4G/4H/4M (Audi A6/A7/A8/Q7),
+  //                   7L0/7P0 (Touareg), 7N0/7P0 (Sharan), 1Z0 (Octavia), 6R0 (Polo 6R)
+  //                   etc. Generic match: any [1-9][A-Z0-9][0-9] prefix + 906 + 3 digits.
+  const vwLegacy    = base.match(/(0[0-9][0-9A-Z][0-9]{6}[A-Z]{1,3})/);
+  const vwModern    = base.match(/([1-9][A-Z0-9][0-9]906\d{3}[A-Z]{0,3})/);
   const boschMatch  = base.match(/(02[6-8]\d{7})/);
   const siemensMatch= base.match(/(5WS\d{5}[A-Z]?-?[A-Z]?)/);
-  const partNumber  = vwMatch?.[1] || boschMatch?.[1] || siemensMatch?.[1] || null;
-  // SW number priority: SN/SA/SM/SG-prefixed → decimal 6-7 digit (excluding round-number false positives)
-  const snMatch = base.match(/(S[NAMG][0-9A-Z]{3}[0-9A-Z]{8})/);
+  // 5WS Siemens override beats vwModern when both could match (5WS doesn't have 906)
+  const partNumber  = vwLegacy?.[1] || vwModern?.[1] || boschMatch?.[1] || siemensMatch?.[1] || null;
+  // SW number priority: S<letter>-prefixed → decimal 6-7 digit (excluding round-number false positives).
+  // v3.16 broadened S[NAMG] → S[A-Z] to catch SC800* (Simos18 Golf 7 / GTI / R)
+  // and other modern series. Length stays the same — 13 chars total.
+  const snMatch = base.match(/(S[A-Z][0-9A-Z]{3}[0-9A-Z]{8})/);
   let swNumber = snMatch?.[1] || null;
   if (!swNumber) {
     const decMatches = [...base.matchAll(/\b(\d{6,7})\b/g)].map(m => m[1])
@@ -84,11 +107,17 @@ function parseFilename(name) {
   // Stage detection — extended with DCTuning_Stage1 / _ori_DCTuning / _ORI_n suffix patterns
   // and " MOD." / "_MOD" / WINOLS .MOD-extension patterns (regression-test caught
   // these were being mis-classified as ORI in v3.14.2 and earlier).
+  // Stage detection — broadened in v3.16 for modern tuner conventions:
+  //   - "step1" / "_step1" / " step 1" — B&C Consulting / IE-style tuners
+  //   - "stg1" / "stg2" / "stg3"        — short form, multiple tuners
+  //   - "(Stage1)" with anchors ignored — bracket-wrapped stage
+  //   - WinOLS .MOD extension           — historical, kept
+  //   - "_OEM" / "OEM"                  — Original marker for newer tuner files
   let stage = 0;
-  if (/(?:^|[\._])Stage\s?3/i.test(base)) stage = 3;
-  else if (/(?:^|[\._])Stage\s?2/i.test(base)) stage = 2;
-  else if (/(?:^|[\._\s])Stage\s?1|DCTuning[_-]Stage1|\bstg1\b|(?:[\s_])MOD(?:[\.\s_]|$)|\.MOD$/i.test(base)) stage = 1;
-  else if (/(?:^|[\._\s])(Original|\.ori|_ori|_ORI_n|ORI_n)/i.test(base) || base.toLowerCase().endsWith('.ori')) stage = 0;
+  if (/(?:^|[\._\s\(])Stage\s?3|(?:^|[\._\s])(?:stg|step)\s?3/i.test(base)) stage = 3;
+  else if (/(?:^|[\._\s\(])Stage\s?2|(?:^|[\._\s])(?:stg|step)\s?2/i.test(base)) stage = 2;
+  else if (/(?:^|[\._\s\(])Stage\s?1|DCTuning[_-]Stage1|(?:^|[\._\s])(?:stg|step)\s?1|(?:[\s_])MOD(?:[\.\s_]|$)|\.MOD$/i.test(base)) stage = 1;
+  else if (/(?:^|[\._\s])(Original|\.ori|_ori|_ORI_n|ORI_n|_OEM|\bOEM\b)/i.test(base) || base.toLowerCase().endsWith('.ori')) stage = 0;
   return { partNumber, swNumber, stage, base };
 }
 
@@ -107,9 +136,18 @@ function diffToRegions(ori, tuned) {
   return regions;
 }
 
+let skippedReadError = 0;
 function buildRecipe(oriPath, tunedPath, stage) {
-  const ori = fs.readFileSync(oriPath);
-  const tuned = fs.readFileSync(tunedPath);
+  // Wrap reads in try/catch — one bad file (path encoding, locked, deleted
+  // between walk and read) should not kill the entire batch.
+  let ori, tuned;
+  try {
+    ori = fs.readFileSync(oriPath);
+    tuned = fs.readFileSync(tunedPath);
+  } catch (e) {
+    skippedReadError++;
+    return null;
+  }
   if (ori.length !== tuned.length) {
     skippedSizeMismatch++;
     return null;
@@ -125,7 +163,7 @@ function buildRecipe(oriPath, tunedPath, stage) {
     sourceSwNumber: oriInfo.swNumber || tunedInfo.swNumber,
     sourceOriFile: path.basename(oriPath),
     sourceTunedFile: path.basename(tunedPath),
-    sourceOriHash: sha256File(oriPath),
+    sourceOriHash: (() => { try { return sha256File(oriPath) } catch { return '' } })(),
     sourceOriSize: ori.length,
     stage,
     regions: regions.map(r => ({
@@ -195,11 +233,27 @@ console.log(`\nTotal files visited: ${filesVisited}, variant groups formed: ${gr
 let pairsFound = 0, recipesWritten = 0;
 for (const [key, g] of groups) {
   if (g.originals.length === 0 || g.tunes.length === 0) continue;
-  // Pick the first original as reference (they should all be identical variants anyway)
-  const oriPath = g.originals[0];
+
+  // v3.16 fix: when a group has multiple ORI candidates of different sizes
+  // (e.g. .frf wrapper alongside raw .bin), pair each tune with the ORI
+  // whose size matches. Previously we always picked originals[0], which
+  // dropped any pair where the wrapper happened to be listed first —
+  // that's how all the 5G0906259C / 8V0906* / 06K906* Golf 7 era pairs
+  // were silently failing.
+  const oriSizes = [];
+  for (const oriPath of g.originals) {
+    try { oriSizes.push({ path: oriPath, size: fs.statSync(oriPath).size }); }
+    catch { /* skip */ }
+  }
+  if (oriSizes.length === 0) continue;
+
   for (const t of g.tunes) {
     pairsFound++;
-    const recipe = buildRecipe(oriPath, t.path, t.stage);
+    let tunedSize;
+    try { tunedSize = fs.statSync(t.path).size; } catch { skippedSizeMismatch++; continue; }
+    const matchingOri = oriSizes.find(o => o.size === tunedSize);
+    if (!matchingOri) { skippedSizeMismatch++; continue; }
+    const recipe = buildRecipe(matchingOri.path, t.path, t.stage);
     if (!recipe) continue;
     if (recipe.regions.length === 0) continue; // identical files, not a real pair
 
