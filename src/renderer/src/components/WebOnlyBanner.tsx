@@ -21,11 +21,16 @@ const ArrowDown = (
 interface Props {
   downloadUrl?: string
   bridgeStatus?: 'unknown' | 'present' | 'absent' | 'connected'
+  // When set, the CTA navigates to the in-app Bridge Download page (preferred
+  // for web users — gives them context, install steps, FAQ before the download).
+  // When omitted, falls back to the direct downloadUrl link.
+  onClickDownload?: () => void
 }
 
 export default function WebOnlyBanner({
   downloadUrl = 'https://github.com/dctunings/DCTUNING_APP/releases/latest',
   bridgeStatus = 'unknown',
+  onClickDownload,
 }: Props) {
   if (!isWebMode()) return null
 
@@ -76,40 +81,61 @@ export default function WebOnlyBanner({
         </div>
       </div>
 
-      {/* CTA */}
-      <a
-        href={bridgeAbsent ? bridgeDownloadUrl : downloadUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 7,
-          padding: '7px 14px',
-          borderRadius: 7,
-          background: 'transparent',
-          border: '1px solid rgba(245,158,11,0.35)',
-          color: '#f59e0b',
-          fontSize: 12,
-          fontWeight: 700,
-          textDecoration: 'none',
-          whiteSpace: 'nowrap',
-          flexShrink: 0,
-          fontFamily: 'Manrope, sans-serif',
-          transition: 'border-color 0.15s, background 0.15s',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = 'rgba(245,158,11,0.6)'
-          e.currentTarget.style.background = 'rgba(245,158,11,0.08)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = 'rgba(245,158,11,0.35)'
-          e.currentTarget.style.background = 'transparent'
-        }}
-      >
-        {ArrowDown}
-        {bridgeAbsent ? 'Download Bridge' : 'Reconnecting…'}
-      </a>
+      {/* CTA — prefer in-app navigation to the BridgeDownload landing page;
+          fall back to the direct URL if the parent didn't pass an onClickDownload. */}
+      {bridgeAbsent && onClickDownload ? (
+        <button
+          onClick={onClickDownload}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 7,
+            padding: '7px 14px', borderRadius: 7,
+            background: 'transparent',
+            border: '1px solid rgba(245,158,11,0.35)',
+            color: '#f59e0b', fontSize: 12, fontWeight: 700,
+            whiteSpace: 'nowrap', flexShrink: 0, cursor: 'pointer',
+            fontFamily: 'Manrope, sans-serif',
+            transition: 'border-color 0.15s, background 0.15s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(245,158,11,0.6)'
+            e.currentTarget.style.background = 'rgba(245,158,11,0.08)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(245,158,11,0.35)'
+            e.currentTarget.style.background = 'transparent'
+          }}
+        >
+          {ArrowDown}
+          Download Bridge
+        </button>
+      ) : (
+        <a
+          href={bridgeAbsent ? bridgeDownloadUrl : downloadUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 7,
+            padding: '7px 14px', borderRadius: 7,
+            background: 'transparent',
+            border: '1px solid rgba(245,158,11,0.35)',
+            color: '#f59e0b', fontSize: 12, fontWeight: 700,
+            textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+            fontFamily: 'Manrope, sans-serif',
+            transition: 'border-color 0.15s, background 0.15s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(245,158,11,0.6)'
+            e.currentTarget.style.background = 'rgba(245,158,11,0.08)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(245,158,11,0.35)'
+            e.currentTarget.style.background = 'transparent'
+          }}
+        >
+          {ArrowDown}
+          {bridgeAbsent ? 'Download Bridge' : 'Reconnecting…'}
+        </a>
+      )}
     </div>
   )
 }

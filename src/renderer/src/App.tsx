@@ -16,6 +16,7 @@ import DeviceLibrary from './pages/DeviceLibrary'
 import DriverSetupPage from './pages/DriverSetupPage'
 import RemapBuilder from './pages/RemapBuilder'
 import ECUFlashManager from './pages/ECUFlashManager'
+import BridgeDownload from './pages/BridgeDownload'
 import PricingPage from './pages/PricingPage'
 import AccountPage from './pages/AccountPage'
 import SubscriptionGate from './components/SubscriptionGate'
@@ -59,6 +60,7 @@ export type Page =
   | 'ecuflash'
   | 'pricing'
   | 'account'
+  | 'bridge-download'
 
 // Pages that require a J2534 PassThru DLL bridge (Windows desktop only).
 // scanner/voltage/j2534 work in web via Web Serial API (ELM327 over USB), so
@@ -241,6 +243,8 @@ export default function App() {
             daysRemaining={daysRemaining}
           />
         )
+      case 'bridge-download':
+        return <BridgeDownload setPage={setPage} />
       default:             return <Dashboard setPage={setPage} connected={connected} activeVehicle={activeVehicle} />
     }
   }
@@ -351,7 +355,7 @@ export default function App() {
             openCustomerPortal={openCustomerPortal}
           >
             {isWebMode() && J2534_DLL_PAGES.includes(page) && bridgeStatus !== 'connected' && (
-              <WebOnlyBanner bridgeStatus={bridgeStatus} />
+              <WebOnlyBanner bridgeStatus={bridgeStatus} onClickDownload={() => setPage('bridge-download')} />
             )}
             {isWebMode() && bridgeStatus === 'connected' && J2534_DLL_PAGES.includes(page) && (
               <div style={{

@@ -120,6 +120,14 @@ const Icons: Record<string, JSX.Element> = {
 // Pro-only pages that require at least Pro plan
 const PRO_ONLY_PAGES: Page[] = ['tunes', 'j2534', 'unlock', 'cloning', 'emissions', 'ecuflash']
 
+// Pages that only make sense in the desktop app (e.g. install Windows drivers
+// from local files). Hidden from the sidebar when running as the web app.
+const DESKTOP_ONLY_PAGES: Page[] = ['driversetup']
+
+function isWebMode(): boolean {
+  return !(window as unknown as { api?: unknown }).api
+}
+
 const navItems: { section: string; items: { id: Page; icon: keyof typeof Icons; label: string }[] }[] = [
   {
     section: 'DCTuning',
@@ -202,10 +210,16 @@ export default function Sidebar({ currentPage, setPage, user, subscription, isAc
       </div>
 
       {/* Nav */}
-      {navItems.map((section) => (
+      {navItems.map((section) => {
+        // Filter out desktop-only pages when running in the web app
+        const visibleItems = section.items.filter(item =>
+          !(isWebMode() && DESKTOP_ONLY_PAGES.includes(item.id))
+        )
+        if (visibleItems.length === 0) return null
+        return (
         <div className="sidebar-section" key={section.section}>
           <div className="sidebar-section-label">{section.section}</div>
-          {section.items.map((item) => {
+          {visibleItems.map((item) => {
             const isProOnly = PRO_ONLY_PAGES.includes(item.id)
             const isLocked = isProOnly && !isPro && isActive
 
@@ -233,7 +247,8 @@ export default function Sidebar({ currentPage, setPage, user, subscription, isAc
             )
           })}
         </div>
-      ))}
+        )
+      })}
 
       {/* Account section — only for logged in users */}
       {user && (
