@@ -67,6 +67,110 @@ function sha256File(p) {
   return h.digest('hex');
 }
 
+// v3.16: Extract (partNumber, swNumber) from BINARY CONTENT. VAG ECUs store
+// the part number + SW number as ASCII text in the calibration region —
+// usually within the first 1 MB of the firmware image. We do a fast string
+// scan and pick the most frequent / longest match.
+//
+// This catches files that filename parsing misses entirely:
+//   • License-plate-named:    "EW732YX.ORI", "245cv-opf-t756.ori"
+//   • Hash-named:             "2df66a6193eeaa950ea255d59b52997a.tun-...mod"
+//   • Tuner-internal:         "JOB12345.bin", "Step2_Dpf_Off.Bc"
+//   • Folder-context only:    "OBD UDS_5G0906259.bin" inside a Golf 7 folder
+//
+// Scan up to 3 MB of the binary. The 1 MB cap missed Simos18 (cal region at
+// 2 MB), but scanning the entire 4 MB binary is wasteful when the metadata
+// strings are clustered around the 2 MB mark. 3 MB covers Simos18 with a
+// margin and keeps per-file cost down — important when ~30K files need
+// content scanning across the whole archive.
+const SCAN_LIMIT = 3 * 1024 * 1024;
+
+// SHAPE-FIRST priority order. The previous frequency-only ranking was getting
+// fooled by garbage like "SPNLLMLKKLLMM" (all-letter repeat pattern, 7
+// occurrences) beating the real "SC800F9000000" (3 occurrences). We now
+// classify candidates by SHAPE first — anything that looks like a real VAG
+// chassis-coded part number wins over generic legacy regex matches like
+// "000000111SC".
+//
+// Priority for part numbers (highest → lowest):
+//   1. Modern chassis with explicit 906 (5G0906259, 8V0906259B, …)
+//   2. Legacy with explicit 906 (03G906018DH, 04L906021M, …)
+//   3. Bosch (0261207939)
+//   4. Siemens (5WS40060I-T)
+//   5. Generic legacy regex match (last resort — most prone to coincidences)
+//
+// For SW numbers we require ≥1 digit because all-letter strings of the right
+// shape are repeating patterns, not real software identifiers.
+function classifyPart(v) {
+  if (/^[1-9][A-Z0-9][0-9]906\d{3}/.test(v)) return 1   // modern chassis 906
+  if (/^0[0-9][0-9A-Z][0-9]906\d{3}/.test(v)) return 2  // legacy 906
+  if (/^02[6-8]\d{7}$/.test(v)) return 3                // Bosch
+  if (/^5WS\d{5}/.test(v)) return 4                     // Siemens
+  return 5                                              // generic legacy
+}
+
+function extractPartNumberFromBinary(buf) {
+  const slice = buf.length > SCAN_LIMIT ? buf.subarray(0, SCAN_LIMIT) : buf;
+  // Treat as Latin-1 — every byte is one character, ASCII range gives us the
+  // identifier characters cleanly.
+  const text = slice.toString('latin1');
+
+  // Tally all candidates, regardless of shape.
+  const candidates = new Map();
+  const tally = (re) => {
+    for (const m of text.matchAll(re)) {
+      const v = m[1];
+      candidates.set(v, (candidates.get(v) || 0) + 1);
+    }
+  };
+  tally(/(0[0-9][0-9A-Z][0-9]{6}[A-Z]{1,3})/g);   // legacy VAG
+  tally(/([1-9][A-Z0-9][0-9]906\d{3}[A-Z]{0,3})/g); // modern chassis VAG
+  tally(/(02[6-8]\d{7})/g);                          // Bosch
+  tally(/(5WS\d{5}[A-Z]?-?[A-Z]?)/g);                // Siemens
+
+  let partNumber = null;
+  if (candidates.size > 0) {
+    // Sort: shape priority ASC (lower = better), then frequency DESC, then length DESC.
+    // Single-occurrence still allowed for class 1-4 (906/Bosch/Siemens shapes are
+    // hard to fake). Class 5 (generic legacy) requires ≥2 occurrences to weed out
+    // regex coincidences.
+    const sorted = [...candidates.entries()]
+      .filter(([v, count]) => {
+        const cls = classifyPart(v);
+        if (cls <= 4) return true             // shape-rescued
+        return count >= 2                     // generic class needs corroboration
+      })
+      .sort((a, b) => {
+        const cA = classifyPart(a[0]);
+        const cB = classifyPart(b[0]);
+        if (cA !== cB) return cA - cB
+        if (a[1] !== b[1]) return b[1] - a[1]
+        return b[0].length - a[0].length
+      });
+    if (sorted.length > 0) partNumber = sorted[0][0];
+  }
+
+  // SW number — require ≥1 digit. Real VAG SWs (SC800F9000000, SN100L8000000,
+  // SA300O1000000, etc.) always mix letters AND digits. All-letter matches like
+  // "SPNLLMLKKLLMM" are repeating-character patterns inside the firmware that
+  // happen to fit the regex shape but aren't real software identifiers.
+  const swCandidates = new Map();
+  for (const m of text.matchAll(/(S[A-Z][0-9A-Z]{3}[0-9A-Z]{8})/g)) {
+    if (!/\d/.test(m[1])) continue            // skip all-letter garbage
+    swCandidates.set(m[1], (swCandidates.get(m[1]) || 0) + 1);
+  }
+  let swNumber = null;
+  if (swCandidates.size > 0) {
+    // Prefer ≥2 occurrences when available (corroborated). Otherwise fall back
+    // to single occurrence with digit (shape-rescued). Frequency tie-break.
+    const corroborated = [...swCandidates.entries()].filter(([_, count]) => count >= 2)
+    const pool = corroborated.length > 0 ? corroborated : [...swCandidates.entries()]
+    pool.sort((a, b) => b[1] - a[1]);
+    swNumber = pool[0][0];
+  }
+  return { partNumber, swNumber };
+}
+
 // Extract (partNumber, swNumber) identifier from filename. Returns null if cannot identify.
 // v3.14.3: extended to recognize Bosch part numbers (0261207939) and Siemens part
 // numbers (5WS40060I-T) as fallbacks when no VW part-number is present, plus
@@ -137,7 +241,12 @@ function diffToRegions(ori, tuned) {
 }
 
 let skippedReadError = 0;
-function buildRecipe(oriPath, tunedPath, stage) {
+// v3.16: buildRecipe now takes resolvedPartNumber + resolvedSwNumber from the
+// caller so binary-content-rescued IDs flow through. Previously buildRecipe
+// re-ran parseFilename on the path, which returns null for the (license-plate
+// / hash / job-id) named files we just rescued via binary scan. That null
+// then crashed `path.join(OUT_ROOT, null)` at write time.
+function buildRecipe(oriPath, tunedPath, stage, resolvedPartNumber, resolvedSwNumber) {
   // Wrap reads in try/catch — one bad file (path encoding, locked, deleted
   // between walk and read) should not kill the entire batch.
   let ori, tuned;
@@ -154,8 +263,6 @@ function buildRecipe(oriPath, tunedPath, stage) {
   }
   const regions = diffToRegions(ori, tuned);
   const totalBytesChanged = regions.reduce((s, r) => s + (r.end - r.start + 1), 0);
-  const oriInfo = parseFilename(oriPath);
-  const tunedInfo = parseFilename(tunedPath);
 
   // Capture the parent folder name so the Recipe Library search picks up
   // vehicle context that's encoded in the folder structure rather than the
@@ -168,8 +275,8 @@ function buildRecipe(oriPath, tunedPath, stage) {
 
   const recipe = {
     schemaVersion: 1,
-    sourcePartNumber: oriInfo.partNumber || tunedInfo.partNumber,
-    sourceSwNumber: oriInfo.swNumber || tunedInfo.swNumber,
+    sourcePartNumber: resolvedPartNumber,    // resolved by caller (filename or binary scan)
+    sourceSwNumber: resolvedSwNumber,        // resolved by caller
     sourceOriFile: path.basename(oriPath),
     sourceTunedFile: path.basename(tunedPath),
     sourceFolder,                                                        // NEW v3.16
@@ -215,34 +322,88 @@ function walk(dir, callback, depth = 0) {
 // Group by (partNumber + swNumber) as the variant identifier
 const groups = new Map() // key → { originals: [], tunes: [{ path, stage }] }
 let skippedSizeMismatch = 0
+let contentMatches = 0   // v3.16 — count files identified by binary content scan
+let walkProgressLast = Date.now()
 
 for (const root of ROOTS) {
   if (!fs.existsSync(root)) {
     console.log(`  ⚠ skipping (not found): ${root}`)
     continue
   }
+  const beforeFiles = filesVisited
+  const beforeContent = contentMatches
+  const startedAt = Date.now()
   console.log(`  → scanning ${root} ...`)
   walk(root, (full, name) => {
+    // Progress beacon every ~2s so the user knows we're still alive on the
+    // long sweeps (some roots have 16K+ files plus binary scans).
+    const now = Date.now()
+    if (now - walkProgressLast > 2000) {
+      walkProgressLast = now
+      const fps = Math.round((filesVisited - beforeFiles) / Math.max(1, (now - startedAt) / 1000))
+      process.stdout.write(`\r    visited ${filesVisited} files (${fps}/s, ${contentMatches} content-rescued, ${groups.size} groups)`)
+    }
     // Fast-path filter: skip by extension before stat
     const ext = path.extname(name).toLowerCase()
     if (SKIP_EXT.has(ext)) return
     let size
     try { size = fs.statSync(full).size } catch { return }
     if (size < MIN_SIZE || size > MAX_SIZE) return
-    const info = parseFilename(name)
-    if (!info.partNumber) return
+    let info = parseFilename(name)
+
+    // v3.16 — content-based identifier fallback. VAG ECUs embed part number
+    // and SW number as ASCII strings in the calibration region. Scan when
+    // EITHER field is missing from the filename (not just partNumber):
+    //
+    // CASE 1 — license-plate-named tune (no part-num in filename):
+    //   "Golf 7 GTI stage 2.MOD"  →  binary scan finds 5G0906259 + SC800F9000000
+    //
+    // CASE 2 — part-num-named ORI (no SW in filename):
+    //   "OBD UDS_5G0906259.bin"   →  filename gives 5G0906259 but no SW.
+    //   Binary scan fills SC800F9000000 so the ORI key matches the tune key.
+    //
+    // Without case 2, ORIs and tunes that share a part number land in
+    // different groups (5G0906259__unknown vs 5G0906259__SC800F9000000)
+    // and never pair — that's why all the Simos18 / modern Golf 7 / GTI
+    // material was orphaned.
+    if (!info.partNumber || !info.swNumber) {
+      let buf
+      try { buf = fs.readFileSync(full) } catch { return }
+      const fromContent = extractPartNumberFromBinary(buf)
+      // partNumber: filename wins; binary fills only if missing
+      const finalPart = info.partNumber || fromContent.partNumber
+      if (!finalPart) return  // genuinely no identifier — skip
+      const finalSW = info.swNumber || fromContent.swNumber
+      const wasBinaryRescued = !info.partNumber && fromContent.partNumber
+      info = { ...info, partNumber: finalPart, swNumber: finalSW }
+      if (wasBinaryRescued) contentMatches++
+    }
+
     const key = `${info.partNumber}__${info.swNumber || 'unknown'}`
     let g = groups.get(key)
     if (!g) { g = { originals: [], tunes: [] }; groups.set(key, g) }
     if (info.stage === 0) g.originals.push(full)
     else g.tunes.push({ path: full, stage: info.stage })
   })
+  const dur = ((Date.now() - startedAt) / 1000).toFixed(1)
+  process.stdout.write(`\r    ${root}: ${filesVisited - beforeFiles} files, ${contentMatches - beforeContent} rescued, ${dur}s\n`)
 }
 console.log(`\nTotal files visited: ${filesVisited}, variant groups formed: ${groups.size}`)
+console.log(`  ${contentMatches} files identified by binary content scan (filename had no part number)`)
 
-let pairsFound = 0, recipesWritten = 0;
+let pairsFound = 0, recipesWritten = 0, skippedNoPart = 0;
 for (const [key, g] of groups) {
   if (g.originals.length === 0 || g.tunes.length === 0) continue;
+
+  // Recover the resolved partNumber + swNumber from the group key. The walker
+  // built keys as `${partNumber}__${swNumber || 'unknown'}`. partNumber is
+  // always set (we returned early in the walker if neither filename nor
+  // binary scan produced one), and swNumber may legitimately be 'unknown'.
+  const sepIdx = key.indexOf('__');
+  const resolvedPart = sepIdx > 0 ? key.slice(0, sepIdx) : key;
+  const resolvedSwRaw = sepIdx > 0 ? key.slice(sepIdx + 2) : 'unknown';
+  const resolvedSw = (resolvedSwRaw && resolvedSwRaw !== 'unknown') ? resolvedSwRaw : null;
+  if (!resolvedPart) { skippedNoPart++; continue; }
 
   // v3.16 fix: when a group has multiple ORI candidates of different sizes
   // (e.g. .frf wrapper alongside raw .bin), pair each tune with the ORI
@@ -263,22 +424,26 @@ for (const [key, g] of groups) {
     try { tunedSize = fs.statSync(t.path).size; } catch { skippedSizeMismatch++; continue; }
     const matchingOri = oriSizes.find(o => o.size === tunedSize);
     if (!matchingOri) { skippedSizeMismatch++; continue; }
-    const recipe = buildRecipe(matchingOri.path, t.path, t.stage);
+    const recipe = buildRecipe(matchingOri.path, t.path, t.stage, resolvedPart, resolvedSw);
     if (!recipe) continue;
     if (recipe.regions.length === 0) continue; // identical files, not a real pair
 
     const partDir = path.join(OUT_ROOT, recipe.sourcePartNumber);
     fs.mkdirSync(partDir, { recursive: true });
-    const variantId = `${recipe.sourceSwNumber}_stage${recipe.stage}`;
+    // null SW → "unknown" stem so multiple null-SW recipes for the same part
+    // don't overwrite each other (e.g. when several Golf 7 tunes share a
+    // partNumber but the SW couldn't be extracted from filename or binary).
+    const swStem = recipe.sourceSwNumber || `unknown_${path.basename(t.path).replace(/[^A-Za-z0-9_-]+/g, '_').slice(0, 32)}`;
+    const variantId = `${swStem}_stage${recipe.stage}`;
     const outPath = path.join(partDir, `${variantId}.json`);
     fs.writeFileSync(outPath, JSON.stringify(recipe, null, 2));
     recipesWritten++;
     if (recipesWritten <= 5) {
-      console.log(`  ✓ ${recipe.sourcePartNumber} ${recipe.sourceSwNumber} Stage${recipe.stage} — ${recipe.regions.length} regions, ${recipe.totalBytesChanged}B changed`);
+      console.log(`  ✓ ${recipe.sourcePartNumber} ${recipe.sourceSwNumber || '(no-sw)'} Stage${recipe.stage} — ${recipe.regions.length} regions, ${recipe.totalBytesChanged}B changed`);
     }
   }
 }
-console.log(`\nDone. Pairs found: ${pairsFound}, recipes written: ${recipesWritten}, skipped (size mismatch): ${skippedSizeMismatch}`);
+console.log(`\nDone. Pairs found: ${pairsFound}, recipes written: ${recipesWritten}, skipped (size mismatch): ${skippedSizeMismatch}, skipped (no part): ${skippedNoPart}`);
 console.log(`Output: ${OUT_ROOT}`);
 
 // Build manifest — small index file that maps ORI hash / (partNumber+sw) → recipe path
