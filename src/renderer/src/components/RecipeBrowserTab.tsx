@@ -341,7 +341,7 @@ export default function RecipeBrowserTab() {
         <input
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(0) }}
-          placeholder="Search part number, SW, vehicle..."
+          placeholder="Search HW part number, SW number, vehicle, model..."
           style={{ flex: 1, minWidth: 200, height: 34 }}
         />
       </div>
@@ -438,11 +438,26 @@ export default function RecipeBrowserTab() {
               }}
             >
               <span style={{ fontSize: 11, opacity: 0.6, transition: 'transform 0.15s', transform: isOpen ? 'rotate(90deg)' : 'rotate(0)' }}>▶</span>
-              <span style={{
-                fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: 'var(--accent)',
-                minWidth: 130,
-              }}>
-                {g.partNumber}
+              {/* VAG convention: the ECU's primary identifier is the HW
+                  (hardware part number, printed on the ECU label). When the
+                  group has exactly one SW (calibration version), show it
+                  too — saves a click for the common case. */}
+              <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4 }}>
+                <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>HW</span>
+                <span style={{
+                  fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: 'var(--accent)',
+                  minWidth: 130,
+                }}>
+                  {g.partNumber}
+                </span>
+                {g.swNumbers.size === 1 && (
+                  <>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5, marginLeft: 6 }}>SW</span>
+                    <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--text-secondary)' }}>
+                      {[...g.swNumbers][0]}
+                    </span>
+                  </>
+                )}
               </span>
               {/* Make badge — color-coded so a quick scan groups by brand */}
               {g.make && g.make !== 'Other' && (
@@ -477,11 +492,21 @@ export default function RecipeBrowserTab() {
               <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                 {g.swNumbers.size > 0 ? `${g.swNumbers.size} SW · ` : ''}{g.variants.length} recipe{g.variants.length !== 1 ? 's' : ''}
               </span>
+              {/* Search the catalog by tuner search field — HW above is also
+                  searchable in the search box at the top. */}
             </div>
 
             {/* Expanded variants */}
             {isOpen && (
               <div style={{ borderTop: '1px solid var(--border)', padding: '8px 16px 12px', background: 'rgba(0,0,0,0.15)' }}>
+                {/* HW number stays in the group header — it's the same for
+                    every variant in this group. The columns below describe
+                    each variant's SW (calibration version) and stage. */}
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 4, fontWeight: 700 }}>
+                  HW <span style={{ color: 'var(--accent)', fontFamily: 'monospace' }}>{g.partNumber}</span>
+                  {' · '}
+                  Variants ({g.variants.length}):
+                </div>
                 <table style={{ width: '100%', fontSize: 11, fontFamily: 'monospace', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ color: 'var(--text-muted)', textAlign: 'left' }}>

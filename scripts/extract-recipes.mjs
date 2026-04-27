@@ -339,7 +339,12 @@ for (const k of ['1K0','1K1','1K2','1K5','1K9','1KE']) POST2008_CHASSIS.add(k)
 //   028 = TDI 1.9 SDI / 1.9 PD early — 1991-2002 (Golf 3 / Passat B5 era)
 //   036 = Polo / Lupo 1.4/1.6 16V — 1995-2002
 //   047 = 1.4 TDI / 1.7 SDI 3-cyl very early — pre-2002
-const PRE2008_ENGINE_FAMILIES = new Set(['037', '028', '036', '047'])
+//   021 = V6/V8/VR6 early (Golf 3 VR6, Passat B5 VR6, Jetta VR6, early Sharan
+//         I VR6) — 1990s. Damo screenshotted 021906258CK/CN/CL/D/EA showing
+//         "Golf VR6", "Passat VR6 1995", "Jetta VR6" — all pre-2008.
+//   030 = Polo / Lupo 1.0/1.4 8V early — pre-Golf-4
+//   032 = Mk2/Mk3 1.8L early — pre-Golf-4
+const PRE2008_ENGINE_FAMILIES = new Set(['021', '028', '030', '032', '036', '037', '047'])
 
 // Brand subfolders that we recognize as non-VAG. Used to drop Bosch/Siemens
 // AMBIGUOUS parts that live under non-VAG brand directories.
@@ -500,22 +505,65 @@ const GENERIC_BASENAMES = new Set(['mod', 'tuning_db_bin', 'damos', 'damos_rar_e
                                     'new_vag_extract', 'from_hex_s19', 'from_archives',
                                     'ecu maps', 'ecu dumps and eeproms'])
 
+// Reject patterns for sourceFolder — beyond the static lists, recognize
+// "BRAND <number>" and bare brand patterns. Damo screenshotted entries with
+// vehicleHint = "VOLKSWAGEN 1" — that's the pattern this kills.
+function isGenericFolderName(name) {
+  if (!name) return true
+  const lower = name.toLowerCase()
+  if (ROOT_BASENAMES.has(lower)) return true
+  if (GENERIC_BASENAMES.has(lower)) return true
+  // Bare brand or brand + short number/letter suffix.
+  // Matches: "VOLKSWAGEN", "VW", "VOLKSWAGEN 1", "Audi 11", "VW N", etc.
+  if (/^(volkswagen|audi|seat|skoda|porsche|vw)(\s+[0-9a-z]{1,4})?$/i.test(name)) return true
+  // Generic brand containers from non-VAG (we drop those by VAG filter anyway,
+  // but also kill the labels for safety).
+  if (/^(bmw|mercedes(\s+benz)?|peugeot|renault|citroen|ford|opel|volvo|alfa|fiat|kia|hyundai|honda|toyota|nissan|mazda|mitsubishi|land\s+rover|jaguar|mini|lancia|dacia|jeep|iveco|scania|suzuki|smart|daewoo|isuzu|ferrari)(\s+[0-9a-z]{1,4})?$/i.test(name)) return true
+  // Pure number / single-char folders aren't useful labels.
+  if (/^[0-9]{1,4}$/.test(name)) return true
+  if (name.length < 4) return true
+  return false
+}
+
+// Pre-compute the canonical absolute path for every ROOT so we can detect
+// when an ancestor walk crosses out of a ROOT (Damo screenshotted the
+// "DATABASE" label leaking — that's `/d/DATABASE`, the parent of
+// `/d/DATABASE/Tuning_DB_BIN`. We must STOP at the ROOT boundary so labels
+// only ever come from within the configured archive area).
+const ROOT_RESOLVED = ROOTS.map(r => path.resolve(r))
+
 // Pick the most informative folder name from the file path. Walks up the
-// path looking for a directory whose basename is NOT a ROOT and NOT a known
-// generic container. Returns "" if nothing useful found (UI hides the field).
+// path looking for a directory whose basename is NOT a ROOT, NOT a known
+// generic container, and NOT a "BRAND N" generic series folder. Stops at
+// the configured ROOT boundary — never returns a directory ABOVE a ROOT
+// (e.g. "DATABASE" when the root is "DATABASE/Tuning_DB_BIN"). Returns ""
+// if nothing useful found (UI hides the field).
 function pickSourceFolder(tunedPath, oriPath) {
   const candidates = []
   for (const p of [tunedPath, oriPath]) {
     if (!p) continue
     let dir = path.dirname(p)
+    const dirAbs0 = path.resolve(dir)
+    // Identify the ROOT this file is under (longest matching prefix).
+    let underRoot = null
+    for (const r of ROOT_RESOLVED) {
+      if (dirAbs0 === r || dirAbs0.startsWith(r + path.sep)) {
+        if (!underRoot || r.length > underRoot.length) underRoot = r
+      }
+    }
     // Walk up to 5 levels — the descriptive folder is usually the immediate
     // parent or one level up (e.g. /d/last tuner files/Golf 7/2000 GTI/file.bin
     // → "2000 GTI" beats "Golf 7" beats "last tuner files").
     for (let i = 0; i < 5; i++) {
       const base = path.basename(dir)
       if (!base) break
-      const lower = base.toLowerCase()
-      if (!ROOT_BASENAMES.has(lower) && !GENERIC_BASENAMES.has(lower)) {
+      const dirAbs = path.resolve(dir)
+      // Stop if we're at or above the ROOT boundary
+      if (underRoot && (dirAbs === underRoot || !dirAbs.startsWith(underRoot + path.sep))) {
+        if (dirAbs !== underRoot) break  // we've crossed above the root — stop
+        // dirAbs === underRoot: this IS the root itself, treat as generic
+      }
+      if (!isGenericFolderName(base)) {
         candidates.push(base)
         break  // take the first non-generic ancestor going up from the file
       }
