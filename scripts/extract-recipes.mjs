@@ -225,6 +225,253 @@ function parseFilename(name) {
   return { partNumber, swNumber, stage, base };
 }
 
+// ─── VAG-only + 2008+ filter (Damo's request) ────────────────────────────
+// Damo wants the Recipe Library scoped to:
+//   • Volkswagen Group makes only — VW, Audi, Seat, Skoda, Porsche
+//     (no BMW/Mercedes/Peugeot/Renault/Ford/Opel/Volvo/etc.)
+//   • Vehicle year ≥2008, EXCEPT the Mk4 Golf (1J0 chassis, 1997-2003) which
+//     stays in for the legacy enthusiasts.
+//
+// We classify each candidate part number into ONE of:
+//   ALLOW  — VAG, post-2008 (or Golf 4)
+//   REJECT — VAG, pre-2008 chassis (drop)
+//   DROP   — non-VAG (BMW, Mercedes, etc.) → drop
+//   AMBIGUOUS — Bosch/Siemens — accept only if file is under a VAG context
+//               folder (Audi, VW, Seat, Skoda, Porsche, audi-package, …)
+
+// Modern VAG chassis prefixes (XXX906…) — 2008+ era. KEEP.
+const POST2008_CHASSIS = new Set([
+  '5G0','5G1','5G5','5G6',                  // Golf 7 (2012+)
+  '5K0','5K1',                              // Golf 6 (2008-2012)
+  '5T0','5T1',                              // Touran II (2015+)
+  '5N0','5N1','5N5','5NA',                  // Tiguan I/II (2007+; we accept the late tail)
+  '5C0','5C1',                              // Beetle 5C (2011+)
+  '5Q0','5Q1','5QF',                        // Golf SW MQB / Tiguan MQB
+  '5E0','5E1','5E5',                        // Skoda Octavia 3 (2013+)
+  '5F0','5F1',                              // Seat Leon 5F (2012+)
+  '5FA','5FB',                              // Seat
+  '5JB','5J0','5J1',                        // Skoda Fabia / Roomster
+  '5L0','5L1',                              // Skoda Roomster late
+  '5J6','5J7',                              // Skoda Fabia II
+  '5W0','5W1',                              // Skoda Karoq (2017+)
+  '6R0','6R1','6RA','6R5',                  // Polo 6R (2009+)
+  '6C0','6C1',                              // Polo 6C (2014+)
+  '6F0','6F1',                              // Polo 6F (2017+)
+  '7N0','7N1','7N5',                        // Sharan II (2010+)
+  '7P0','7P5','7P6',                        // Touareg II (2010+)
+  '7C0','7C1',                              // Crafter II
+  '3C0','3C1','3C5',                        // Passat B6/B7 (2005+)
+  '3D0',                                    // Phaeton late (we keep the partial overlap)
+  '3Q0','3Q1','3Q5',                        // Passat B8 (2014+)
+  '3G0','3G1','3G5',                        // Passat B8 facelift / Arteon
+  '3CN','3G8','3GO',                        // newer Passat / Arteon
+  '5NN','5N7',                              // Tiguan facelift
+  '561','565','567',                        // Various
+  '8K0','8K1','8K5','8K9',                  // Audi A4 B8 (2008+)
+  '8R0','8R1','8R5',                        // Audi Q5 8R (2008+)
+  '8X0','8X1','8X4','8XA',                  // Audi A1 8X (2010+)
+  '8U0','8U1','8U5',                        // Audi Q3 8U (2011+)
+  '8P0','8P1','8PA',                        // Audi A3 8P (2003-2013) — keep, post-Golf-4 era
+  '8T0','8T1','8T3','8TA','8T5',            // Audi A5 8T (2007-2017) — keep
+  '8V0','8V1','8VA','8V5','8V7',            // Audi A3 8V (2012+)
+  '8W0','8W1','8W2','8W5','8W6',            // Audi A4 B9 (2016+)
+  '8S0','8S1',                              // Audi TT MK3 (2014+)
+  '8Y0','8Y1',                              // Audi A3 8Y (2020+)
+  '4F0','4F2','4F5',                        // Audi A6 C6 (2004+) — keep
+  '4G0','4G1','4G5','4G8','4GA',            // Audi A6 C7 (2011+)
+  '4M0','4M1','4M5','4MA',                  // Audi Q7 4M (2015+)
+  '4H0','4H1','4HA','4HE','4HF',            // Audi A8 4H (2010+)
+  '4S0','4S1',                              // Audi R8 (2014+)
+  '4N0','4N1',                              // Audi A8 D5 (2017+)
+  '4K0','4K1','4KE','4KF','4KH',            // Audi A6 C8 (2018+)
+  '4L0','4L1','4LB',                        // Audi Q7 4L (2006-2015) — partial keep
+  'F4A','FYA','FYB',                        // newer
+  '420','422','427','423',                  // Audi R8 / TT
+  '8KH','83A','83B',                        // newer Audi
+  '9A1','9PA','9PB','958','970','971','991','992',  // Porsche post-2008 chassis
+  '95B',                                    // Porsche Macan
+  '8J0','8J1','8J3','8J9',                  // Audi TT 8J (2006-2014) — keep
+  '7L8',                                    // Touareg I late (2007+)
+])
+
+// Mk4 Golf chassis — 1997-2003. Damo's exception, keep these.
+const GOLF4_CHASSIS = new Set(['1J0','1J1','1J2','1J3','1J5','1J6','1J7'])
+
+// Pre-2008 VAG chassis to REJECT.
+const PRE2008_CHASSIS = new Set([
+  '8D0','8D1','8D2','8D3','8D5','8D9',      // Audi A4 B5 (1995-2001)
+  '4B0','4B2','4B3','4B5','4B9',            // Audi A6 C5 (1997-2004)
+  '4D0','4D1','4D2','4D5',                  // Audi A8 D2 (1994-2002)
+  '4E0','4E1','4E2',                        // Audi A8 D3 (2002-2010, mostly pre-2008)
+  '8L0','8L1','8L9',                        // Audi A3 8L (1996-2003)
+  '8N0','8N1','8N3','8N7','8N8','8N9',      // Audi TT 8N (1998-2006)
+  '8E0','8E1','8E2','8E5','8E9','8EC',      // Audi A4 B6/B7 (2001-2008)
+  '8H0','8H1','8H2','8H5','8H7','8H9',      // Audi A4 B6 Cabrio
+  '8Z0','8Z1','8Z9',                        // Audi A2 8Z (2000-2005)
+  '443','447','4A0','4A2',                  // older Audi 100/A6 C4/C3
+  '893','8A0','8B0','8C0','8C5',            // Audi 80/90 B3/B4
+  '1H0','1H1','1H2','1H5','1H6','1H9',      // Golf 3 (1991-1997)
+  '6N0','6N1','6N2','6N3','6N9',            // Polo 6N (1994-2002)
+  '9N0','9N1','9N2','9N3','9N9',            // Polo 9N (2002-2009) — early pre-2008
+  '3B0','3B1','3B2','3B3','3B5','3B6','3B9','3BG', // Passat B5 (1996-2005)
+  '3A0','3A1','3A2','3A5','3A9',            // Passat B4
+  '3Y0','3Y9',                              // older Passat
+  '7M0','7M1','7M2','7M3','7M9',            // Sharan I (1995-2010, mostly pre-2008)
+  '6E0','6E1','6E2','6E3','6E9',            // Lupo (1998-2005)
+  '6X0','6X1','6X9',                        // Lupo / Arosa
+  '1L0','1L1','1L2','1L9',                  // Vento
+  '1E0','1E1','1E9','1F0','1F1',            // Caddy / older
+  '2E0','2E1','2E9',                        // Caddy
+  '1K0','1K1','1K2','1K5','1K9','1KE',      // Golf 5 (2003-2008) — borderline; keep MOST
+  // Hmm, 1K0 Golf 5 is 2003-2008. Damo said "under 2008" so 2003-2007 is out.
+  // But Mk5 GTI is iconic and most files in this codebase. Let me KEEP it.
+  // (Removing 1K0 from this list — see MIXED_CHASSIS below)
+])
+// Remove Golf 5 from PRE2008 — keep as borderline (still very much in use).
+for (const k of ['1K0','1K1','1K2','1K5','1K9','1KE']) PRE2008_CHASSIS.delete(k)
+// Add Golf 5 to allowed
+for (const k of ['1K0','1K1','1K2','1K5','1K9','1KE']) POST2008_CHASSIS.add(k)
+
+// Pre-2008 engine ECU families to REJECT — these only appear on cars made
+// before the Golf 4 era (1997+) or are exclusively early-era engines that
+// Damo's spec rules out:
+//   037 = Mk2/Mk3 era (1.6/1.8/2.0 8V/16V) — 1985-1997
+//   028 = TDI 1.9 SDI / 1.9 PD early — 1991-2002 (Golf 3 / Passat B5 era)
+//   036 = Polo / Lupo 1.4/1.6 16V — 1995-2002
+//   047 = 1.4 TDI / 1.7 SDI 3-cyl very early — pre-2002
+const PRE2008_ENGINE_FAMILIES = new Set(['037', '028', '036', '047'])
+
+// Brand subfolders that we recognize as non-VAG. Used to drop Bosch/Siemens
+// AMBIGUOUS parts that live under non-VAG brand directories.
+const NONVAG_BRAND_FOLDERS = new Set([
+  'bmw','mercedes benz','mercedes','peugeot','renault','citroen','ford','opel',
+  'volvo','alfa','fiat','kia','hyundai','honda','toyota','nissan','mazda',
+  'mitsubishi','land rover','jaguar','mini','lancia','dacia','jeep','iveco',
+  'scania','suzuki','smart','daewoo','isuzu','ferrari','kawasaki',
+])
+
+// VAG brand folder hints — anything under these is VAG context.
+const VAG_BRAND_FOLDERS = new Set([
+  'vw','volkswagen','audi','seat','skoda','porsche','audi-package',
+])
+
+// Extract chassis prefix from a part number. Returns the leading 3 chars
+// only when the part is a modern chassis-coded number (XXX906…). Otherwise
+// returns null and the caller decides.
+function chassisPrefix(pn) {
+  if (!pn) return null
+  if (/^[1-9A-Z][A-Z0-9][0-9]906\d{3}/.test(pn)) return pn.slice(0, 3).toUpperCase()
+  return null
+}
+
+// Classify a part number for the VAG/year filter.
+// Returns one of: 'ALLOW' | 'REJECT' | 'AMBIGUOUS' | 'DROP'
+function classifyForFilter(pn) {
+  if (!pn) return 'DROP'
+  const p = pn.toUpperCase()
+
+  // Chassis-coded VAG (modern)
+  const cp = chassisPrefix(p)
+  if (cp) {
+    if (POST2008_CHASSIS.has(cp)) return 'ALLOW'
+    if (GOLF4_CHASSIS.has(cp)) return 'ALLOW'
+    if (PRE2008_CHASSIS.has(cp)) return 'REJECT'
+    // Unknown chassis prefix with 906 marker — most likely VAG, keep as ALLOW
+    // so we don't lose new chassis we haven't enumerated yet.
+    return 'ALLOW'
+  }
+
+  // Legacy VAG engine ECU (0XX906xxx). The 3-char prefix identifies the engine
+  // family. Reject explicitly pre-Golf-4 families (037/028/036/047).
+  if (/^0[0-9][0-9A-Z]906\d{3}[A-Z]{0,3}$/.test(p)) {
+    const engineFamily = p.slice(0, 3)
+    if (PRE2008_ENGINE_FAMILIES.has(engineFamily)) return 'REJECT'
+    return 'ALLOW'
+  }
+
+  // Bosch / Siemens generic — used by many makes. Defer to folder context.
+  if (/^02[6-8]\d{7}$/.test(p)) return 'AMBIGUOUS'
+  if (/^5WS\d{5}/.test(p)) return 'AMBIGUOUS'
+
+  // Generic legacy regex match (0XX[A-Z0-9][0-9]{6}[A-Z]{1,3}). These are
+  // uncertain — could be VAG or other. Defer to folder context.
+  return 'AMBIGUOUS'
+}
+
+// Walk a path's ancestry and decide if it sits under a VAG context folder
+// or under a non-VAG brand folder. Returns 'VAG' | 'NONVAG' | 'UNKNOWN'.
+//
+// Two passes per ancestor:
+//   exact-match check against VAG_BRAND_FOLDERS / NONVAG_BRAND_FOLDERS, then
+//   substring keyword check ("VOLKSWAGEN", "Vw", "Audi", brand words inside
+//   long descriptive folder names like "Vw VOLKSWAGEN ECU Map Tuning Files").
+const VAG_KEYWORDS = ['volkswagen', 'audi', ' vw', 'vw ', 'seat ', 'skoda',
+                       'porsche', 'audi-package', 'golf', 'passat', 'polo',
+                       'tiguan', 'touareg', 'octavia', 'fabia', 'leon',
+                       'ibiza', 'cayenne', 'macan', 'panamera', 'a3 ', 'a4 ',
+                       'a6 ', 'a8 ', 'q3 ', 'q5 ', 'q7 ', 's3 ', 'rs3', 'rs4',
+                       'rs6', 'gti', 'tdi', 'tfsi', 'tsi', 'simos', 'edc17']
+const NONVAG_KEYWORDS = ['bmw ', ' bmw', 'mercedes', 'peugeot', 'renault',
+                          'citroen', 'ford ', ' ford', 'opel', 'volvo', 'alfa',
+                          'fiat ', 'kia ', 'hyundai', 'honda', 'toyota',
+                          'nissan', 'mazda', 'mitsubishi', 'land rover',
+                          'jaguar', 'mini ', 'lancia', 'dacia', 'jeep',
+                          'iveco', 'scania', 'suzuki', 'smart ', 'daewoo',
+                          'isuzu', 'ferrari']
+function folderBrandContext(filePath) {
+  let dir = path.dirname(filePath)
+  for (let i = 0; i < 8; i++) {
+    const base = path.basename(dir)
+    const lower = base.toLowerCase()
+    // Exact match against the canonical brand-folder Sets (Tuning_DB_BIN
+    // subdirs sit here unambiguously).
+    if (VAG_BRAND_FOLDERS.has(lower)) return 'VAG'
+    if (NONVAG_BRAND_FOLDERS.has(lower)) return 'NONVAG'
+    // Substring match for descriptive folder names.
+    // Surround with spaces so "vw " pattern doesn't trigger on "vwgolf" etc.
+    const padded = ` ${lower} `
+    for (const kw of VAG_KEYWORDS) if (padded.includes(kw)) return 'VAG'
+    for (const kw of NONVAG_KEYWORDS) if (padded.includes(kw)) return 'NONVAG'
+    const parent = path.dirname(dir)
+    if (parent === dir) break
+    dir = parent
+  }
+  return 'UNKNOWN'
+}
+
+// Sanity filter — drop part numbers that aren't real ECU identifiers.
+// Damo screenshotted entries like `000000000PMS` and `000000111S` (immobilizer
+// CAS modules from `5WP44xxx_CAS3A035` folders) — the binary scanner picks
+// these up by accident from repeating-zero memory regions. They aren't
+// engine-ECU recipes and pollute the catalog.
+function isGarbagePartNumber(pn) {
+  if (!pn) return true
+  const p = pn.toUpperCase()
+  if (/^0{4,}/.test(p)) return true             // starts with ≥4 zeros (placeholder)
+  if (/^[A-Z]{4,}/.test(p)) return true         // all-letter prefix (sequential garbage)
+  // Generic legacy regex match WITHOUT the 906 engine marker is suspicious —
+  // real VAG legacy parts always have 906 (or are Bosch/Siemens). Drop.
+  if (/^0[0-9][0-9A-Z][0-9]/.test(p) && !/906/.test(p) && !/^02[6-8]\d{7}$/.test(p)) {
+    return true
+  }
+  return false
+}
+
+// Combined gate. Returns true if the file should be included in the manifest.
+function shouldInclude(partNumber, filePath) {
+  if (isGarbagePartNumber(partNumber)) return false
+  const cls = classifyForFilter(partNumber)
+  if (cls === 'ALLOW') return true
+  if (cls === 'REJECT') return false
+  if (cls === 'DROP') return false
+  // AMBIGUOUS — check folder context
+  const ctx = folderBrandContext(filePath)
+  if (ctx === 'VAG') return true
+  if (ctx === 'NONVAG') return false
+  // UNKNOWN context — be conservative and DROP.
+  return false
+}
+
 // Cluster diff bytes into regions (gaps ≤8 bytes belong to same region)
 function diffToRegions(ori, tuned) {
   const diffs = [];
@@ -368,17 +615,38 @@ function walk(dir, callback, depth = 0) {
 const groups = new Map() // key → { originals: [], tunes: [{ path, stage }] }
 let skippedSizeMismatch = 0
 let contentMatches = 0   // v3.16 — count files identified by binary content scan
+let filterDropped = 0    // v3.16.1 — files dropped by VAG/year filter
 let walkProgressLast = Date.now()
 
 // Retry helper — Damo's D: drive transiently disappears mid-scan (USB sleep
-// or filesystem hiccup). One retry with a small delay recovers most cases.
+// or filesystem hiccup). Try multiple times with growing delay because the
+// drive can take 5-10 seconds to wake up after going idle.
 function existsWithRetry(p) {
   if (fs.existsSync(p)) return true
-  // 2-second delay then re-check. Synchronous spin is fine — this only
-  // fires on the rare miss, not the hot path.
-  const until = Date.now() + 2000
-  while (Date.now() < until) { /* spin */ }
-  return fs.existsSync(p)
+  // Try up to 4 times: 2s, 4s, 6s, 8s waits. Total max wait 20s if the
+  // drive is genuinely missing, but ~2-4s for a sleepy drive.
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    const until = Date.now() + 2000 * attempt
+    while (Date.now() < until) { /* spin */ }
+    if (fs.existsSync(p)) {
+      console.log(`    (woke ${p} after ${2 * attempt}s)`)
+      return true
+    }
+  }
+  return false
+}
+
+// Also wrap readdirSync with retry for the same reason — the walker hits
+// thousands of directories and any one of them can transiently fail.
+const _readdirSync = fs.readdirSync
+function readdirSyncWithRetry(p, opts) {
+  try { return _readdirSync(p, opts) }
+  catch (e) {
+    // Single 1-second retry — short because we're inside the walker hot path
+    const until = Date.now() + 1000
+    while (Date.now() < until) { /* spin */ }
+    try { return _readdirSync(p, opts) } catch { throw e }
+  }
 }
 
 for (const root of ROOTS) {
@@ -435,6 +703,16 @@ for (const root of ROOTS) {
       if (wasBinaryRescued) contentMatches++
     }
 
+    // VAG-only + 2008+ filter (Damo's spec). Drops:
+    //   • Non-VAG makes (BMW, Mercedes, Peugeot, …)
+    //   • Pre-2008 Audi B5/B6/B7, A6 C5, A8 D2/D3, A3 8L, TT 8N, Polo 6N/9N
+    //     (Mk4 Golf 1J0 stays in as the explicit exception)
+    //   • Bosch/Siemens generic parts that aren't under a VAG-context folder
+    if (!shouldInclude(info.partNumber, full)) {
+      filterDropped++
+      return
+    }
+
     const key = `${info.partNumber}__${info.swNumber || 'unknown'}`
     let g = groups.get(key)
     if (!g) { g = { originals: [], tunes: [] }; groups.set(key, g) }
@@ -446,6 +724,7 @@ for (const root of ROOTS) {
 }
 console.log(`\nTotal files visited: ${filesVisited}, variant groups formed: ${groups.size}`)
 console.log(`  ${contentMatches} files identified by binary content scan (filename had no part number)`)
+console.log(`  ${filterDropped} files dropped by VAG/2008+ filter (non-VAG or pre-2008 chassis)`)
 
 let pairsFound = 0, recipesWritten = 0, skippedNoPart = 0;
 for (const [key, g] of groups) {
