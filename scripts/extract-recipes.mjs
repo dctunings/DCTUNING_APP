@@ -240,6 +240,46 @@ function diffToRegions(ori, tuned) {
   return regions;
 }
 
+// Set of ROOT folder names — sourceFolder must NOT be one of these. Built
+// from the configured ROOTS so adding a new root automatically updates the
+// blacklist. We also include a few generic "container" names that appear as
+// intermediate folders without vehicle info.
+const ROOT_BASENAMES = new Set([
+  ...ROOTS.map(r => path.basename(r).toLowerCase()),
+  // Brand directories under Tuning_DB_BIN — these alone aren't vehicle hints.
+  // We allow them as a fallback (better than empty) but prefer deeper folders.
+])
+const GENERIC_BASENAMES = new Set(['mod', 'tuning_db_bin', 'damos', 'damos_rar_extract',
+                                    'new_vag_extract', 'from_hex_s19', 'from_archives',
+                                    'ecu maps', 'ecu dumps and eeproms'])
+
+// Pick the most informative folder name from the file path. Walks up the
+// path looking for a directory whose basename is NOT a ROOT and NOT a known
+// generic container. Returns "" if nothing useful found (UI hides the field).
+function pickSourceFolder(tunedPath, oriPath) {
+  const candidates = []
+  for (const p of [tunedPath, oriPath]) {
+    if (!p) continue
+    let dir = path.dirname(p)
+    // Walk up to 5 levels — the descriptive folder is usually the immediate
+    // parent or one level up (e.g. /d/last tuner files/Golf 7/2000 GTI/file.bin
+    // → "2000 GTI" beats "Golf 7" beats "last tuner files").
+    for (let i = 0; i < 5; i++) {
+      const base = path.basename(dir)
+      if (!base) break
+      const lower = base.toLowerCase()
+      if (!ROOT_BASENAMES.has(lower) && !GENERIC_BASENAMES.has(lower)) {
+        candidates.push(base)
+        break  // take the first non-generic ancestor going up from the file
+      }
+      const parent = path.dirname(dir)
+      if (parent === dir) break
+      dir = parent
+    }
+  }
+  return candidates[0] || ''
+}
+
 let skippedReadError = 0;
 // v3.16: buildRecipe now takes resolvedPartNumber + resolvedSwNumber from the
 // caller so binary-content-rescued IDs flow through. Previously buildRecipe
@@ -269,9 +309,14 @@ function buildRecipe(oriPath, tunedPath, stage, resolvedPartNumber, resolvedSwNu
   // filename. e.g. "Golf 7 2.0 TFSI Stage 1 Sw SC800H6300000 Hw 5G0906259E
   // 300Hp DSG250 Simos18" — searching "Golf 7" should find this even though
   // the .bin filename inside has no "Golf 7" string.
-  const tunedDir = path.dirname(tunedPath)
-  const oriDir = path.dirname(oriPath)
-  const sourceFolder = path.basename(tunedDir) || path.basename(oriDir) || ''
+  //
+  // CRITICAL — skip ROOT folder names. When a file sits directly in one of the
+  // configured ROOTs (e.g. /d/last tuner files/SOMEFILE.BIN), basename gives
+  // "last tuner files" which is just the archive container, useless for
+  // vehicle ID. Damo flagged 1,552 entries showing "last tuner files" and
+  // 1,184 showing "audi-package" — that's 37% of the manifest with garbage
+  // labels. Skip when the parent IS a ROOT.
+  const sourceFolder = pickSourceFolder(tunedPath, oriPath)
 
   const recipe = {
     schemaVersion: 1,
@@ -325,8 +370,19 @@ let skippedSizeMismatch = 0
 let contentMatches = 0   // v3.16 — count files identified by binary content scan
 let walkProgressLast = Date.now()
 
+// Retry helper — Damo's D: drive transiently disappears mid-scan (USB sleep
+// or filesystem hiccup). One retry with a small delay recovers most cases.
+function existsWithRetry(p) {
+  if (fs.existsSync(p)) return true
+  // 2-second delay then re-check. Synchronous spin is fine — this only
+  // fires on the rare miss, not the hot path.
+  const until = Date.now() + 2000
+  while (Date.now() < until) { /* spin */ }
+  return fs.existsSync(p)
+}
+
 for (const root of ROOTS) {
-  if (!fs.existsSync(root)) {
+  if (!existsWithRetry(root)) {
     console.log(`  ⚠ skipping (not found): ${root}`)
     continue
   }
