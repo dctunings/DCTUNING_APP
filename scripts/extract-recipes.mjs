@@ -20,30 +20,24 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 
-// v3.12.1+v3.14.1+v3.14.3+v3.16.0: all of Damo's pair sources.
+// All of Damo's pair sources. He cleaned up D: on Apr 27 2026 — removed
+// ECU Dumps, ECU maps, 2017.2019, remap DVD3 (those folders no longer
+// exist). Desktop/DATABASE and Desktop/Damos-Big-Archive never existed.
+// Removed those dead paths so the run log isn't littered with skips.
 const ROOTS = [
   'D:/DATABASE/Tuning_DB_BIN',                                 // recurses into all 35 brand subfolders
   'D:/audi-package',                                           // Audi-focused pairs + DAMOS
   'D:/DAMOS 2020',                                             // older DAMOS packs with bundled pairs
   'D:/DAMOS-2021-2022',                                        // newer DAMOS packs (A2L + pairs)
-  'D:/ECU Dumps and EEPROMs',                                  // scattered ECU dumps
-  'D:/ECU maps',                                               // tuner-share pair collections
   'D:/Vw VOLKSWAGEN  ECU Map Tuning Files Stage 1 + Stage 2  Remap Files Collection TESTED',
-  'D:/2017.2019',                                              // 2017-2019 pair archive
-  'C:/Users/damoc/Desktop/DATABASE/Tuning_DB_BIN',             // Desktop copy (if present)
-  'C:/Users/damoc/Desktop/Damos-Big-Archive',                  // v3.14.1 — added Apr 24 2026
   'D:/dctuning-scan/damos_rar_extract',                        // extracted contents of 2,305 RAR archives
-  'C:/Users/damoc/Desktop/Damos',                              // v3.14.3 — multi-brand DAMOS; VAG subfolders only via VAG_PREFIX guard below
-  'C:/Users/damoc/Desktop/ECU FILES TEST',                     // v3.14.3 — Damo's curated reference set (DCTuning_Stage1 pairs)
-  'D:/dctuning-scan/new_vag_extract/from_hex_s19',             // v3.14.3 — converted HEX→BIN from new DAMOS folder
-  'D:/dctuning-scan/new_vag_extract/from_archives',            // v3.14.3 — extracted ZIPs (mostly .dat reference data, will be ext-skipped)
-  // v3.16.0 (Apr 26 2026) — discovered via folder audit; these were never
-  // scanned despite living right next to the other configured roots.
-  // Together they account for almost all of Damo's modern Golf 7 / GTI / R /
-  // Audi A3 8V era content (5G0906*, 8V0906*, 06K906*, 04E906*).
-  'D:/last tuner files',                                        // 16,345 files — modern Golf 7 / Simos18 / GTI heaven
-  'D:/tuning files',                                            //    830 files — assorted pair archives
-  'D:/remap DVD3',                                              //     13 files — small but VAG content
+  'D:/dctuning-scan/new_vag_extract/from_hex_s19',             // converted HEX→BIN from new DAMOS folder
+  'D:/dctuning-scan/new_vag_extract/from_archives',            // extracted ZIPs (mostly .dat reference data)
+  'D:/dctuning-scan/dls_extract',                              // 170 DLS ZIPs extracted via scripts/extract-dls.mjs
+  'D:/last tuner files',                                       // modern Golf 7 / Simos18 / GTI heaven
+  'D:/tuning files',                                           // assorted pair archives
+  'C:/Users/damoc/Desktop/Damos',                              // multi-brand DAMOS
+  'C:/Users/damoc/Desktop/ECU FILES TEST',                     // Damo's curated reference set
 ]
 // Files under this size aren't ECU binaries worth recipe-ing (need at least 64KB
 // for a meaningful tune). Also caps at 12 MB to skip .ols/.zip/.odx archives.
@@ -217,10 +211,13 @@ function parseFilename(name) {
   //   - "(Stage1)" with anchors ignored — bracket-wrapped stage
   //   - WinOLS .MOD extension           — historical, kept
   //   - "_OEM" / "OEM"                  — Original marker for newer tuner files
+  // Stage separator: allow whitespace OR underscore between "Stage" and the
+  // digit. The DLS-folder ZIPs name files "Stage_1_<SW>.dat" / "Stage_2_<SW>.dat"
+  // which the previous \s?-only regex missed entirely. [_\s]? covers both.
   let stage = 0;
-  if (/(?:^|[\._\s\(])Stage\s?3|(?:^|[\._\s])(?:stg|step)\s?3/i.test(base)) stage = 3;
-  else if (/(?:^|[\._\s\(])Stage\s?2|(?:^|[\._\s])(?:stg|step)\s?2/i.test(base)) stage = 2;
-  else if (/(?:^|[\._\s\(])Stage\s?1|DCTuning[_-]Stage1|(?:^|[\._\s])(?:stg|step)\s?1|(?:[\s_])MOD(?:[\.\s_]|$)|\.MOD$/i.test(base)) stage = 1;
+  if (/(?:^|[\._\s\(])Stage[_\s]?3|(?:^|[\._\s])(?:stg|step)[_\s]?3/i.test(base)) stage = 3;
+  else if (/(?:^|[\._\s\(])Stage[_\s]?2|(?:^|[\._\s])(?:stg|step)[_\s]?2/i.test(base)) stage = 2;
+  else if (/(?:^|[\._\s\(])Stage[_\s]?1|DCTuning[_-]Stage1|(?:^|[\._\s])(?:stg|step)[_\s]?1|(?:[\s_])MOD(?:[\.\s_]|$)|\.MOD$/i.test(base)) stage = 1;
   else if (/(?:^|[\._\s])(Original|\.ori|_ori|_ORI_n|ORI_n|_OEM|\bOEM\b)/i.test(base) || base.toLowerCase().endsWith('.ori')) stage = 0;
   return { partNumber, swNumber, stage, base };
 }
@@ -445,36 +442,35 @@ function folderBrandContext(filePath) {
 }
 
 // Sanity filter — drop part numbers that aren't real ECU identifiers.
-// Damo screenshotted entries like `000000000PMS` and `000000111S` (immobilizer
-// CAS modules from `5WP44xxx_CAS3A035` folders) — the binary scanner picks
-// these up by accident from repeating-zero memory regions. They aren't
-// engine-ECU recipes and pollute the catalog.
+// Only the obvious garbage cases that come from regex coincidences in
+// repeating-character memory regions of the binary: 4+ leading zeros
+// (`000000000PMS`, `00000111S`) and all-letter prefixes (`STAUDIXWVUYZ1`).
+//
+// Everything else passes — Damo Apr 27 2026: "no skipping this time".
+// That includes non-906 legacy parts (transmission ECUs `01D911...`,
+// decoded Bosch internal codes `037380...`), Bosch ECUs, Siemens, etc.
 function isGarbagePartNumber(pn) {
   if (!pn) return true
   const p = pn.toUpperCase()
   if (/^0{4,}/.test(p)) return true             // starts with ≥4 zeros (placeholder)
   if (/^[A-Z]{4,}/.test(p)) return true         // all-letter prefix (sequential garbage)
-  // Generic legacy regex match WITHOUT the 906 engine marker is suspicious —
-  // real VAG legacy parts always have 906 (or are Bosch/Siemens). Drop.
-  if (/^0[0-9][0-9A-Z][0-9]/.test(p) && !/906/.test(p) && !/^02[6-8]\d{7}$/.test(p)) {
-    return true
-  }
   return false
 }
 
 // Combined gate. Returns true if the file should be included in the manifest.
-function shouldInclude(partNumber, filePath) {
+//
+// Damo decision Apr 27 2026: scan EVERYTHING — every folder, every subfolder,
+// no make filter, no year filter. The only exclusion is obviously-garbage
+// part numbers (4+ leading zeros, all-letter prefixes from regex
+// coincidences in repeating-character memory regions). Bosch / Siemens /
+// pre-2008 / non-VAG content all flows through.
+//
+// He cleaned the source folders of cruft, so the catalog should reflect
+// what actually sits on disk. Earlier filters were dropping legitimate
+// pairs Damo could see in his folders.
+function shouldInclude(partNumber, _filePath) {
   if (isGarbagePartNumber(partNumber)) return false
-  const cls = classifyForFilter(partNumber)
-  if (cls === 'ALLOW') return true
-  if (cls === 'REJECT') return false
-  if (cls === 'DROP') return false
-  // AMBIGUOUS — check folder context
-  const ctx = folderBrandContext(filePath)
-  if (ctx === 'VAG') return true
-  if (ctx === 'NONVAG') return false
-  // UNKNOWN context — be conservative and DROP.
-  return false
+  return true
 }
 
 // Cluster diff bytes into regions (gaps ≤8 bytes belong to same region)
@@ -639,7 +635,7 @@ function buildRecipe(oriPath, tunedPath, stage, resolvedPartNumber, resolvedSwNu
 // D:/audi-package and the DAMOS packs have pairs 3-5 levels deep.
 let filesVisited = 0, filesSkipped = 0
 function walk(dir, callback, depth = 0) {
-  if (depth > 10) return // sanity cap against symlink loops
+  if (depth > 15) return // sanity cap against symlink loops (Damo wants deep recursion)
   let entries
   try { entries = fs.readdirSync(dir, { withFileTypes: true }) } catch { return }
   for (const entry of entries) {
@@ -742,11 +738,37 @@ for (const root of ROOTS) {
       let buf
       try { buf = fs.readFileSync(full) } catch { return }
       const fromContent = extractPartNumberFromBinary(buf)
-      // partNumber: filename wins; binary fills only if missing
-      const finalPart = info.partNumber || fromContent.partNumber
+
+      // Parent folder hint — DLS-format archives nest as
+      // "<Vehicle_Description>/<HW_PART_NUMBER>[_suffix]/original_<SW>.dat".
+      // The HW lives in the parent folder (sometimes with _suffix like
+      // "_2718" appended). Use a non-anchored match so suffixes don't break
+      // the lookup.
+      const parentName = path.basename(path.dirname(full))
+      const parentMatch =
+        parentName.match(/(0[0-9][0-9A-Z]906\d{3}[A-Z]{0,3})/) ||      // legacy VAG with 906 (preferred — high specificity)
+        parentName.match(/([1-9][A-Z0-9][0-9]906\d{3}[A-Z]{0,3})/) ||  // modern chassis VAG with 906
+        parentName.match(/(0[0-9][0-9A-Z][0-9]{6}[A-Z]{1,3})/) ||       // legacy 11-char generic
+        parentName.match(/(02[6-8]\d{7})/) ||                            // Bosch
+        parentName.match(/(5WS\d{5}[A-Z]?-?[A-Z]?)/)                     // Siemens
+      const fromParent = parentMatch ? parentMatch[1] : null
+
+      // Resolution priority for partNumber:
+      //   1. filename (already in info.partNumber if set)
+      //   2. parent folder when it has a VAG-906 shape — that's the most
+      //      authoritative source for DLS-pack files (the binary's Bosch
+      //      ECU code would otherwise hijack identification away from the
+      //      VAG HW). Damo screenshotted "06J906026AR_2718" recipes coming
+      //      out as "0261201951" because the binary scan won.
+      //   3. binary scan
+      const parentIsVAG906 = fromParent && /906/.test(fromParent)
+      let finalPart = info.partNumber
+        || (parentIsVAG906 ? fromParent : null)
+        || fromContent.partNumber
+        || fromParent
       if (!finalPart) return  // genuinely no identifier — skip
       const finalSW = info.swNumber || fromContent.swNumber
-      const wasBinaryRescued = !info.partNumber && fromContent.partNumber
+      const wasBinaryRescued = !info.partNumber && (fromContent.partNumber || finalPart)
       info = { ...info, partNumber: finalPart, swNumber: finalSW }
       if (wasBinaryRescued) contentMatches++
     }
