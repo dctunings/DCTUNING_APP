@@ -31,6 +31,6 @@
     "pkg": "^5.8.1",
     "postject": "^1.0.0-alpha.6",
     "rcedit": "^4.0.1",
-    "typescript": "^5.0.0"
+    "typescript": "^6.0.3"
   }
 }
