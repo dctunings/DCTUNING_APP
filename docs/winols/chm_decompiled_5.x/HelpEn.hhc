@@ -1,0 +1,1434 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<BODY>
+<OBJECT type="text/site properties">
+	<param name="Window Styles" value="0x800025">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="WinOLS Help index">
+	<param name="Local" value="main_index.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Quick introduction">
+	<param name="Local" value="quick_introduction.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Installation">
+	<param name="Local" value="installation.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Registering WinOLS">
+	<param name="Local" value="registering_winols.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Language">
+	<param name="Local" value="language.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Checksums">
+	<param name="Local" value="checksums.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Network installation">
+	<param name="Local" value="network_installation.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The main screen">
+	<param name="Local" value="der_hauptbildschirm.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Projects">
+	<param name="Local" value="projects.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Creating a project">
+	<param name="Local" value="creating_a_project.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="From a file">
+	<param name="Local" value="from_a_file.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="From an eprom">
+	<param name="Local" value="from_an_eprom.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="From an ECU (via BDM100)">
+	<param name="Local" value="from_an_ecu_via_bdm100.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The original">
+	<param name="Local" value="the_original.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The version">
+	<param name="Local" value="the_version.htm">
+</OBJECT>
+</UL>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Typical tasks">
+	<param name="Local" value="typical_tasks.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Creating a new project">
+	<param name="Local" value="creating_a_new_project.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Automatically find maps">
+	<param name="Local" value="automatically_find_maps.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Manually find maps (Text mode)">
+	<param name="Local" value="manually_find_maps_text_mode.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Manually find maps (2d mode)">
+	<param name="Local" value="manually_find_maps_2d_mode.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Manually find maps (Typing)">
+	<param name="Local" value="kennfelder_manuell_finden_eint.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Manually find maps (Vertical map)">
+	<param name="Local" value="kennfelder_manuell_finden_toyo.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Create many maps">
+	<param name="Local" value="viele_kennfelder_erzeugen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Edit many maps">
+	<param name="Local" value="viele_kennfelder_veraendern.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Preview">
+	<param name="Local" value="preview.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Changing maps">
+	<param name="Local" value="changing_maps.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Correcting checksums">
+	<param name="Local" value="correcting_checksums.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Importing data from older projects">
+	<param name="Local" value="import_data_from_older_project.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="AutoUpdate + AutoImport">
+	<param name="Local" value="autoupdate_autoimport.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Special Aspects">
+	<param name="Local" value="special_aspects.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Keyboard Shortcuts">
+	<param name="Local" value="shortcuts.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Drag and Drop">
+	<param name="Local" value="dragdrop.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Floating / dockable dialogs">
+	<param name="Local" value="floating.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Mouse cursor">
+	<param name="Local" value="mousecursor.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Scrolling">
+	<param name="Local" value="scrolling.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Context menus">
+	<param name="Local" value="contextmenus.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Selections">
+	<param name="Local" value="selections.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Elements">
+	<param name="Local" value="elements.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Data areas">
+	<param name="Local" value="datenbereiche.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Clients">
+	<param name="Local" value="mandaten.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Reseller">
+	<param name="Local" value="reseller.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Command line">
+	<param name="Local" value="kommandozeile.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Language">
+	<param name="Local" value="sprachen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Sessions">
+	<param name="Local" value="sessions.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="WinOLS as service">
+	<param name="Local" value="winols_as_service.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Protections">
+	<param name="Local" value="protections.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Shadow data">
+	<param name="Local" value="schattendaten.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="View mode">
+	<param name="Local" value="viewmode.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="International characters">
+	<param name="Local" value="intchars.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Commands of the menu Project">
+	<param name="Local" value="menu_file.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command New (Menu Project)">
+	<param name="Local" value="hid_file_new.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog File format">
+	<param name="Local" value="hid_selectbyteorg.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Open (Menu Project)">
+	<param name="Local" value="hid_selectcar.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="When all / some projects are missing">
+	<param name="Local" value="noprojects.htm">
+	<param name="WindowName" value="NoProjects">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Buy project / versions">
+	<param name="Local" value="buyversions.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Mass export (contxt menu)">
+	<param name="Local" value="massenexport.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Search and replace in projects (context menu)">
+	<param name="Local" value="hid_sucheersetzen_prj.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Search in projects (context menu)">
+	<param name="Local" value="searchinprojects.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Open version (Menu Project)">
+	<param name="Local" value="hid_file_open_version.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Close (Menu Project)">
+	<param name="Local" value="hid_file_close.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Save changes (Menu Project)">
+	<param name="Local" value="hid_savechanges.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Save changes (Table style) (Menu Project)">
+	<param name="Local" value="hid_savequestions.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Save (Menu Project)">
+	<param name="Local" value="hid_file_save.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Save all (Menu Project)">
+	<param name="Local" value="hid_file_save_all.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The Dialog Properties: Project (Menu Project)">
+	<param name="Local" value="hid_selectcar_edit1.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog customer list">
+	<param name="Local" value="hid_kundenliste.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog customer details">
+	<param name="Local" value="hid_kundendetails.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="WinOLS ini files">
+	<param name="Local" value="winols_ini_files.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Multiple elements in the project">
+	<param name="Local" value="hid_multiprojekt.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Project comment">
+	<param name="Local" value="hid_projektkommentar.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Project language">
+	<param name="Local" value="projectlanguage.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Modelle.txt">
+	<param name="Local" value="modelle_txt.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Properties: Version (Menu Project)">
+	<param name="Local" value="hid_versionsverwaltung_edit.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Find similar projects (Menu Project)">
+	<param name="Local" value="hid_file_projekt_suchen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Find duplicate objects (Menu Project)">
+	<param name="Local" value="hid_projekt_doppelteversionensuchen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Update all projects (Menu Project)">
+	<param name="Local" value="hid_update_projects.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Clone project properties (Menu Project)">
+	<param name="Local" value="clonepropertiesproject.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Ex - &amp; Import">
+	<param name="Local" value="ex____import.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Import file">
+	<param name="Local" value="hid_importfile.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Export file">
+	<param name="Local" value="hid_exportfile.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog BdmToGo-Properties (Menu project)">
+	<param name="Local" value="hid_bdmtogoprop.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Send project as Mail">
+	<param name="Local" value="hid_sendmail.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Import directory (Menu Project)">
+	<param name="Local" value="massimport.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command AutoUpdate + AutoImport (Menu Project)">
+	<param name="Local" value="dlg_autoupdate_autoimport.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Export CSV/JSON map list (Menu Project)">
+	<param name="Local" value="hid_excsv.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Update map list on basis of CSV/JSON file (Menu Project) ">
+	<param name="Local" value="idd_update_by_csv.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command export map pack (Menu Project)">
+	<param name="Local" value="hid_exkfpaket.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command import map pack (Menu Project)">
+	<param name="Local" value="hid_imkfpaket.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command import maps (Menu Project)">
+	<param name="Local" value="hid_file_kennfelder_importieren_.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Import Changes (Menu Project)">
+	<param name="Local" value="hid_aendueb.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Damos &amp; A2L Import (Menu Project)">
+	<param name="Local" value="hid_damos.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Export project properties (Menu Project)">
+	<param name="Local" value="der_befehl_export_projekteigen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Import project properties (Menu Project)">
+	<param name="Local" value="der_befehl_import_projekteigen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Translate map texts (Menu Project)">
+	<param name="Local" value="translate_maps.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Printing (Menu Project)">
+	<param name="Local" value="hid_printoptions.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configure printing (Menu Project)">
+	<param name="Local" value="the_dialog_configure_printing_.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Exit (Menu Project)">
+	<param name="Local" value="hid_app_exit.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The commands 1, 2, 3, 4 (Menu Project)">
+	<param name="Local" value="hid_file_mru_file1.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Commands of the menu Edit">
+	<param name="Local" value="menu_edit.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Undo (Menu Edit)">
+	<param name="Local" value="hid_edit_undo.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Redo (Menu Edit)">
+	<param name="Local" value="hid_edit_redo.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Copy (Menu Edit)">
+	<param name="Local" value="hid_edit_copy.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Copy map properties (Menu Edit)">
+	<param name="Local" value="copymapproperties.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Copy memory range (Menu Edit)">
+	<param name="Local" value="der_befehl_datenbereich_kopier.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Cut (Menu Edit)">
+	<param name="Local" value="hid_edit_cut.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Paste (Menu Edit)">
+	<param name="Local" value="hid_edit_paste.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Insert / Delete window">
+	<param name="Local" value="insert__delete_window.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Insert new hexdump (Menu Edit)">
+	<param name="Local" value="hid_bearbeiten_hexfenstereinfgen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Insert new Map (Menu Edit)">
+	<param name="Local" value="hid_bearbeiten_kennfeldeinfgen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Delete Window (Menu Edit)">
+	<param name="Local" value="hid_bearbeiten_fensterlschen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Open map (Menu Edit)">
+	<param name="Local" value="hid_bearbeiten_fenstereinfgen_kennfeldffnen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Delete Map (Menu Edit)">
+	<param name="Local" value="hid_bearbeiten_kennfeldlschen.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The Dialog as Text (Menu Edit)">
+	<param name="Local" value="hid_bearbeiten_alstext.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Inplace edit (Menu Edit)">
+	<param name="Local" value="hid_inplace.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The Dialog Sign Hexdump (Menu Edit)">
+	<param name="Local" value="hid_signatur.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The Dialog QuickFix (Menu Edit)">
+	<param name="Local" value="quickfix.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Value + 1 (Menu Edit)">
+	<param name="Local" value="hid_edit_wert_plus.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Value - 1 (Menu Edit)">
+	<param name="Local" value="hid_edit_wert_minus.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Change absolute (Menu Edit)">
+	<param name="Local" value="hid_aendern_absolut.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Change relative (Menu Edit)">
+	<param name="Local" value="hid_aendern_relativ.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Change by edit (Menu Edit)">
+	<param name="Local" value="hid_aendern_slider.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog round/limit values (Menu Edit)">
+	<param name="Local" value="runden.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Original value (Menu Edit)">
+	<param name="Local" value="hid_edit_wertoriginal_2.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The Dialog Interpolate (Menu Edit)">
+	<param name="Local" value="interpolate.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The Dialog Remove row / column (Menu Edit)">
+	<param name="Local" value="removecolumn.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Again (Menu Edit)">
+	<param name="Local" value="hid_edit_aendernwiederholen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Checksums (Menu Edit)">
+	<param name="Local" value="hid_edit_checksumme.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The Dialog Search checksum online (Menu Edit)">
+	<param name="Local" value="hid_checksumme_online.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Checksum properties">
+	<param name="Local" value="hid_edit_eigenschaften_der_checksumme.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Sync block Properties">
+	<param name="Local" value="hidd_editsyncblock.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The Command Apply Checksum (Menu Edit)">
+	<param name="Local" value="hid_anwenden_checksumme.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog checksum ranges (Menu Edit)">
+	<param name="Local" value="der_dialog_checksummen_bereich.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog properties: Window: Hexdump (Menu Edit)">
+	<param name="Local" value="hid_properties_hex.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog properties: Window: Map (Menu Edit)">
+	<param name="Local" value="hid_properties_map.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Calculate factor and offset">
+	<param name="Local" value="faktoroffsetassi.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Number to Text">
+	<param name="Local" value="numbertotext.htm">
+</OBJECT>
+</UL>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Commands of the menu Hardware">
+	<param name="Local" value="menu_hardware.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Producer (Menu Hardware)">
+	<param name="Local" value="hid_hersteller.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Swap Lines (Menu Hardware)">
+	<param name="Local" value="hid_eprom_leitungenvertauschen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="BDM">
+	<param name="Local" value="bdm.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog BDM / Compare (Menu Hardware)">
+	<param name="Local" value="hid_bdm_vergleichen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog BDM / Program (Menu Hardware)">
+	<param name="Local" value="hid_bdm_programmieren.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog BDM / Testempty (Menu Hardware)">
+	<param name="Local" value="hid_bdm_leertest.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog BDM / Read (Menu Hardware)">
+	<param name="Local" value="hid_bdm_auslesen.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="BSL">
+	<param name="Local" value="bsl.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog BSL / Compare (Menu Hardware)">
+	<param name="Local" value="hid_bsl_vergleichen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog BSL / Program (Menu Hardware)">
+	<param name="Local" value="hid_bsl_programmieren.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog BSL / Read (Menu Hardware)">
+	<param name="Local" value="hid_bsl_auslesen.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Eprom">
+	<param name="Local" value="eprom.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Eprom / Compare (Menu Hardware)">
+	<param name="Local" value="hid_vergleichen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Eprom / Program (Menu Hardware)">
+	<param name="Local" value="hid_programmieren.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Eprom / Testempty/Delete (Menu Hardware)">
+	<param name="Local" value="hid_leertest.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Eprom / Parameters (Menu Hardware)">
+	<param name="Local" value="hid_parameter.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Eprom / Read (Menu Hardware)">
+	<param name="Local" value="hid_auslesen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Eprom / Options (Menu Hardware)">
+	<param name="Local" value="hid_epromoptionen.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Genius">
+	<param name="Local" value="genius.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Genius / Import (Menu Hardware)">
+	<param name="Local" value="hid_genius_import.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Genius / Export (Menu Hardware)">
+	<param name="Local" value="hid_genius_export.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Genius / Explorer (Menu Hardware)">
+	<param name="Local" value="hid_genius_explorer.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Simulator">
+	<param name="Local" value="simulator.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Load Simulator (Menu Hardware)">
+	<param name="Local" value="hid_simload.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Simulator / Properties (Menu Hardware)">
+	<param name="Local" value="hid_simulator_eigenschaften.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Simulator / Check map accesses (Menu Hardware)">
+	<param name="Local" value="hid_simchkmap.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Simulator / Delete map access info (Menu Hardware)">
+	<param name="Local" value="hid_simdelmap.htm">
+</OBJECT>
+</UL>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Commands of the menu View">
+	<param name="Local" value="menu_view.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Symbol bar (Menu View)">
+	<param name="Local" value="hid_view_toolbar.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Status bar (Menu View)">
+	<param name="Local" value="hid_view_status_bar.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Move origin left (Menu view)">
+	<param name="Local" value="hid_anfang_nach_links.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Move origin right (Menu view)">
+	<param name="Local" value="hid_anfang_nach_rechts.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Cursor position as origin">
+	<param name="Local" value="hid_cursorpositionalsanfang.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command More columns (Menu View)">
+	<param name="Local" value="hid_mehr_spalten.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Less columns (Menu View)">
+	<param name="Local" value="hid_weniger_spalten.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Zoom (Menu View)">
+	<param name="Local" value="hid_ansicht_zoom.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Scale 100% (Menu View)">
+	<param name="Local" value="hid_ansicht_zoom_reset.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Unzoom (Menu View)">
+	<param name="Local" value="hid_ansicht_unzoom.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Connect Dots (Menu View)">
+	<param name="Local" value="hid_ansicht_connect_dots.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Show Rowmarkers (Menu View)">
+	<param name="Local" value="hid_view_showcolumns.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Differences (Menu View)">
+	<param name="Local" value="hid_unterschiede_2.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Differences / first (Menu View)">
+	<param name="Local" value="hid_unterschiede_erster.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Differences / previous (Menu View)">
+	<param name="Local" value="hid_unterschiede_vorheriger.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Differences / next (Menu View)">
+	<param name="Local" value="hid_unterschiede_naechster.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Differences / last (Menu View)">
+	<param name="Local" value="hid_unterschiede_letzer.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Select reference Version (Menu View)">
+	<param name="Local" value="hid_vergleichsfenster.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Select the connection window (hexdump) (Menu View)">
+	<param name="Local" value="hid_selectkopplung.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Select the connection window (map) (Menu View)">
+	<param name="Local" value="hid_selectmapkopplung.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Connect Helper (Maximize Button Popup)">
+	<param name="Local" value="maximizepopup.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Optimize value range (Menu View)">
+	<param name="Local" value="hid_ansicht_wertebereichoptimieren.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Detect map (Menu View)">
+	<param name="Local" value="hid_ansicht_kennfelddetecten.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Support map selection (Menu View)">
+	<param name="Local" value="hid_ansicht_selassi.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Commands of the menu Selection">
+	<param name="Local" value="menu_selektion.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Select cell (Menu Selection)">
+	<param name="Local" value="hid_zelle_selektieren.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Select row (Menu Selection)">
+	<param name="Local" value="hid_zeile_selektieren.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Select column (Menu Selection)">
+	<param name="Local" value="hid_spalte_selektieren.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Select all (Menu Selection)">
+	<param name="Local" value="hid_alles_selektieren.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Select screen (Menu Selection)">
+	<param name="Local" value="hid_bildschirm_selektieren_2.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Invert screen selection (Menu Selection)">
+	<param name="Local" value="hid_bildschirmselektion_umkehren.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Select changes (Menu Selection)">
+	<param name="Local" value="hid_select_changes.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Create selection (Menu Selection)">
+	<param name="Local" value="hid_selektion_erzeugen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Select nothing (Menu Selection)">
+	<param name="Local" value="hid_nichts_selektieren.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Restore last selection (Menu Selection)">
+	<param name="Local" value="hid_letzte_selektion.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Selection -&gt; Map (Menu Selection)">
+	<param name="Local" value="hid_selektion_zu_kennfeld.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Selection (Table) -&gt; Maps (Menu Selection)">
+	<param name="Local" value="createmaps.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Selection / Load (Menu Selection)">
+	<param name="Local" value="hid_selektion_laden.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Selection / Save (Menu Selection)">
+	<param name="Local" value="hid_selektion_speichern.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Selection mode (Menu Selection)">
+	<param name="Local" value="hid_selektionsmodus.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Selection beginning (Menu Selection)">
+	<param name="Local" value="hid_selektionanfang.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Selection end (Menu Selection)">
+	<param name="Local" value="hid_selektionende.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Commands of the menu Find">
+	<param name="Local" value="menu_suchen.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Search for byte sequences (Menu Find)">
+	<param name="Local" value="hid_suchebytes.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Search / Selection (Menu Find)">
+	<param name="Local" value="hid_suchen_selektion.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Search parameters (Menu Find)">
+	<param name="Local" value="hid_suchparameter.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Continue search (Menu Find)">
+	<param name="Local" value="hid_weitersuchen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Search backwards (Menu Find)">
+	<param name="Local" value="hid_zuruecksuchen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Restart background map search">
+	<param name="Local" value="hid_restartmapsearch.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Axis description profile (Menu Find)">
+	<param name="Local" value="hid_stuetzprofil.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Parallel maps">
+	<param name="Local" value="hid_parallelekennfelder.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Find similar maps">
+	<param name="Local" value="hid_findsimilarmaps.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Go to address (Menu Find)">
+	<param name="Local" value="hid_goto.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Jump to address from hexdump (Menu Find)">
+	<param name="Local" value="hid_jump.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Previous comment (Menu Find)">
+	<param name="Local" value="hid_remprev.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Next comment (Menu Find)">
+	<param name="Local" value="hid_remnext.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Insert / Edit comment (Menu Find)">
+	<param name="Local" value="hid_remedit.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Delete comment (Menu Find)">
+	<param name="Local" value="hid_remdel.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Previous marker (Menu Find)">
+	<param name="Local" value="hid_markerprev.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Next marker (Menu Find)">
+	<param name="Local" value="hid_markernext.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Insert / Delete marker (Menu Find)">
+	<param name="Local" value="hid_markeredit.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Solutions">
+	<param name="Local" value="hidsolutions.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Scripts (Menu Find)">
+	<param name="Local" value="hid_skript_edit.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Create scripts (Menu Find)">
+	<param name="Local" value="hid_skript_create.htm">
+</OBJECT>
+</UL>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Commands of the menu Miscellaneous">
+	<param name="Local" value="menu_sonstiges.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Updates+Registration (Menu Miscellaneous)">
+	<param name="Local" value="hid_freischalten.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Rescue project (Menu Miscellaneous)">
+	<param name="Local" value="idd_rescue.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration (Menu Miscellaneous)">
+	<param name="Local" value="hid_config.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Colours (Menu Miscellaneous)">
+	<param name="Local" value="hid_config1.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / View (Menu Miscellaneous)">
+	<param name="Local" value="hid_config5e.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / View / Hexdump (Menu Miscellaneous)">
+	<param name="Local" value="hid_config5a.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / View / Text (Menu Miscellaneous)">
+	<param name="Local" value="hid_config5b.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / View / 2d (Menu Miscellaneous)">
+	<param name="Local" value="hid_config5c.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / View / 3d (Menu Miscellaneous)">
+	<param name="Local" value="hid_config5d.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Messages (Menu Miscellaneous)">
+	<param name="Local" value="hid_config3a.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Messages / turned off (Menu Miscellaneous)">
+	<param name="Local" value="hid_config3b.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Paths (Menu Miscellaneous)">
+	<param name="Local" value="der_dialog_konfiguration_pfade.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Paths / Clients (Menu Miscellaneous)">
+	<param name="Local" value="der_dialog_konfiguration_mandanten.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Automatically (Menu Miscellaneous)">
+	<param name="Local" value="hid_config6c.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Automatically / Import (Menu Miscellaneous)">
+	<param name="Local" value="hid_config6a.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Automatically / Export (Menu Miscellaneous)">
+	<param name="Local" value="hid_config6f.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Automatically / E-Mail (Menu Miscellaneous)">
+	<param name="Local" value="hid_config2a.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The Dialog Configuration / Automatically / Map search">
+	<param name="Local" value="hid_config6d.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The Dialog Configuration / Automatically / Report">
+	<param name="Local" value="hid_config6e.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Miscellaneous (Menu Miscellaneous)">
+	<param name="Local" value="hid_config2e.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Miscellaneous / Edit (Menu Miscellaneous)">
+	<param name="Local" value="hid_config2b.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Miscellaneous / Debug (Menu Miscellaneous)">
+	<param name="Local" value="hid_config2c.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Miscellaneous / Language (Menu Miscellaneous)">
+	<param name="Local" value="hid_config2d.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Miscellaneous / Internet (Menu Miscellaneous)">
+	<param name="Local" value="der_dialog_konfiguration__sons.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Miscellaneous / Reseller (Menu Miscellaneous)">
+	<param name="Local" value="der_dialog_konfiguration_reseller.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Miscellaneous / Reseller-Buyer (Menu Miscellaneous)">
+	<param name="Local" value="der_dialog_konfiguration_resellerbuyer.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Hardware (Menu Miscellaneous)">
+	<param name="Local" value="der_dialog_konfiguration__hard.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Hardware / Read protection (Menu Miscellaneous)">
+	<param name="Local" value="der_dialog_konfiguration__har2.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Hardware / BDM (Menu Miscellaneous)">
+	<param name="Local" value="der_dialog_konfiguration__har3.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Hardware / BSL (Menu Miscellaneous)">
+	<param name="Local" value="der_dialog_konfiguration__har7.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Hardware / Eprom (Menu Miscellaneous)">
+	<param name="Local" value="der_dialog_konfiguration__har4.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Hardware / Simulator (Menu Miscellaneous)">
+	<param name="Local" value="der_dialog_konfiguration__har5.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Configuration / Hardware / Third Party (Menu Miscellaneous)">
+	<param name="Local" value="der_dialog_konfiguration__thirdparty.htm">
+</OBJECT>
+</UL>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Calculator (Menu Miscellaneous)">
+	<param name="Local" value="hid_calc.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Commands of the menu Window">
+	<param name="Local" value="menu_window.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Map selection (Menu Window)">
+	<param name="Local" value="hid_selectkennfeld.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Differences to the Original (Menu Window)">
+	<param name="Local" value="hid_unterschiede.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Visualizer (Menu Window)">
+	<param name="Local" value="visualizer.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Visualizer Logfiles">
+	<param name="Local" value="visualizer_logfiles.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Overview (Menu Window)">
+	<param name="Local" value="hid_overview.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Preview (Menu Window)">
+	<param name="Local" value="hid_preview.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Map database - Basics">
+	<param name="Local" value="hid_mapdb.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Map database - Rule list">
+	<param name="Local" value="hid_mapdb_list.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Map database - Rules">
+	<param name="Local" value="hid_mapdb_rule.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Map database - Preview">
+	<param name="Local" value="hid_mapdb_preview.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Map database - Conditions">
+	<param name="Local" value="hid_mapdb_ifs.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Map database - Basic values">
+	<param name="Local" value="hid_mapdb_eckwerte.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Map database - Basic values - Create">
+	<param name="Local" value="hid_mapdb_eckwerte_2.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Map database - Search text">
+	<param name="Local" value="hid_mapdb_suchtext.htm">
+</OBJECT>
+</UL>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Map database - Then">
+	<param name="Local" value="hid_mapdb_then.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Command line">
+	<param name="Local" value="cmdwin.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Lua (Menu Window)">
+	<param name="Local" value="hid_lua_again.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Lua Debugger (Menu Window)">
+	<param name="Local" value="luadebugger.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Encrypt LUA script (Menu Window)">
+	<param name="Local" value="hid_luacrypt.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Toggle floating windows (Menu Window)">
+	<param name="Local" value="hid_fenster_togglefloating.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command New Window (Menu Window)">
+	<param name="Local" value="hid_window_new.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Cascade (Menu Window)">
+	<param name="Local" value="hid_window_cascade.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Tile horizontally (Menu Window)">
+	<param name="Local" value="hid_window_tile.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Tile vertically (Menu Window)">
+	<param name="Local" value="hid_window_arrange.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The commands 1, 2, ... (Menu Window)">
+	<param name="Local" value="hid_window_all.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Commands of the menu ? (Help)">
+	<param name="Local" value="menu_help.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Help topics (Menu ? (Help))">
+	<param name="Local" value="hid_help_index.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command context help  (Menu ? (Help))">
+	<param name="Local" value="hid_context_help.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog A small tip (Menu ? (Help))">
+	<param name="Local" value="hid_smalltip.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Tip of the day (Menu ? (Help))">
+	<param name="Local" value="hid_tipoftheday.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Homepage EVC (Menu ? (Help))">
+	<param name="Local" value="hid_help_homepage.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Info about plug-ins (Menu ? (Help))">
+	<param name="Local" value="hid_listplugins.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Info about WinOLS (Menu ? (Help))">
+	<param name="Local" value="hid_aboutbox.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Other Dialogs">
+	<param name="Local" value="other_dialogs.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Intel/Motorola import parameter">
+	<param name="Local" value="hid_intelhexopt.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Protected memory area is being changed">
+	<param name="Local" value="hidd_dataprotection.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog search in map list (Menu map list)">
+	<param name="Local" value="hid_suchekfliste.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Enter a filename">
+	<param name="Local" value="hid_filename.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Name folder">
+	<param name="Local" value="hid_rename.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Move maps">
+	<param name="Local" value="hid_selectkennfolder.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Create map">
+	<param name="Local" value="createmap.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Fix translation">
+	<param name="Local" value="fixtranslation.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Status bar">
+	<param name="Local" value="afx_hidw_status_bar.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Right Side (Icon bar)">
+	<param name="Local" value="hid_icon_rightside.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Data width (Icon bar)">
+	<param name="Local" value="hid_icon_datawidth.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Data organisation (Icon bar)">
+	<param name="Local" value="hid_icon_dataorganisation.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command number system (Icon bar)">
+	<param name="Local" value="hid_icon_zahlensystem.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Calculate factor and offset">
+	<param name="Local" value="hid_faktoroffset.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Factor, Offset, etc. (Icon bar)">
+	<param name="Local" value="hid_icon_faktoroffset.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The command Right Side / Fixate Ride Side (Menu View)">
+	<param name="Local" value="hid_rightside.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Change project size">
+	<param name="Local" value="hid_projektresize.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Edit Multiple Maps">
+	<param name="Local" value="editmultiplemaps.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Transfer changes">
+	<param name="Local" value="hid_datenuebertragen.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="The dialog Insert / edit comment">
+	<param name="Local" value="hid_postit.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="SPI-Signature">
+	<param name="Local" value="hid_spisignatur.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Advanced topics">
+	<param name="Local" value="advanced_topics.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Scripts">
+	<param name="Local" value="scripts.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Basics">
+	<param name="Local" value="basics.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Script language">
+	<param name="Local" value="script_language.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Map scripts">
+	<param name="Local" value="map_scripts.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Importing with scripts">
+	<param name="Local" value="importing_with_scripts.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Trickery with scripts">
+	<param name="Local" value="tricksen_mit_skripten.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Why can't my script be applied?">
+	<param name="Local" value="skriptproblem.htm">
+</OBJECT>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Additional file formats">
+	<param name="Local" value="zusaetzliche_dateiformate.htm">
+</OBJECT>
+<UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Basics">
+	<param name="Local" value="externe_konverter.htm">
+</OBJECT>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Example">
+	<param name="Local" value="beispiel.htm">
+</OBJECT>
+</UL>
+</UL>
+<LI><OBJECT type="text/sitemap">
+	<param name="Name" value="Copyright, Contact &amp; Internet">
+	<param name="Local" value="copyright_contact__internet.htm">
+</OBJECT>
+</UL>
+</BODY></HTML>

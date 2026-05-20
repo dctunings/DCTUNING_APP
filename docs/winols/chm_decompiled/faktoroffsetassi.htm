@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <title>Calculate factor and offset</title>
+   <meta name="generator" content="Help & Manual">
+   <meta name="keywords" content="Factor,Offset,Reciprocal,Formula">
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <link type="text/css" href="default.css" rel="stylesheet">
+   <link type="text/css" href="custom.css" rel="stylesheet">
+   <script type="text/javascript" src="nsh.js"></script>
+   <script type="text/javascript" src="tablesort.js"></script>
+   
+<!-- non-scrolling headers for CHM and browser-based help, local styles-->
+<style TYPE="text/css" media="screen"> 
+   <!-- 
+   body {    
+      margin:0; 
+      padding:0; 
+      overflow: auto; 
+      background: #FFFFFF; 
+   } 
+   #idheader { 
+      width:100%; 
+      height:auto; 
+      padding: 0; 
+      margin: 0; 
+} 
+    #idheaderbg  {
+    background: #649CCC; 
+}
+   -->
+   </style>
+   
+<style TYPE="text/css" MEDIA="print">
+<!--
+/* Hide navigation links and add space between header
+     and text in the printed version. Not valid for eBooks. */
+#idnav { display:none;	 }
+.topichead { padding: 5px 5px 20px 5px; }
+-->
+</style>   
+</head>
+<body>
+<!--ZOOMSTOP-->
+
+<div id="idheader">
+<div id="idheaderbg">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" 
+       style="margin: 0px; color: #649CCC; background: url(header_bg.jpg);">
+
+  <tr valign="bottom">
+    <td align="left" valign="bottom" class="topichead" style="padding:10px">
+   <p class="crumbs" id="idnav" style="color:#000080"><b>Navigation:</b>&nbsp;
+   
+   <A HREF="Main_index.htm">Start page</A> > <a href="menu_edit.htm">Commands of the menu Edit</a> &gt; <a href="hid_properties_hex.htm">The dialog properties: Window (Menu Edit)</a>&nbsp;&gt;</p>
+   <p class="p_Heading1"><span class="f_Heading1">Calculate factor and offset</span></p>
+
+    </td>
+    <td align="right" width="120" valign="middle" class="topichead" id="idnav" style="padding:10px">
+    <a href="javascript: print();"
+    		onmouseover="document.images.prntr.src='print1.gif'" 
+        onmouseout="document.images.prntr.src='print2.gif'"
+        ><img name="prntr" border="0" alt="Print" title="Drucken" src="print2.gif"
+        ></a>
+     <a href="hid_properties_hex.htm"
+        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
+        onmouseout="document.images.prev.src='btn_prev_n.gif'"
+        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
+        ></a><a href="hid_properties_hex.htm"
+        onmouseover="document.images.main.src='btn_home_h.gif'" 
+        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Up"
+        ></a><a href="menu_hardware.htm"
+        onmouseover="document.images.next.src='btn_next_h.gif'" 
+        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
+        ></a>
+    </td>
+  </tr>
+  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
+</table>
+</div>
+
+<!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
+  
+
+</div>  
+
+
+
+<div id="idcontent"><div id="innerdiv" style="padding:10px"> 
+<!--ZOOMRESTART-->
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table width="100" cellspacing="0" cellpadding="10" bgcolor="#ff0000" border="1" style="background-color: #ff0000; border: solid 1px #000000; border-spacing:0px;">
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" style="border: none"><p><span style="font-size: 12pt; font-family: 'Wingdings 3';">u</span><span style="font-size: 12pt;">  <a href="https://www.evc.de/en/service/video.asp?id=hlgBK02KZvI" target="_blank" class="weblink">Video</a></span></p>
+</td>
+</tr>
+</table>
+</div>
+<p><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">This wizard helps you to determine the factor and offset based on various source data. This is useful if you have information about the conversion of the eprom values which cannot be entered directly in WinOLS (as factor and offset) due to their format. You can access this dialog via the f(x) button in the <a href="hid_properties_hex.htm">map properties window</a>.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><img src="faktoroffsetassie.png" width="739" height="549" border="0" alt=""></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">Regardless of which of the 5 variants you choose, the wizard immediately calculates the factor and offset and displays them in the bottom left corner and applies them to the map in the background for testing purposes. This happens only if this is mathematically possible (e. g. no division by 0). In addition, you have the option of having individual values converted on the basis of the determined data for testing purposes.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS" style="font-weight: bold;">1) and 2) given formulas</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">If you have the source formula, you can simply select the appropriate formula here and enter the values. For example, you might have the following conversion formula:</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">VAL = 100/ (0.00001 * N)</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">First select the type of formula. The input size in the example is below the fraction line, so it is the right formula. Enter the values. The number 100 above the fraction line. The number 0.00001 below the fraction line as a factor. In our example, no further value is added. So just leave the additive variable under the fraction line at 0.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS" style="font-weight: bold;">3) Flexible formula</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">In this input field you can enter a formula (such as &quot;(input+3)*10&quot;) or select a predefined formula and insert its (up to 4) parameter values on the right.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">For all formula formats, you can activate the checkbox &quot;Swap Input/Output&quot;. Use this if your source formula is formulated backwards, i. e. converts displayed values to eprom values.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS" style="font-weight: bold;">4) Example values</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">If you have sample values for the displayed value and the corresponding eprom value, you can enter them here. Normally, two pairs of values are sufficient to determine the data. Only when using reciprocal values 3 values are required. It is important that the values for #1 and #2 (and possibly #3) are not identical.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS" style="font-weight: bold;">5) Corner values</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">This is a variation of the example values in which the system automatically determines the eprom values from the project. You then only need to enter the displayed values. Pick 2 or 3 corners from the map with different values and enter their display values. If there are not enough different basic values in the map, this method cannot be used.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS" style="font-weight: bold;">Swap input/output</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">If your source formula defines how to calculate the eprom values from the displayed values, then input and output are reversed. This checkbox causes WinOLS to calculate the corresponding inverse formula.</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS" style="font-weight: bold;">Reciprocal?</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">If you do not have the formula, it is difficult to see if a reciprocal value (1/x) is used only on the basis of the values. Therefore, it is best to try it first without, using 2 values. These 2 will probably be converted correctly (you can see this in the background in hexdump). If other values are still wrong, activate the reciprocal (= the third input value) at 3) or 4).</span></p>
+<p class="p_WinOLS"><span class="f_WinOLS">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Shortcuts</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 24px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="89"><span style="font-size: 12pt; color: #000000;">Symbol bar:</span></td><td><span style="font-size: 12pt; color: #000000;">-</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 24px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="89"><span style="font-size: 12pt; color: #000000;">Keyboard:</span></td><td><span style="font-size: 12pt; color: #000000;">-</span></td></tr></table></div>
+<!--ZOOMSTOP-->
+
+</div></div>
+<script type="text/javascript"> 
+<!-- 
+var lastSlashPos = document.URL.lastIndexOf("/") >
+document.URL.lastIndexOf("\\") ? document.URL.lastIndexOf("/") :
+document.URL.lastIndexOf("\\");
+if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4
+).toLowerCase() != "~hh" )
+{
+    nsrInit();
+}
+--> 
+</script> 
+</body>
+</html>

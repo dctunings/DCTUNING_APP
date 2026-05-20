@@ -58,6 +58,45 @@ export async function sha256Buffer(buf: ArrayBuffer): Promise<string> {
   return hex
 }
 
+// ─── Normalize manifest entries to expected interface ─────────────────────────
+// The on-disk manifest uses {hw, sw, stage, partNumber, family} but the engine
+// expects {partNumber, swNumber, oriHash, oriSize, path, ...}. This bridges the gap.
+function normalizeManifestEntry(raw: Record<string, unknown>): RecipeManifestEntry {
+  const hw = String(raw.hw || raw.partNumber || '')
+  const sw = String(raw.sw || raw.swNumber || 'AUTO')
+  const rawStage = raw.stage
+  // Stage can be number (1,2,3) or string ("Stage1","Stage2","Stage3")
+  let stage: number
+  if (typeof rawStage === 'number') {
+    stage = rawStage
+  } else if (typeof rawStage === 'string') {
+    const m = rawStage.match(/(\d+)/)
+    stage = m ? parseInt(m[1], 10) : 0
+  } else {
+    stage = 0
+  }
+  // Construct path from hw/sw/stage: e.g. "000000000/AUTO_Stage1.json"
+  const path = raw.path ? String(raw.path) : `${hw}/${sw}_Stage${stage}.json`
+  return {
+    partNumber: String(raw.partNumber || hw),
+    swNumber: sw,
+    stage,
+    oriHash: String(raw.oriHash || raw.oriSha256 || ''),
+    oriSize: Number(raw.oriSize || 0),
+    regions: Number(raw.regions || raw.regionCount || 0),
+    totalBytesChanged: Number(raw.totalBytesChanged || 0),
+    path,
+    sourceTunedFile: String(raw.sourceTunedFile || raw.sourceTuned || ''),
+    sourceFolder: raw.sourceFolder ? String(raw.sourceFolder) : undefined,
+  }
+}
+
+function normalizeManifest(raw: Record<string, unknown>[]): RecipeManifestEntry[] {
+  return raw.map(normalizeManifestEntry)
+}
+
+
+
 // ─── Extract part number + SW number from binary content ─────────────────────
 // Fallback when ORI hash doesn't match any manifest (e.g. user has a file from a
 // variant we've seen but slightly different content). We can still find matching
@@ -112,7 +151,7 @@ export function findMatchingRecipes(
   if (idents.partNumber && idents.swNumber) {
     for (const e of manifest) {
       if (seen.has(e.path)) continue
-      if (e.partNumber === idents.partNumber && e.swNumber === idents.swNumber && e.oriSize === oriSize) {
+      if (e.partNumber === idents.partNumber && e.swNumber === idents.swNumber) {
         out.push({ entry: e, confidence: 'variant', stage: e.stage })
         seen.add(e.path)
       }
@@ -122,7 +161,7 @@ export function findMatchingRecipes(
   if (idents.partNumber) {
     for (const e of manifest) {
       if (seen.has(e.path)) continue
-      if (e.partNumber === idents.partNumber && e.oriSize === oriSize) {
+      if (e.partNumber === idents.partNumber) {
         out.push({ entry: e, confidence: 'part-only', stage: e.stage })
         seen.add(e.path)
       }
@@ -192,8 +231,8 @@ export async function loadManifest(): Promise<RecipeManifestEntry[]> {
       if (api?.loadRecipeManifest) {
         const res = await api.loadRecipeManifest()
         if (res?.ok && Array.isArray(res.manifest)) {
-          cachedManifest = res.manifest
-          return res.manifest
+          cachedManifest = normalizeManifest(res.manifest as Record<string, unknown>[])
+          return cachedManifest
         }
       }
       // Fall back to HTTP fetch (web mode — served as static asset).
@@ -207,9 +246,9 @@ export async function loadManifest(): Promise<RecipeManifestEntry[]> {
       const url = `./recipes/manifest.json?v=${__APP_VERSION__}`
       const res = await fetch(url, { cache: 'no-cache' })
       if (!res.ok) return []
-      const manifest = (await res.json()) as RecipeManifestEntry[]
-      cachedManifest = manifest
-      return manifest
+      const raw = await res.json()
+      cachedManifest = normalizeManifest(raw as Record<string, unknown>[])
+      return cachedManifest
     } catch {
       return []
     }
@@ -239,11 +278,37 @@ export async function loadRecipe(relativePath: string): Promise<Recipe | null> {
       const res = await api.loadRecipe(relativePath)
       if (res?.ok && res.recipe) return res.recipe as Recipe
     }
-    // Web fallback — Supabase Storage CDN
-    const res = await fetch(`${SUPABASE_RECIPES_BASE}/${relativePath}`, { cache: 'force-cache' })
-    if (!res.ok) return null
-    return (await res.json()) as Recipe
+    // Web fallback 1 — Supabase Storage CDN
+    try {
+      const cdnRes = await fetch(`${SUPABASE_RECIPES_BASE}/${relativePath}`, { cache: 'force-cache' })
+      if (cdnRes.ok) return (await cdnRes.json()) as Recipe
+    } catch { /* Supabase bucket may not exist yet */ }
+    // Web fallback 2 — local static files (public/recipes/ served by Vite)
+    const localRes = await fetch(`./recipes/${relativePath}`, { cache: 'force-cache' })
+    if (!localRes.ok) return null
+    return (await localRes.json()) as Recipe
   } catch {
     return null
   }
 }
+// ─── Progressive manifest loading for large manifests ────────────────────────
+// Splits manifest into chunks and yields them progressively to keep UI responsive
+export interface ManifestLoadProgress {
+  loaded: number
+  total: number
+  entries: RecipeManifestEntry[]
+}
+
+export async function* loadManifestProgressive(
+  chunkSize = 500
+): AsyncGenerator<ManifestLoadProgress> {
+  const all = await loadManifest()
+  const total = all.length
+  for (let i = 0; i < total; i += chunkSize) {
+    const chunk = all.slice(i, i + chunkSize)
+    yield { loaded: Math.min(i + chunkSize, total), total, entries: chunk }
+    // Yield to event loop to keep UI responsive
+    await new Promise((r) => setTimeout(r, 0))
+  }
+}
+

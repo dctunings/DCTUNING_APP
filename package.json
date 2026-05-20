@@ -9,7 +9,10 @@
     "preview": "electron-vite preview",
     "build:win": "npm run build && electron-builder --win",
     "build:web": "node scripts/copy-web-catalogs.mjs && vite build --config vite.web.config.ts",
-    "dev:web": "node scripts/copy-web-catalogs.mjs && vite --config vite.web.config.ts"
+    "dev:web": "node scripts/copy-web-catalogs.mjs && vite --config vite.web.config.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
@@ -17,11 +20,14 @@
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "@vitejs/plugin-react": "^4.0.0",
-    "electron": "^31.0.0",
-    "electron-builder": "^24.0.0",
-    "electron-vite": "^2.0.0",
+    "@vitest/coverage-v8": "^2.0.0",
+    "electron": "^41.5.0",
+    "electron-builder": "^26.8.1",
+    "electron-vite": "^3.1.0",
+    "jsdom": "^24.0.0",
     "typescript": "^5.0.0",
-    "vite": "^5.0.0"
+    "vite": "^6.4.2",
+    "vitest": "^2.0.0"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
@@ -29,6 +35,8 @@
     "@electron-toolkit/utils": "^4.0.0",
     "@supabase/supabase-js": "^2.0.0",
     "better-sqlite3": "^12.9.0",
+    "electron-log": "^5.4.3",
+    "electron-updater": "^6.8.3",
     "fflate": "^0.8.2",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",

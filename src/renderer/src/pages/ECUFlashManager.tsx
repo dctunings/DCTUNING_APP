@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import VehicleStrip from '../components/VehicleStrip'
 import type { ActiveVehicle } from '../lib/vehicleContext'
 import { bridge } from '../lib/bridgeClient'
+import PreFlashSafetyCheck from '../components/PreFlashSafetyCheck'
 
 interface ConnectResult { ok: boolean; error?: string }
 interface Props {
@@ -120,6 +121,7 @@ export default function ECUFlashManager({ connected, activeVehicle, onConnect }:
   const [csumResult, setCsumResult] = useState<{ stored: string; calculated: string; match: boolean } | null>(null)
   const [confirmWrite, setConfirmWrite] = useState(false)
   const unsubRef = useRef<(() => void) | null>(null)
+  const [showSafetyCheck, setShowSafetyCheck] = useState(false)
   const logEndRef = useRef<HTMLDivElement | null>(null)
 
   const addLog = (msg: string, type = 'info') => {
@@ -687,7 +689,7 @@ export default function ECUFlashManager({ connected, activeVehicle, onConnect }:
                       You are about to write <strong>{writeFile?.name}</strong> to <strong>{selectedEcu.name}</strong>. This cannot be undone without the original file. Are you sure?
                     </div>
                     <div style={{ display: 'flex', gap: 10 }}>
-                      <button className="btn btn-danger" style={{ flex: 1 }} onClick={writeFlash} disabled={busy}>
+                      <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => setShowSafetyCheck(true)} disabled={busy}>
                         {phase === 'writing' ? '⏳ Flashing...' : 'YES — FLASH NOW'}
                       </button>
                       <button className="btn btn-ghost" onClick={() => setConfirmWrite(false)} disabled={busy}>Cancel</button>
@@ -889,6 +891,23 @@ export default function ECUFlashManager({ connected, activeVehicle, onConnect }:
             <div ref={logEndRef} />
           </div>
         </div>
+      )}
+      {showSafetyCheck && (
+        <PreFlashSafetyCheck
+          onComplete={(result) => {
+            setShowSafetyCheck(false)
+            if (result.passed) {
+              setConfirmWrite(true)
+              addLog(`Safety check passed: Battery ${result.batteryVoltage?.toFixed(1)}V, Coolant ${result.coolantTemp?.toFixed(0)}°C`, 'success')
+            } else {
+              addLog(`Safety check FAILED: ${result.criticals.join('; ')}`, 'error')
+            }
+          }}
+          onCancel={() => {
+            setShowSafetyCheck(false)
+            addLog('Flash cancelled by user during safety check', 'warn')
+          }}
+        />
       )}
     </div>
   )

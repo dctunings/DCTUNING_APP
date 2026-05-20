@@ -1,0 +1,19 @@
+//--------------------------------------------------------------------------------------------
+// This is a WinOLS "MapProperties->Unit" file.
+// Do not edit while it's inside "c:\program files". Copy it to your own folder first!
+//--------------------------------------------------------------------------------------------
+// You can use it to define the values for the unit combobox drop-down.
+//--------------------------------------------------------------------------------------------
+// Format:
+//   My unit1
+//   My unit2
+//
+//   // My optional comment (not shown in the drop-down)
+//   My unit3 // My optional comment (not shown in the drop-down)
+//--------------------------------------------------------------------------------------------
+// Start editing here:
+My unit1
+My unit2
+
+// My optional comment (not shown in the drop-down)
+My unit3 // My optional comment (not shown in the drop-down)

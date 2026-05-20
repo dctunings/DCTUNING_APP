@@ -75,6 +75,10 @@ class ELM327 {
     return this.port !== null && this.writer !== null
   }
 
+  isAvailable(): boolean {
+    return 'serial' in navigator
+  }
+
   getInfo(): string { return this._info }
   getPortLabel(): string { return this._portLabel }
 

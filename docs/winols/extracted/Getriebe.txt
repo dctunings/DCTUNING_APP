@@ -1,0 +1,75 @@
+Audi;5M
+Audi;6M
+Audi;Tiptronic
+Audi;S-Tronic
+Audi;S-Tronic DSG7 DQ200
+Audi;S-Tronic DSG7 DQ200 MQB
+Audi;S-Tronic DSG6 DQ250
+Audi;S-Tronic DSG6 DQ250 MQB
+Audi;S-Tronic DSG7 DQ500
+Audi;S-Tronic DL501
+Audi;S-Tronic DSG DQ800
+Audi;Multitronic
+Audi;Automatic transmission
+Audi;Switch gear
+
+Renault;5M
+Renault;6M
+Renault;Automatic transmission
+Renault;Switch gear
+Renault;DCT
+
+Porsche;5M
+Porsche;6M
+Porsche;Automatic transmission
+Porsche;Switch gear
+Porsche;PDK
+
+VW;5M
+VW;6M
+VW;Automatic transmission
+VW;Switch gear
+VW;DSG
+VW;DSG7 DQ200
+VW;DSG7 DQ200 MQB
+VW;DSG6 DQ250
+VW;DSG6 DQ250 MQB
+VW;DSG7 DQ381 MQB
+VW;DSG7 DQ500
+
+Seat;5M
+Seat;6M
+Seat;Automatic transmission
+Seat;Switch gear
+Seat;DSG
+Seat;DSG7 DQ200
+Seat;DSG7 DQ200 MQB
+Seat;DSG6 DQ250
+Seat;DSG6 DQ250 MQB
+Seat;DSG7 DQ381 MQB
+Seat;DSG7 DQ500
+
+Skoda;5M
+Skoda;6M
+Skoda;Automatic transmission
+Skoda;Switch gear
+Skoda;DSG
+Skoda;DSG7 DQ200
+Skoda;DSG7 DQ200 MQB
+Skoda;DSG6 DQ250
+Skoda;DSG6 DQ250 MQB
+Skoda;DSG7 DQ381 MQB
+Skoda;DSG7 DQ500
+
+BMW;5M
+BMW;6M
+BMW;Automatic transmission
+BMW;Switch gear
+BMW;DKG
+
+;5M
+;6M
+;Automatic transmission
+;Switch gear
+;CVT
+;DCT

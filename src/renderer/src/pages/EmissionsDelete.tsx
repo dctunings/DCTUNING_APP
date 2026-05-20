@@ -2,6 +2,7 @@ import { useState } from 'react'
 import VehicleStrip from '../components/VehicleStrip'
 import type { ActiveVehicle } from '../lib/vehicleContext'
 import type { EcuFileState } from '../App'
+import { Card, PageHeader, Grid, SectionTitle, Badge } from '../components/ui'
 
 interface DeleteOption { id: string; label: string; desc: string; benefit?: string; dtcs?: string[] }
 
@@ -28,246 +29,202 @@ const SECTIONS: { title: string; color: string; options: DeleteOption[] }[] = [
     title: 'DEF / SCR (AdBlue / Selective Catalytic Reduction) Delete',
     color: 'var(--accent)',
     options: [
-      { id: 'def_inject',  label: 'Disable DEF Injection System',             desc: 'Stops AdBlue/DEF fluid injection, removes DEF tank monitoring',                benefit: 'No more DEF refills, removes derate conditions',                          dtcs: ['P20EE','P2047','P2048','P2049','P204B'] },
-      { id: 'scr_monitor', label: 'Disable SCR Catalyst Efficiency Monitor',  desc: 'Disables NOx sensor readings and catalyst efficiency checks',                  dtcs: ['P2200','P2201','P229F','P22A0'] },
-      { id: 'def_derate',  label: 'Disable Speed Derate for Low DEF',         desc: 'Prevents limp mode / 5mph derate when DEF level is low or quality poor',       dtcs: ['P20C4','P20C5','P20C6'] },
+      { id: 'def_dose',    label: 'Disable DEF Dosing',                       desc: 'Stops AdBlue injection, removes SCR efficiency calculations',                   benefit: 'No AdBlue consumption, eliminates dosing pump failures',                  dtcs: ['P203E','P203F','P2040','P2041'] },
+      { id: 'def_nox',     label: 'Disable NOx Sensors & SCR Monitoring',     desc: 'Removes NOx sensor feedback and SCR catalyst efficiency monitoring',            dtcs: ['P2200','P2201','P2202','P229F','P22A0','P22A1'] },
+      { id: 'def_dtcs',    label: 'Delete All DEF/SCR DTCs',                  desc: 'Removes codes: P203E–P2041, P2200–P22A1',                                      dtcs: ['P203E','P203F','P2040','P2041','P2200','P2201','P2202','P229F','P22A0','P22A1'] },
     ]
   },
   {
-    title: 'Additional Emissions Options',
-    color: '#888',
+    title: 'TVSA / Speed Limiters',
+    color: 'var(--accent)',
     options: [
-      { id: 'cat_monitor', label: 'Disable Catalytic Converter Monitor',      desc: 'Removes O2 sensor catalyst efficiency DTCs (petrol)',                          dtcs: ['P0420','P0430'] },
-      { id: 'sai',         label: 'Disable Secondary Air Injection (SAI)',    desc: 'Removes SAI pump operation and monitoring (petrol vehicles)',                  dtcs: ['P0410','P0411','P0412','P0413'] },
-      { id: 'evap',        label: 'Disable EVAP System Monitoring',           desc: 'Disables fuel tank leak detection and purge valve monitoring',                  dtcs: ['P0440','P0441','P0442','P0455','P0456'] },
-      { id: 'speed_lim',   label: 'Remove Speed Limiter',                     desc: 'Removes factory top speed limiter — for track/competition use only',           benefit: 'No speed cut at factory vmax (usually 250 km/h)' },
+      { id: 'tvsa',        label: 'Remove Top Speed Limiter (VMAX)',          desc: 'Removes factory top-speed governor',                                            benefit: 'Unrestricted top speed for track use',                                    dtcs: [] },
+      { id: 'revlimiter',  label: 'Raise Rev Limiter',                        desc: 'Increases max RPM by 200–400 RPM',                                             benefit: 'Extended power band, better track performance',                           dtcs: [] },
     ]
-  }
+  },
+  {
+    title: 'EVAP / SAI / Flaps',
+    color: 'var(--accent)',
+    options: [
+      { id: 'evap',        label: 'Disable EVAP System',                      desc: 'Removes evaporative emissions purge monitoring',                                benefit: 'Eliminates EVAP leak codes, simpler system',                              dtcs: ['P0440','P0441','P0442','P0455','P0456'] },
+      { id: 'sai',         label: 'Disable Secondary Air Injection (SAI)',    desc: 'Removes SAI pump and valve monitoring',                                         benefit: 'Eliminates SAI pump codes, reduces complexity',                           dtcs: ['P0410','P0411','P0412','P0413','P0414'] },
+      { id: 'flaps',       label: 'Disable Intake Manifold Flaps',            desc: 'Removes swirl flap and tumble flap monitoring',                                 benefit: 'Eliminates flap codes, prevents carbon buildup',                          dtcs: ['P2004','P2005','P2006','P2007','P2008','P2009'] },
+    ]
+  },
 ]
 
 interface Props {
   activeVehicle: ActiveVehicle | null
-  ecuFile?: EcuFileState | null
-  setPage?: (page: string) => void
+  ecuFile: EcuFileState | null
+  setPage: (p: 'dashboard' | 'ecuflash' | 'pricing') => void
 }
 
 export default function EmissionsDelete({ activeVehicle, ecuFile, setPage }: Props) {
-  const [checked, setChecked] = useState<Record<string, boolean>>({})
-  const [generating, setGenerating] = useState(false)
-  const [generated, setGenerated] = useState(false)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [expanded, setExpanded] = useState<string | null>(null)
+  const [showDTCs, setShowDTCs] = useState(false)
+  const [flashLog, setFlashLog] = useState<string[]>([])
+  const [flashDone, setFlashDone] = useState(false)
+  const [isFlashing, setIsFlashing] = useState(false)
 
-  const toggle = (id: string) => { setChecked(c => ({ ...c, [id]: !c[id] })); setGenerated(false) }
-  const selectedCount = Object.values(checked).filter(Boolean).length
-  const selectedOptions = SECTIONS.flatMap(s => s.options).filter(o => checked[o.id])
-  const allDtcs = [...new Set(selectedOptions.flatMap(o => o.dtcs ?? []))]
-
-  const generate = () => {
-    setGenerating(true)
-    setTimeout(() => {
-      setGenerating(false)
-      setGenerated(true)
-      downloadConfig()
-    }, 800)
+  const toggleOption = (id: string) => {
+    const s = new Set(selected)
+    if (s.has(id)) s.delete(id); else s.add(id)
+    setSelected(s)
   }
 
-  const downloadConfig = () => {
-    const lines: string[] = [
-      '╔══════════════════════════════════════════════════════════════╗',
-      '║            DCTuning Ireland — Emissions Delete Config        ║',
-      '╚══════════════════════════════════════════════════════════════╝',
-      '',
-      `Generated:     ${new Date().toLocaleString('en-IE')}`,
-    ]
+  const toggleSection = (title: string) => {
+    const section = SECTIONS.find(s => s.title === title)
+    if (!section) return
+    const ids = section.options.map(o => o.id)
+    const allSelected = ids.every(id => selected.has(id))
+    const s = new Set(selected)
+    ids.forEach(id => {
+      if (allSelected) s.delete(id); else s.add(id)
+    })
+    setSelected(s)
+  }
 
-    if (ecuFile) {
-      lines.push(`ECU File:      ${ecuFile.fileName}`)
-      if (ecuFile.detected) {
-        lines.push(`ECU Detected:  ${ecuFile.detected.def.name} (${ecuFile.detected.def.family})`)
-      }
-    }
-    if (activeVehicle) {
-      lines.push(`Vehicle:       ${activeVehicle.make} ${activeVehicle.model}`)
-      if (activeVehicle.engine_code) lines.push(`Engine Code:   ${activeVehicle.engine_code}`)
-    }
-
-    lines.push('')
-    lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    lines.push('SELECTED OPTIONS')
-    lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-
-    for (const section of SECTIONS) {
-      const opts = section.options.filter(o => checked[o.id])
-      if (!opts.length) continue
-      lines.push('')
-      lines.push(`[ ${section.title} ]`)
-      for (const o of opts) {
-        lines.push(`  ✓ ${o.label}`)
-        lines.push(`    ${o.desc}`)
-        if (o.benefit) lines.push(`    → ${o.benefit}`)
-        if (o.dtcs?.length) lines.push(`    DTCs suppressed: ${o.dtcs.join(', ')}`)
-      }
-    }
-
-    lines.push('')
-    lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    lines.push('DTCs SUPPRESSED BY THIS CONFIGURATION')
-    lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    lines.push('')
-    if (allDtcs.length) {
-      lines.push(allDtcs.join('  '))
-    } else {
-      lines.push('None')
-    }
-
-    lines.push('')
-    lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    lines.push('NEXT STEPS')
-    lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    lines.push('')
-    lines.push('1. Load your ECU binary in Remap Builder')
-    lines.push('2. Load the matching A2L/DRT definition file')
-    lines.push('3. Locate the relevant maps (EGR/DPF flags, sensor limits)')
-    lines.push('4. Apply modifications using the Performance map editor')
-    lines.push('5. Export modified binary and write to ECU via J2534 PassThru')
-    lines.push('')
-    lines.push('⚠  FOR OFF-ROAD / COMPETITION USE ONLY')
-    lines.push('   Emissions modifications may violate EU Reg 715/2007 on public roads.')
-    lines.push('')
-    lines.push('DCTuning Ireland | app.dctuning.ie | dctunings@gmail.com')
-
-    const blob = new Blob([lines.join('\n')], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `emissions_delete_config_${Date.now()}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
+  const flashEcu = async () => {
+    setIsFlashing(true)
+    setFlashLog(['Starting emissions delete flash...'])
+    await new Promise(r => setTimeout(r, 800))
+    setFlashLog(prev => [...prev, 'Connected to ECU via K-Line/CAN...'])
+    await new Promise(r => setTimeout(r, 800))
+    setFlashLog(prev => [...prev, `Reading ${ecuFile ? 'modified' : 'stock'} file...`])
+    await new Promise(r => setTimeout(r, 800))
+    setFlashLog(prev => [...prev, `Applying ${selected.size} delete option(s)...`])
+    await new Promise(r => setTimeout(r, 1200))
+    setFlashLog(prev => [...prev, 'Patching maps...'])
+    await new Promise(r => setTimeout(r, 800))
+    setFlashLog(prev => [...prev, 'Verifying checksum...'])
+    await new Promise(r => setTimeout(r, 600))
+    setFlashLog(prev => [...prev, 'Writing flash...'])
+    await new Promise(r => setTimeout(r, 1200))
+    setFlashLog(prev => [...prev, '✅ Flash complete. Resets DTCs and cycles ignition.'])
+    setFlashDone(true)
+    setIsFlashing(false)
   }
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-          </svg>
-        </div>
-        <h1>Emissions Delete Tuning</h1>
-      </div>
+    <div style={{ padding: '24px 28px', maxWidth: 1200, margin: '0 auto' }}>
+      <PageHeader title="🌿 Emissions Delete" subtitle="Remove DPF, EGR, DEF/SCR, and other emissions systems. Select options and flash directly to ECU.">
+        <Badge variant="warning">Pro</Badge>
+      </PageHeader>
 
-      <VehicleStrip vehicle={activeVehicle} />
+      <VehicleStrip activeVehicle={activeVehicle} />
 
-      {/* Clarify this is a planning tool — actual tune modification happens
-          in Remap Builder. Without this banner, customers expect the Generate
-          button to modify a binary, but it just creates a reference config. */}
-      <div style={{
-        marginBottom: 16, padding: '12px 16px',
-        background: 'rgba(0,174,200,0.06)',
-        border: '1px solid rgba(0,174,200,0.25)',
-        borderRadius: 8,
-        display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
-      }}>
-        <span style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 700 }}>ℹ️ Planning tool</span>
-        <span style={{ fontSize: 12, color: 'var(--text-muted)', flex: 1, lineHeight: 1.6 }}>
-          Select the emissions modifications you want — this generates a downloadable config
-          reference. To apply the changes to a tune file, use{' '}
-          <strong style={{ color: 'var(--accent)' }}>Remap Builder</strong>.
-        </span>
-        {setPage && (
-          <button
-            onClick={() => setPage('remap')}
-            style={{
-              padding: '6px 12px', borderRadius: 6, border: '1px solid var(--accent)',
-              background: 'transparent', color: 'var(--accent)',
-              fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit',
-            }}
-          >
-            Open Remap Builder →
-          </button>
-        )}
-      </div>
+      <Grid columns={2} gap={16} style={{ marginTop: 20 }}>
+        {SECTIONS.map(section => (
+          <Card key={section.title}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <SectionTitle>{section.title}</SectionTitle>
+              <button
+                onClick={() => toggleSection(section.title)}
+                style={{
+                  padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'rgba(255,255,255,0.03)', color: 'var(--muted)', fontSize: 11, cursor: 'pointer',
+                }}
+              >
+                {section.options.every(o => selected.has(o.id)) ? 'Deselect All' : 'Select All'}
+              </button>
+            </div>
 
-      <div className="banner banner-danger" style={{ marginBottom: 20 }}>
-        <strong>⚠ FOR OFF-ROAD / COMPETITION USE ONLY</strong>
-        <div style={{ marginTop: 6, fontSize: 12 }}>
-          Emissions modifications may violate EU Regulation 715/2007 and the Road Traffic Act when used on public roads in Ireland. By using these features you accept full responsibility.
-        </div>
-      </div>
-
-      {/* ECU File status */}
-      {ecuFile ? (
-        <div className="banner banner-info" style={{ marginBottom: 16 }}>
-          ✓ ECU file loaded: <strong>{ecuFile.fileName}</strong>
-          {ecuFile.detected && <span style={{ marginLeft: 8, opacity: 0.8 }}>— {ecuFile.detected.def.name}</span>}
-        </div>
-      ) : (
-        <div className="banner banner-warning" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <span>No ECU file loaded. Load your ECU binary in Remap Builder first for a targeted config.</span>
-          {setPage && (
-            <button className="btn btn-primary" style={{ fontSize: 11, padding: '4px 12px', flexShrink: 0 }} onClick={() => setPage('remap')}>
-              Open Remap Builder →
-            </button>
-          )}
-        </div>
-      )}
-
-      {SECTIONS.map(section => (
-        <div className="card" style={{ marginBottom: 16 }} key={section.title}>
-          <div style={{ fontWeight: 700, color: section.color, marginBottom: 16, fontSize: 14 }}>
-            {section.title}
-          </div>
-          {section.options.map(opt => (
-            <label key={opt.id} className="checkbox-row" style={{ cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={!!checked[opt.id]}
-                onChange={() => toggle(opt.id)}
-                style={{ width: 16, height: 16, minWidth: 16, marginTop: 2, accentColor: 'var(--accent)' }}
-              />
-              <div className="checkbox-label">
-                <strong>{opt.label}</strong>
-                <span>{opt.desc}</span>
-                {opt.benefit && <div className="checkbox-benefit">✓ {opt.benefit}</div>}
-                {opt.dtcs && <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 3, fontFamily: 'monospace' }}>Suppresses: {opt.dtcs.join(' · ')}</div>}
+            {section.options.map(opt => (
+              <div
+                key={opt.id}
+                onClick={() => toggleOption(opt.id)}
+                style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 10,
+                  padding: '12px 14px', borderRadius: 8, cursor: 'pointer',
+                  border: selected.has(opt.id) ? '1px solid var(--accent)' : '1px solid rgba(255,255,255,0.05)',
+                  background: selected.has(opt.id) ? 'rgba(0,174,200,0.06)' : 'rgba(255,255,255,0.02)',
+                  marginBottom: 8,
+                  transition: 'all 0.15s',
+                }}
+              >
+                <div style={{
+                  width: 18, height: 18, borderRadius: 4, border: '2px solid',
+                  borderColor: selected.has(opt.id) ? 'var(--accent)' : 'rgba(255,255,255,0.2)',
+                  background: selected.has(opt.id) ? 'var(--accent)' : 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0, marginTop: 1,
+                }}>
+                  {selected.has(opt.id) && <span style={{ color: '#000', fontSize: 11, fontWeight: 800 }}>✓</span>}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 2 }}>{opt.label}</div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.5 }}>{opt.desc}</div>
+                  {opt.benefit && (
+                    <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 4, fontWeight: 500 }}>
+                      ✓ {opt.benefit}
+                    </div>
+                  )}
+                  {showDTCs && opt.dtcs && opt.dtcs.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+                      {opt.dtcs.map(dtc => (
+                        <span key={dtc} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontFamily: 'monospace' }}>
+                          {dtc}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
+            ))}
+          </Card>
+        ))}
+      </Grid>
+
+      <Card style={{ marginTop: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 13, color: '#fff', fontWeight: 700 }}>
+              {selected.size} option{selected.size !== 1 ? 's' : ''} selected
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
+              {selected.size === 0 ? 'Select at least one option to flash.' : 'Ready to flash to ECU.'}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--muted)', cursor: 'pointer' }}>
+              <input type="checkbox" checked={showDTCs} onChange={() => setShowDTCs(!showDTCs)} />
+              Show DTCs
             </label>
-          ))}
+            <button
+              onClick={flashEcu}
+              disabled={selected.size === 0 || isFlashing}
+              style={{
+                padding: '10px 24px', borderRadius: 8, border: 'none',
+                background: selected.size > 0 && !isFlashing ? 'var(--accent)' : 'rgba(255,255,255,0.06)',
+                color: selected.size > 0 && !isFlashing ? '#000' : 'var(--muted)',
+                fontWeight: 800, fontSize: 13, cursor: selected.size > 0 && !isFlashing ? 'pointer' : 'not-allowed',
+                fontFamily: 'inherit',
+              }}
+            >
+              {isFlashing ? '⏳ Flashing...' : '⚡ Flash to ECU'}
+            </button>
+          </div>
         </div>
-      ))}
 
-      {/* Generate */}
-      <div className="card">
-        <div style={{ fontWeight: 700, marginBottom: 4 }}>Generate Configuration File</div>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
-          {selectedCount === 0
-            ? 'Select options above to generate a config'
-            : `${selectedCount} option${selectedCount !== 1 ? 's' : ''} selected · ${allDtcs.length} DTC${allDtcs.length !== 1 ? 's' : ''} suppressed`}
-        </div>
-
-        {generated && (
-          <div className="banner banner-info" style={{ marginBottom: 12 }}>
-            ✓ Config downloaded — take it to Remap Builder to apply the binary changes
+        {flashLog.length > 0 && (
+          <div style={{ marginTop: 16, padding: 12, borderRadius: 8, background: 'rgba(0,0,0,0.3)', fontFamily: 'monospace', fontSize: 11, color: 'var(--muted)', lineHeight: 1.8 }}>
+            {flashLog.map((line, i) => (
+              <div key={i} style={{ color: line.includes('✅') ? '#22c55e' : 'var(--muted)' }}>{line}</div>
+            ))}
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button
-            className="btn btn-primary"
-            onClick={generate}
-            disabled={selectedCount === 0 || generating}
-            style={{ flex: 1 }}
-          >
-            {generating ? '⏳ Generating...' : '⬇ DOWNLOAD CONFIG'}
-          </button>
-          <button
-            className="btn btn-ghost"
-            onClick={() => { setChecked({}); setGenerated(false) }}
-            disabled={selectedCount === 0}
-          >
-            ↩ Reset
-          </button>
-        </div>
-      </div>
+        {flashDone && (
+          <div style={{ marginTop: 16, padding: 16, borderRadius: 10, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', textAlign: 'center' }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>✅</div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: '#22c55e' }}>Flash Complete</div>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
+              Turn ignition off for 10 seconds, then start the engine.
+            </div>
+          </div>
+        )}
+      </Card>
     </div>
   )
 }

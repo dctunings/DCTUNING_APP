@@ -66,9 +66,20 @@ const Icons: Record<string, JSX.Element> = {
       <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
     </svg>
   ),
+  'performance-monitor': (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  ),
   emissions: (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+    </svg>
+  ),
+  marketplace: (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 3h18v18H3zM3 9h18M9 21V9"/>
     </svg>
   ),
   j2534: (
@@ -115,14 +126,22 @@ const Icons: Record<string, JSX.Element> = {
       <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
     </svg>
   ),
+  fleet: (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="12" rx="2"/>
+      <path d="M7 16v4M17 16v4M7 20h10"/>
+      <circle cx="8" cy="10" r="1.5" fill="currentColor"/>
+      <circle cx="16" cy="10" r="1.5" fill="currentColor"/>
+    </svg>
+  ),
 }
 
 // Pro-only pages that require at least Pro plan
 const PRO_ONLY_PAGES: Page[] = ['tunes', 'j2534', 'unlock', 'cloning', 'emissions', 'ecuflash']
 
-// Pages that only make sense in the desktop app (e.g. install Windows drivers
-// from local files). Hidden from the sidebar when running as the web app.
-const DESKTOP_ONLY_PAGES: Page[] = ['driversetup']
+// Pages that only make sense in the desktop app. Driver setup is visible
+// everywhere since users need to download J2534 DLLs and Scanmatic drivers.
+const DESKTOP_ONLY_PAGES: Page[] = []
 
 function isWebMode(): boolean {
   return !(window as unknown as { api?: unknown }).api
@@ -130,10 +149,24 @@ function isWebMode(): boolean {
 
 const navItems: { section: string; items: { id: Page; icon: keyof typeof Icons; label: string }[] }[] = [
   {
-    section: 'DCTuning',
+    section: 'Platform',
     items: [
       { id: 'dashboard', icon: 'dashboard', label: 'Dashboard' },
       { id: 'vin',       icon: 'vin',       label: 'VIN Decoder' },
+      { id: 'fleet',     icon: 'fleet',     label: 'Fleet' },
+      { id: 'marketplace', icon: 'marketplace', label: 'Marketplace' },
+      { id: 'storefront',   icon: 'marketplace',  label: 'My Storefront' },
+      { id: 'seller-dash',  icon: 'marketplace',  label: 'Seller Dashboard' },
+    ]
+  },
+  {
+    section: 'Tuning',
+    items: [
+      { id: 'remap',       icon: 'remap',       label: 'Remap Builder' },
+      { id: 'tunes',       icon: 'tunes',       label: 'File Vault' },
+      { id: 'ecuflash',    icon: 'ecuflash',    label: 'ECU Flash' },
+      { id: 'cloning',     icon: 'cloning',     label: 'ECU Cloning' },
+      { id: 'performance-monitor', icon: 'performance-monitor', label: 'Performance Monitor' },
     ]
   },
   {
@@ -145,23 +178,13 @@ const navItems: { section: string; items: { id: Page; icon: keyof typeof Icons; 
     ]
   },
   {
-    section: 'ECU Tools',
-    items: [
-      { id: 'tunes',       icon: 'tunes',       label: 'Tune Manager' },
-      { id: 'ecuflash',    icon: 'ecuflash',    label: 'ECU Flash' },
-      { id: 'cloning',     icon: 'cloning',     label: 'ECU Cloning' },
-      { id: 'performance', icon: 'performance', label: 'Performance' },
-      { id: 'remap',       icon: 'remap',       label: 'Remap Builder' },
-    ]
-  },
-  {
     section: 'Advanced',
     items: [
-      { id: 'emissions', icon: 'emissions', label: 'Emissions Delete' },
-      { id: 'j2534',     icon: 'j2534',     label: 'J2534 PassThru' },
-      { id: 'unlock',    icon: 'unlock',    label: 'ECU Unlock' },
-      { id: 'devices',      icon: 'devices',      label: 'Device Library' },
-      { id: 'driversetup',  icon: 'driversetup',  label: 'Driver Setup' },
+      { id: 'emissions',   icon: 'emissions',   label: 'Emissions Delete' },
+      { id: 'j2534',       icon: 'j2534',       label: 'J2534 PassThru' },
+      { id: 'unlock',      icon: 'unlock',      label: 'ECU Unlock' },
+      { id: 'devices',     icon: 'devices',     label: 'Device Library' },
+      { id: 'driversetup', icon: 'driversetup', label: 'Driver Setup' },
     ]
   }
 ]
@@ -297,10 +320,11 @@ export default function Sidebar({ currentPage, setPage, user, subscription, isAc
           >
             <span className="nav-icon">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                <path d="M4 10h9M4 14h7"/>
+                <path d="M14 5c2.5 0 4.5 2 5 5M14 19c2.5 0 4.5-2 5-5"/>
               </svg>
             </span>
-            Plans & Pricing
+            Seller Plans
             {daysRemaining !== null && daysRemaining <= 7 && daysRemaining > 0 && (
               <span style={{
                 marginLeft: 'auto',

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
 import Dashboard from './pages/Dashboard'
@@ -7,7 +7,6 @@ import ECUScanner from './pages/ECUScanner'
 import VoltageMeter from './pages/VoltageMeter'
 import TuneManager from './pages/TuneManager'
 import ECUCloning from './pages/ECUCloning'
-import Performance from './pages/Performance'
 import EmissionsDelete from './pages/EmissionsDelete'
 import J2534PassThru from './pages/J2534PassThru'
 import ECUUnlock from './pages/ECUUnlock'
@@ -20,9 +19,14 @@ import BridgeDownload from './pages/BridgeDownload'
 import PricingPage from './pages/PricingPage'
 import AccountPage from './pages/AccountPage'
 import SubscriptionGate from './components/SubscriptionGate'
-import WebLanding from './pages/WebLanding'
 import LoginScreen from './components/LoginScreen'
+import PerformanceMonitor from './pages/PerformanceMonitor'
+import ErrorBoundary from './components/ErrorBoundary'
 import WebOnlyBanner, { isWebMode } from './components/WebOnlyBanner'
+import FleetDashboard from './pages/FleetDashboard'
+import Marketplace from './pages/Marketplace'
+import SellerStorefront from './pages/SellerStorefront'
+import SellerDashboard from './pages/SellerDashboard'
 import AIChatSidebar, { type ChatContext } from './components/AIChatSidebar'
 import { bridge } from './lib/bridgeClient'
 import type { ActiveVehicle } from './lib/vehicleContext'
@@ -50,7 +54,6 @@ export type Page =
   | 'wiring'
   | 'tunes'
   | 'cloning'
-  | 'performance'
   | 'emissions'
   | 'j2534'
   | 'unlock'
@@ -61,6 +64,8 @@ export type Page =
   | 'pricing'
   | 'account'
   | 'bridge-download'
+  | 'performance-monitor'
+  | 'fleet'
 
 // Pages that require a J2534 PassThru DLL bridge (Windows desktop only).
 // scanner/voltage/j2534 work in web via Web Serial API (ELM327 over USB), so
@@ -103,9 +108,14 @@ export default function App() {
   const [manufacturer, setManufacturer] = useState<string>('')
   const [vehicle, setVehicle] = useState<string>('')
   const [connected, setConnected] = useState(false)
+  const userDisconnectedRef = useRef(false)
+  const setConnectedTracked = useCallback((value: boolean) => {
+    if (value === false) userDisconnectedRef.current = true
+    if (value === true) userDisconnectedRef.current = false
+    setConnected(value)
+  }, [])
   const [activeVehicle, setActiveVehicle] = useState<ActiveVehicle | null>(null)
   const [ecuFile, setEcuFile] = useState<EcuFileState | null>(null)
-  const [showAuthModal, setShowAuthModal] = useState(false)
   // v3.14 Phase B: AI chat sidebar state. The panel is global so it follows the
   // user across pages — context is assembled from the currently-loaded ECU file
   // and the last tune applied in RemapBuilder.
@@ -182,8 +192,10 @@ export default function App() {
   }, [])
 
   // Auto-fire connectBridgeDevice when bridge first becomes available
+  // Skip if user has manually disconnected to avoid fighting their action
   useEffect(() => {
     if (bridgeStatus !== 'connected' || connected) return
+    if (userDisconnectedRef.current) return
     void connectBridgeDevice()
   }, [bridgeStatus, connected, connectBridgeDevice])
 
@@ -260,24 +272,17 @@ export default function App() {
                                     }}
                                   />
       case 'cloning':      return <ECUCloning connected={connected} activeVehicle={activeVehicle} onConnect={connectBridgeDevice} />
-      case 'performance':  return <Performance activeVehicle={activeVehicle} ecuFile={ecuFile} setPage={setPage} />
       case 'emissions':    return <EmissionsDelete activeVehicle={activeVehicle} ecuFile={ecuFile} setPage={setPage} />
-      case 'j2534':        return <J2534PassThru connected={connected} setConnected={setConnected} activeVehicle={activeVehicle} />
+      case 'j2534':        return <J2534PassThru connected={connected} setConnected={setConnectedTracked} activeVehicle={activeVehicle} setPage={setPage} />
       case 'unlock':       return <ECUUnlock connected={connected} activeVehicle={activeVehicle} onConnect={connectBridgeDevice} />
       case 'devices':      return <DeviceLibrary />
       case 'driversetup':  return <DriverSetupPage />
-      case 'remap':        return <RemapBuilder onEcuLoaded={setEcuFile} onTuneApplied={setLastTuneSummary} onAskAI={handleAskAI} onAskAICustom={handleAskAICustom} />
+      case 'remap':        return <RemapBuilder onEcuLoaded={setEcuFile} onTuneApplied={setLastTuneSummary} onAskAI={handleAskAI} onAskAICustom={handleAskAICustom} setPage={setPage} />
       case 'ecuflash':     return <ECUFlashManager connected={connected} activeVehicle={activeVehicle} onConnect={connectBridgeDevice} />
       case 'pricing':
         return (
           <PricingPage
-            user={user}
             onBack={() => setPage('dashboard')}
-            plans={plans}
-            subscription={subscription}
-            isActive={isActive}
-            createCheckoutSession={createCheckoutSession}
-            openCustomerPortal={openCustomerPortal}
           />
         )
       case 'account':
@@ -293,39 +298,30 @@ export default function App() {
         )
       case 'bridge-download':
         return <BridgeDownload setPage={setPage} />
-      default:             return <Dashboard setPage={setPage} connected={connected} activeVehicle={activeVehicle} />
+      case 'performance-monitor':
+        return <PerformanceMonitor setPage={setPage} />
+      case 'fleet':
+        return <FleetDashboard />
+      case 'marketplace':
+        return <Marketplace navigateTo={setPage} />
+      case 'storefront':
+        return <SellerStorefront />
+      case 'seller-dash':
+        return <SellerDashboard />
+      default: return <Dashboard setPage={setPage} connected={connected} activeVehicle={activeVehicle} />
     }
   }
 
-  // ── Web mode: show landing page for unauthenticated visitors ──────────────
+  // ── Web mode: show login/signup for unauthenticated visitors ──────────────
   if (isWebMode() && !user && !authLoading) {
-    // Enable scroll on html/body for landing page
-    document.documentElement.classList.add('landing-mode')
-
-    if (showAuthModal) {
-      document.documentElement.classList.remove('landing-mode')
-      return (
-        <LoginScreen
-          signIn={async (email, password) => {
-            const err = await signIn(email, password)
-            if (!err) setShowAuthModal(false)
-            return err
-          }}
-          signUp={signUp}
-          resetPassword={resetPassword}
-        />
-      )
-    }
     return (
-      <WebLanding
-        onSignIn={() => setShowAuthModal(true)}
-        onSignUp={() => setShowAuthModal(true)}
+      <LoginScreen
+        signIn={signIn}
+        signUp={signUp}
+        resetPassword={resetPassword}
       />
     )
   }
-
-  // Remove landing mode when app is running
-  document.documentElement.classList.remove('landing-mode')
 
   // Desktop: always show login screen if not authenticated
   if (!isWebMode() && !user && !authLoading) {
@@ -420,7 +416,7 @@ export default function App() {
                 </span>
               </div>
             )}
-            {renderPage()}
+            <ErrorBoundary>{renderPage()}</ErrorBoundary>
           </SubscriptionGate>
         </div>
       </div>

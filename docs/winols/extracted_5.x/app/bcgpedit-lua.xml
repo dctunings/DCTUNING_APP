@@ -1,0 +1,579 @@
+<SETTINGS>
+<OPTIONS>
+    <!-- Wort- und Sonderzeichen-Delimiters -->
+	<WordDelimeters>" \t\n\r,./<;:\"\'#{[}]~%@|^&*()-+=!"</WordDelimeters>
+	<SpecialDelimiters>";.{}\n"</SpecialDelimiters>
+	<IntelliSenseChars>".:"></IntelliSenseChars>
+
+    <!-- Escape-Sequenzen für Lua -->
+    <EscapeSequences>
+        <EscapeSequence>\\</EscapeSequence>
+        <EscapeSequence>\'</EscapeSequence>
+        <EscapeSequence>\"</EscapeSequence>
+        <EscapeSequence>\a</EscapeSequence>
+        <EscapeSequence>\b</EscapeSequence>
+        <EscapeSequence>\f</EscapeSequence>
+        <EscapeSequence>\n</EscapeSequence>
+        <EscapeSequence>\r</EscapeSequence>
+        <EscapeSequence>\t</EscapeSequence>
+        <EscapeSequence>\v</EscapeSequence>
+    </EscapeSequences>
+
+    <!-- Kommentar-Symbol für Lua -->
+	<CommentString>"-- "</CommentString>
+</OPTIONS>
+
+<COLOR_DATA>
+	<KEYWORDS>
+		<Color>555588</Color>
+		<CaseSensitive>True</CaseSensitive>
+
+		<!-- Lua-Schlüsselwörter -->
+		<Keyword>and</Keyword>
+		<Keyword>break</Keyword>
+		<Keyword>do</Keyword>
+		<Keyword>else</Keyword>
+		<Keyword>elseif</Keyword>
+		<Keyword>end</Keyword>
+		<Keyword>false</Keyword>
+		<Keyword>for</Keyword>
+		<Keyword>function</Keyword>
+		<Keyword>goto</Keyword>
+		<Keyword>if</Keyword>
+		<Keyword>in</Keyword>
+		<Keyword>local</Keyword>
+		<Keyword>nil</Keyword>
+		<Keyword>not</Keyword>
+		<Keyword>or</Keyword>
+		<Keyword>repeat</Keyword>
+		<Keyword>return</Keyword>
+		<Keyword>then</Keyword>
+		<Keyword>true</Keyword>
+		<Keyword>until</Keyword>
+		<Keyword>while</Keyword>
+		<Keyword>require</Keyword>
+	</KEYWORDS>
+
+	<KEYWORDS>
+		<Color>404070</Color>
+		<CaseSensitive>True</CaseSensitive>
+
+		<Keyword>usestrict</Keyword><tip>usestrict ()\nReturn value: -\n\nSimilar to the JavaScript mode of the same name, variables must be explicitly declared. This protects against typing errors in variable names.</tip>
+		<Keyword>fromhex</Keyword><tip>fromhex (string HexNumberAsString)\nReturn value: Number\n\nConverts the given hex number (a string parameter) into a number</tip>
+		<Keyword>tohex</Keyword><tip>tohex (int number)\nReturn value: String\n\nConverts the parameter into a hex string</tip>
+		<Keyword>fromJSON</Keyword><tip>fromJSON (string strJSON)\nReturn value: Object\n\nReceives a string with JSON data and creates a LUA object from it.</tip>
+		<Keyword>toJSON</Keyword><tip>toJSON (Object data)\nReturn value: String\n\nReceives a LUA object and generates a JSON string from it.</tip>
+		<Keyword>requirex</Keyword><tip>requirex (String filename)\nReturn value: boolean\nWorks like the normal require command, but can also handle encrypted files (see WinOLS help: luaX). It is not possible to enter a password, but if the current script has already been opened with a password, this is automatically tried for the file specified here.</tip>
+		<Keyword>binaryor</Keyword><tip>binaryor (Number param1, Number param2, ...)\nReturn value: Number\n\nSince LUA does not support a “binary or“ like C, this function was introduced. It supports any number of parameters.</tip>
+		<Keyword>binaryxor</Keyword><tip>binaryxor (Number param1, Number param2, ...)\nReturn value: Number\n\nSince LUA does not support a “binary x-or“ like C, this function was introduced. It supports any number of parameters.</tip>
+		<Keyword>binaryand</Keyword><tip>binaryand (Number param1, Number param2, ...)\nReturn value: Number\n\nSince LUA does not support a “binary and“ like C, this function was introduced. It supports any number of parameters.</tip>
+		<Keyword>MessageBox</Keyword><tip>MessageBox (String Text, Number Type = MB_OK)\nReturn value: Number\n\nThis function allows you to display a window and thus reflects the Windows function of same denominator. It is great for testing, but should be avoided on server as it will pause the process until the window is closed by the user.\n\nType can be entered as the binary combination of the following values:\nMB_ICONERROR, MB_ICONQUESTION, MB_ICONWARNING, MB_ICONINFORMATION, MB_ABORTRETRYIGNORE, MB_OK, MB_OKCANCEL, MB_RETRYCANCEL, MB_YESNO, MB_YESNOCANCEL\n\nThe return value can be one of the following values: IDYES, IDNO, IDCANCEL, IDOK, IDABORT, IDRETRY, IDIGNORE.</tip>
+		<Keyword>Quit</Keyword><tip>Quit ()\nReturn value: -\n\nThis function terminates WinOLS.\n\nNotes:\n* All unsaved changes will be lost. Use the function SaveAll() first, if you don’t like that.\n* All open projects will be restored during the next start. This isn’t a good idea for the automated use, since the number of projects will grow and use up memory. Use the function CloseAll() before terminating WinOLS.\n* If you run a WinOLS with a LUA script as parameter and expect WinOLS to close after running the script then script must end with this function.</tip>
+		<Keyword>Log</Keyword><tip>Log (string)\nReturn value: -\n\nWrite a string into the WinOLS logfile (and the service console, if used).</tip>
+		<Keyword>SaveAll</Keyword><tip>SaveAll ()\nReturn value: -\n\nThis function saves all changes in open WinOLS projects. If an original version with changes in the hexdump is saved, then a new version with the name “CreatedByLua” will be created. If a version with changes in the hexdump is saved, then the same version will be overwritten.</tip>
+		<Keyword>CloseAll</Keyword><tip>CloseAll ()\nReturn value: -\n\nThis function closes all open WinOLS projects. Unsaved changes will be lost.\n\nNotes: All open projects will be restored during the next start. This isn’t a good idea for the automated use, since the number of projects will grow and use up memory. Use the function CloseAll() before terminating WinOLS.</tip>
+		<Keyword>SetClient</Keyword><tip>SetClient (string clientname)\nReturn value: bool (true for success)\n\nSetClient()\nReturn value: string (current value)\n\nChanges the current client. This function influences subsequent calls to NewProject, FindProjects, etc. It has no influence on projects that are already created / open.\n\nInstead of a client name, you can also provide a reseller name. This allows you to access the reseller’s project list, e.g. using projectFindSimilarProjects (but you can’t purchase using LUA). Please note that you MUST set the client back to a regular, local client before the next project is created.\n\nIf no parameter is passed, the current client is returned.</tip>
+		<Keyword>NewProject</Keyword><tip>NewProject ()\nReturn value: -\n\nThis function creates a new, empty WinOLS project. This new project (and window) will be used as active project (and window).</tip>
+		<Keyword>GetVersion</Keyword><tip>GetVersion (Number VersionId)\nReturn value: Number\n\nThis function returns the versions number (major or minor) from WinOLS or from the “External Control” plugin. The parameter “VersionId” must have one of the following values: eWinOLSMajor, eWinOLSMinor, ePluginMajor, ePluginMinor.\n\nUse this function to maintain compatibility for future extensions or changes.</tip>
+		<Keyword>Sleep</Keyword><tip>Sleep (Number Milliseconds)\nSleep (Number Milliseconds, String pathAndWildcards)\nReturn value: -\n\nThis function lets WinOLS “sleep” for a defined time, so that neither computing power is used up, nor actions can be performed by WinOLS. Use it to check data at regular intervals without using up too much computing power. The parameter is defined in 1/1000 seconds.\n\nIf you pass a path including file name with wildcards as second parameter, the function will return immediately if such a file exists / is created or if WinOLS is getting closed.</tip>
+		<Keyword>MessagePump</Keyword><tip>MessagePump ()\n\nHandles pending Windows messages in the WinOLS main thread. This function should be called regularly if the LUA code takes a long time or runs in an endless loop. Otherwise Windows will show that WinOLS is not responding anymore.</tip>
+		<Keyword>FindProjects</Keyword><tip>FindProjects (String Producer, String Chassis, String Model, String md5Cpu, String md5Eprom, Number ProjectStatus, string Softwareversion)\nReturn value: Array\n\nThis function returns an array with all filenames of projects that match the search criteria. Valid values for the ProjectStatus are the values ePrjDeveloping, ePrjFinished, ePrjMaster or 0.\n\nUse the empty string (""), or the number 0 to show that this criterion should be ignored.\n\nIt’s recommended to use the ProjektStatus to avoid confusion with temporarily created projects.</tip>
+		<Keyword>FindProjects2</Keyword><tip>FindProjects2 (Number MaxNumberOfResults, string GeneralSearch, Number idSearchColumn1, String Column1Value, Number idSearchColumn2, String Column2Value, Number idDesiredColumn1, Number idDesiredColumn2, …)\nReturn value: array\n\nThis function searches the current client for projects that meet the 3 specified conditions:\n1. GeneralSearch: A general search string that searches all columns. The usual tricks like spaces or minus also work here.\n2. idSearchColumn1+Column1Value: The id of a column (e.g. ePrjPropVehicleProducer) and the text value that in must contain. Instead of the Id, 0 can also be used to skip this search condition. If the text value is an empty string, then only projects where this field is empty fit.\n3. idSearchColumn2+Column2Value: Like 2.\n\nIt returns a list with all desired columns.</tip>
+		<Keyword>DuplicateProject</Keyword><tip>DuplicateProject (String Filename)\nReturn value: string\n\nThis function creates a binary copy of the specified ols file and automatically creates a new file name in the current client folder. The new path+filename is returned.</tip>
+		<Keyword>ReactivateChecksums</Keyword><tip>ReactivateChecksums ()\nReturn value: -\n\nIf a checksum plugin causes an exception while searching or calculating WinOLS automatically disables it until WinOLS is restarted to protect the use against problems. If you program want to write a script to automatically search for checksum you might want to call this function after each finished project to re-enable all plugins.</tip>
+		<Keyword>GetProjectVersions</Keyword><tip>GetProjectVersions (String Filename)\nGetProjectVersions (String Filename, int versionproperties, …)\nReturn value: Array\n\nThis function returns an array with all version names and descriptions of a given ols project file. The array contains alternately name and description (starting with index 1 for name). The name contains twice as much entries as the project has versions.\n\nAlternatively, you can pass any number of version properties (see versionGetProperty). Then these properties are returned instead of the ones mentioned above.</tip>
+		<Keyword>OpenProjectVersion</Keyword><tip>OpenProjectVersion (string filename, string versionname)\nOpenProjectVersion (string filename, number versionindex)\nReturn value: bool (true for success)\n\nOpens the given project in the desired version. The project must be closed later with projectClose or CloseAll.\n\nversionname: Name of the desired version. If not unique, the one with the smallest index will be used.\nversionindex: 0 for original, 1 for first version…\n\nNote: The *type* is important for parameter 2. If you have string (from a file) that contains a number (as text), it’s a version name. Use “1*mystring” to use it as version index.</tip>
+		<Keyword>DeleteProjectVersion</Keyword><tip>DeleteProjectVersion (string filename, string versionname)\nDeleteProjectVersion (string filename, number versionindex)\nReturn value: bool (true for success)\n\nLike OpenProjectVersion, but the version is not opened, but deleted.\n\nNote: Versions that are currently open cannot be deleted.\n\nNote: Deleting a version will cause the following version numbers to shift. If you want to delete multiple versions, use the version names or delete by descending size numbers.</tip>
+		<Keyword>OpenAndExport</Keyword><tip>OpenAndExport (string filename, string versionname, String Filename, Number Typ, String ZippedFileiname="")\nOpenAndExport (string filename, number versionindex, String Filename, Number Typ, String ZippedFileiname="")\nReturn value: bool (true for success)\n\nCombines the functions OpenProjectVersion, projectExport and projectClose. Parameters like for the listed functions.</tip>
+		<Keyword>StartUrl</Keyword><tip>ReadDirectory (string filenameandwildcards)\n\nReturns an array with file and foldernames.</tip>
+		<Keyword>ReadDirectory</Keyword><tip>ReadDirectory (string filenameandwildcards)\n\nReturns an array with file and foldernames.</tip>
+		<Keyword>TextEntryDialog</Keyword><tip>TextEntryDialog (String WindowTitle, int mode, String Description, String DefaultValue, …)\nReturn value: Array\n\nIn this mode, the TextEntryDialog function is more flexible. The 3 parameters mode/Description/DefaultValue can be repeated several times to query several things simultaneously.</tip>
+		<Keyword>SetSolutionInformation</Keyword><tip></tip>
+		<Keyword>GetSystemInformation</Keyword><tip></tip>
+		<Keyword>CreateDirectory</Keyword><tip>CreateDirectory (string full_path)\n\nReturns 0 in case of an error, 1 if the folder was created and 2 if it already existed.</tip>
+		<Keyword>RemoveNonFilenameCharacters</Keyword><tip>RemoveNonFilenameCharacters (string input)\nReturn value: String\n\nTakes the input string and removes characters that Windows won’t accept in a filename, like “?”. Returns the updated string.</tip>
+		<Keyword>GetLastError</Keyword><tip>GetLastError(bool bAsString=FALSE)\nReturn value: Number\n\nReturns the value of the Windows function with the same name. Due to automatic correction strategies, the reason for the failure of a WinOLS function does not necessarily have to be in here.\n\nIf an import fails because of NOREAD, projectImport sets the value to 30 (which corresponds to the Windows error ERROR_READ_FAULT).</tip>
+		<Keyword>timeGetTime</Keyword><tip>timeGetTime()\nReturn value: Number\n\nReturns the value of the Windows function of the same name, i.e. the milliseconds since system startup.</tip>
+		<Keyword>HttpStart</Keyword><tip>HttpStart (string url, string verb=”GET”)\nReturn value: bool\n\nFirst command to initiate an http request.</tip>
+		<Keyword>HttpAddParam</Keyword><tip>HttpAddParam (string name, string value)\nReturn value: bool\n\nAdds a parameter to the http call. (optional)</tip>
+		<Keyword>HttpAddHeader</Keyword><tip>HttpAddParam (string name, string value)\nReturn value: bool\n\nAdds a parameter to the http call. (optional)</tip>
+		<Keyword>HttpAddFile</Keyword><tip>HttpAddFile (string name, string path_and_filename)\nReturn value: bool\n\nAdds a file as a parameter to the http call. (optional)</tip>
+		<Keyword>HttpExecute</Keyword><tip>HttpExecute ()\nReturn value: Number\n\nExecutes the http call. Returns the http status code as a number. If successful, usually 200. Your HttpAdd… calls must be executed before this command. Your HttpResponse… calls afterwards.</tip>
+		<Keyword>HttpResponseError</Keyword><tip>HttpResponseError ()\nReturn value: String\n\nReturns the http status text as a string. If successful, usually "OK".</tip>
+		<Keyword>HttpResponseString</Keyword><tip>HttpResponseString ()\nReturn value: String\n\nReturns the result of the http call as a string.</tip>
+		<Keyword>HttpResponseFile</Keyword><tip>HttpResponseFile (string path_and_filename)\nReturn value: bool\n\nSaves the result of the http call as a file.</tip>
+
+		<Keyword>projectGetProperty</Keyword><tip>projectGetProperty (Number id, Number iOrgVer=0)\nReturn value: String\n\nThis function polls one of the many texts from the project </tip>
+		<Keyword>projectSetProperty</Keyword><tip>projectSetProperty (Number id, String newvalue)\nReturn value: bool\n\nThis function changes one of the many texts from the project properties to a new value.</tip>
+		<Keyword>projectSave</Keyword><tip>Save (bool CreateNewVersion, String VersionName=”CreatedByLua”, String VersionDescription=””)\nReturn value: bool\n\nThis function saves the active WinOLS project, if there are any changes to save. If an original with changes is currently in the hexdump, then a version with the name “CreatedByLua” will be created. If a version with changes is currently in the hexdump, then the same version will be overwritten. You can force WinOLS to create a new version by passing TRUE as first parameter. The second and third parameter can be version name and description. They’re only observed if a new version is saved.</tip>
+		<Keyword>projectClose</Keyword><tip>projectClose (bool bDeleteFile=FALSE)\nReturn value: bool\n\nThis functions closes the active WinOLS project and all windows which belong to this project. Unsaved changes will be lost. If you use the value “TRUE” as parameter, the project is closed and delete from the harddisk.</tip>
+		<Keyword>projectImport</Keyword><tip>projectImport (String Filename, Number Typ=eFiletypeAuto, Number Offset=0, String olsxPassword=””, Number Options=0)\nReturn value: bool\n\nThis function imports the given file as a version into the current project. By default WinOLS tries to select the directory of the lua script as current directory. To be on the safe side, you should always use absolute paths (like in the example) and not relative paths (with incomplete names).</tip>
+		<Keyword>projectExport</Keyword><tip>projectExport (String Filename, Number Typ, String ZippedFileiname=““, Number BdmToGoFlags=0, Number olsxCustomerNumber=0, String olsxPassword=””, Number ExportFlags=0)\nReturn value: bool\n\nThis function exports the current project as a file.</tip>
+		<Keyword>projectMail</Keyword><tip>projectMail (String To, String Subject, String Message, String Filename=““)\nReturn value: bool\n\nThis function sends a mail (optionally with a file as attachment) directly from WinOLS. To send the mail WinOLS uses the default MAPI application of the computer. This is the same application that is used when you’re clicking on a mail hyperlink on a website.</tip>
+		<Keyword>projectAddChecksum</Keyword><tip>projectAddChecksum (Number iFrom, Number iTo, Number dataOrg, Number iCorrectAt=-1, Boolean bAutoApply=FALSE, Number iCorrectAtTo=-1)\nReturn value: bool\n\nAdds a manual (additive) checksum block. Depending on the number of parameters:\n- only with display of the result\n- with (optionally automatic) balancing of the result\n- with (optionally automatic) balancing of the result over a range (full byte)</tip>
+		<Keyword>projectSearchChecksums</Keyword><tip>projectSearchChecksums ()\nReturn value: bool\n\nThis function calls the checksum search in WinOLS. Depending on the configuration this may be done anyway automatically when importing the file.\n\nThe function returns TRUE, if it was possible to run the checksum search. (FALSE for example when no project was currently open). TRUE does not mean that a checksum was found. To question that property please use the function projectStatChecksums.</tip>
+		<Keyword>projectApplyChecksums</Keyword><tip>projectApplyChecksums ()\nReturn value: bool\n\nThis function makes sure that all not calculated checksums get calculated. Depending on the project file this isn’t always done automatically.\n\nThe function returns TRUE, if at least one checksum needs to be recalculated or false, if no changes were needed or no project file or checksums were available.</tip>
+		<Keyword>projectStatChecksums</Keyword><tip>projectStatChecksums ()\nReturn value: bool\n\nThis function returns information about the current checksum. If the return value equals -1, then the current project does not contain any checksums or there is no current project. If the return value is bigger than 0, then this number equals the number of checksums that could not be calculated correctly. The return value 0 means that the project contains at least one checksum and all checksums were calculated correctly.\n\nNormally any return value other than 0 should cause some attention and your script should make sure that the project doesn’t get delivered in the current state.</tip>
+		<Keyword>projectGetChecksumName</Keyword><tip>projectGetChecksumName (EChkInfo ChkInfo=eChecksumName)\nReturn value: string\n\nThis function returns the name of the checksum found in the current project. This is the same text that is displayed in the project properties and the project list. If you pass the value “eChecksumNumber” as optional parameter, the function will not return the name of the checksum, but the number (e.g. “OLS265”). If you use “eChecksumVersion”, you’ll receive the checksum version (e.g. “2.05”).\n\nIf no checksum was found, the function returns an empty string.</tip>
+		<Keyword>projectGetElement</Keyword><tip>projectGetElement ()\nReturn value: Number\n\nThis function returns the identifier of the current element. The return value is one of the following values: eElementNone, eElementHeader, eElementProcessor, eElementEprom, eElementEprom2, eElementEEprom, eElementConfiguration</tip>
+		<Keyword>projectGetElementOffset</Keyword><tip>projectGetElementOffset ()\nReturn value: Number\n\nThis function returns the offset, i.e. the address that marks the first byte of the current elements. Often, this is 0. Checksums or manual changes at the elements may cause other result values.</tip>
+		<Keyword>projectSetElement</Keyword><tip>projectSetElement (Number ElementId)\nReturn value: bool\n\nThis function selects the currently visible element and thus the range that is used for an import or export process for several file formats. For the ElementId all values from projectGetElement are accepted.</tip>
+		<Keyword>projectSetElementRanges</Keyword><tip>projectSetElementRanges (String RangeString)\nReturn value: bool\n\nThis function overwrites the currently configured definitions for the element ranges with the definitions from the parameter. That has the format ELEMENTNAME:FROM-TO. „From“ and „To“ are decimal values. Further ranges can be appended (separated by semicolons).</tip>
+		<Keyword>projectAddCommentAt</Keyword><tip>projectAddCommentAt (Number FromAdrress, Number ToAddress, String Text, Number FrameColor=-1, Number BackColor=-1)\nReturn value: bool\n\nThis function adds a comment for the range defined by the parameters. The frame and back colors are optional. The addresses are relative for the currently selected element.\n\nNote: This function changes the project data and marks the project as changed.</tip>
+		<Keyword>projectDelCommentAt</Keyword><tip>projectDelCommentAt (Number Address)\nReturn value: bool\n\nThis function checks if there is a comment at the given address and deletes it, if there is one. The address is relative to the currently selected element.\n\nNote: This function changes the project data and marks the project as changed.</tip>
+		<Keyword>projectGetCommentAt</Keyword><tip>projectGetCommentAt (Number Address)\nReturn value: String\n\nThis function checks if there is a comment at the given address and returns the comment text if there is one. If no comment is there, and empty string will be returned. The address is relative to the currently selected element.</tip>
+		<Keyword>projectSetAt</Keyword><tip>projectSetAt (Number Address, Number Value, Number Datatype=eByte, Number Mode=eSetAbsolute)\nprojectSetAt (Number Address, String Values, Number Datatype =eByte, Number Mode=eSetAbsolute)\nReturn value: bool\n\nThis function writes one / multiple(s) value at the given address into the hexdump. The address is relative to the currently selected element. The optional parameter “datatype” describes the organization and bitwidth that is used to store the value. Valid values for this parameter are eByte, eLoHi, eHiLo, eLoHiLoHi, eHiLoHiLo, eFloatLoHi, eFloatHiLo, eDoubleLoHi, eDoubleHiLo, eBitLoHi, eBitHiLo.\n\nIf you’re passing multiple values as string, WinOLS expects hex values. You can specify decimal values with the postfix “M”. When using the eByte datatype, the string may contain ?? placeholders for values which should not be replaced.\n\nNote: This function changes the project data and marks the project as changed.\n\nNote: You can pass eEmptyvalue for Value to reset the cell to the original value.</tip>
+		<Keyword>projectGetAt</Keyword><tip>projectGetAt (Number Address, Number Datatype=eByte, Number nValues=1)\nReturn value: Number/Array\n\nThis function reads the value stored in the hexdump at the given address and returns it. The address is relative to the currently selected element. The optional parameter “datatype” describes the organization and bitwidth that is used to store the value. Valid values for this parameter are eByte, eLoHi, eHiLo, eLoHiLoHi, eHiLoHiLo, eFloatLoHi, eFloatHiLo.\n\nNote: In the case of an error the function will not return 0, but eEmptyvalue which (currently) equals the value -99999.\n\nIf you pass 3 parameters, the function can query multiple consecutive values and return an array.</tip>
+		<Keyword>projectSetOrg</Keyword><tip>projectSetOrg ()\nprojectSetOrg (Number Address)\nprojectSetOrg (Number AddressStart, Number AddressEnd)\nReturn value: bool\n\nThis function resets the bytes of the entire projects / of the give address / address range to the original version.</tip>
+		<Keyword>projectSetProducer</Keyword><tip></tip>
+		<Keyword>projectFindBytes</Keyword><tip>projectFindBytes (Number StartAddress, Number OrgVer, Number FirstByte, …)\nprojectFindBytes (Number StartAddress, Number OrgVer, String AllBytes, Datatype=eByte)\nprojectFindBytes (Number StartAddress, Number EndAddress, Number OrgVer, Number FirstByte, …)\nprojectFindBytes (Number StartAddress, Number EndAddress, Number OrgVer, String AllBytes, Datatype=eByte)\nReturn value: Number or Array\n\nThis function searches in the current element either in the original (0) or in the version (1) for the byte sequence. Each byte is appended as separate argument. The function accepts any number of arguments.\n\nAlternatively you can pass all bytes in form of a string. In this case it doesn’t matter if you use a space character, colon or tab character as separator. The „0x“ prefix is optional, too, WinOLS always expects hex numbers. Furthermore you can replace individual byte in the search string with the ?? placeholder.\n\nIf StartAddres>=0 then the function will return the next occurrence at / after this address or -1 if the string isn’t found. If StartAddress is -1, the function will return an array with all occurrences. (The array will be empty, if no occurrence was found.\n\nThe parameter EndAddress is optional. If you use it, it must not be 0 or 1 to avoid confusion with the OrgVer parameter.\n\nStarting with WinOLS 5.15 you can optionally specify the data type after the string. Valid values are: eByte, eHiLo, eLoHi, eHiLoHiLo, eLoHiLoHi, eFloatHiLo, eDoubleLoHi, eDoubleHiLo, eBitLoHi, eBitHiLo.\n\nAll addresses are relative to the currently selected element.</tip>
+		<Keyword>projectReplaceBytes</Keyword><tip>projectReplaceBytes (Number StartAddress, Number EndAddress, String AllSearchCells, String AllReplaceCells, Number SearchOrgVer=0, Number LimitNumberResults =1, Number DataType=eByte, Number Mode=eSetAbsolute)\nprojectReplaceBytes (Number StartAddress, Number EndAddress, String AlleSearchCells, Number ReplaceValue, Number SearchOrgVer=0, Number LimitNumberResults=1, Number DataType =eByte, Number Mode=eSetAbsolute)\nErfordert WinOLS 5.27\n\nReturn value: Number (number of replaced results).\n\nThis function searches for the sequence of cells in the current element either in the original (0) or in the version (1). The sequence will be passed in the form of a string. It does not matter if a space, comma or tab character is used as separator. Also the "0x" prefix is optional, WinOLS always expects hex numbers. Furthermore, you can replace single bytes in the search string with ?? as placeholder.\n\nFor replacement you can specify a string or a single value.\n\nDecimal values can be specified in the string with the postfix "M". When using the eByte data type, the string can contain ?? placeholders for values that should not be searched/replaced.</tip>
+		<Keyword>projectFindSimilarProjects</Keyword><tip>As of WinOLS 5.71.24 this function is obsolete, projectFindSimilarProjectsSql should be used instead, which is faster/more modern. Parameters and return values are identical. The projects found may differ slightly in individual cases due to the different technology.</tip>
+		<Keyword>projectFindSimilarProjectsSql</Keyword><tip>Syntax: projectFindSimilarProjectsSql (Number MinPercent, Number MaxNumberOfResults, Number idDesiredColumn1, Number idDesiredColumn2, …)\nReturn value: array\n\nThis function searches for project similar to the active one the current client folder. It returns a sorted list, starting with the best match. The list contains values for the relevance and all desired properties. The similarity calculation is not influenced the columns that you specify. The active project is automatically excluded from the search results.\n\nData areas: Starting with WinOLS 5.11 this function can also find projects with similar data areas. This is symbolized by negative values. To activate this feature, a minus sign must be placed in front of the value for MinPercent (example: -80). And in the result list, entries where only the data range is similar are also marked by a negative value (example: -100).\n\nProperty matches: Starting with WinOLS 5.50 this function can also return projects where only a project property matches (and not the similarity, which is returned as 0). To activate this, pass the flag eFSPAllowPropertyMatches after MaxNumberOfResults.\n\nExtended relevance info: As of WinOLS 5.52, WinOLS can return three instead of one relevance info. The first remains the same, the next two are the project similarity and the data area similarity. To activate this, pass the eFSPTrippleRelevance flag after MaxNumberOfResults. (The exact position of the flag is ignored, WinOLS always returns the 3 relevance information in the first 3 columns.)</tip>
+		<Keyword>projectAddMap</Keyword><tip>projectAddMap ()\nReturn value: bool\n\nAdds another map to the current project, which can be set up with windowSetMapProperties.</tip>
+		<Keyword>projectDelMap</Keyword><tip>projectDelMap (Number StartAddress)\nprojectDelMap (String StringWithWildcards)\nReturn value: Number\n\nDeletes all maps that begin at the given start address. Returns the number of maps that were deleted.</tip>
+		<Keyword>projectFindMap</Keyword><tip></tip>
+		<Keyword>projectImportMapPack</Keyword><tip>projectImportMapPack (String Filename, Number Offset=0, String Prefix="", Number bSkipDuplicates=false, Number bIgnoreAxis=false, Number bIgnoreTexts=false)\nReturn value: bool\n\nImports the given kp-file into the current project.</tip>
+		<Keyword>projectImportCsvJson</Keyword><tip>projectImportMapPack (String Filename, Number Offset=0, String Prefix="", Number bSkipDuplicates=false, Number bIgnoreAxis=false, Number bIgnoreTexts=false)\nReturn value: bool\n\nImports the given kp-file into the current project.</tip>
+		<Keyword>projectSetRight</Keyword><tip>projectSetRight (Number idRight, bool bNewState)\nReturn value: bool\n\nChanges the given right for the current project. Requires at least WinOLS 4.69 (see eWinOLSMajor, eWinOLSMinor).\n\nThis function will fail and return false if the registered WinOLS user isn’t allowed to change the rights for this project (see projectSetRightsOwner).\n\nValid values for idRight are:\nePRExportBinary, ePRExportOLS, ePRExportBdm, ePRExportKp, ePRExportClipboard, ePRExportOther, ePRWriteEprom, ePRWriteBdm, ePROtherTransMapContent, ePROtherTransMapProp, ePRAccessHexdump, ePRAccessMaps, ePRAccessMapList</tip>
+		<Keyword>projectSetRightsOwner</Keyword><tip>projectSetRightsOwner (Number EvcCustomerNumber)\nReturn value: bool\n\nChanges the owner of the project rights. If this number doesn’t match the customer number of the currently registered WinOLS user and at least one right not granted, all subsequent attempts to change the rights or the rights owner will fail. This applies both to lua commands and GUI use.\n\nThis function will fail and return false if the registered WinOLS user isn’t allowed to change the rights for this project.</tip>
+		<Keyword>projectGetChecksumOptionStatus</Keyword><tip>projectGetChecksumOptionStatus (Number index_or_id)\nprojectGetChecksumOptionStatus (String SearchStringWithWildcards)\nReturn value: bool\n\nThis function returns the status (0 or 1) of the "Checkbox" checksum option (for example, OLS285) specified by the 0-based index.</tip>
+		<Keyword>projectGetChecksumOptionText</Keyword><tip>projectGetChecksumOptionText (Number index_or_id)\nprojectGetChecksumOptionText (String SearchStringWithWildcards)\nReturn value: string\n\nThis function returns the label text of the checksum option specified by the 0-based index.</tip>
+		<Keyword>projectGetChecksumOptionType</Keyword><tip>projectGetChecksumOptionStatus (Number index_or_id)\nprojectGetChecksumOptionStatus (String SearchStringWithWildcards)\nReturn value: ECOptType\n\nThis function returns the type of the checksum option specified by the 0-based index. Possible return values are:\n* eCOTNone		=> Not available\n* eCOTCheckbox		=> This is a checkbox\n* eCOTText		=> This is a text. (There is no status)\n* eCOTCheckboxSearchAgain => Like eCOTCheckbox, but projectSearchChecksums must be called again if you change the status of this checkbox.</tip>
+		<Keyword>projectSetChecksumOptionStatus</Keyword><tip>projectSetChecksumOptionStatus (Number index_or_id, Number NewValue)\nprojectSetChecksumOptionStatus (String SearchStringWithWildcards, Number NewValue)\nReturn value: bool\n\nThis function returns the status (0 or 1) of the "Checkbox" checksum option (for example, for OLS285) specified by the 0-based index.\n\nImportant: If the checksums is type eCOTCheckboxSearchAgain, the checksum search must be called again. (Starting with WinOLS 5.32, this is done automatically.)</tip>
+		<Keyword>projectCountDifferentBytes</Keyword><tip>projectCountDifferentBytes (bool bReallyReturnDifferences=FALSE)\nReturn value: int\n\nEven if the name suggests otherwise, this function counts the number of identical bytes between the current version and the original of the project. For compatibility reasons, this cannot be corrected, but if you pass TRUE as a parameter, the different bytes are actually counted.\n\nAny reference version is ignored. The function always considers the entire project (i.e. ignores the current element). It also takes changes made by checksums into account, even if these have been hidden (F12>Hexdump).</tip>
+		<Keyword>projectImportFromOls</Keyword><tip>projectImportFromOls (String SourceFilename, Number iVersion=0, Number Flags=0)\nReturn value: Number (true if successful)\n\nImports maps and hexdump values from the source project to the current project in a new version. The projects must have the same size, an offset is not supported.\n\niVersion is the index of the version from which the data is imported. 0 is the original. If -1 is transferred here, no version data is transferred. Instead of the version index, you can also use the version name instead.</tip>
+		<Keyword>projectDelFolder</Keyword><tip>projectDelFolder (String FolderName)\nReturn value: bool\n\nDeletes the given folder and the maps inside.</tip>
+		<Keyword>projectAddrCpuToRaw</Keyword><tip>projectAddrCpuToRaw (Number Address)\nReturn value: Number\n\nConverts the address from CPU format (as normally displayed in WinOLS) to the raw address you see when you select "all elements". If the address cannot be converted, 0xFFFFFFFF is returned.</tip>
+		<Keyword>projectAddrRawToCpu</Keyword><tip>projectAddrRawToCpu (Number Address)\nReturn value: Number\n\nConverts the address from the raw format (which you see when you select "all elements") to the CPU address (as it is normally displayed in WinOLS). If the address cannot be converted, 0xFFFFFFFF is returned.</tip>
+		<Keyword>projectImportChanges</Keyword><tip>projectImportChanges (string SourceFilename, string versionname, number flags=binaryor(eICImportMapStructure,eICImportMapContents), number transfermode=eAutmAbsolute, number tolerance=0)\nprojectImportChanges (string SourceFilename, number versionindex, number flags, number transfermode=eAutmAbsolute, number tolerance=0)\nReturn value: bool\n\nExecutes the function "Import changes: Automatic". The maps/values from the source project are transferred to the target project. The offset is determined automatically. The correctness/completeness of the imported data cannot be guaranteed. The use of this function in an automatic process without human control is therefore susceptible to risk.</tip>
+		<Keyword>projectAutoUpdate</Keyword><tip>projectAutoUpdate (bool bForce=FALSE)\nReturn value: bool\n\nTriggers AutoUpdate (Like: Projekt > Ex-&Import > AutoUpdate) for the project.\n\nbForce: If TRUE, then the data will be updated, even if the file timestamp doesn’t require it.</tip>
+		<Keyword>projectAutoImport</Keyword><tip>projectAutoImport (bool bForce=FALSE)\nReturn value: bool\n\nTriggers AutoImport (Like: Projekt > Ex-&Import > AutoImport) for the project.\n\nbForce: If TRUE, then the data will be updated, even if the file timestamp doesn’t require it.</tip>
+		<Keyword>projectDelDuplicateMaps</Keyword><tip>projectDelDuplicateMaps (bool bOnlyCompareAddressesAndSizes, bool bOnlyWhenInTheSameFolder)\nReturn value: Number\n\nDeletes duplicate maps in the current project. Corresponds to the map part of the WinOLS function "Project > Find duplicate objects" (but without the confirmations). The function returns the number of deleted maps or -1 in case of error.</tip>
+		<Keyword>projectSearchVehicleData</Keyword><tip>projectSearchVehicleData ()\nReturn value: bool\n\nTriggers the search for project properties.</tip>
+		<Keyword>projectCloneVehicleData</Keyword><tip>projectCloneVehicleData ()\nprojectCloneVehicleData (String clientname, Number flags, String emptyvalues)\nReturn value: bool\n\nUses the "Update projects > Clone" function (and its settings by default) to transfer project properties from projects with identical search fields to the current project. All 3 parameters are optional. If they are not specified, WinOLS uses the current settings from the dialog. If the second parameter is specified, it must contain ALL flags (binaryor) that are to be used. In the third parameter, the individual values are separated by semicolons.</tip>
+
+		<Keyword>projectGetQuickFixState</Keyword><tip>projectGetQuickFixState (String name, bool bReturnInt=true)\nReturn value: Number oder String\n\nReturns the status of the desired QuickFix. The name does not have to match exactly, parts are also sufficient.\n\nThe return value is either a number or a string. A 1 or 0 indicates on or off. (WinOLS recognizes most common state names automatically.) Important: This is a number, a comparison with the Boolean "true" or "false" will not work! In string mode, the name of the state is returned. The return value -1 (or "undef") means that the current state is contradictory. -2 (or "unknown") means that no QuickFix with the name was found.</tip>
+		<Keyword>projectSetQuickFixState</Keyword><tip>projectSetQuickFixState (String name, StringOrBoolen newState)\nReturn value: Number\n\nSets the status of the QuickFix. The name does not have to match exactly, parts are also sufficient. If you pass the status as a string, it must match exactly (otherwise "applied" would also match "not applied"). If you pass the status as a Boolean (e.g. true), WinOLS automatically understands most of the textual designations commonly used in the project.\n\nA return value of 1 indicates success. The return value -1 means that the desired state was not found. -2 means that no QuickFix with the name was found.</tip>
+		<Keyword>projectGetQuickFixes</Keyword><tip>projectGetQuickFixes ()\nReturn value: Array\n\nReturns a list of the names of all QuickFixes available in the current project.</tip>
+
+		<Keyword>simInterface</Keyword><tip></tip>
+		<Keyword>simLoad</Keyword><tip></tip>
+		<Keyword>versionGetProperty</Keyword><tip>versionGetProperty (Number id)\nReturn value: String or Number\n\nThis function queries one of the texts from the version properties.</tip>
+		<Keyword>versionSetProperty</Keyword><tip>versionSetProperty (Number id, String newvalue)\nversionSetProperty (Number id, Number newvalue)\nReturn value: bool\n\nThis function changes one of the texts from the version properties to a new value.\n\nThe parameter “id” must have one of the values from versionGetProperty. Note: This function changes the project data and marks the project as changed.</tip>
+		<Keyword>windowGetActive</Keyword><tip>windowGetActive ()\nReturn value: Number\n\nThis function returns an identifier (Type: Number) for the current window. The identifier is valid only for this session. If the window or WinOLS get closed the identifier becomes invalid.</tip>
+		<Keyword>windowSetActive</Keyword><tip>windowSetActive (Number WindowIdentifier)\nReturn value: bool\n\nThis function activates the window that is identified by the parameter and brings it to the foreground. All functions that use the project or window as context now use this window / project.</tip>
+		<Keyword>windowGetMapProperties</Keyword><tip>windowGetMapProperties (string PropertyName)\nwindowGetMapProperties (string PropertyName, number MapStartAddress)\nwindowGetMapProperties (string PropertyName, number MapStartAddress, number nSkip)\nwindowGetMapProperties (string PropertyName, string MapId)\nReturn value: string\n\nReturns the current value for the selected map property. The possible PropertyNames are the same as for the WinOLS-Script-command set_map_property. (See WinOLS help file)\nIf an address or a map ID is passed as the second parameter, the function does not refer to the active map window, but to the map that starts at the specified address / has the specified map ID. If there is more than one map that meets this condition, you can use nSkip to specify how many of them should be skipped.\n\nThis function requires that the project right "Transfer map structure" is given.</tip>
+		<Keyword>windowSetMapProperties</Keyword><tip>windowSetMapProperties (string PropertyName, string/number Wert)\nwindowSetMapProperties (string PropertyName, string/number Wert, bool bLastNew)\nwindowSetMapProperties (string PropertyName, string/number Wert, number MapStartAddress)\nwindowSetMapProperties (string PropertyName, string/number Wert, number MapStartAddress, number nSkip)\nwindowSetMapProperties (string PropertyName, string/number Wert, string MapId)\nReturn value: bool\n\nChanges the property of the current map (if bLastNew==TRUE: of the last map that was created by LUA). If an address (>1) or a map ID is passed as the third parameter, the function does not refer to the active map window, but to the map that starts at the specified address / has the specified map ID. If there is more than one map that meets this condition, you can use nSkip to specify how many of them should be skipped.\n\nThe possible PropertyNames are the same as for the WinOLS-Script-command set_map_property. (See WinOLS help file)</tip>
+		<Keyword>wSMP</Keyword><tip>Short version of windowSetMapProperties</tip>
+
+	</KEYWORDS>
+
+	<KEYWORDS>
+		<Color>506070</Color>
+		<CaseSensitive>True</CaseSensitive>
+
+		<Keyword>MB_ICONERROR</Keyword>
+		<Keyword>MB_ICONQUESTION</Keyword>
+		<Keyword>MB_ICONWARNING</Keyword>
+		<Keyword>MB_ICONINFORMATION</Keyword>
+		<Keyword>MB_ABORTRETRYIGNORE</Keyword>
+		<Keyword>MB_OK</Keyword>
+		<Keyword>MB_OKCANCEL</Keyword>
+		<Keyword>MB_RETRYCANCEL</Keyword>
+		<Keyword>MB_YESNO</Keyword>
+		<Keyword>MB_YESNOCANCEL</Keyword>
+
+		<Keyword>IDYES</Keyword>
+		<Keyword>IDNO</Keyword>
+		<Keyword>IDCANCEL</Keyword>
+		<Keyword>IDOK</Keyword>
+		<Keyword>IDABORT</Keyword>
+		<Keyword>IDRETRY</Keyword>
+		<Keyword>IDIGNORE</Keyword>
+
+		<Keyword>eFiletypeAuto</Keyword>
+		<Keyword>eFiletypeBinary</Keyword>
+		<Keyword>eFiletypeWinOLS</Keyword>
+		<Keyword>eFiletypeWinOLSAll</Keyword>
+		<Keyword>eFiletypeEcuX</Keyword>
+		<Keyword>eFiletypeEcuXAll</Keyword>
+		<Keyword>eFiletypeIntelHex</Keyword>
+		<Keyword>eFiletypeMotorolaHex</Keyword>
+		<Keyword>eFiletypeEDX</Keyword>
+		<Keyword>eFiletypeBdmToGo</Keyword>
+		<Keyword>eFiletypeBslToGo</Keyword>
+		<Keyword>eFiletypeVSpire</Keyword>
+		<Keyword>eFiletypeWinOLSX</Keyword>
+		<Keyword>eFiletypeWinOLSAllX</Keyword>
+		<Keyword>eFiletypeVBF</Keyword>
+		<Keyword>eFiletypeFLS</Keyword>
+		<Keyword>eFiletypeCMDSlave</Keyword>
+		<Keyword>eFiletypeODX</Keyword>
+		<Keyword>eFiletypeCFF</Keyword>
+		<Keyword>eFiletypeCRE</Keyword>
+		<Keyword>eFiletypeBFlashSlave</Keyword>
+		<Keyword>eFiletypeSMRF</Keyword>
+		<Keyword>eFiletypeAutotunerSlave</Keyword>
+		<Keyword>eFiletypeAutoflasherSlave</Keyword>
+		<Keyword>eFiletypeMagicmotorsportSlave</Keyword>
+		<Keyword>eFiletypeJCBS</Keyword>
+
+		<Keyword>eOptionCmdCutFF</Keyword>
+		<Keyword>eOptionCmdIgnore</Keyword>
+
+		<Keyword>eWinOLSMajor</Keyword>
+		<Keyword>eWinOLSMinor</Keyword>
+		<Keyword>ePluginMajor</Keyword>
+		<Keyword>ePluginMinor</Keyword>
+
+		<Keyword>ePrjPropClientName</Keyword>
+		<Keyword>ePrjPropClientNumber</Keyword>
+		<Keyword>ePrjPropClientLicenceplace</Keyword>
+		<Keyword>ePrjPropVehicleProducer</Keyword>
+		<Keyword>ePrjPropVehicleChassis</Keyword>
+		<Keyword>ePrjPropVehicleModel</Keyword>
+		<Keyword>ePrjPropVehicleModelyear</Keyword>
+		<Keyword>ePrjPropVehicleVIN</Keyword>
+		<Keyword>ePrjVehicleBuild</Keyword>
+		<Keyword>ePrjVehicleCharacteristic</Keyword>
+		<Keyword>ePrjPropEcuProducer</Keyword>
+		<Keyword>ePrjPropEcuBuild</Keyword>
+		<Keyword>ePrjPropEcuProdNr</Keyword>
+		<Keyword>ePrjPropEcuStgNr</Keyword>
+		<Keyword>ePrjPropEcuSoftwareversion</Keyword>
+		<Keyword>ePrjPropEcuChecksum</Keyword>
+		<Keyword>ePrjPropEcuSoftwaresize</Keyword>
+		<Keyword>ePrjPropEngineName</Keyword>
+		<Keyword>ePrjPropEngineType</Keyword>
+		<Keyword>ePrjPropEngineDisplacement</Keyword>
+		<Keyword>ePrjPropEngineTransmission</Keyword>
+		<Keyword>ePrjPropProjectType</Keyword>
+		<Keyword>ePrjImportFilename</Keyword>
+		<Keyword>ePrjImportPath</Keyword>
+		<Keyword>ePrjFilename</Keyword>
+		<Keyword>ePrjComment</Keyword>
+		<Keyword>ePrjProjectStatus</Keyword>
+		<Keyword>ePrjUserdef1</Keyword>
+		<Keyword>ePrjUserdef2</Keyword>
+		<Keyword>ePrjUserdef3</Keyword>
+		<Keyword>ePrjUserdef4</Keyword>
+		<Keyword>ePrjUserdef5</Keyword>
+		<Keyword>ePrjUserdef6</Keyword>
+		<Keyword>ePrjUserdef7</Keyword>
+		<Keyword>ePrjUserdef8</Keyword>
+		<Keyword>ePrjUserdef9</Keyword>
+		<Keyword>ePrjUserdef10</Keyword>
+
+		<Keyword>ePrjUserdef11</Keyword>
+		<Keyword>ePrjUserdef12</Keyword>
+		<Keyword>ePrjUserdef13</Keyword>
+		<Keyword>ePrjUserdef14</Keyword>
+		<Keyword>ePrjUserdef15</Keyword>
+		<Keyword>ePrjUserdef16</Keyword>
+		<Keyword>ePrjUserdef17</Keyword>
+		<Keyword>ePrjUserdef18</Keyword>
+		<Keyword>ePrjUserdef19</Keyword>
+		<Keyword>ePrjUserdef20</Keyword>
+
+		<Keyword>ePrjPropEngineOutputPS</Keyword>
+		<Keyword>ePrjPropEngineOutputKW</Keyword>
+		<Keyword>ePrjPropEngineEmissionStd</Keyword>
+		<Keyword>ePrjPropCommunicationsReadhardware</Keyword>
+		<Keyword>ePrjPropEcuUse</Keyword>
+
+		<Keyword>ePrjPropEngineTorque</Keyword>
+
+		<Keyword>ePrjPropVehicleType</Keyword>
+		<Keyword>ePrjPropEcuSoftwareversionVersion</Keyword>
+		<Keyword>ePrjFileCreatedBy</Keyword>
+		<Keyword>ePrjFileModifiedBy</Keyword>
+		<Keyword>ePrjFileCreatedOn</Keyword>
+		<Keyword>ePrjFileModifiedOn</Keyword>
+
+		<Keyword>ePrjPropNoreadTag</Keyword>
+		<Keyword>ePrjPropSpiTag</Keyword>
+		<Keyword>ePrjPropBdmTag</Keyword>
+		<Keyword>ePrjPropUserTag</Keyword>
+		<Keyword>ePrjPropUserTagText</Keyword>
+		<Keyword>ePrjPropResellerCredits</Keyword>
+		<Keyword>ePrjPropResellerProjectType</Keyword>
+		<Keyword>ePrjPropResellerProjectDetails</Keyword>
+
+		<Keyword>ePrjPropChecksum8Bit</Keyword>
+		<Keyword>ePrjPropChecksum8BitCpu</Keyword>
+		<Keyword>ePrjPropChecksum8BitEpr</Keyword>
+		<Keyword>ePrjPropChecksumMD5</Keyword>
+		<Keyword>ePrjPropChecksumMD5Cpu</Keyword>
+		<Keyword>ePrjPropChecksumMD5Epr</Keyword>
+		<Keyword>ePrjPropChecksumSHA1</Keyword>
+		<Keyword>ePrjPropChecksumSHA256</Keyword>
+
+		<Keyword>eDataSrcNone</Keyword>
+		<Keyword>eRom</Keyword>
+		<Keyword>eRomAdd</Keyword>
+		<Keyword>eRomSub</Keyword>
+		<Keyword>eUserdef</Keyword>
+		<Keyword>eRomBackwards</Keyword>
+		<Keyword>eRomDataIndex</Keyword>
+		<Keyword>eRomIndexData</Keyword>
+		<Keyword>eUserdefString</Keyword>
+
+		<Keyword>eKennTypNone</Keyword>
+		<Keyword>eHexDump</Keyword>
+		<Keyword>eEinzel</Keyword>
+		<Keyword>eEindim</Keyword>
+		<Keyword>eZweidim</Keyword>
+		<Keyword>eZweiInv</Keyword>
+
+		<Keyword>eRightWinNone</Keyword>
+		<Keyword>eHex</Keyword>
+		<Keyword>eBars</Keyword>
+		<Keyword>eHexBars</Keyword>
+
+		<Keyword>eViewNone</Keyword>
+		<Keyword>eViewText</Keyword>
+		<Keyword>eView2d</Keyword>
+		<Keyword>eView3d</Keyword>
+
+		<Keyword>eVerPropName</Keyword>
+		<Keyword>eVerPropComment</Keyword>
+		<Keyword>eVerPropCreatedOn</Keyword>
+		<Keyword>eVerPropChangedOn</Keyword>
+		<Keyword>eVerPropChecksum</Keyword>
+		<Keyword>eVerPropCVN</Keyword>
+		<Keyword>eVerPropOutput</Keyword>
+		<Keyword>eVerPropTorque</Keyword>
+
+		<Keyword>eVerPropState</Keyword>
+		<Keyword>eVerPropCredits</Keyword>
+
+		<Keyword>eElementNone</Keyword>
+		<Keyword>eElementHeader</Keyword>
+		<Keyword>eElementProcessor</Keyword>
+		<Keyword>eElementProcessor2</Keyword>
+		<Keyword>eElementProcessor3</Keyword>
+		<Keyword>eElementProcessor4</Keyword>
+		<Keyword>eElementEprom</Keyword>
+		<Keyword>eElementEEprom</Keyword>
+		<Keyword>eElementConfiguration</Keyword>
+		<Keyword>eElementEprom2</Keyword>
+		<Keyword>eElementEprom3</Keyword>
+		<Keyword>eElementEprom4</Keyword>
+		<Keyword>eElementEmpty1</Keyword>
+		<Keyword>eElementEmpty2</Keyword>
+		<Keyword>eElementEmpty3</Keyword>
+		<Keyword>eElementEmpty4</Keyword>
+		<Keyword>eElementPublicKey</Keyword>
+		<Keyword>eElementPrivateKey</Keyword>
+
+		<Keyword>eElementEEEprom</Keyword>
+		<Keyword>eElementEEEprom2</Keyword>
+		<Keyword>eElementEEEprom3</Keyword>
+		<Keyword>eElementEEEprom4</Keyword>
+		<Keyword>eElementIEEprom</Keyword>
+		<Keyword>eElementIEEprom2</Keyword>
+		<Keyword>eElementIEEprom3</Keyword>
+		<Keyword>eElementIEEprom4</Keyword>
+		<Keyword>eElementUniqueId</Keyword>
+		<Keyword>eElementUniqueId2</Keyword>
+		<Keyword>eElementUniqueId3</Keyword>
+		<Keyword>eElementUniqueId4</Keyword>
+
+		<Keyword>eBdmToGoProgramEprom</Keyword>
+		<Keyword>eBdmToGoProgramEprom2</Keyword>
+		<Keyword>eBdmToGoProgramEEprom</Keyword>
+		<Keyword>eBdmToGoProgramProcessor</Keyword>
+		<Keyword>eBdmToGoNoReimport</Keyword>
+
+		<Keyword>eDataOrgNone</Keyword>
+		<Keyword>eByte</Keyword>
+		<Keyword>eLoHi</Keyword>
+		<Keyword>eHiLo</Keyword>
+		<Keyword>eLoHiLoHi</Keyword>
+		<Keyword>eHiLoHiLo</Keyword>
+		<Keyword>eFloatLoHi</Keyword>
+		<Keyword>eFloatHiLo</Keyword>
+		<Keyword>eBitLoHi</Keyword>
+		<Keyword>eBitHiLo</Keyword>
+		<Keyword>eDoubleLoHi</Keyword>
+		<Keyword>eDoubleHiLo</Keyword>
+
+		<Keyword>eChecksumName</Keyword>
+		<Keyword>eChecksumNumber</Keyword>
+		<Keyword>eChecksumVersion</Keyword>
+		<Keyword>eChecksumMessage</Keyword>
+
+		<Keyword>ePrjNone</Keyword>
+		<Keyword>ePrjDeveloping</Keyword>
+		<Keyword>ePrjFinished</Keyword>
+		<Keyword>ePrjMaster</Keyword>
+		<Keyword>ePrjToDo</Keyword>
+		<Keyword>ePrjResellerReady</Keyword>
+
+		<Keyword>eTextEntrySmall</Keyword>
+		<Keyword>eTextEntryPassword</Keyword>
+		<Keyword>eTextEntryEdit</Keyword>
+		<Keyword>eTextEntryCheckbox</Keyword>
+
+		<Keyword>eSolutionInfoReturncode</Keyword>
+		<Keyword>eSolutionInfoName</Keyword>
+		<Keyword>eSolutionInfoDescription</Keyword>
+		<Keyword>eSolutionInfoDebugUser</Keyword>
+		<Keyword>eSolutionInfoDebugDeveloper</Keyword>
+		<Keyword>eSolutionInfoFullFile</Keyword>
+		<Keyword>eSolutionInfoLockKey</Keyword>
+		<Keyword>eSolutionInfoInfoKey</Keyword>
+		<Keyword>eSolutionInfoCredits</Keyword>
+		<Keyword>eSolutionInfoEnd</Keyword>
+		<Keyword>eSolutionInfoConfirmation</Keyword>
+
+		<Keyword>eSysInfoLanguageDeEn</Keyword>
+
+		<Keyword>ePRExportBinary</Keyword>
+		<Keyword>ePRExportOLS</Keyword>
+		<Keyword>ePRExportBdm</Keyword>
+		<Keyword>ePRExportKp</Keyword>
+		<Keyword>ePRExportClipboard</Keyword>
+		<Keyword>ePRExportOther</Keyword>
+		<Keyword>ePRWriteEprom</Keyword>
+		<Keyword>ePRWriteBdm</Keyword>
+		<Keyword>ePROtherTransMapContent</Keyword>
+		<Keyword>ePROtherTransMapProp</Keyword>
+		<Keyword>ePRAccessHexdump</Keyword>
+		<Keyword>ePRAccessMaps</Keyword>
+		<Keyword>ePRAccessMapList</Keyword>
+
+		<Keyword>eCOTNone</Keyword>
+		<Keyword>eCOTCheckbox</Keyword>
+		<Keyword>eCOTText</Keyword>
+		<Keyword>eCOTCheckboxSearchAgain</Keyword>
+
+		<Keyword>TRUE</Keyword>
+		<Keyword>FALSE</Keyword>
+
+		<Keyword>EDB88320</Keyword>
+		<Keyword>FADECAFE</Keyword>
+		<Keyword>CAFEAFFE</Keyword>
+		<Keyword>FF</Keyword>
+		<Keyword>FFFF</Keyword>
+		<Keyword>FFFFFFFF</Keyword>
+
+		<Keyword>eImportSkipEEprom</Keyword>
+		<Keyword>eImportOnlyDataArea</Keyword>
+		<Keyword>eImportSkipMaps</Keyword>
+		<Keyword>eImportMapsPercent</Keyword>
+		<Keyword>eImportMapsRelative</Keyword>
+		<Keyword>eImportSkipInsideMaps</Keyword>
+		<Keyword>eImportSkipOutsideMaps</Keyword>
+		<Keyword>eImportOnlyChanged</Keyword>
+		<Keyword>eImportUseElementInformation</Keyword>
+		<Keyword>eImportDontUseElementInformation</Keyword>
+
+		<Keyword>eExportRemoveChecksums</Keyword>
+		<Keyword>eExportActiveElementOnly</Keyword>
+
+		<Keyword>eICImportMapStructure</Keyword>
+		<Keyword>eICImportMapContents</Keyword>
+		<Keyword>eICImportDataAreas</Keyword>
+		<Keyword>eICOnlyChangedMaps</Keyword>
+		<Keyword>eICCompareById</Keyword>
+		<Keyword>eICCompareByName</Keyword>
+		<Keyword>eICAllowReturn4</Keyword>
+		<Keyword>eICRemoveDuplicates</Keyword>
+
+		<Keyword>eICTMAbsolute</Keyword>
+		<Keyword>eICTMRelative</Keyword>
+		<Keyword>eICTMPercent</Keyword>
+		<Keyword>eICTMAllFromOrg</Keyword>
+		<Keyword>eICTMAllFromVer</Keyword>
+
+		<Keyword>eFSPAllowPropertyMatches</Keyword>
+		<Keyword>eFSPTrippleRelevance</Keyword>
+
+		<Keyword>eEmptyvalue</Keyword>
+
+		<Keyword>eSetAbsolute</Keyword>
+		<Keyword>eSetRelative</Keyword>
+		<Keyword>eSetPercent</Keyword>
+
+		<Keyword>eClonePropCompareSoftware</Keyword>
+		<Keyword>eClonePropCompareSoftwareVersion</Keyword>
+		<Keyword>eClonePropCompareEngineDescription</Keyword>
+		<Keyword>eClonePropCompareECUProd</Keyword>
+		<Keyword>eClonePropVehicle</Keyword>
+		<Keyword>eClonePropUserdef</Keyword>
+		<Keyword>eClonePropECU</Keyword>
+		<Keyword>eClonePropEngine</Keyword>
+		<Keyword>eClonePropAcceptDissent</Keyword>
+		<Keyword>eClonePropSimpleMajority</Keyword>
+		<Keyword>eClonePropAllowOverwrite</Keyword>
+
+		<Keyword>eVerStatNone</Keyword>
+		<Keyword>eVerStatExperiment</Keyword>
+		<Keyword>eVerStatToDo</Keyword>
+		<Keyword>eVerStatDev</Keyword>
+		<Keyword>eVerStatTestable</Keyword>
+		<Keyword>eVerStatErrors</Keyword>
+		<Keyword>eVerStatFinished</Keyword>
+		<Keyword>eVerStatMaster</Keyword>
+		<Keyword>eVerAutoExport</Keyword>
+		<Keyword>eVerAutoImport</Keyword>
+		<Keyword>eVerAutoUpdate</Keyword>
+		<Keyword>eVerAutoUpdateAndExport</Keyword>
+	</KEYWORDS>
+
+	<!-- Kommentarbehandlung -->
+	<BLOCKS>
+		<!-- Einzeilige Kommentare -->
+		<BLOCK>
+			<Start>--!!</Start>
+			<Color>7D3B3B</Color>
+			<WholeText>false</WholeText>
+		</BLOCK>
+
+		<BLOCK>
+			<Start>--- </Start>
+			<Color>3D7B3B</Color>
+			<WholeText>false</WholeText>
+		</BLOCK>
+
+		<BLOCK>
+			<Start>--</Start>
+			<Color>3D7B7B</Color>
+			<WholeText>false</WholeText>
+		</BLOCK>
+
+		<!-- Mehrzeilige Kommentare -->
+		<BLOCK>
+			<Start>--[[</Start>
+			<End>]]</End>
+			<Color>3D7B7B</Color>
+			<WholeText>false</WholeText>
+		</BLOCK>
+
+		<!-- Zeichenfolgen (Strings) -->
+		<BLOCK>
+			<Start>"</Start>
+			<End>"</End>
+			<Color>808000</Color>
+			<WholeText>false</WholeText>
+		</BLOCK>
+
+		<BLOCK>
+			<Start>'</Start>
+			<End>'</End>
+			<Color>808000</Color>
+			<WholeText>false</WholeText>
+		</BLOCK>
+
+		<!-- Mehrzeilige Strings in Lua -->
+		<BLOCK>
+			<Start>[[</Start>
+			<End>]]</End>
+			<Color>C24432</Color>
+			<WholeText>false</WholeText>
+		</BLOCK>
+	</BLOCKS>
+</COLOR_DATA>
+</SETTINGS>

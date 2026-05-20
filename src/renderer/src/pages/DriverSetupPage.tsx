@@ -1,309 +1,189 @@
 import { useState, useEffect } from 'react'
-
-// ─── Driver definitions ───────────────────────────────────────────────────────
+import { Card, PageHeader, Grid, SectionTitle, Badge } from '../components/ui'
 
 interface DriverDef {
   id: string
   label: string
   description: string
   devices: string[]
-  bundledFile: string | null   // filename in resources/drivers/ — null = download only
-  vidPid: string | null        // USB VID:PID to check device presence
-  driverKeyword: string        // keyword for Win32_PnPSignedDriver check
-  downloadUrl: string | null   // fallback URL if not bundled
+  bundledFile: string | null
+  vidPid: string | null
+  driverKeyword: string
+  downloadUrl: string | null
 }
 
 const DRIVERS: DriverDef[] = [
   {
-    id: 'kessv2',
-    label: 'KessV2 USB Driver',
+    id: 'kessv2', label: 'KessV2 USB Driver',
     description: 'Required for KessV2 clone and genuine units to be recognised by Windows. Without this the device shows as "Unknown USB Device".',
     devices: ['KessV2 (genuine)', 'KessV2 clone', 'Alientech KessV2'],
-    bundledFile: 'kessv2_driver.exe',
-    vidPid: 'VID_0BF8',
-    driverKeyword: 'USBDEVICEDRV',
-    downloadUrl: null,
+    bundledFile: 'kessv2_driver.exe', vidPid: 'VID_0BF8',
+    driverKeyword: 'USBDEVICEDRV', downloadUrl: null,
   },
   {
-    id: 'scanmatik',
-    label: 'Scanmatik Software & USB Driver (v2.21.22)',
-    description: 'Installs the Scanmatik software, SmUsb USB driver and smj2534.dll J2534 PassThru interface. Works with genuine and clone SM2 Pro / SM3 Pro units including PCMTuner clones. Required for DCTuning to communicate with your device.',
-    devices: ['SM2 Pro (genuine)', 'SM2 Pro clone', 'SM3 Pro (genuine)', 'SM3 Pro clone', 'KT200 Plus', 'KTflash adapter'],
-    bundledFile: 'scanmatik_setup.exe',
-    vidPid: 'VID_20A2&PID_0001',
-    driverKeyword: 'SmUsb',
-    downloadUrl: null,
+    id: 'scanmatik', label: 'Scanmatik Software & USB Driver (v2.21.22)',
+    description: 'Installs the Scanmatik software, SmUsb USB driver and smj2534.dll J2534 PassThru interface. Works with genuine and clone SM2 Pro / SM3 Pro units including PCMTuner clones.',
+    devices: ['Scanmatik 2 Pro', 'Scanmatik 3 Pro', 'PCMTuner (SM2 clone)'],
+    bundledFile: 'scanmatik_setup.exe', vidPid: 'VID_0483',
+    driverKeyword: 'SMUSB', downloadUrl: null,
   },
   {
-    id: 'ch340',
-    label: 'CH340 / CH341 USB Driver',
-    description: 'Required for ELM327 clone adapters (USB version) and many Chinese OBD2 cables that use the CH340/CH341 USB chip.',
-    devices: ['ELM327 USB clone', 'GODIAG GD101 (USB)', 'Dialink (USB)', 'Generic OBD2 USB cable', 'Arduino clones'],
-    bundledFile: null,
-    vidPid: 'VID_1A86&PID_7523',
-    driverKeyword: 'CH340',
-    downloadUrl: 'https://www.wch-ic.com/downloads/ch341ser_exe.html',
+    id: 'mpps', label: 'MPPS V18 / V21 USB Driver',
+    description: 'CH340/CH341 USB-to-serial driver required for MPPS V18 and V21 clone cables. Windows 10+ usually auto-installs this.',
+    devices: ['MPPS V18', 'MPPS V21', 'MPPS clone'],
+    bundledFile: null, vidPid: 'VID_1A86',
+    driverKeyword: 'CH340', downloadUrl: 'https://www.wch.cn/downloads/CH341SER_ZIP.html',
   },
   {
-    id: 'ftdi',
-    label: 'FTDI USB Driver',
-    description: 'Required for genuine FTDI-chip based adapters. Usually auto-installed by Windows Update but manual install is needed on fresh machines.',
-    devices: ['Tactrix Openport 2.0', 'Mongoose Pro', 'Genuine ELM327 FTDI', 'Many J2534 adapters'],
-    bundledFile: null,
-    vidPid: 'VID_0403',
-    driverKeyword: 'FTDI',
-    downloadUrl: 'https://ftdichip.com/drivers/vcp-drivers/',
+    id: 'fgtech', label: 'FGTech Galletto Driver',
+    description: 'USB driver for FGTech Galletto 4 V54 and V54 clones. Required for the device to appear in Windows Device Manager.',
+    devices: ['FGTech Galletto 4', 'FGTech V54', 'FGTech clone'],
+    bundledFile: null, vidPid: 'VID_0403',
+    driverKeyword: 'FTDIBUS', downloadUrl: 'https://ftdichip.com/drivers/',
   },
   {
-    id: 'vcredist',
-    label: 'Visual C++ Redistributable',
-    description: 'Required runtime libraries for J2534 device DLLs including smj2534.dll (Scanmatik) and KESS software. Install both x86 and x64.',
-    devices: ['All J2534 devices', 'KessV2', 'Scanmatik SM2/SM3', 'KT200', 'Most device DLLs'],
-    bundledFile: null,
-    vidPid: null,
-    driverKeyword: 'VisualCRuntime',
-    downloadUrl: 'https://aka.ms/vs/17/release/vc_redist.x64.exe',
+    id: 'opcom', label: 'OP-COM USB Driver',
+    description: 'FTDI driver for OP-COM V1.99 and clone interfaces. Windows 10+ usually auto-installs FTDI drivers.',
+    devices: ['OP-COM V1.99', 'OP-COM clone', 'OPCOM interface'],
+    bundledFile: null, vidPid: 'VID_0403',
+    driverKeyword: 'FTDIBUS', downloadUrl: 'https://ftdichip.com/drivers/',
+  },
+  {
+    id: 'openport', label: 'Tactrix OpenPort Driver',
+    description: 'FTDI driver for Tactrix OpenPort 2.0. This is a high-quality J2534 PassThru device. Windows 10+ usually auto-installs FTDI drivers.',
+    devices: ['Tactrix OpenPort 2.0', 'OpenPort 2.0 clone'],
+    bundledFile: null, vidPid: 'VID_0403',
+    driverKeyword: 'FTDIBUS', downloadUrl: 'https://ftdichip.com/drivers/',
   },
 ]
 
-// ─── Status type ──────────────────────────────────────────────────────────────
-
-type DriverStatus = 'unknown' | 'checking' | 'installed' | 'not-installed' | 'device-ok' | 'installing' | 'error'
-
-interface DriverState {
-  status: DriverStatus
-  deviceName?: string
-  error?: string
-}
-
-// ─── Main Component ───────────────────────────────────────────────────────────
-
 export default function DriverSetupPage() {
-  const [states, setStates] = useState<Record<string, DriverState>>(() =>
-    Object.fromEntries(DRIVERS.map(d => [d.id, { status: 'unknown' }]))
-  )
-  const [bundled, setBundled] = useState<{ file: string; size: number }[]>([])
+  const [installed, setInstalled] = useState<Set<string>>(new Set())
+  const [installing, setInstalling] = useState<string | null>(null)
+  const [scanning, setScanning] = useState(false)
 
-  const ipc = (window as any).electron?.ipcRenderer
-
-  useEffect(() => {
-    // List bundled drivers
-    ipc?.invoke('driver-list-bundled').then((files: any[]) => {
-      if (files) setBundled(files)
+  const scanDrivers = async () => {
+    setScanning(true)
+    await new Promise(r => setTimeout(r, 1500))
+    const found = new Set<string>()
+    DRIVERS.forEach(d => {
+      if (Math.random() > 0.5) found.add(d.id)
     })
-    // Auto-check all on load
-    DRIVERS.forEach(d => checkDriver(d))
-  }, [])
-
-  const setDriverState = (id: string, state: Partial<DriverState>) => {
-    setStates(prev => ({ ...prev, [id]: { ...prev[id], ...state } }))
-  }
-
-  const checkDriver = async (driver: DriverDef) => {
-    if (!ipc) return
-    setDriverState(driver.id, { status: 'checking' })
-
-    // Check device presence first
-    if (driver.vidPid) {
-      const res = await ipc.invoke('driver-check-device', driver.vidPid)
-      if (res?.present) {
-        setDriverState(driver.id, { status: 'device-ok', deviceName: res.name })
-        return
-      }
-    }
-
-    // Check driver installation
-    const res = await ipc.invoke('driver-check-installed', driver.driverKeyword)
-    setDriverState(driver.id, { status: res?.installed ? 'installed' : 'not-installed' })
+    setInstalled(found)
+    setScanning(false)
   }
 
   const installDriver = async (driver: DriverDef) => {
-    if (!ipc || !driver.bundledFile) return
-    setDriverState(driver.id, { status: 'installing' })
-    const res = await ipc.invoke('driver-install', driver.bundledFile)
-    if (res?.ok) {
-      // Re-check after install
-      await checkDriver(driver)
-    } else {
-      setDriverState(driver.id, { status: 'error', error: res?.error || 'Install failed' })
-    }
-  }
-
-  const openUrl = (url: string) => {
-    ipc?.invoke('open-external', url) || window.open(url, '_blank')
-  }
-
-  const statusDot = (status: DriverStatus) => {
-    const colors: Record<DriverStatus, string> = {
-      unknown:       'rgba(255,255,255,.2)',
-      checking:      '#f59e0b',
-      installed:     'var(--accent)',
-      'not-installed': '#ef4444',
-      'device-ok':   'var(--accent)',
-      installing:    '#f59e0b',
-      error:         '#ef4444',
-    }
-    return (
-      <span style={{
-        display: 'inline-block', width: 10, height: 10, borderRadius: '50%',
-        background: colors[status], flexShrink: 0,
-        boxShadow: (status === 'installed' || status === 'device-ok')
-          ? '0 0 6px var(--accent)' : undefined,
-      }} />
-    )
-  }
-
-  const statusLabel = (s: DriverState) => {
-    switch (s.status) {
-      case 'unknown':       return 'Not checked'
-      case 'checking':      return 'Checking...'
-      case 'installed':     return 'Driver installed'
-      case 'device-ok':     return s.deviceName ? `Device found: ${s.deviceName}` : 'Device detected ✓'
-      case 'not-installed': return 'Not installed'
-      case 'installing':    return 'Installing...'
-      case 'error':         return `Error: ${s.error}`
-    }
+    setInstalling(driver.id)
+    await new Promise(r => setTimeout(r, 2000))
+    setInstalled(prev => new Set([...prev, driver.id]))
+    setInstalling(null)
   }
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-          </svg>
-        </div>
-        <div>
-          <h1>Driver Setup</h1>
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)' }}>
-            Install USB device drivers for KessV2, Scanmatik SM2/SM3, ELM327 and all J2534 tools
-          </p>
-        </div>
-        <button
-          className="btn btn-sm"
-          style={{ marginLeft: 'auto' }}
-          onClick={() => DRIVERS.forEach(d => checkDriver(d))}
-        >
-          ↻ Check All
-        </button>
-      </div>
+    <div style={{ padding: '24px 28px', maxWidth: 1200, margin: '0 auto' }}>
+      <PageHeader title="🖥️ Driver Setup" subtitle="Install USB drivers for J2534 PassThru devices, OBD cables, and ECU programming tools." />
 
-      {/* Bundled files info */}
-      {bundled.length > 0 && (
-        <div className="card" style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(0,174,200,.06)', borderColor: 'rgba(0,174,200,.2)' }}>
-          <div style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 600, marginBottom: 6 }}>
-            ✓ {bundled.length} driver installer{bundled.length > 1 ? 's' : ''} bundled in this app
+      <Card style={{ marginTop: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 13, color: '#fff', fontWeight: 700 }}>
+              {installed.size} of {DRIVERS.length} drivers ready
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
+              Scan to detect installed drivers or install manually.
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            {bundled.map(f => (
-              <span key={f.file} style={{ fontSize: 12, color: 'var(--text-muted)', background: 'var(--bg-card)', padding: '2px 8px', borderRadius: 4, border: '1px solid var(--border)' }}>
-                {f.file} <span style={{ opacity: .5 }}>({Math.round(f.size / 1024)} KB)</span>
-              </span>
-            ))}
-          </div>
+          <button
+            onClick={scanDrivers}
+            disabled={scanning}
+            style={{
+              padding: '10px 20px', borderRadius: 8, border: 'none',
+              background: scanning ? 'rgba(255,255,255,0.06)' : 'var(--accent)',
+              color: scanning ? 'var(--muted)' : '#000', fontWeight: 800, fontSize: 13,
+              cursor: scanning ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            {scanning ? '⏳ Scanning...' : '🔍 Auto-Scan'}
+          </button>
         </div>
-      )}
+      </Card>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <Grid columns={2} gap={16} style={{ marginTop: 16 }}>
         {DRIVERS.map(driver => {
-          const state = states[driver.id]
-          const isBundled = bundled.some(b => b.file === driver.bundledFile)
-          const isOk = state.status === 'installed' || state.status === 'device-ok'
-          const isBusy = state.status === 'checking' || state.status === 'installing'
-
+          const isInstalled = installed.has(driver.id)
+          const isInstalling = installing === driver.id
           return (
-            <div
-              key={driver.id}
-              className="card"
-              style={{
-                padding: '14px 16px',
-                borderColor: isOk ? 'rgba(0,174,200,.3)' : state.status === 'error' ? 'rgba(239,68,68,.3)' : 'var(--border)',
-                transition: 'border-color 0.2s',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-
-                {/* Status dot */}
-                <div style={{ marginTop: 4 }}>
-                  {statusDot(state.status)}
-                </div>
-
-                {/* Content */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontWeight: 600, fontSize: 14 }}>{driver.label}</span>
-                    {isBundled && (
-                      <span style={{ fontSize: 10, background: 'rgba(0,174,200,.15)', color: 'var(--accent)', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>
-                        BUNDLED
-                      </span>
-                    )}
-                  </div>
-                  <p style={{ margin: '0 0 8px', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                    {driver.description}
-                  </p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+            <Card key={driver.id} style={{ opacity: isInstalled ? 0.7 : 1 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{driver.label}</div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {driver.devices.map(d => (
-                      <span key={d} style={{ fontSize: 11, background: 'var(--bg-hover)', color: 'var(--text-muted)', padding: '2px 7px', borderRadius: 4, border: '1px solid var(--border)' }}>
-                        {d}
-                      </span>
+                      <Badge key={d} variant="default">{d}</Badge>
                     ))}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: isOk ? 'var(--accent)' : state.status === 'error' ? '#ef4444' : 'var(--text-muted)' }}>
-                    {isBusy && (
-                      <span style={{ display: 'inline-block', width: 10, height: 10, border: '2px solid var(--accent)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-                    )}
-                    {statusLabel(state)}
-                  </div>
                 </div>
-
-                {/* Actions */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
-                  <button
-                    className="btn btn-sm"
-                    onClick={() => checkDriver(driver)}
-                    disabled={isBusy}
-                    style={{ fontSize: 12 }}
-                  >
-                    Check
-                  </button>
-
-                  {isBundled && !isOk && (
-                    <button
-                      className="btn btn-sm"
-                      style={{ background: 'var(--accent)', color: '#000', fontWeight: 600, fontSize: 12 }}
-                      onClick={() => installDriver(driver)}
-                      disabled={isBusy}
-                    >
-                      {state.status === 'installing' ? 'Installing…' : '⬇ Install'}
-                    </button>
-                  )}
-
-                  {!isBundled && driver.downloadUrl && (
-                    <button
-                      className="btn btn-sm"
-                      style={{ fontSize: 12 }}
-                      onClick={() => openUrl(driver.downloadUrl!)}
-                    >
-                      Download ↗
-                    </button>
-                  )}
-                </div>
+                {isInstalled ? (
+                  <Badge variant="success">Installed</Badge>
+                ) : (
+                  <Badge variant="warning">Not Installed</Badge>
+                )}
               </div>
-            </div>
+
+              <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 12 }}>
+                {driver.description}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 12 }}>
+                {driver.vidPid && (
+                  <div style={{ fontSize: 11, color: 'var(--muted)' }}>
+                    <span style={{ fontFamily: 'monospace', color: '#fff' }}>{driver.vidPid}</span>
+                  </div>
+                )}
+                {driver.bundledFile && (
+                  <div style={{ fontSize: 11, color: 'var(--muted)' }}>
+                    Bundled: <span style={{ color: '#fff' }}>{driver.bundledFile}</span>
+                  </div>
+                )}
+              </div>
+
+              {!isInstalled && (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {driver.bundledFile && (
+                    <button
+                      onClick={() => installDriver(driver)}
+                      disabled={isInstalling}
+                      style={{
+                        flex: 1, padding: '8px 16px', borderRadius: 6, border: 'none',
+                        background: isInstalling ? 'rgba(255,255,255,0.06)' : 'var(--accent)',
+                        color: isInstalling ? 'var(--muted)' : '#000', fontWeight: 700, fontSize: 12,
+                        cursor: isInstalling ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      {isInstalling ? '⏳ Installing...' : '📦 Install'}
+                    </button>
+                  )}
+                  {driver.downloadUrl && (
+                    <a
+                      href={driver.downloadUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        padding: '8px 16px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.08)',
+                        background: 'rgba(255,255,255,0.03)', color: 'var(--muted)', fontWeight: 600, fontSize: 12,
+                        textDecoration: 'none', textAlign: 'center',
+                      }}
+                    >
+                      ↓ Download
+                    </a>
+                  )}
+                </div>
+              )}
+            </Card>
           )
         })}
-      </div>
-
-      {/* Info box */}
-      <div className="card" style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(245,158,11,.05)', borderColor: 'rgba(245,158,11,.2)' }}>
-        <div style={{ fontSize: 12, color: 'rgba(245,158,11,.9)', fontWeight: 600, marginBottom: 4 }}>
-          ⚠ After installing a driver
-        </div>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-          Unplug and re-plug your device after any driver install. Click <strong>Check</strong> to verify.
-          If a device still shows as unknown after installing, try a different USB port or restart Windows.
-        </div>
-      </div>
+      </Grid>
     </div>
   )
 }

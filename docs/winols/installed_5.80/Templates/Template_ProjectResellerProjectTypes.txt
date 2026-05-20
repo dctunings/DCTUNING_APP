@@ -1,0 +1,19 @@
+//--------------------------------------------------------------------------------------------
+// This is a WinOLS "ProjectProperties->ResellerProjectType" file.
+// Do not edit while it's inside "c:\program files". Copy it to your own folder first!
+//--------------------------------------------------------------------------------------------
+// You can use it to define the values for the ResellerProjectType combobox drop-down.
+//--------------------------------------------------------------------------------------------
+// Format:
+//   My ResellerProjectType 1
+//   My ResellerProjectType 2
+//
+//   // My optional comment (not shown in the drop-down)
+//   My ResellerProjectType 3 // My optional comment (not shown in the drop-down)
+//--------------------------------------------------------------------------------------------
+// Start editing here:
+My ResellerProjectType 1
+My ResellerProjectType 2
+
+// My optional comment (not shown in the drop-down)
+My ResellerProjectType 3 // My optional comment (not shown in the drop-down)

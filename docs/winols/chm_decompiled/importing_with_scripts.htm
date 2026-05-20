@@ -1,0 +1,432 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <title>Importing with scripts</title>
+   <meta name="generator" content="Help & Manual">
+   <meta name="keywords" content="DataAddr,DataHeader,DataOrg,DataSrc,Einheit,Faktor,Feldwerte,IdName,Nachkommastellen,Name,Offset,RWin,Radix,Spalten,StartAddr,StuetzX,StuetzY,Typ,ViewMode,Zeilen,bDelta,bKehrwert,bOriginal,bOriginalWerte,bProzent,bRueckwaerts,bVorzeichen,SignaturByte,SkipBytes,FolderName,set_map_property">
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <link type="text/css" href="default.css" rel="stylesheet">
+   <link type="text/css" href="custom.css" rel="stylesheet">
+   <script type="text/javascript" src="nsh.js"></script>
+   <script type="text/javascript" src="tablesort.js"></script>
+   
+<!-- non-scrolling headers for CHM and browser-based help, local styles-->
+<style TYPE="text/css" media="screen"> 
+   <!-- 
+   body {    
+      margin:0; 
+      padding:0; 
+      overflow: auto; 
+      background: #FFFFFF; 
+   } 
+   #idheader { 
+      width:100%; 
+      height:auto; 
+      padding: 0; 
+      margin: 0; 
+} 
+    #idheaderbg  {
+    background: #649CCC; 
+}
+   -->
+   </style>
+   
+<style TYPE="text/css" MEDIA="print">
+<!--
+/* Hide navigation links and add space between header
+     and text in the printed version. Not valid for eBooks. */
+#idnav { display:none;	 }
+.topichead { padding: 5px 5px 20px 5px; }
+-->
+</style>   
+</head>
+<body>
+<!--ZOOMSTOP-->
+
+<div id="idheader">
+<div id="idheaderbg">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" 
+       style="margin: 0px; color: #649CCC; background: url(header_bg.jpg);">
+
+  <tr valign="bottom">
+    <td align="left" valign="bottom" class="topichead" style="padding:10px">
+   <p class="crumbs" id="idnav" style="color:#000080"><b>Navigation:</b>&nbsp;
+   
+   <A HREF="Main_index.htm">Start page</A> > <a href="advanced_topics.htm">Advanced topics</a> &gt; <a href="scripts.htm">Scripts</a>&nbsp;&gt;</p>
+   <p class="p_Heading1"><span class="f_Heading1">Importing with scripts</span></p>
+
+    </td>
+    <td align="right" width="120" valign="middle" class="topichead" id="idnav" style="padding:10px">
+    <a href="javascript: print();"
+    		onmouseover="document.images.prntr.src='print1.gif'" 
+        onmouseout="document.images.prntr.src='print2.gif'"
+        ><img name="prntr" border="0" alt="Print" title="Drucken" src="print2.gif"
+        ></a>
+     <a href="map_scripts.htm"
+        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
+        onmouseout="document.images.prev.src='btn_prev_n.gif'"
+        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
+        ></a><a href="scripts.htm"
+        onmouseover="document.images.main.src='btn_home_h.gif'" 
+        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Up"
+        ></a><a href="zusaetzliche_dateiformate.htm"
+        onmouseover="document.images.next.src='btn_next_h.gif'" 
+        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
+        ></a>
+    </td>
+  </tr>
+  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
+</table>
+</div>
+
+<!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
+  
+
+</div>  
+
+
+
+<div id="idcontent"><div id="innerdiv" style="padding:10px"> 
+<!--ZOOMRESTART-->
+<p><span style="font-size: 12pt;">Originally scripts were introduced to enable you to repeat often needed changes.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">But since scripts are quite easy to create, advanced users with programming knowledge may use them as import interface for maps. This can be useful if you have extensive information about one or more projects in a format that cannot imported into WinOLS.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">In this case you can develop your own conversion software to create scripts that are used to import the known information. The created script can be dragged-dropped into the project window.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">The created script should follow this structure:</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table cellspacing="0" cellpadding="5" border="0" style="border: none; border-spacing:0px; border-collapse: collapse;">
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" bgcolor="#99ccff" style="background-color:#99ccff; border: solid 1px #000000;"><p><span class="f_CourierFixed">//--------------------------------------------------------------------------------------------</span></p>
+<p><span class="f_CourierFixed">// This is a WinOLS Script * Please refer to the WinOLS documentation for details</span></p>
+<p><span class="f_CourierFixed">//--------------------------------------------------------------------------------------------</span></p>
+<p><span class="f_CourierFixed">requires_winols &quot;1.505&quot;</span></p>
+<p><span class="f_CourierFixed">&nbsp;</span></p>
+<p><span class="f_CourierFixed">replace_mode absolute</span></p>
+<p><span class="f_CourierFixed">&nbsp;</span></p>
+<p><span class="f_CourierFixed">begin_requires</span></p>
+<p><span class="f_CourierFixed">end_requires</span></p>
+<p><span class="f_CourierFixed">&nbsp;</span></p>
+<p><span class="f_CourierFixed">begin_executable</span></p>
+<p><span class="f_CourierFixed"> &nbsp; search KF00 eByte 0x00000 0 0% &quot;?&quot;</span></p>
+<p><span class="f_CourierFixed">&nbsp;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; begin_insert_map KF00</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;Name&quot; &quot;Kennfeld&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;IdName&quot; &quot;&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;Typ&quot; &quot;eZweidim&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;FolderName&quot; &quot;My maps&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;ViewMode&quot; &quot;eViewText&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;RWin&quot; &quot;eBars&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;DataOrg&quot; &quot;eFloatLoHi&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;bKehrwert&quot; &quot;0&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // reciprocal </span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;bVorzeichen&quot; &quot;0&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // sign</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;bDelta&quot; &quot;0&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;bProzent&quot; &quot;0&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;// percent</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;bOriginal&quot; &quot;0&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;bOriginalWerte&quot; &quot;0&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;// original values</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;Spalten&quot; &quot;16&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;// columns</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;Zeilen&quot; &quot;3&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;// rows</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;Radix&quot; &quot;10&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;Nachkommastellen&quot; &quot;0&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;// precision</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;Kommentar&quot; &quot;My comment&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;// comment</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;SkipBytes&quot; &quot;0&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;LineSkipBytes&quot; &quot;0&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;Feldwerte.Name&quot; &quot;-&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;// field values</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;Feldwerte.Einheit&quot; &quot;-&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // ...unit</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;Feldwerte.Faktor&quot; &quot;1,000000&quot; &nbsp; &nbsp; &nbsp; &nbsp; // ...factor</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;Feldwerte.Offset&quot; &quot;0,000000&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;Feldwerte.StartAddr&quot; &quot;7668&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.Name&quot; &quot;-&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;// x-axis</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.Einheit&quot; &quot;-&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.Faktor&quot; &quot;1,000000&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.Offset&quot; &quot;0,000000&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.DataSrc&quot; &quot;eRom&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.DataHeader&quot; &quot;0&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.DataAddr&quot; &quot;4096&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.DataOrg&quot; &quot;eFloatLoHi&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.Radix&quot; &quot;10&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.bRueckwaerts&quot; &quot;0&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;// backwards</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.bKehrwert&quot; &quot;0&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.bVorzeichen&quot; &quot;0&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.Nachkommastellen&quot; &quot;0&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.SignaturByte&quot; &quot;0xFFFFFFFF&quot; &nbsp; // signature byte</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.SkipBytes&quot; &quot;0&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzY.Name&quot; &quot;-&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzY.Einheit&quot; &quot;-&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzY.Faktor&quot; &quot;1,000000&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzY.Offset&quot; &quot;0,000000&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzY.DataSrc&quot; &quot;eRom&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzY.DataHeader&quot; &quot;0&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzY.DataAddr&quot; &quot;8192&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzY.DataOrg&quot; &quot;eFloatLoHi&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzY.Radix&quot; &quot;10&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzY.bRueckwaerts&quot; &quot;0&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzY.bKehrwert&quot; &quot;0&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzY.bVorzeichen&quot; &quot;0&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzY.Nachkommastellen&quot; &quot;0&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzY.SignaturByte&quot; &quot;0xFFFFFFFF&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzY.SkipBytes&quot; &quot;0&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; end_insert_map</span></p>
+<p><span class="f_CourierFixed">end_executable</span></p>
+</td>
+</tr>
+</table>
+</div>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">The sample script creates a map. To create more than one map with a single script, simply repeat the text with the begin_executable / end_executable block and replace &quot;KF00&quot; each time with other, unique identifiers.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">The script uses the command set_map_property to fill several properties of the map with values. The individual properties mirror the fields in the dialog &quot;Properties: Map&quot;. Checkboxes are filled with the numbers 0 (not checked) or 1 (checked). The individual field names have these meanings:</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table cellspacing="0" cellpadding="0" border="0" style="border: none; border-spacing:0px;">
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">Name</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">The name of the map or axis</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">IdName</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">The internal identifier. Normally only Damos / ASAP2 use it.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">Typ</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">The map type. Valid values are eEinzel (Single value), eEindim (Onedimensional map), eZweidim (Twodimensional map), eZweiInv (Twodimensional, inverted map)</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">FolderName</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">The name of the folder (requires WinOLS 2.08)</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">ViewMode</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">The view mode. Valid values are eViewText (Text mode), eView2d (2d-Mode), eView3d (3d-Mode)</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">RWin</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">The right area in text mode. Valid values are eRightWinNone (Nothing), eHex (Character view), eBars (Bar view), eHexBars (Both views)</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">DataOrg</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">The data organization (Endian and bit width). Valid values are eByte, eLoHi, eHiLo, eLoHiLoHi, eHiLoHiLo, eFloatLoHi, eFloatHiLo, eUserdef, eUserdefString</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">bKehrwert</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">1 for a reciprocal view (otherwise 0)</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">bVorzeichen</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">1 for a signed view (otherwise 0)</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">bDelta</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">1 for a view of the difference (otherwise 0)</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">bProzent</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">1 for a view with a percentual difference (otherwise 0)</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">bOriginal</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">1 to ignore factor and offset (otherwise 0)</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">bOriginalWerte</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">1 to view the not the version values, but the original values (otherwise 0)</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">Spalten</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">Number of columns in the map</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">Zeilen</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">Number of rows in the map</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">Radix</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">Number system. 16 for hexadecimal, 10 for decimal</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">Kommentar</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">A comment</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">Nachkommastellen</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">Number of positions after decimal point</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">SignaturByte</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">The marker byte before the axis or 0xFFFFFFFF (requires WinOLS 2.08)</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">SkipBytes</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">The number of bytes the are skipped between two axis values (requires WinOLS 2.08)</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><br>
+</td>
+<td valign="top" width="677" style="width:677px;"><br>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">Feldwerte (...)</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">This prefix means that the following properties applies to the actual values of the map.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">StuetzX (...)</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">This prefix means that the following properties applies to the values of the X axis.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">StuetzY (...)</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">This prefix means that the following properties applies to the values of the Y axis.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">StuetzX.1</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">Sets the string axis value for the first position. Requires DataOrg=eUserdefString. Can be used for StuetzY and other numbers, too.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><br>
+</td>
+<td valign="top" width="677" style="width:677px;"><br>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">Einheit</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">A text field with the unit for the values.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">Faktor</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">The multiplications factor for viewing the values</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">Offset</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">The addition values for viewing the values</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">StartAddr / DataAddr</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">The values start at this hexdump address. This address is not absolute, but shifts with the same offset that was found to fulfill the search condition(s).</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><br>
+</td>
+<td valign="top" width="677" style="width:677px;"><br>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">DataSrc</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">The type of data source. Valid values are eDataSrcNone (no axis), &nbsp;eRom (Data from the hexdump), eRomAdd (Additive values from the hexdump), eRomSub (Subtractive values from the hexdump), eUserdef (Userdefined vallues), eRomBackwards (Values from the hexdump in inverted order)</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">DataHeader</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">Number of header bytes before the axis that is marked in the hexdump as well</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><p><span style="font-size: 12pt;">bRueckwaerts</span></p>
+</td>
+<td valign="top" width="677" style="width:677px;"><p><span style="font-size: 12pt;">1 for mirroring the data (otherwise 0)</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="186" style="width:186px;"><br>
+</td>
+<td valign="top" width="677" style="width:677px;"><br>
+</td>
+</tr>
+</table>
+</div>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">Here an excerpt from a script that imports a text axis:</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table cellspacing="0" cellpadding="5" border="0" style="border: none; border-spacing:0px; border-collapse: collapse;">
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" bgcolor="#99ccff" style="background-color:#99ccff; border: solid 1px #000000;"><p><span class="f_CourierFixed">(...)</span></p>
+<p><span class="f_CourierFixed"> &nbsp; begin_insert_map KF00</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;(...)</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.DataOrg&quot; &quot;eUserdefString&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.0&quot; &quot;First text&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.1&quot; &quot;Second text&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.2&quot; &quot;Third text&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.3&quot; &quot;Fourth text&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; &nbsp; &nbsp;set_map_property &quot;StuetzX.4&quot; &quot;Last text&quot;</span></p>
+<p><span class="f_CourierFixed"> &nbsp; end_insert_map</span></p>
+<p><span class="f_CourierFixed">end_executable</span></p>
+</td>
+</tr>
+</table>
+</div>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+
+<!--ZOOMSTOP-->
+
+</div></div>
+<script type="text/javascript"> 
+<!-- 
+var lastSlashPos = document.URL.lastIndexOf("/") >
+document.URL.lastIndexOf("\\") ? document.URL.lastIndexOf("/") :
+document.URL.lastIndexOf("\\");
+if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4
+).toLowerCase() != "~hh" )
+{
+    nsrInit();
+}
+--> 
+</script> 
+</body>
+</html>

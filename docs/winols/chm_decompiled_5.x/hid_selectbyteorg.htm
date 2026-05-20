@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <title>The dialog File format</title>
+   <meta name="generator" content="Help & Manual">
+   <meta name="keywords" content="Data organisation,File format,bin,hex,paf,daf,s19,dat,ols,zip,EcuX,Intel-hex,Motorola-hex">
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <link type="text/css" href="default.css" rel="stylesheet">
+   <link type="text/css" href="custom.css" rel="stylesheet">
+   <script type="text/javascript" src="nsh.js"></script>
+   <script type="text/javascript" src="tablesort.js"></script>
+   
+<!-- non-scrolling headers for CHM and browser-based help, local styles-->
+<style TYPE="text/css" media="screen"> 
+   <!-- 
+   body {    
+      margin:0; 
+      padding:0; 
+      overflow: auto; 
+      background: #FFFFFF; 
+   } 
+   #idheader { 
+      width:100%; 
+      height:auto; 
+      padding: 0; 
+      margin: 0; 
+} 
+    #idheaderbg  {
+    background: #649CCC; 
+}
+   -->
+   </style>
+   
+<style TYPE="text/css" MEDIA="print">
+<!--
+/* Hide navigation links and add space between header
+     and text in the printed version. Not valid for eBooks. */
+#idnav { display:none;	 }
+.topichead { padding: 5px 5px 20px 5px; }
+-->
+</style>   
+</head>
+<body>
+<!--ZOOMSTOP-->
+
+<div id="idheader">
+<div id="idheaderbg">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" 
+       style="margin: 0px; color: #649CCC; background: url(header_bg.jpg);">
+
+  <tr valign="bottom">
+    <td align="left" valign="bottom" class="topichead" style="padding:10px">
+   <p class="crumbs" id="idnav" style="color:#000080"><b>Navigation:</b>&nbsp;
+   
+   <A HREF="Main_index.htm">Start page</A> > <a href="menu_file.htm">Commands of the menu Project</a> &gt; <a href="hid_file_new.htm">The command New (Menu Project)</a>&nbsp;&gt;</p>
+   <p class="p_Heading1"><span class="f_Heading1">The dialog File format</span></p>
+
+    </td>
+    <td align="right" width="120" valign="middle" class="topichead" id="idnav" style="padding:10px">
+    <a href="javascript: print();"
+    		onmouseover="document.images.prntr.src='print1.gif'" 
+        onmouseout="document.images.prntr.src='print2.gif'"
+        ><img name="prntr" border="0" alt="Print" title="Drucken" src="print2.gif"
+        ></a>
+     <a href="hid_file_new.htm"
+        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
+        onmouseout="document.images.prev.src='btn_prev_n.gif'"
+        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
+        ></a><a href="hid_file_new.htm"
+        onmouseover="document.images.main.src='btn_home_h.gif'" 
+        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Up"
+        ></a><a href="hid_selectcar.htm"
+        onmouseover="document.images.next.src='btn_next_h.gif'" 
+        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
+        ></a>
+    </td>
+  </tr>
+  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
+</table>
+</div>
+
+<!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
+  
+
+</div>  
+
+
+
+<div id="idcontent"><div id="innerdiv" style="padding:10px"> 
+<!--ZOOMRESTART-->
+<p><img src="datenorganisatione.png" width="594" height="602" border="0" alt=""></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">This dialog is shown during import and export. You can configure the type of file(s) you want to import/export. At the top you can choose file format. Several formats are available. Some of them are only visible depending on the project type selected in the <a href="hid_selectcar_edit1.htm">project properties</a> or if the respective <a href="http://www.evc.de/de/download/down_check.asp" target="_blank" class="weblink">plugin</a> is installed. (Export: Plugins may not appear due to <a href="schattendaten.htm">shadow data</a> restrictions.)</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">All of the following options are only visible if they are supported by the selected format:</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">Individual checkboxes:</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 12pt; font-family: 'Symbol'; font-style: normal; color: #969696; text-decoration: none;">&#183;</span></td><td><span style="font-size: 12pt;">Temporarily delete checksums + sync blocks before export</span><span style="font-size: 12pt; color: #969696;"> [Only export]</span><br>
+<span style="font-size: 12pt;">Removes the mentioned properties and restores the original values (only while exporting)</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 12pt; font-family: 'Symbol'; font-style: normal; color: #969696; text-decoration: none;">&#183;</span></td><td><span style="font-size: 12pt;">Compress as Zip-File </span><span style="font-size: 12pt; color: #969696;"> [Only export and when the file format isn't already compressed]</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 12pt; font-family: 'Symbol'; font-style: normal; color: #969696; text-decoration: none;">&#183;</span></td><td><span style="font-size: 12pt;">Create new version</span><span style="font-size: 12pt; color: #969696;"> [Only import]</span><br>
+<span style="font-size: 12pt;">Creates a new project version when importing (instead of overwriting the current)</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 12pt; font-family: 'Symbol'; font-style: normal; color: #969696; text-decoration: none;">&#183;</span></td><td><span style="font-size: 12pt;">This file may not be reimported into WinOLS </span><span style="font-size: 12pt; color: #969696;">[Only export BxxToGo]</span><br>
+<span style="font-size: 12pt; color: #000000;">The created file can only be used in BdmToGo / BslToGO. Not in WinOLS. (This option does not modify the programmed data and thus does not offer any protection against re-reading the data from the ECU. To get that kind of protection, activate the option &quot;BDM read protection&quot; in the dialog &quot;<a href="hid_selectcar_edit1.htm">Properties: Project</a>&quot;. It will place a marker into the data and thus the re-read project can only be imported into a WinOLS that is registered to your customer number.)</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 12pt; font-family: 'Symbol'; font-style: normal; color: #969696; text-decoration: none;">&#183;</span></td><td><span style="font-size: 12pt;">Export only active element </span><span style="font-size: 12pt; color: #969696;">[Only binary / Intel Hex / Motorola Hex export]</span><br>
+<span style="font-size: 12pt;">By default WinOLS exports always the entire projects. For some file formats you can limit the export to individual elements (if there are several).</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 12pt; font-family: 'Symbol'; font-style: normal; color: #969696; text-decoration: none;">&#183;</span></td><td><span style="font-size: 12pt;">File version</span><span style="font-size: 12pt; color: #969696;"> [Only export ols]</span><br>
+<span style="font-size: 12pt;">For compatibility reasons you can export an older version of the ols file format.</span></td></tr></table></div><p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Code data &amp; swap lines</span><span style="font-size: 12pt; font-weight: bold;">: </span><span style="font-size: 12pt; color: #969696;">[Only binary / Intel Hex / Motorola Hex if encryption / swapping is configured in the project]</span></p>
+<p><span style="font-size: 12pt; color: #000000;">It is possible to encrypt data and lines just like it would be done with the integrated eprommer. In oder to activate this option you must enable encryption in the producer dialog and select a key file.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; color: #000000;">Optionally swapping of data lines can be activated, which is done just like it would be done when you are using the integrated eprommer. In order to activate this option you must select a producer and activate the swapping of data lines.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Offset &amp; address area</span><span style="font-size: 12pt; font-weight: bold;">: </span><span style="font-size: 12pt; color: #969696;">[Only binary / Intel Hex / Motorola Hex]</span></p>
+<p><span style="font-size: 12pt; color: #000000;">Here an offset can be configured for Intel-Hex / Motorola-Hex files for the addresses in these files. Furthermore an address range can be configured if you want to handle only a part of the project. When importing this option is only available if the project already contains a version. It is always available when exporting.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; color: #000000;">For Intel-Hex / Motorola-Hex files you can tell WinOLS to mimic the file format of the imported file. This is only available when the file was imported from the same file format. It helps you communicate with other programs that require the file to have a certain format (within the standard).</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">Project rights: </span><span style="font-size: 12pt; color: #969696;">[Only olsx export]</span></p>
+<p><span style="font-size: 12pt;">Allows you to configure the project rights when exporting to limit the rights when the file is reimported.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">Password and customer number: </span><span style="font-size: 12pt; color: #969696;">[Only olsx export]</span></p>
+<p><span style="font-size: 12pt;">You can make sure that the file can only be imported if you know the password and / or use a WinOLS with the right customer number.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">Security areas: </span><span style="font-size: 12pt; color: #969696;">[Only BdmToGo/BslToGo export]</span></p>
+<p><span style="font-size: 12pt; color: #000000;">You can choose up to 3 areas, which should be compared with the ECU before programming. This was introduced to protect the user from using the wrong ECU and it is also a copy protection for your work. Simply include the VIN into the checked areas and the file can only be programmed into the desired vehicle (and not into all other similar vehicles). It is recommended to mark the areas by comments. If you use the comment names &quot;BDM1&quot;, &quot;BDM2&quot; or &quot;BDM3&quot;, WinOLS will recognize the comments and automatically enter the marked areas into this dialog.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold;">Which elements should be exported? </span><span style="font-size: 12pt; color: #969696;">[Only BdmToGo/BslToGo export]</span></p>
+<p><span style="font-size: 12pt;">Here you can select which elements should be programmed later on. </span><span style="font-size: 12pt; color: #000000;">Elements that contain differences between original and version are printed in bold.</span></p>
+<p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Shortcuts</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 24px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="89"><span style="font-size: 12pt; color: #000000;">Symbol bar:</span></td><td><span style="font-size: 12pt; color: #000000;">-</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 24px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="89"><span style="font-size: 12pt; color: #000000;">Keyboard:</span></td><td><span style="font-size: 8pt; color: #000000;">-</span></td></tr></table></div><p><span style="font-size: 12pt; color: #000000;">&nbsp;</span></p>
+
+<!--ZOOMSTOP-->
+
+</div></div>
+<script type="text/javascript"> 
+<!-- 
+var lastSlashPos = document.URL.lastIndexOf("/") >
+document.URL.lastIndexOf("\\") ? document.URL.lastIndexOf("/") :
+document.URL.lastIndexOf("\\");
+if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4
+).toLowerCase() != "~hh" )
+{
+    nsrInit();
+}
+--> 
+</script> 
+</body>
+</html>

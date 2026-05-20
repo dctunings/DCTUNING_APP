@@ -1,0 +1,31 @@
+//--------------------------------------------------------------------------------------------
+// You can use this to change the ordner of versions in a project.
+// IMPORTANT: The order in with the lines are in this file is key!
+// Lines STARTING with "//" are comments and thus ignored.
+// If the "//" in later in the line, it's considered normal characters and not a comment!
+//
+// Format:
+//   version1
+//   version2
+//   version3
+//   version*+feature*
+//   *
+//
+// You can use wildcards:
+//   bad*;okayName*;
+//
+// WinOLS will try to match all versions from the project with the list from this file.
+// If multiple lines match, WinOLS chooses the one with the longest text.
+// If any line from this file can't be matched, it's ignored. (makes orginal/original possible)
+// If any version from the project can't be matched, the entire sorting it stopped.
+// If you want it to continue nevertheless, put a * as last line. That will put all other versions last
+// The Original (version 0) is never changed by this function.
+//--------------------------------------------------------------------------------------------
+
+// Start editing here:
+version1
+version2
+version3
+version1+feature1
+version1+feature2
+version1+feature1+feature2

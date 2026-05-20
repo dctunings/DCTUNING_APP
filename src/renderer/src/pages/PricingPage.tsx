@@ -1,426 +1,171 @@
 import { useState } from 'react'
-import type { User } from '@supabase/supabase-js'
-import type { SubscriptionPlan, Subscription } from '../lib/useSubscription'
+import { supabase } from '../lib/supabase'
 
 interface Props {
-  user: User | null
   onBack: () => void
-  plans: SubscriptionPlan[]
-  subscription: Subscription | null
-  isActive: boolean
-  createCheckoutSession: (planId: string, interval: 'monthly' | 'yearly') => Promise<void>
-  openCustomerPortal: () => Promise<void>
 }
 
-const PLAN_STYLES: Record<string, { border: string; shadow: string; badge?: string }> = {
-  starter: {
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+
+const SELLER_PLANS = [
+  {
+    id: 'starter',
+    name: 'Starter',
+    price: 15,
+    fee: 20,
+    description: 'Perfect for individual tuners just getting started',
+    features: ['Unlimited listings & sales', 'Unlimited remap downloads', '20% platform fee', 'All tools included', 'Stripe Connect payouts'],
+    color: '#3b82f6',
     border: '1.5px solid #3b82f6',
-    shadow: '0 0 0 0 transparent',
   },
-  pro: {
+  {
+    id: 'pro',
+    name: 'Pro',
+    price: 29,
+    fee: 12,
+    description: 'For established tuners with regular customers',
+    features: ['Unlimited listings & sales', 'Unlimited remap downloads', '12% platform fee', 'All tools included', 'Featured listings', 'Priority support'],
+    color: '#00aec8',
     border: '2px solid var(--accent)',
-    shadow: '0 0 32px rgba(0,174,200,0.12), 0 4px 24px rgba(0,0,0,0.5)',
-    badge: 'Most Popular',
+    popular: true,
   },
-  agency: {
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    price: 49,
+    fee: 8,
+    description: 'For professional tuning shops with high volume',
+    features: ['Unlimited listings & sales', 'Unlimited remap downloads', '8% platform fee', 'All tools included', 'Custom storefront', 'API access', 'Dedicated manager'],
+    color: '#a855f7',
     border: '1.5px solid #a855f7',
-    shadow: '0 0 0 0 transparent',
   },
-}
+]
 
-const PLAN_COLORS: Record<string, string> = {
-  starter: '#3b82f6',
-  pro: '#00aec8',
-  agency: '#a855f7',
-}
+export default function PricingPage({ onBack }: Props) {
+  const [loading, setLoading] = useState<string | null>(null)
 
-export default function PricingPage({
-  user,
-  onBack,
-  plans,
-  subscription,
-  isActive,
-  createCheckoutSession,
-  openCustomerPortal,
-}: Props) {
-  const [interval, setInterval] = useState<'monthly' | 'yearly'>('monthly')
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
-
-  const getPrice = (plan: SubscriptionPlan) => {
-    if (interval === 'yearly') {
-      return Math.round(plan.price_yearly / 12 / 100)
-    }
-    return Math.round(plan.price_monthly / 100)
-  }
-
-  const handleCTA = async (planId: string) => {
-    setLoadingPlan(planId)
+  const handleSellerSubscribe = async (planId: string) => {
+    setLoading(planId)
     try {
-      await createCheckoutSession(planId, interval)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { alert('Please sign in first'); return }
+      const { data, error } = await supabase.functions.invoke('create-seller-checkout-session', {
+        body: { userId: user.id, email: user.email, planId }
+      })
+      if (error) throw error
+      if (data?.url) window.open(data.url, '_blank')
+    } catch (err: any) {
+      alert('Subscription error: ' + (err.message || 'Unknown error'))
     } finally {
-      setLoadingPlan(null)
+      setLoading(null)
     }
   }
 
-  const handleManageBilling = async () => {
-    setLoadingPlan('portal')
+  const handleBuyerSubscribe = async () => {
+    setLoading('buyer')
     try {
-      await openCustomerPortal()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { alert('Please sign in first'); return }
+      const { data, error } = await supabase.functions.invoke('create-buyer-tool-checkout', {
+        body: { userId: user.id, email: user.email }
+      })
+      if (error) throw error
+      if (data?.url) window.open(data.url, '_blank')
+    } catch (err: any) {
+      alert('Subscription error: ' + (err.message || 'Unknown error'))
     } finally {
-      setLoadingPlan(null)
+      setLoading(null)
     }
   }
-
-  const isCurrentPlan = (planId: string) => isActive && subscription?.plan_id === planId
-
-  // Sort plans in order: starter, pro, agency
-  const orderedPlans = ['starter', 'pro', 'agency']
-    .map(id => plans.find(p => p.id === id))
-    .filter((p): p is SubscriptionPlan => !!p)
 
   return (
-    <div style={{
-      minHeight: '100%',
-      background: 'var(--bg-primary)',
-      padding: '32px 24px 48px',
-      overflowY: 'auto',
-    }}>
-      {/* Back button */}
-      {user && (
-        <button
-          onClick={onBack}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-            fontSize: 13,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            marginBottom: 28,
-            padding: 0,
-            fontFamily: 'inherit',
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-          Back to app
-        </button>
-      )}
+    <div style={{ padding: 24, maxWidth: 1000, margin: '0 auto' }}>
+      <button
+        onClick={onBack}
+        style={{ padding: '8px 16px', borderRadius: 6, border: 'none', background: 'rgba(255,255,255,0.06)', color: 'var(--text)', cursor: 'pointer', marginBottom: 24 }}
+      >
+        ← Back
+      </button>
 
-      {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: 36 }}>
-        <div style={{
-          display: 'inline-block',
-          background: 'rgba(0,174,200,0.1)',
-          border: '1px solid rgba(0,174,200,0.25)',
-          borderRadius: 20,
-          padding: '4px 14px',
-          fontSize: 11,
-          fontWeight: 700,
-          color: '#00aec8',
-          letterSpacing: '0.8px',
-          textTransform: 'uppercase',
-          marginBottom: 16,
-        }}>
-          Subscription Plans
-        </div>
-        <h1 style={{
-          fontSize: 34,
-          fontWeight: 900,
-          color: '#fff',
-          margin: '0 0 12px',
-          letterSpacing: '-0.5px',
-          lineHeight: 1.2,
-        }}>
-          Choose Your Plan
-        </h1>
-        <p style={{ fontSize: 15, color: 'var(--text-muted)', margin: '0 0 24px' }}>
-          Professional ECU tuning tools for every workshop
-        </p>
-
-        {/* Interval toggle */}
-        <div style={{
-          display: 'inline-flex',
-          background: '#111',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: 10,
-          padding: 3,
-          gap: 2,
-          alignItems: 'center',
-        }}>
-          <button
-            onClick={() => setInterval('monthly')}
-            style={{
-              padding: '7px 18px',
-              borderRadius: 7,
-              border: 'none',
-              background: interval === 'monthly' ? 'rgba(255,255,255,0.1)' : 'none',
-              color: interval === 'monthly' ? '#fff' : 'var(--text-muted)',
-              fontWeight: interval === 'monthly' ? 700 : 500,
-              fontSize: 13,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              transition: 'all 0.15s',
-            }}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setInterval('yearly')}
-            style={{
-              padding: '7px 18px',
-              borderRadius: 7,
-              border: 'none',
-              background: interval === 'yearly' ? 'rgba(255,255,255,0.1)' : 'none',
-              color: interval === 'yearly' ? '#fff' : 'var(--text-muted)',
-              fontWeight: interval === 'yearly' ? 700 : 500,
-              fontSize: 13,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              transition: 'all 0.15s',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-            }}
-          >
-            Yearly
-            <span style={{
-              background: '#00aec8',
-              color: '#000',
-              fontSize: 9,
-              fontWeight: 900,
-              padding: '2px 6px',
-              borderRadius: 4,
-              letterSpacing: '0.4px',
-            }}>
-              20% OFF
-            </span>
-          </button>
-        </div>
+      {/* ── Customer Plan ─────────────────────────────── */}
+      <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#f43f5e', letterSpacing: '2.5px', textTransform: 'uppercase', marginBottom: 12 }}>For Customers</div>
+        <h1 style={{ fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 800, letterSpacing: '-1px', lineHeight: 1.1, marginBottom: 12 }}>Tune your own car.</h1>
+        <p style={{ color: 'var(--muted)', fontSize: 15, maxWidth: 460, margin: '0 auto' }}>Build remaps and test performance without selling on the marketplace.</p>
       </div>
 
-      {/* Plans grid */}
-      {orderedPlans.length === 0 ? (
-        <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '60px 0' }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
-          <div>Loading plans...</div>
+      <div style={{ maxWidth: 420, margin: '0 auto 48px', background: 'rgba(244,63,94,0.04)', border: '2px solid rgba(244,63,94,0.3)', borderRadius: 16, padding: '32px 28px', textAlign: 'center' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#f43f5e', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Customer Tools</div>
+        <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>Remap Builder + Performance Monitor access</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4, marginBottom: 16 }}>
+          <span style={{ fontSize: 42, fontWeight: 800 }}>€34.99</span>
+          <span style={{ color: 'var(--muted)', fontSize: 14 }}>/month</span>
         </div>
-      ) : (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: 20,
-          maxWidth: 980,
-          margin: '0 auto 40px',
-        }}>
-          {orderedPlans.map((plan) => {
-            const style = PLAN_STYLES[plan.id] || PLAN_STYLES.starter
-            const color = PLAN_COLORS[plan.id] || '#888'
-            const current = isCurrentPlan(plan.id)
-            const isPro = plan.id === 'pro'
+        <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', display: 'grid', gap: 8, textAlign: 'left' }}>
+          {[
+            'Remap Builder with 6,722 recipes',
+            'AI Copilot integration',
+            '5 modified binary downloads per month',
+            'Performance Monitor & virtual dyno',
+            'J2534 PassThru flashing',
+            'Fleet Dashboard & File Vault',
+          ].map((f, i) => (
+            <li key={i} style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ color: '#f43f5e' }}>✓</span> {f}
+            </li>
+          ))}
+        </ul>
+        <button
+          onClick={handleBuyerSubscribe}
+          disabled={loading === 'buyer'}
+          style={{ width: '100%', padding: '14px 24px', borderRadius: 10, border: 'none', background: '#f43f5e', color: '#fff', fontSize: 15, fontWeight: 700, cursor: loading === 'buyer' ? 'not-allowed' : 'pointer', opacity: loading === 'buyer' ? 0.6 : 1 }}
+        >
+          {loading === 'buyer' ? 'Loading...' : 'Subscribe — €34.99/month'}
+        </button>
+      </div>
 
-            return (
-              <div
-                key={plan.id}
-                style={{
-                  background: '#111',
-                  border: current ? `2px solid ${color}` : style.border,
-                  borderRadius: 14,
-                  padding: '28px 24px 24px',
-                  position: 'relative',
-                  boxShadow: isPro ? style.shadow : undefined,
-                  transform: isPro ? 'translateY(-4px)' : undefined,
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}
-              >
-                {/* Most Popular badge */}
-                {isPro && (
-                  <div style={{
-                    position: 'absolute',
-                    top: -1,
-                    right: 20,
-                    background: '#00aec8',
-                    color: '#000',
-                    fontSize: 9,
-                    fontWeight: 900,
-                    padding: '5px 12px',
-                    borderRadius: '0 0 8px 8px',
-                    letterSpacing: '0.8px',
-                    textTransform: 'uppercase',
-                  }}>
-                    Most Popular
-                  </div>
-                )}
+      {/* ── Seller Plans ──────────────────────────────── */}
+      <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#00aec8', letterSpacing: '2.5px', textTransform: 'uppercase', marginBottom: 12 }}>For Sellers</div>
+        <h2 style={{ fontSize: 'clamp(22px, 3vw, 32px)', fontWeight: 800, letterSpacing: '-1px', lineHeight: 1.1, marginBottom: 12 }}>Sell tunes & grow your business.</h2>
+        <p style={{ color: 'var(--muted)', fontSize: 15, maxWidth: 460, margin: '0 auto' }}>All tools included free. Unlimited remap downloads. List and sell on the Marketplace.</p>
+      </div>
 
-                {/* Current plan badge */}
-                {current && (
-                  <div style={{
-                    position: 'absolute',
-                    top: -1,
-                    left: 20,
-                    background: color,
-                    color: plan.id === 'pro' ? '#000' : '#fff',
-                    fontSize: 9,
-                    fontWeight: 900,
-                    padding: '5px 12px',
-                    borderRadius: '0 0 8px 8px',
-                    letterSpacing: '0.8px',
-                    textTransform: 'uppercase',
-                  }}>
-                    Current Plan
-                  </div>
-                )}
-
-                {/* Plan name */}
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    marginBottom: 10,
-                  }}>
-                    <div style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      background: color,
-                    }} />
-                    <span style={{ fontSize: 13, fontWeight: 700, color: color, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-                      {plan.name}
-                    </span>
-                  </div>
-
-                  {/* Price */}
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
-                    <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>€</span>
-                    <span style={{ fontSize: 40, fontWeight: 900, color: '#fff', lineHeight: 1, letterSpacing: '-1px' }}>
-                      {getPrice(plan)}
-                    </span>
-                    <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>/mo</span>
-                  </div>
-                  {interval === 'yearly' && (
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                      Billed €{Math.round(plan.price_yearly / 100)}/year
-                      <span style={{ color: '#00aec8', marginLeft: 6, fontWeight: 700 }}>Save €{Math.round((plan.price_monthly * 12 - plan.price_yearly) / 100)}</span>
-                    </div>
-                  )}
-                  {interval === 'monthly' && (
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                      Billed monthly
-                    </div>
-                  )}
-                </div>
-
-                {/* Features */}
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', flex: 1 }}>
-                  {plan.features.map((feature, i) => (
-                    <li key={i} style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 9,
-                      padding: '5px 0',
-                      fontSize: 13,
-                      color: feature.startsWith('Everything') ? 'var(--text-muted)' : '#ddd',
-                      fontStyle: feature.startsWith('Everything') ? 'italic' : 'normal',
-                    }}>
-                      <span style={{
-                        color: color,
-                        fontWeight: 800,
-                        fontSize: 14,
-                        lineHeight: '18px',
-                        flexShrink: 0,
-                      }}>✓</span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                {/* CTA */}
-                {current ? (
-                  <button
-                    onClick={handleManageBilling}
-                    disabled={loadingPlan === 'portal'}
-                    style={{
-                      width: '100%',
-                      padding: '12px 0',
-                      borderRadius: 8,
-                      border: `1.5px solid ${color}`,
-                      background: 'none',
-                      color: color,
-                      fontWeight: 700,
-                      fontSize: 14,
-                      cursor: loadingPlan === 'portal' ? 'not-allowed' : 'pointer',
-                      fontFamily: 'inherit',
-                      opacity: loadingPlan === 'portal' ? 0.6 : 1,
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    {loadingPlan === 'portal' ? 'Loading...' : 'Manage Billing'}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleCTA(plan.id)}
-                    disabled={loadingPlan === plan.id}
-                    style={{
-                      width: '100%',
-                      padding: '12px 0',
-                      borderRadius: 8,
-                      border: isPro ? 'none' : `1.5px solid ${color}44`,
-                      background: isPro ? '#00aec8' : `${color}22`,
-                      color: isPro ? '#000' : color,
-                      fontWeight: 700,
-                      fontSize: 14,
-                      cursor: loadingPlan === plan.id ? 'not-allowed' : 'pointer',
-                      fontFamily: 'inherit',
-                      opacity: loadingPlan === plan.id ? 0.6 : 1,
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    {loadingPlan === plan.id
-                      ? 'Loading...'
-                      : isActive
-                        ? `Switch to ${plan.name}`
-                        : `Subscribe to ${plan.name}`}
-                  </button>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Trust badges */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        gap: 24,
-        flexWrap: 'wrap',
-      }}>
-        {[
-          { icon: '✕', text: 'Cancel anytime' },
-          { icon: '🔒', text: 'Stripe secured payments' },
-          { icon: '⚡', text: 'Instant access after payment' },
-        ].map((badge) => (
-          <div key={badge.text} style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 7,
-            fontSize: 12,
-            color: 'var(--text-muted)',
-            background: '#111',
-            border: '1px solid rgba(255,255,255,0.07)',
-            borderRadius: 8,
-            padding: '7px 14px',
-          }}>
-            <span style={{ fontSize: 14 }}>{badge.icon}</span>
-            {badge.text}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20, marginBottom: 40 }}>
+        {SELLER_PLANS.map((plan) => (
+          <div key={plan.id} style={{ padding: 24, borderRadius: 12, border: plan.border, background: 'rgba(255,255,255,0.03)', position: 'relative', boxShadow: plan.popular ? '0 0 32px rgba(0,174,200,0.12), 0 4px 24px rgba(0,0,0,0.5)' : 'none' }}>
+            {plan.popular && (
+              <div style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', background: '#00aec8', color: '#000', fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20 }}>Most Popular</div>
+            )}
+            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>{plan.name}</div>
+            <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>{plan.description}</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}>
+              <span style={{ fontSize: 36, fontWeight: 800 }}>€{plan.price}</span>
+              <span style={{ color: 'var(--muted)', fontSize: 14 }}>/month</span>
+            </div>
+            <div style={{ fontSize: 13, color: plan.color, fontWeight: 600, marginBottom: 20 }}>{plan.fee}% platform fee per sale</div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', display: 'grid', gap: 8 }}>
+              {plan.features.map((feature, i) => (
+                <li key={i} style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ color: '#00aec8' }}>✓</span> {feature}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => handleSellerSubscribe(plan.id)}
+              disabled={loading === plan.id}
+              style={{ width: '100%', padding: '12px 24px', borderRadius: 8, border: 'none', background: plan.popular ? '#00aec8' : 'rgba(255,255,255,0.08)', color: plan.popular ? '#000' : '#fff', fontSize: 14, fontWeight: 700, cursor: loading === plan.id ? 'not-allowed' : 'pointer', opacity: loading === plan.id ? 0.6 : 1 }}
+            >
+              {loading === plan.id ? 'Loading...' : `Subscribe to ${plan.name}`}
+            </button>
           </div>
         ))}
+      </div>
+
+      <div style={{ textAlign: 'center', padding: '20px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <p style={{ color: 'var(--muted)', fontSize: 13 }}>
+          Just want to buy tunes? <button onClick={onBack} style={{ background: 'none', border: 'none', color: '#00aec8', cursor: 'pointer', fontWeight: 600 }}>Browse marketplace free →</button>
+        </p>
       </div>
     </div>
   )

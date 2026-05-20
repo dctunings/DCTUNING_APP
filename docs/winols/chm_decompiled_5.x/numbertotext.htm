@@ -1,0 +1,134 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <title>Number to Text</title>
+   <meta name="generator" content="Help & Manual">
+   <meta name="keywords" content="Symbolic names,Number,Text">
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <link type="text/css" href="default.css" rel="stylesheet">
+   <link type="text/css" href="custom.css" rel="stylesheet">
+   <script type="text/javascript" src="nsh.js"></script>
+   <script type="text/javascript" src="tablesort.js"></script>
+   
+<!-- non-scrolling headers for CHM and browser-based help, local styles-->
+<style TYPE="text/css" media="screen"> 
+   <!-- 
+   body {    
+      margin:0; 
+      padding:0; 
+      overflow: auto; 
+      background: #FFFFFF; 
+   } 
+   #idheader { 
+      width:100%; 
+      height:auto; 
+      padding: 0; 
+      margin: 0; 
+} 
+    #idheaderbg  {
+    background: #649CCC; 
+}
+   -->
+   </style>
+   
+<style TYPE="text/css" MEDIA="print">
+<!--
+/* Hide navigation links and add space between header
+     and text in the printed version. Not valid for eBooks. */
+#idnav { display:none;	 }
+.topichead { padding: 5px 5px 20px 5px; }
+-->
+</style>   
+</head>
+<body>
+<!--ZOOMSTOP-->
+
+<div id="idheader">
+<div id="idheaderbg">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" 
+       style="margin: 0px; color: #649CCC; background: url(header_bg.jpg);">
+
+  <tr valign="bottom">
+    <td align="left" valign="bottom" class="topichead" style="padding:10px">
+   <p class="crumbs" id="idnav" style="color:#000080"><b>Navigation:</b>&nbsp;
+   
+   <A HREF="Main_index.htm">Start page</A> > <a href="menu_edit.htm">Commands of the menu Edit</a> &gt; <a href="hid_properties_map.htm">The dialog properties: Window: Map (Menu Edit)</a>&nbsp;&gt;</p>
+   <p class="p_Heading1"><span class="f_Heading1">Number to Text</span></p>
+
+    </td>
+    <td align="right" width="120" valign="middle" class="topichead" id="idnav" style="padding:10px">
+    <a href="javascript: print();"
+    		onmouseover="document.images.prntr.src='print1.gif'" 
+        onmouseout="document.images.prntr.src='print2.gif'"
+        ><img name="prntr" border="0" alt="Print" title="Drucken" src="print2.gif"
+        ></a>
+     <a href="faktoroffsetassi.htm"
+        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
+        onmouseout="document.images.prev.src='btn_prev_n.gif'"
+        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
+        ></a><a href="hid_properties_map.htm"
+        onmouseover="document.images.main.src='btn_home_h.gif'" 
+        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Up"
+        ></a><a href="menu_hardware.htm"
+        onmouseover="document.images.next.src='btn_next_h.gif'" 
+        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
+        ></a>
+    </td>
+  </tr>
+  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
+</table>
+</div>
+
+<!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
+  
+
+</div>  
+
+
+
+<div id="idcontent"><div id="innerdiv" style="padding:10px"> 
+<!--ZOOMRESTART-->
+<p><span style="font-size: 12pt;">You can use this dialog to display individual values as text. You can access this dialog via the &quot;Text&quot; button in the <a href="hid_properties_map.htm">map properties</a>.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><img src="numbertotexte.png" width="615" height="295" border="0" alt=""></p>
+<p><span class="f_ImageCaption">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">Sometimes numbers have certain textual meanings. WinOLS can use this dialog to display the text instead of the number in text mode. You can specify ranges by separating 2 numbers with &quot;..&quot;. Optionally (with *), all values that are not assigned can be translated to a standard text. All texts should be short, but you can use &quot;//&quot; to define comments that are displayed in the mouse tooltip.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">Example:</span></p>
+<p><span style="font-size: 12pt;">0=Off</span></p>
+<p><span style="font-size: 12pt;">1=On // Tooltip</span></p>
+<p><span style="font-size: 12pt;">10..19=Range // With Colors #ff0000 #0000ff</span></p>
+<p><span style="font-size: 12pt;">*=Undefined</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">The tooltip can contain colors in CSS format (RGB or RGBA) for the value in the map. First the text color, then the background color. Or with double # only the background color. Examples:</span></p>
+<p><span style="font-size: 12pt;">100 = xy // red text #ff0000</span></p>
+<p><span style="font-size: 12pt;">101 = xy // red background ##ff0000</span></p>
+<p><span style="font-size: 12pt;">102 = xy // white text on red background (semi-transparent) #ffffff #ff000080</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">You can edit cells via <a href="hid_inplace.htm">Inplace Edit</a> and enter the text there.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">To transfer the content of text files into this dialog, you can drag the file into this dialog or use the import button. Hex values should have the prefix &quot;0x&quot; in the files. You can also drag (multiple) files directly onto the &quot;Text&quot; button in the map properties dialog. Or hold Shift while clicking the &quot;Text&quot; button to go directly to the file dialog. If you want to add the file (instead of replacing the content), hold down Ctrl while you drag in the file / click on &quot;Import&quot;.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt;">If the name of the text file(s) ends with &quot;.number2text.txt&quot;, you can drag it directly into the map window.</span></p>
+<p><span style="font-size: 12pt;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-weight: bold; color: #000000;">Shortcuts</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 24px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="89"><span style="font-size: 12pt; color: #000000;">Symbol bar:</span></td><td><span style="font-size: 12pt; color: #000000;">-</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 24px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="89"><span style="font-size: 12pt; color: #000000;">Keyboard:</span></td><td><span style="font-size: 12pt; color: #000000;">-</span></td></tr></table></div>
+<!--ZOOMSTOP-->
+
+</div></div>
+<script type="text/javascript"> 
+<!-- 
+var lastSlashPos = document.URL.lastIndexOf("/") >
+document.URL.lastIndexOf("\\") ? document.URL.lastIndexOf("/") :
+document.URL.lastIndexOf("\\");
+if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4
+).toLowerCase() != "~hh" )
+{
+    nsrInit();
+}
+--> 
+</script> 
+</body>
+</html>

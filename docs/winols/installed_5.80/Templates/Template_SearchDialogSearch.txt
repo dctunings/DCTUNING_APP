@@ -1,0 +1,47 @@
+//--------------------------------------------------------------------------------------------
+// This is a WinOLS "SearchDialog->Search" file.
+// Do not edit while it's inside "c:\program files". Copy it to your own folder first!
+//--------------------------------------------------------------------------------------------
+// You can use it to define the values in the search combobox drop-down in the search for bytes dialog
+//--------------------------------------------------------------------------------------------
+// Format:
+//   11 22 33
+//   22 33 44 // You will see this text in the drop-down **)
+// 
+//   // Treebranch
+//   33 44 // -sub item 1
+//   55 66 // -sub item 2
+// 
+//   // Another Treebranch
+//   // -Subbranch
+//   // --Subsubbranch
+//   33 44 //sub item 1 *)
+//   55 66 //sub item 2
+//
+// *) Note: For simplicity, you can skip the minus characters for lines that contain search text. WinOLS will assume that it's a child of the most recent branch.
+// **) Note: You MUST use a space character before the comment: "x // good" (not: "x// bad"). This is necessary because "//" can occur in some ECU strings for text search mode.
+//--------------------------------------------------------------------------------------------
+// Triggers in templates:
+// You can link the current selection of search/replace with triggers. If a comment in a template contains the text "->XY", the trigger "XY" is triggered. This selects an item containing "<-XY" in the comment in the other field.
+// 
+// Example:
+// Search-Template.txt:
+//   AA BB // Click here ->MyTriggerName
+// 
+// Replace-Template.txt:
+//   CC DD // This will be selected automatically <-MyTriggerName
+//--------------------------------------------------------------------------------------------
+
+// Start editing here:
+11 22 33
+22 33 44 // You will see this text in the drop-down **)
+
+// Treebranch
+33 44 // -sub item 1
+55 66 // -sub item 2
+
+// Another Treebranch
+// -Subbranch
+// --Subsubbranch
+33 44 //sub item 1 *)
+55 66 //sub item 2

@@ -1,0 +1,20 @@
+# CODEOWNERS for DCTuning Desktop
+# Requires code review for critical paths
+
+# Core engine files - require review for any ECU tuning logic
+/src/renderer/src/lib/                    @dctuning/core-team
+/src/main/                                @dctuning/core-team
+/src/preload/                             @dctuning/core-team
+
+# Build and CI/CD
+/.github/workflows/                       @dctuning/devops
+/build/                                   @dctuning/devops
+
+# Documentation
+/docs/                                    @dctuning/docs
+
+# Bridge server (J2534 proxy)
+/bridge/                                  @dctuning/core-team
+
+# Recipe database
+/resources/recipes/                       @dctuning/core-team

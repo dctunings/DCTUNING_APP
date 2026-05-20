@@ -1,0 +1,28 @@
+//--------------------------------------------------------------------------------------------
+// You can use this to automatically set the credits for typical version names.
+//
+// Lines STARTING with "//" are comments and thus ignored.
+// If the "//" in later in the line, it's considered normal characters and not a comment!
+//
+// Format:
+//   version1;10
+//   version1+feature1;15
+//
+// You can use wildcards:
+//   version*;10
+//
+// If multiple lines match, WinOLS chooses the one with the longest text before the ";".
+// Unlike in the combine template, the plus character ("+") isn't anything special here.
+// It's just a character like ABC.
+//
+// Example above: "version" gets 10 credits. But "version1+feature1" gets 15 credits
+//
+// To reset the a version to "not separately for sale", use -1 as price:
+//   version;-1
+//--------------------------------------------------------------------------------------------
+
+// Start editing here:
+version1;10
+version1+feature1;15
+
+version*;10

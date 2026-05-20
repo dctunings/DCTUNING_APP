@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { hasToolAccess, canDownloadRemap, logRemapDownload } from '../lib/buyerSubscription'
 import { ECU_DEFINITIONS, ADDONS } from '../lib/ecuDefinitions'
 import type { EcuDef, MapDef, MapCategory, DataType } from '../lib/ecuDefinitions'
 import { detectEcu, detectEcuFromFilename, detectEcuFromCatalog, extractAllMaps, extractMap, validateA2LMapsInBinary, syntheticMapDefFromA2L, syntheticMapDefFromSignature, extractPartNumberFromBinary } from '../lib/binaryParser'
@@ -703,8 +704,8 @@ function StepBar({ current }: { current: number }) {
         <div key={i} style={{ display: 'flex', alignItems: 'center', flex: i < STEPS.length - 1 ? 1 : undefined }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
             <div style={{
-              width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 800, fontSize: 12,
+              width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 800, fontSize: 13,
               background: i < current ? 'var(--accent)' : i === current ? 'var(--accent)' : 'var(--bg-card)',
               color: i <= current ? '#000' : 'var(--text-muted)',
               border: i > current ? '1px solid var(--border)' : 'none',
@@ -717,13 +718,13 @@ function StepBar({ current }: { current: number }) {
                 </svg>
               ) : i + 1}
             </div>
-            <div style={{ fontSize: 10, fontWeight: i === current ? 700 : 500, color: i === current ? 'var(--accent)' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: 11, fontWeight: i === current ? 700 : 500, color: i === current ? 'var(--accent)' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               {label}
             </div>
           </div>
           {i < STEPS.length - 1 && (
             <div style={{
-              flex: 1, height: 2, margin: '0 6px', marginBottom: 18,
+              flex: 1, height: 3, margin: '0 10px', marginBottom: 18, borderRadius: 2,
               background: i < current ? 'var(--accent)' : 'var(--border)',
               transition: 'background 0.3s ease',
             }} />
@@ -755,7 +756,17 @@ interface RemapBuilderProps {
   onAskAI?: (action: 'explain' | 'warnings' | 'safety') => void          // opens chat + runs quick-prompt
   onAskAICustom?: (prompt: string) => void                                // opens chat + runs custom prompt (Zone Editor)
 }
-export default function RemapBuilder({ onEcuLoaded, onTuneApplied, onAskAI, onAskAICustom }: RemapBuilderProps) {
+export default function RemapBuilder({ onEcuLoaded, onTuneApplied, onAskAI, onAskAICustom, setPage }: RemapBuilderProps & { setPage?: (p: string) => void }) {
+  // ── Subscription gate ──────────────────────────────────────────
+  const [subChecked, setSubChecked] = useState(false)
+  const [hasAccess, setHasAccess] = useState(false)
+  const [isSeller, setIsSeller] = useState(false)
+  const [downloadInfo, setDownloadInfo] = useState<{ remaining: number; limit: number }>({ remaining: 5, limit: 5 })
+  useEffect(() => {
+    hasToolAccess().then(r => { setHasAccess(r.hasAccess); setIsSeller(r.isSeller); setSubChecked(true) }).catch(() => setSubChecked(true))
+    canDownloadRemap().then(r => setDownloadInfo({ remaining: r.remaining, limit: r.limit })).catch(() => {})
+  }, [])
+
   const [step, setStep] = useState(0)
 
   // Step 0 state
@@ -1749,9 +1760,19 @@ export default function RemapBuilder({ onEcuLoaded, onTuneApplied, onAskAI, onAs
     }
   }
 
-  // ─── Download ─────────────────────────────────────────────────────────────
+  // ─── Download (with limit enforcement for buyer subscribers) ────────────
   const handleDownload = async () => {
     if (!remapResult || !selectedEcu) return
+
+    // Check download limit for buyer subscribers (sellers = unlimited)
+    if (!isSeller) {
+      const check = await canDownloadRemap()
+      if (!check.allowed) {
+        setLoadError(`Monthly download limit reached (${check.limit}/${check.limit}). Upgrade to a Seller plan for unlimited downloads, or wait until next month.`)
+        return
+      }
+    }
+
     const outName = buildFilename(fileName, selectedEcu, stage, addons)
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1765,6 +1786,12 @@ export default function RemapBuilder({ onEcuLoaded, onTuneApplied, onAskAI, onAs
         const a = document.createElement('a')
         a.href = url; a.download = outName; a.click()
         URL.revokeObjectURL(url)
+      }
+      // Log the download for buyer limit tracking
+      if (!isSeller) {
+        await logRemapDownload(outName)
+        const updated = await canDownloadRemap()
+        setDownloadInfo({ remaining: updated.remaining, limit: updated.limit })
       }
     } catch (err) {
       setLoadError(`Save failed: ${String(err)}`)
@@ -4315,20 +4342,31 @@ export default function RemapBuilder({ onEcuLoaded, onTuneApplied, onAskAI, onAs
           </div>
         </div>
 
+        {/* Download counter for buyer subscribers */}
+        {!isSeller && downloadInfo.limit < 999 && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8, padding: '8px 16px', background: downloadInfo.remaining > 0 ? 'rgba(184,240,42,0.08)' : 'rgba(244,63,94,0.08)', border: `1px solid ${downloadInfo.remaining > 0 ? 'rgba(184,240,42,0.2)' : 'rgba(244,63,94,0.2)'}`, borderRadius: 8 }}>
+            <span style={{ fontSize: 13, color: downloadInfo.remaining > 0 ? 'var(--text-muted)' : '#f43f5e' }}>
+              {downloadInfo.remaining > 0
+                ? `${downloadInfo.remaining} of ${downloadInfo.limit} downloads remaining this month`
+                : `Monthly download limit reached (${downloadInfo.limit}/${downloadInfo.limit})`}
+            </span>
+          </div>
+        )}
         {/* Download button */}
         <div style={{ display: 'flex', gap: 10 }}>
           <button className="btn-secondary" onClick={() => setStep(3)}>Back</button>
           <button
             className="btn-primary"
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: (!isSeller && downloadInfo.remaining <= 0) ? 0.5 : 1 }}
             onClick={handleDownload}
+            disabled={!isSeller && downloadInfo.remaining <= 0}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="7 10 12 15 17 10"/>
               <line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
-            Download Modified Binary
+            {(!isSeller && downloadInfo.remaining <= 0) ? 'Download Limit Reached' : 'Download Modified Binary'}
           </button>
           <button
             className="btn-secondary"
@@ -4353,12 +4391,46 @@ export default function RemapBuilder({ onEcuLoaded, onTuneApplied, onAskAI, onAs
     )
   }
 
+  // ── Subscription gate renders ──────────────────────────────────────
+  if (!subChecked) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+      <div style={{ color: 'var(--text-muted, #888)', fontSize: 15 }}>Checking subscription...</div>
+    </div>
+  )
+
+  if (!hasAccess) return (
+    <div style={{ maxWidth: 640, margin: '80px auto', textAlign: 'center', padding: '0 20px' }}>
+      <div style={{ background: 'var(--bg-card, #1a1a1d)', border: '1px solid var(--border, rgba(255,255,255,0.08))', borderRadius: 20, padding: '48px 32px' }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+        <h2 style={{ color: 'var(--text-primary, #fff)', fontSize: 24, fontWeight: 700, marginBottom: 12 }}>Remap Builder — Subscription Required</h2>
+        <p style={{ color: 'var(--text-muted, #888)', fontSize: 15, lineHeight: 1.7, marginBottom: 32 }}>
+          Build professional ECU tunes with 6,722 recipes, AI Copilot and J2534 flashing. Choose the plan that fits you.
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap', marginBottom: 32 }}>
+          <div style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.3)', borderRadius: 14, padding: '20px 18px', minWidth: 150, textAlign: 'center' }}>
+            <div style={{ color: '#f43f5e', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Customer</div>
+            <div style={{ color: '#f43f5e', fontWeight: 700, fontSize: 22 }}>€34.99<span style={{ fontSize: 12, fontWeight: 400 }}>/mo</span></div>
+            <div style={{ color: 'var(--text-muted, #888)', fontSize: 12, marginTop: 6 }}>5 remap downloads/month</div>
+            <div style={{ color: 'var(--text-muted, #888)', fontSize: 12 }}>Remap Builder + Perf Monitor</div>
+          </div>
+          <div style={{ background: 'rgba(184,240,42,0.08)', border: '1px solid rgba(184,240,42,0.3)', borderRadius: 14, padding: '20px 18px', minWidth: 150, textAlign: 'center' }}>
+            <div style={{ color: '#b8f02a', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Seller Plans</div>
+            <div style={{ color: '#b8f02a', fontWeight: 700, fontSize: 22 }}>From €15<span style={{ fontSize: 12, fontWeight: 400 }}>/mo</span></div>
+            <div style={{ color: 'var(--text-muted, #888)', fontSize: 12, marginTop: 6 }}>Unlimited downloads</div>
+            <div style={{ color: 'var(--text-muted, #888)', fontSize: 12 }}>All tools + Marketplace</div>
+          </div>
+        </div>
+        <button onClick={() => setPage?.('pricing')} style={{ background: 'var(--accent, #b8f02a)', color: '#000', fontWeight: 700, fontSize: 15, padding: '12px 32px', borderRadius: 10, border: 'none', cursor: 'pointer' }}>View Plans →</button>
+      </div>
+    </div>
+  )
+
   return (
-    <div style={{ maxWidth: 860, margin: '0 auto' }}>
+    <div style={{ maxWidth: 960, margin: '0 auto' }}>
       {/* Page header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
         <div style={{
-          width: 44, height: 44, borderRadius: 12, background: 'var(--accent)',
+          width: 48, height: 48, borderRadius: 14, background: 'var(--accent)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
         }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -4366,7 +4438,7 @@ export default function RemapBuilder({ onEcuLoaded, onTuneApplied, onAskAI, onAs
           </svg>
         </div>
         <div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
             Remap Builder
           </h1>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -4383,7 +4455,7 @@ export default function RemapBuilder({ onEcuLoaded, onTuneApplied, onAskAI, onAs
       <StepBar current={step} />
 
       {/* Step content */}
-      <div style={{ background: 'var(--bg-secondary)', borderRadius: 14, border: '1px solid var(--border)', padding: '24px 28px' }}>
+      <div style={{ background: 'var(--bg-secondary)', borderRadius: 16, border: '1px solid var(--border)', padding: '28px 32px' }}>
         <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>
           {STEPS[step]}
         </div>

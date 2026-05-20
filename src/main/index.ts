@@ -1,3 +1,4 @@
+import { session } from 'electron'
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -40,6 +41,7 @@ import {
 } from './j2534Manager'
 import { scanSignatures, getCatalogStats } from './vagSignatureScanner'
 import { ask as aiAsk, hasApiKey as aiHasKey, setApiKey as aiSetKey, clearApiKey as aiClearKey } from './aiService'
+import { initUpdater } from './updater'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -76,6 +78,46 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  // Content Security Policy (v3.16 security fix)
+  // Initialize auto-updater (checks for updates on startup)
+  initUpdater()
+
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+
+    callback({
+
+      responseHeaders: {
+
+        ...details.responseHeaders,
+
+        "Content-Security-Policy": [
+
+          "default-src 'self';",
+
+          "script-src 'self' 'unsafe-inline';",
+
+          "style-src 'self' 'unsafe-inline';",
+
+          "img-src 'self' data: blob:;",
+
+          "font-src 'self';",
+
+          "connect-src 'self' https://eqfmeavkefflwmzihqkd.supabase.co https://releases.dctuning.ie;",
+
+          "frame-ancestors 'none';",
+
+          "base-uri 'self';",
+
+          "form-action 'self';",
+
+        ].join(" "),
+
+      },
+
+    })
+
+  })
+
   electronApp.setAppUserModelId('ie.dctuning.desktop')
 
   app.on('browser-window-created', (_, window) => {

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { Card, PageHeader, Badge } from '../components/ui'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Tier = 'hobby' | 'budget' | 'semi-pro' | 'professional' | 'dealer' | 'diagnostics'
@@ -882,22 +883,10 @@ export default function DeviceLibrary() {
   }, [search, tierFilter, connFilter])
 
   return (
-    <div>
-      {/* Header */}
-      <div className="page-header">
-        <div className="page-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/>
-            <rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>
-          </svg>
-        </div>
-        <div>
-          <h1>Device Library</h1>
-        </div>
-        <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-muted)' }}>
-          {filtered.length} of {DEVICES.length} devices
-        </span>
-      </div>
+    <div style={{ padding: '24px 28px', maxWidth: 1400, margin: '0 auto' }}>
+      <PageHeader title="🔧 Device Library" subtitle={`${filtered.length} of ${DEVICES.length} devices — ECU programming tools, J2534 interfaces, and OBD adapters.`} />
+
+      {/* Tabs */}
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 0, borderBottom: '1px solid var(--border)' }}>

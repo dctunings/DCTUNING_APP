@@ -1,0 +1,70 @@
+//--------------------------------------------------------------------------------------------
+// This is a WinOLS "SearchDialog->Replace" file.
+// Do not edit while it's inside "c:\program files". Copy it to your own folder first!
+//--------------------------------------------------------------------------------------------
+// You can use it to define the values in the replace combobox drop-down in the search for bytes dialog
+//--------------------------------------------------------------------------------------------
+// Format:
+//   11 22 33
+//   22 33 44 // You will see this text in the drop-down **)
+// 
+//   // Treebranch
+//   33 44 // -sub item 1
+//   55 66 // -sub item 2
+// 
+//   // Another Treebranch
+//   // -Subbranch
+//   // --Subsubbranch
+//   33 44 //sub item 1 *)
+//   55 66 //sub item 2
+//
+// *) Note: For simplicity, you can skip the minus characters for lines that contain search text. WinOLS will assume that it's a child of the most recent branch.
+// **) Note: You MUST use a space character before the comment: "x // good" (not: "x// bad"). This is necessary because "//" can occur in some ECU strings for text search mode.
+//--------------------------------------------------------------------------------------------
+// Triggers in templates:
+// You can link the current selection of search/replace with triggers. If a comment in a template contains the text "->XY", the trigger "XY" is triggered. This selects an item containing "<-XY" in the comment in the other field.
+// 
+// Example:
+// Search-Template.txt:
+//   AA BB // Click here ->MyTriggerName
+// 
+// Replace-Template.txt:
+//   CC DD // This will be selected automatically <-MyTriggerName
+//--------------------------------------------------------------------------------------------
+// Extended replace:
+// This function requires WinOLS 5.58 + FeatureUpdate
+// 
+// If the replace text begins with "do ", commands can be entered there. The window and/or a part of the coordinate can be adjusted.
+// 
+// Examples:
+// do *2; +1
+//   2 combined commands: The cells are doubled and 1 is added.
+// do yaxis=1
+//   The value in the Y-axis is set to 1
+// do map0.col1=4
+//   The value in the connected map 0 (counted from the left) in column 1 is set to 4.
+// do myid.yaxis=4
+//   The value in the connected map with the Id myid in the Y-axis is set to 4
+// do map[xy].col[zz]=4
+//   The value in the connected map field with xy in the name in the column with zz in the text name is set to 4
+// do col[+1]=4
+//   The value in characteristic field 1 to the right of the search value is set to 4
+// do map0.col1=4; map0.col2=5
+//   2 instructions
+// 
+// Attention: All indexes start at 0!
+//--------------------------------------------------------------------------------------------
+
+// Start editing here:
+11 22 33
+22 33 44 // You will see this text in the drop-down **)
+
+// Treebranch
+33 44 // -sub item 1
+55 66 // -sub item 2
+
+// Another Treebranch
+// -Subbranch
+// --Subsubbranch
+33 44 //sub item 1 *)
+55 66 //sub item 2

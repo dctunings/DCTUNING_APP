@@ -1,0 +1,21 @@
+//--------------------------------------------------------------------------------------------
+// You can use this to fix typical typos and set standards for version names.
+// Lines STARTING with "//" are comments and thus ignored.
+// If the "//" in later in the line, it's considered normal characters and not a comment!
+//
+// Format:
+//   badName1;goodName1
+//   badName2;goodName2
+//
+// You can use wildcards:
+//   bad*;okay*
+//
+// If multiple lines match, WinOLS chooses the one with the longest text before the ";".
+// Example: "badName3" is renamed to "okayName3". But "badName1" is still renamed to "goodName1"
+//--------------------------------------------------------------------------------------------
+
+// Start editing here:
+badName1;goodName1
+badName2;goodName2
+
+bad*;okay*
