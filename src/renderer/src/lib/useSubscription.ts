@@ -1,9 +1,7 @@
 // Hook to check and manage user subscription
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
 import type { User } from '@supabase/supabase-js'
-
-const TRIAL_DURATION_MS = 60 * 60 * 1000 // 1 hour
 
 export interface SubscriptionPlan {
   id: string
@@ -33,9 +31,6 @@ export interface SubscriptionState {
   isPro: boolean
   isAgency: boolean
   daysRemaining: number | null
-  isTrialActive: boolean
-  trialMinutesLeft: number | null
-  trialExpired: boolean
 }
 
 export function useSubscription(user: User | null): SubscriptionState & {
@@ -46,8 +41,6 @@ export function useSubscription(user: User | null): SubscriptionState & {
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [plans, setPlans] = useState<SubscriptionPlan[]>([])
   const [loading, setLoading] = useState(true)
-  const [trialMinutesLeft, setTrialMinutesLeft] = useState<number | null>(null)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const loadData = async () => {
     if (!user) { setLoading(false); return }
@@ -67,23 +60,17 @@ export function useSubscription(user: User | null): SubscriptionState & {
         .limit(1)
         .single()
 
-      // First login — create a trial record
+      // First login — create an inactive subscription record
       if (!subData) {
-        const now = new Date().toISOString()
         const { data: newSub } = await supabase
           .from('subscriptions')
-          .insert({ user_id: user.id, trial_started_at: now, status: 'trial', plan_id: null })
+          .insert({ user_id: user.id, status: 'inactive', plan_id: null })
           .select('*, plan:subscription_plans(*)')
           .single()
         subData = newSub ?? null
-      } else if (!subData.trial_started_at) {
-        // Existing user with no trial timestamp — set it now
-        const now = new Date().toISOString()
-        await supabase
-          .from('subscriptions')
-          .update({ trial_started_at: now })
-          .eq('user_id', user.id)
-        subData = { ...subData, trial_started_at: now }
+
+        // Notify owner about the new signup (best-effort, don't block)
+        supabase.functions.invoke('notify-signup').catch(() => {})
       }
 
       setSubscription(subData ?? null)
@@ -96,43 +83,11 @@ export function useSubscription(user: User | null): SubscriptionState & {
 
   useEffect(() => { loadData() }, [user?.id])
 
-  // Trial countdown timer
-  useEffect(() => {
-    if (timerRef.current) clearInterval(timerRef.current)
-
-    const trialStart = subscription?.trial_started_at
-      ? new Date(subscription.trial_started_at).getTime()
-      : null
-
-    if (!trialStart) return
-
-    const tick = () => {
-      const elapsed = Date.now() - trialStart
-      const remaining = TRIAL_DURATION_MS - elapsed
-      setTrialMinutesLeft(remaining > 0 ? Math.ceil(remaining / 60000) : 0)
-    }
-
-    tick()
-    timerRef.current = setInterval(tick, 30000)
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [subscription?.trial_started_at])
-
   const isOwner = user?.email === 'dctunings@gmail.com'
-
   const hasPaidSub = subscription?.status === 'active' || subscription?.status === 'trialing'
 
-  // Trial state must be computed before isActive/isPro so they can include it
-  const trialStart = subscription?.trial_started_at
-    ? new Date(subscription.trial_started_at).getTime()
-    : null
-  const isTrialActive = !isOwner && !hasPaidSub && trialStart !== null
-    && (Date.now() - trialStart) < TRIAL_DURATION_MS
-  const trialExpired = !isOwner && !hasPaidSub && trialStart !== null
-    && (Date.now() - trialStart) >= TRIAL_DURATION_MS
-
-  // Trial users get full Pro access; after trial expires isActive becomes false → pricing wall
-  const isActive = isOwner || hasPaidSub || isTrialActive
-  const isPro = isOwner || isTrialActive || (hasPaidSub && (subscription?.plan_id === 'pro' || subscription?.plan_id === 'agency'))
+  const isActive = isOwner || hasPaidSub
+  const isPro = isOwner || (hasPaidSub && (subscription?.plan_id === 'pro' || subscription?.plan_id === 'agency'))
   const isAgency = isOwner || (hasPaidSub && subscription?.plan_id === 'agency')
 
   let daysRemaining: number | null = null
@@ -193,7 +148,6 @@ export function useSubscription(user: User | null): SubscriptionState & {
   return {
     subscription, plans, loading,
     isActive, isPro, isAgency, daysRemaining,
-    isTrialActive, trialMinutesLeft, trialExpired,
     refresh: loadData, createCheckoutSession, openCustomerPortal
   }
 }

@@ -233,9 +233,6 @@ export default function App() {
     isPro,
     isAgency,
     daysRemaining,
-    isTrialActive,
-    trialMinutesLeft,
-    trialExpired,
     createCheckoutSession,
     openCustomerPortal,
   } = useSubscription(user)
@@ -341,34 +338,6 @@ export default function App() {
       />
       <div className="app-main">
         <Topbar connected={connected} />
-        {isTrialActive && trialMinutesLeft !== null && (
-          <div className="trial-banner">
-            <span className="trial-banner-icon">⏱</span>
-            <span className="trial-banner-text">
-              Free trial active —{' '}
-              <span className="trial-banner-time">
-                {trialMinutesLeft >= 60
-                  ? `${Math.floor(trialMinutesLeft / 60)}h ${trialMinutesLeft % 60}m`
-                  : `${trialMinutesLeft} min`}
-              </span>
-              {' '}remaining. All Pro features unlocked.
-            </span>
-            <button className="trial-banner-btn" onClick={() => setPage('pricing')}>
-              Upgrade Now →
-            </button>
-          </div>
-        )}
-        {trialExpired && (
-          <div className="trial-expired-banner">
-            <span className="trial-banner-icon">🔒</span>
-            <span className="trial-banner-text">
-              Your free trial has expired. Subscribe to continue using Pro features.
-            </span>
-            <button className="trial-expired-btn" onClick={() => setPage('pricing')}>
-              View Plans →
-            </button>
-          </div>
-        )}
         <div className="app-content" style={{ padding: page === 'pricing' ? 0 : undefined }}>
           <SubscriptionGate
             user={user}
