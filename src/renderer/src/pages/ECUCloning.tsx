@@ -1,13 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import VehicleStrip from '../components/VehicleStrip'
-import type { ActiveVehicle } from '../lib/vehicleContext'
 import { bridge } from '../lib/bridgeClient'
 
 interface ConnectResult { ok: boolean; error?: string }
 
 interface Props {
   connected: boolean
-  activeVehicle: ActiveVehicle | null
   onConnect?: () => Promise<ConnectResult>
 }
 
@@ -44,7 +41,7 @@ function formatSize(bytes: number): string {
   return `${(bytes / 1024).toFixed(1)} KB`
 }
 
-export default function ECUCloning({ connected, activeVehicle, onConnect }: Props) {
+export default function ECUCloning({ connected, onConnect }: Props) {
   const api = (window as any).api
   const [connecting, setConnecting] = useState(false)
   const [connectError, setConnectError] = useState<string | null>(null)
@@ -301,7 +298,6 @@ export default function ECUCloning({ connected, activeVehicle, onConnect }: Prop
         <h1>ECU Read / Write / Clone</h1>
       </div>
 
-      <VehicleStrip vehicle={activeVehicle} />
 
       {!connected && (
         <div className="banner banner-warning" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>

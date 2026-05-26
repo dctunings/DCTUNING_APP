@@ -29,7 +29,6 @@ import SellerStorefront from './pages/SellerStorefront'
 import SellerDashboard from './pages/SellerDashboard'
 import AIChatSidebar, { type ChatContext } from './components/AIChatSidebar'
 import { bridge } from './lib/bridgeClient'
-import type { ActiveVehicle } from './lib/vehicleContext'
 import { useAuth } from './lib/useAuth'
 import { useSubscription } from './lib/useSubscription'
 import type { A2LMapDef } from './lib/a2lParser'
@@ -66,6 +65,9 @@ export type Page =
   | 'bridge-download'
   | 'performance-monitor'
   | 'fleet'
+  | 'marketplace'
+  | 'storefront'
+  | 'seller-dash'
 
 // Pages that require a J2534 PassThru DLL bridge (Windows desktop only).
 // scanner/voltage/j2534 work in web via Web Serial API (ELM327 over USB), so
@@ -105,8 +107,6 @@ function ProUpgradeWall({ setPage }: { setPage: (p: Page) => void }) {
 
 export default function App() {
   const [page, setPage] = useState<Page>('dashboard')
-  const [manufacturer, setManufacturer] = useState<string>('')
-  const [vehicle, setVehicle] = useState<string>('')
   const [connected, setConnected] = useState(false)
   const userDisconnectedRef = useRef(false)
   const setConnectedTracked = useCallback((value: boolean) => {
@@ -114,7 +114,6 @@ export default function App() {
     if (value === true) userDisconnectedRef.current = false
     setConnected(value)
   }, [])
-  const [activeVehicle, setActiveVehicle] = useState<ActiveVehicle | null>(null)
   const [ecuFile, setEcuFile] = useState<EcuFileState | null>(null)
   // v3.14 Phase B: AI chat sidebar state. The panel is global so it follows the
   // user across pages — context is assembled from the currently-loaded ECU file
@@ -241,13 +240,6 @@ export default function App() {
     openCustomerPortal,
   } = useSubscription(user)
 
-  // Called by VINDecoder when user picks a vehicle from DB matches
-  const handleVehicleSelect = (v: ActiveVehicle) => {
-    setActiveVehicle(v)
-    setManufacturer(v.make)
-    setVehicle(v.model)
-  }
-
   const renderPage = () => {
     // Gate Pro-only pages — isPro is true during trial, false when trial expired or no sub
     if (PRO_ONLY_PAGES.includes(page) && !isPro) {
@@ -255,13 +247,12 @@ export default function App() {
     }
 
     switch (page) {
-      case 'dashboard':    return <Dashboard setPage={setPage} connected={connected} activeVehicle={activeVehicle} />
-      case 'vin':          return <VINDecoder onVehicleSelect={handleVehicleSelect} activeVehicle={activeVehicle} setPage={setPage} />
-      case 'scanner':      return <ECUScanner connected={connected} activeVehicle={activeVehicle} />
+      case 'dashboard':    return <Dashboard setPage={setPage} connected={connected} />
+      case 'vin':          return <VINDecoder setPage={setPage} />
+      case 'scanner':      return <ECUScanner connected={connected} />
       case 'voltage':      return <VoltageMeter connected={connected} />
-      case 'wiring':       return <WiringDiagrams activeVehicle={activeVehicle} />
+      case 'wiring':       return <WiringDiagrams />
       case 'tunes':        return <TuneManager
-                                    activeVehicle={activeVehicle}
                                     onOpenInRemap={(fileName, fileBuffer) => {
                                       // AutoTuner workflow: file picked up by Watch Folder,
                                       // customer clicks "Tune in Remap Builder" → file is
@@ -271,14 +262,14 @@ export default function App() {
                                       setPage('remap')
                                     }}
                                   />
-      case 'cloning':      return <ECUCloning connected={connected} activeVehicle={activeVehicle} onConnect={connectBridgeDevice} />
-      case 'emissions':    return <EmissionsDelete activeVehicle={activeVehicle} ecuFile={ecuFile} setPage={setPage} />
-      case 'j2534':        return <J2534PassThru connected={connected} setConnected={setConnectedTracked} activeVehicle={activeVehicle} setPage={setPage} />
-      case 'unlock':       return <ECUUnlock connected={connected} activeVehicle={activeVehicle} onConnect={connectBridgeDevice} />
+      case 'cloning':      return <ECUCloning connected={connected} onConnect={connectBridgeDevice} />
+      case 'emissions':    return <EmissionsDelete ecuFile={ecuFile} setPage={setPage} />
+      case 'j2534':        return <J2534PassThru connected={connected} setConnected={setConnectedTracked} setPage={setPage} />
+      case 'unlock':       return <ECUUnlock connected={connected} onConnect={connectBridgeDevice} />
       case 'devices':      return <DeviceLibrary />
       case 'driversetup':  return <DriverSetupPage />
       case 'remap':        return <RemapBuilder onEcuLoaded={setEcuFile} onTuneApplied={setLastTuneSummary} onAskAI={handleAskAI} onAskAICustom={handleAskAICustom} setPage={setPage} />
-      case 'ecuflash':     return <ECUFlashManager connected={connected} activeVehicle={activeVehicle} onConnect={connectBridgeDevice} />
+      case 'ecuflash':     return <ECUFlashManager connected={connected} onConnect={connectBridgeDevice} />
       case 'pricing':
         return (
           <PricingPage
@@ -308,7 +299,7 @@ export default function App() {
         return <SellerStorefront />
       case 'seller-dash':
         return <SellerDashboard />
-      default: return <Dashboard setPage={setPage} connected={connected} activeVehicle={activeVehicle} />
+      default: return <Dashboard setPage={setPage} connected={connected} />
     }
   }
 
@@ -346,18 +337,10 @@ export default function App() {
         isAgency={isAgency}
         daysRemaining={daysRemaining}
         onSignOut={signOut}
-        onSignIn={() => setShowAuthModal(true)}
+        onSignIn={() => { /* login screen shown automatically when user is null */ }}
       />
       <div className="app-main">
-        <Topbar
-          manufacturer={manufacturer}
-          setManufacturer={(m) => { setManufacturer(m); setVehicle(''); setActiveVehicle(null) }}
-          vehicle={vehicle}
-          setVehicle={setVehicle}
-          connected={connected}
-          activeVehicle={activeVehicle}
-          setActiveVehicle={setActiveVehicle}
-        />
+        <Topbar connected={connected} />
         {isTrialActive && trialMinutesLeft !== null && (
           <div className="trial-banner">
             <span className="trial-banner-icon">⏱</span>

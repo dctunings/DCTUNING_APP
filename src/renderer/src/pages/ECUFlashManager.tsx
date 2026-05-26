@@ -1,13 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import VehicleStrip from '../components/VehicleStrip'
-import type { ActiveVehicle } from '../lib/vehicleContext'
 import { bridge } from '../lib/bridgeClient'
 import PreFlashSafetyCheck from '../components/PreFlashSafetyCheck'
 
 interface ConnectResult { ok: boolean; error?: string }
 interface Props {
   connected: boolean
-  activeVehicle: ActiveVehicle | null
   onConnect?: () => Promise<ConnectResult>
 }
 
@@ -94,7 +91,7 @@ function fmtSize(bytes: number): string {
   return bytes + ' B'
 }
 
-export default function ECUFlashManager({ connected, activeVehicle, onConnect }: Props) {
+export default function ECUFlashManager({ connected, onConnect }: Props) {
   const [tab, setTab] = useState<Tab>('select')
   const [connecting, setConnecting] = useState(false)
   const [connectError, setConnectError] = useState<string | null>(null)
@@ -400,7 +397,6 @@ export default function ECUFlashManager({ connected, activeVehicle, onConnect }:
         <h1>ECU Flash Manager</h1>
       </div>
 
-      <VehicleStrip vehicle={activeVehicle} />
 
       {!connected && (
         <div className="banner banner-warning" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>

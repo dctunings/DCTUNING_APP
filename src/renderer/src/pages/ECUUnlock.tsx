@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react'
-import VehicleStrip from '../components/VehicleStrip'
-import type { ActiveVehicle } from '../lib/vehicleContext'
 import { bridge } from '../lib/bridgeClient'
 import { Card, PageHeader, Grid, SectionTitle, Badge, Button } from '../components/ui'
 
 interface ConnectResult { ok: boolean; error?: string }
 interface Props {
   connected: boolean
-  activeVehicle: ActiveVehicle | null
   onConnect?: () => Promise<ConnectResult>
 }
 
@@ -77,7 +74,7 @@ const SECURITY_LEVELS: Record<string, { level: number; color: string; label: str
   'PPD1.5 (VW/Audi 2.0 TDI PD)':    { level: 1, color: '#22c55e', label: 'Low — K-Line only' },
 }
 
-export default function ECUUnlock({ connected, activeVehicle, onConnect }: Props) {
+export default function ECUUnlock({ connected, onConnect }: Props) {
   const [vendor, setVendor] = useState('')
   const [model, setModel] = useState('')
   const [unlocking, setUnlocking] = useState(false)
@@ -110,7 +107,6 @@ export default function ECUUnlock({ connected, activeVehicle, onConnect }: Props
         <Badge variant="warning">Pro</Badge>
       </PageHeader>
 
-      <VehicleStrip activeVehicle={activeVehicle} />
 
       <Grid columns={2} gap={16} style={{ marginTop: 20 }}>
         <Card>

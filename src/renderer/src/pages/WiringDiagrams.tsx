@@ -1,11 +1,5 @@
 import { useState } from 'react'
-import VehicleStrip from '../components/VehicleStrip'
-import type { ActiveVehicle } from '../lib/vehicleContext'
 import { Card, PageHeader, Grid, StatCard, SectionTitle, Badge } from '../components/ui'
-
-interface Props {
-  activeVehicle: ActiveVehicle | null
-}
 
 // ─── Pin data ─────────────────────────────────────────────────────────────────
 
@@ -72,14 +66,14 @@ const PROTOCOL_COLORS: Record<string, string> = {
   IN: '#8b5cf6',
 }
 
-export default function WiringDiagrams({ activeVehicle }: Props) {
+export default function WiringDiagrams() {
   const [tab, setTab] = useState<'obd2' | 'me7' | 'can'>('obd2')
 
   return (
     <div style={{ padding: '0 4px' }}>
       <PageHeader
         title="Wiring Diagrams"
-        subtitle={activeVehicle ? `${activeVehicle.year} ${activeVehicle.make} ${activeVehicle.model}` : 'OBD2, ECU pinouts & CAN bus reference'}
+        subtitle="OBD2, ECU pinouts & CAN bus reference"
         icon="🔌"
       />
 

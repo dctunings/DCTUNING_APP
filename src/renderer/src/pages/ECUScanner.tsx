@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
-import VehicleStrip from '../components/VehicleStrip'
-import type { ActiveVehicle } from '../lib/vehicleContext'
 import { elm327 } from '../lib/elm327WebSerial'
 import { Card, PageHeader, Grid, StatCard, SectionTitle, Button, Badge } from '../components/ui'
 
-interface Props { connected: boolean; activeVehicle: ActiveVehicle | null }
+interface Props { connected: boolean }
 
 interface DTCCode {
   code: string
@@ -384,7 +382,7 @@ function classifyDTC(code: string): 'active' | 'pending' | 'stored' {
   return 'active'
 }
 
-export default function ECUScanner({ connected, activeVehicle }: Props) {
+export default function ECUScanner({ connected }: Props) {
   const [scanning, setScanning] = useState(false)
   const [dtcs, setDtcs] = useState<DTCCode[]>([])
   const [rawResponse, setRawResponse] = useState('')
@@ -493,7 +491,7 @@ export default function ECUScanner({ connected, activeVehicle }: Props) {
     <div style={{ padding: '0 4px' }}>
       <PageHeader
         title="ECU Scanner"
-        subtitle={activeVehicle ? `${activeVehicle.year} ${activeVehicle.make} ${activeVehicle.model}` : 'Read & clear diagnostic trouble codes'}
+        subtitle="Read & clear diagnostic trouble codes"
         icon="🔍"
       />
 

@@ -1,17 +1,26 @@
 import { useState } from 'react'
-import type { Vehicle } from '../lib/useVehicle'
 import { Card, PageHeader, Grid, StatCard, SectionTitle, Button, Input } from '../components/ui'
 
 interface Props {
-  onVehicleSelect: (v: Vehicle) => void
-  activeVehicle: Vehicle | null
   setPage: (page: string) => void
 }
 
-export default function VINDecoder({ onVehicleSelect, activeVehicle }: Props) {
+interface DecodedVehicle {
+  id: string
+  vin: string
+  make: string
+  model: string
+  year: number
+  engine: string
+  transmission: string
+  trim: string
+  created_at: string
+}
+
+export default function VINDecoder({ setPage }: Props) {
   const [vin, setVin] = useState('')
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<Vehicle | null>(null)
+  const [result, setResult] = useState<DecodedVehicle | null>(null)
   const [error, setError] = useState('')
 
   const decodeVin = async () => {
@@ -29,7 +38,7 @@ export default function VINDecoder({ onVehicleSelect, activeVehicle }: Props) {
         setError('Could not decode VIN')
         return
       }
-      const vehicle: Vehicle = {
+      const vehicle: DecodedVehicle = {
         id: crypto.randomUUID(),
         vin: vin.toUpperCase(),
         make: info.Make,
@@ -41,7 +50,6 @@ export default function VINDecoder({ onVehicleSelect, activeVehicle }: Props) {
         created_at: new Date().toISOString(),
       }
       setResult(vehicle)
-      onVehicleSelect(vehicle)
       // Save to fleet
       const fleet = JSON.parse(localStorage.getItem('fleet_vehicles') || '[]')
       localStorage.setItem('fleet_vehicles', JSON.stringify([vehicle, ...fleet]))
@@ -141,22 +149,6 @@ export default function VINDecoder({ onVehicleSelect, activeVehicle }: Props) {
         </>
       )}
 
-      {activeVehicle && !result && (
-        <>
-          <SectionTitle>Active Vehicle</SectionTitle>
-          <Card>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ fontSize: 28 }}>🚗</div>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: '#eee' }}>
-                  {activeVehicle.year} {activeVehicle.make} {activeVehicle.model}
-                </div>
-                <div style={{ fontSize: 12, color: '#888' }}>{activeVehicle.vin}</div>
-              </div>
-            </div>
-          </Card>
-        </>
-      )}
     </div>
   )
 }

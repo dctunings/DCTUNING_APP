@@ -15,8 +15,9 @@ import {
   getPendingListings,
   moderateListing,
   getStripeConnectUrl,
+  isAdmin as checkIsAdmin,
 } from '../lib/marketplace'
-import { hasActiveSellerSub, getSellerSub } from '../lib/sellerSubscription'
+import { hasActiveSellerSub } from '../lib/sellerSubscription'
 
 // ── SVG Icons ─────────────────────────────────────────────────────
 const Icons = {
@@ -155,8 +156,7 @@ export default function Marketplace({ navigateTo }: { navigateTo?: (p: string) =
       const l = await getMyListings()
       setMyListings(l)
     } else if (tab === 'admin') {
-      const { data: { user } } = await supabase.auth.getUser()
-      const isAdminUser = user?.user_metadata?.is_admin === true
+      const isAdminUser = await checkIsAdmin()
       setIsAdmin(isAdminUser)
       if (isAdminUser) {
         try {
@@ -169,13 +169,9 @@ export default function Marketplace({ navigateTo }: { navigateTo?: (p: string) =
     }
   }
 
-  // Check admin status on mount
+  // Check admin status on mount — uses profiles.is_admin, not user_metadata
   useEffect(() => {
-    const checkAdmin = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setIsAdmin(user?.user_metadata?.is_admin === true)
-    }
-    checkAdmin()
+    checkIsAdmin().then(setIsAdmin)
   }, [])
 
   useEffect(() => {
@@ -696,7 +692,7 @@ export default function Marketplace({ navigateTo }: { navigateTo?: (p: string) =
                 <label style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }}>Tune File</label>
                 <input
                   type="file"
-                  accept=".bin,.ori,.mod,.hex,.zip"
+                  accept=".bin,.frf,.ori,.mod,.dat,.kp"
                   onChange={e => setUploadFile(e.target.files?.[0] || null)}
                   style={{ fontSize: 13, color: 'var(--muted)' }}
                 />

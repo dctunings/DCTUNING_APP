@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import VehicleStrip from '../components/VehicleStrip'
-import type { ActiveVehicle } from '../lib/vehicleContext'
 import type { EcuFileState } from '../App'
 import { Card, PageHeader, Grid, SectionTitle, Badge } from '../components/ui'
 
@@ -54,12 +52,11 @@ const SECTIONS: { title: string; color: string; options: DeleteOption[] }[] = [
 ]
 
 interface Props {
-  activeVehicle: ActiveVehicle | null
   ecuFile: EcuFileState | null
   setPage: (p: 'dashboard' | 'ecuflash' | 'pricing') => void
 }
 
-export default function EmissionsDelete({ activeVehicle, ecuFile, setPage }: Props) {
+export default function EmissionsDelete({ ecuFile, setPage }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [expanded, setExpanded] = useState<string | null>(null)
   const [showDTCs, setShowDTCs] = useState(false)
@@ -112,7 +109,6 @@ export default function EmissionsDelete({ activeVehicle, ecuFile, setPage }: Pro
         <Badge variant="warning">Pro</Badge>
       </PageHeader>
 
-      <VehicleStrip activeVehicle={activeVehicle} />
 
       <Grid columns={2} gap={16} style={{ marginTop: 20 }}>
         {SECTIONS.map(section => (

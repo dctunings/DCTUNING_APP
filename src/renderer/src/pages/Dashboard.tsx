@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react'
-import type { Vehicle } from '../lib/useVehicle'
 import { Card, PageHeader, Grid, StatCard, SectionTitle } from '../components/ui'
 
 interface Props {
   setPage: (page: string) => void
   connected: boolean
-  activeVehicle: Vehicle | null
 }
 
-export default function Dashboard({ setPage, connected, activeVehicle }: Props) {
+export default function Dashboard({ setPage, connected }: Props) {
   const [stats, setStats] = useState({ tunes: 0, recipes: 0, scans: 0, vehicles: 0 })
 
   useEffect(() => {
@@ -37,7 +35,7 @@ export default function Dashboard({ setPage, connected, activeVehicle }: Props) 
     <div style={{ padding: '0 4px' }}>
       <PageHeader
         title="Dashboard"
-        subtitle={activeVehicle ? `${activeVehicle.year} ${activeVehicle.make} ${activeVehicle.model}` : 'Welcome to DCTuning'}
+        subtitle="Welcome to DCTuning"
       />
 
       {/* Stats Row */}
@@ -83,48 +81,6 @@ export default function Dashboard({ setPage, connected, activeVehicle }: Props) 
           </Card>
         ))}
       </Grid>
-
-      {/* Active Vehicle */}
-      {activeVehicle && (
-        <>
-          <SectionTitle>Active Vehicle</SectionTitle>
-          <Card style={{ marginBottom: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{
-                width: 56,
-                height: 56,
-                borderRadius: 14,
-                background: 'linear-gradient(135deg, #00cce0 0%, #00aec8 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 24,
-              }}>
-                🚗
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#eee' }}>
-                  {activeVehicle.year} {activeVehicle.make} {activeVehicle.model}
-                </div>
-                <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>
-                  {activeVehicle.vin || 'No VIN'} · {activeVehicle.engine || 'Unknown engine'}
-                </div>
-              </div>
-              <div style={{
-                padding: '6px 12px',
-                borderRadius: 8,
-                background: connected ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-                color: connected ? '#10b981' : '#ef4444',
-                fontSize: 11,
-                fontWeight: 700,
-                textTransform: 'uppercase',
-              }}>
-                {connected ? 'Connected' : 'Offline'}
-              </div>
-            </div>
-          </Card>
-        </>
-      )}
 
       {/* Recent Activity */}
       <SectionTitle>Recent Activity</SectionTitle>

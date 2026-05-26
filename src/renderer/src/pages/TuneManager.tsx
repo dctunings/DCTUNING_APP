@@ -39,7 +39,11 @@ const iS: React.CSSProperties = { width: '100%', padding: '10px 14px', borderRad
 const lS: React.CSSProperties = { fontSize: 12, color: '#aaa', marginBottom: 4, display: 'block' }
 const bS: React.CSSProperties = { padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'all 0.2s' }
 
-export default function TuneManager() {
+interface Props {
+  onOpenInRemap?: (fileName: string, fileBuffer: ArrayBuffer) => void
+}
+
+export default function TuneManager({ onOpenInRemap }: Props = {}) {
   const [files, setFiles] = useState<TuneFile[]>([])
   const [fleet, setFleet] = useState<FleetVehicle[]>([])
   const [loading, setLoading] = useState(true)

@@ -5,7 +5,6 @@ import { bridge } from '../lib/bridgeClient'
 type Page = string
 
 interface Props {
-  activeVehicle?: { make: string; model: string; year: number; ecuType?: string } | null
   setPage?: (p: Page) => void
   connected?: boolean
   setConnected?: (c: boolean) => void
@@ -19,7 +18,7 @@ interface ScannedDevice {
   [key: string]: unknown
 }
 
-export default function J2534PassThru({ activeVehicle, setPage, setConnected: setGlobalConnected }: Props) {
+export default function J2534PassThru({ setPage, setConnected: setGlobalConnected }: Props) {
   const [connected, setConnected] = useState(false)
   const [bridgeConnected, setBridgeConnected] = useState(false)
   const [protocol, setProtocol] = useState('CAN')
@@ -149,25 +148,6 @@ export default function J2534PassThru({ activeVehicle, setPage, setConnected: se
         title="🔌 J2534 PassThru"
         subtitle="Connect to J2534 PassThru devices for ECU communication, flashing, and diagnostics."
       />
-
-      {activeVehicle && (
-        <Card style={{ marginBottom: 16, background: 'rgba(0,174,200,0.06)', border: '1px solid rgba(0,174,200,0.2)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ fontSize: 24 }}>🚗</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 11, color: 'var(--muted)' }}>Active Vehicle</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>
-                {activeVehicle.make} {activeVehicle.model} {activeVehicle.year}
-              </div>
-              {activeVehicle.ecuType && (
-                <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
-                  ECU: {activeVehicle.ecuType}
-                </div>
-              )}
-            </div>
-          </div>
-        </Card>
-      )}
 
       <Grid columns={4} gap={12} style={{ marginBottom: 16 }}>
         <StatCard
