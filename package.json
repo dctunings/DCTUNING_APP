@@ -34,7 +34,7 @@
     "@electron-toolkit/tsconfig": "^2.0.0",
     "@electron-toolkit/utils": "^4.0.0",
     "@supabase/supabase-js": "^2.0.0",
-    "better-sqlite3": "^12.9.0",
+    "better-sqlite3": "^12.10.0",
     "electron-log": "^5.4.3",
     "electron-updater": "^6.8.3",
     "fflate": "^0.8.2",
