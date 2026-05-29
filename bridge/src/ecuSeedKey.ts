@@ -277,6 +277,18 @@ export const ECU_FLASH_DEFINITIONS: ECUFlashDef[] = [
     notes: 'CAN UDS protocol. Standard J2534 flash. Most common on Irish VW/Audi.',
   },
   {
+    id: 'bosch_me17_vag_small',
+    name: 'Bosch ME17.5.20 / ME17.5.26',
+    manufacturer: 'Bosch',
+    family: 'MED17',
+    vehicles: ['VW Polo 1.0 MPI (6C/AW)', 'VW Up! 1.0 MPI', 'Seat Ibiza 1.0 MPI', 'Seat Mii 1.0', 'Skoda Fabia 1.0 MPI', 'Skoda Citigo 1.0'],
+    protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01,
+    seedLength: 4,
+    flashStartAddr: 0x000000, flashSize: 0x200000, chunkSize: 255,
+    canFlashOBD: true, requiresBench: false,
+    notes: 'VAG 1.0 MPI (CHYA/CHYB) — same Bosch 17.x Tricore platform as MED17.5. Full read/write/clone via OBD supported.',
+  },
+  {
     id: 'bosch_med17_bmw_petrol',
     name: 'Bosch MED17.2 (BMW petrol)',
     manufacturer: 'Bosch',
