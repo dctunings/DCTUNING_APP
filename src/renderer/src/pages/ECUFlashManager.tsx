@@ -143,30 +143,10 @@ export default function ECUFlashManager({ connected, onConnect }: Props) {
     { id: 'continental_ems3125', name: 'Continental EMS3125 / EMS3150', manufacturer: 'Continental', family: 'EMS31', vehicles: ['Renault Clio/Megane 1.2/1.4/1.6 TCe', 'Dacia Sandero/Duster 1.2 TCe'], protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01, seedLength: 2, flashStartAddr: 0x000000, flashSize: 0x080000, chunkSize: 128, canFlashOBD: true, requiresBench: false, notes: 'Renault petrol. Standard UDS flash.' },
   ]
 
-  // Load ECU flash definitions from main process (desktop) or bridge (web).
-  // Falls back to bundled definitions if neither is available.
+  // Use bundled definitions directly — no bridge/IPC fetch needed for static data.
   useEffect(() => {
-    let cancelled = false
-    const load = async () => {
-      const api = (window as any).api
-      let defs: ECUFlashDef[] = []
-      if (api?.j2534GetECUDefinitions) {
-        defs = await api.j2534GetECUDefinitions().catch(() => [] as ECUFlashDef[])
-      } else if (bridge.isConnected()) {
-        try {
-          const res = await bridge.j2534GetECUDefinitions()
-          defs = (res as ECUFlashDef[]) || []
-        } catch { defs = [] }
-      }
-      // Fallback to bundled definitions if IPC/bridge returned nothing
-      if (!defs?.length) defs = BUNDLED_ECU_DEFS
-      if (cancelled) return
-      setEcuDefs(defs)
-      setSelectedEcu(defs[0])
-    }
-    void load()
-    const unsub = bridge.onStateChange(() => { void load() })
-    return () => { cancelled = true; unsub() }
+    setEcuDefs(BUNDLED_ECU_DEFS)
+    setSelectedEcu(BUNDLED_ECU_DEFS[0])
   }, [])
 
   // Subscribe to J2534 progress events
