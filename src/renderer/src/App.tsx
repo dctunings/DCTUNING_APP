@@ -6,7 +6,6 @@ import VINDecoder from './pages/VINDecoder'
 import ECUScanner from './pages/ECUScanner'
 import VoltageMeter from './pages/VoltageMeter'
 import TuneManager from './pages/TuneManager'
-import ECUCloning from './pages/ECUCloning'
 import EmissionsDelete from './pages/EmissionsDelete'
 import J2534PassThru from './pages/J2534PassThru'
 import ECUUnlock from './pages/ECUUnlock'
@@ -52,7 +51,6 @@ export type Page =
   | 'voltage'
   | 'wiring'
   | 'tunes'
-  | 'cloning'
   | 'emissions'
   | 'j2534'
   | 'unlock'
@@ -73,10 +71,10 @@ export type Page =
 // scanner/voltage/j2534 work in web via Web Serial API (ELM327 over USB), so
 // they're NOT gated. Only the J2534-DLL-bridge features (ECU read/write/unlock
 // via PassThru) genuinely require the desktop app.
-const J2534_DLL_PAGES: Page[] = ['cloning', 'unlock', 'ecuflash']
+const J2534_DLL_PAGES: Page[] = ['unlock', 'ecuflash']
 
 // Pages that require at least the Pro plan
-const PRO_ONLY_PAGES: Page[] = ['tunes', 'j2534', 'unlock', 'cloning', 'emissions', 'ecuflash']
+const PRO_ONLY_PAGES: Page[] = ['tunes', 'j2534', 'unlock', 'emissions', 'ecuflash']
 
 function ProUpgradeWall({ setPage }: { setPage: (p: Page) => void }) {
   return (
@@ -259,7 +257,6 @@ export default function App() {
                                       setPage('remap')
                                     }}
                                   />
-      case 'cloning':      return <ECUCloning connected={connected} onConnect={connectBridgeDevice} />
       case 'emissions':    return <EmissionsDelete ecuFile={ecuFile} setPage={setPage} />
       case 'j2534':        return <J2534PassThru connected={connected} setConnected={setConnectedTracked} setPage={setPage} />
       case 'unlock':       return <ECUUnlock connected={connected} onConnect={connectBridgeDevice} />

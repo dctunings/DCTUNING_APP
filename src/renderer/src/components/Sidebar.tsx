@@ -56,11 +56,6 @@ const Icons: Record<string, JSX.Element> = {
       <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
     </svg>
   ),
-  cloning: (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="8" y="8" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-    </svg>
-  ),
   performance: (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
@@ -137,7 +132,7 @@ const Icons: Record<string, JSX.Element> = {
 }
 
 // Pro-only pages that require at least Pro plan
-const PRO_ONLY_PAGES: Page[] = ['tunes', 'j2534', 'unlock', 'cloning', 'emissions', 'ecuflash']
+const PRO_ONLY_PAGES: Page[] = ['tunes', 'j2534', 'unlock', 'emissions', 'ecuflash']
 
 // Pages that only make sense in the desktop app. Driver setup is visible
 // everywhere since users need to download J2534 DLLs and Scanmatic drivers.
@@ -164,8 +159,7 @@ const navItems: { section: string; items: { id: Page; icon: keyof typeof Icons; 
     items: [
       { id: 'remap',       icon: 'remap',       label: 'Remap Builder' },
       { id: 'tunes',       icon: 'tunes',       label: 'File Vault' },
-      { id: 'ecuflash',    icon: 'ecuflash',    label: 'ECU Flash' },
-      { id: 'cloning',     icon: 'cloning',     label: 'ECU Cloning' },
+      { id: 'ecuflash',    icon: 'ecuflash',    label: 'ECU Flash / Clone' },
       { id: 'performance-monitor', icon: 'performance-monitor', label: 'Performance Monitor' },
     ]
   },

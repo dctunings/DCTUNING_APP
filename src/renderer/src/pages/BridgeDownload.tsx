@@ -115,7 +115,7 @@ export default function BridgeDownload({ setPage }: Props) {
         )}
 
         <div style={{ marginTop: 14, fontSize: 11, color: 'var(--text-muted)', opacity: 0.7 }}>
-          Windows 10 / 11 · Free · Required for ECU Cloning, Unlock, Flash from the browser
+          Windows 10 / 11 · Free · Required for ECU Flash / Clone, Unlock from the browser
         </div>
       </div>
 
@@ -167,7 +167,7 @@ export default function BridgeDownload({ setPage }: Props) {
           service that bridges the two: browser ↔ Bridge ↔ J2534 DLL ↔ your device.
         </p>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.7, margin: 0 }}>
-          You only need it for hardware operations — ECU Cloning, Unlock, Flash, Live PIDs over CAN. Tune Manager,
+          You only need it for hardware operations — ECU Flash / Clone, Unlock, Live PIDs over CAN. Tune Manager,
           Remap Builder, Performance, Emissions Delete, AI Copilot all work without it (file-based features).
         </p>
       </div>
