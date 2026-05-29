@@ -513,6 +513,68 @@ export default function ECUFlashManager({ connected, onConnect }: Props) {
             </div>
           )}
 
+          {/* ── CLONING GUIDE ─────────────────────────────────────────── */}
+          <div className="card" style={{ marginBottom: 16 }}>
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, color: 'var(--accent)', letterSpacing: '0.05em' }}>
+              ECU CLONING GUIDE
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Method Comparison</div>
+              <table className="data-table" style={{ fontSize: 12 }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', padding: '6px 10px' }}>Method</th>
+                    <th style={{ textAlign: 'center', padding: '6px 10px' }}>Calibration</th>
+                    <th style={{ textAlign: 'center', padding: '6px 10px' }}>Program</th>
+                    <th style={{ textAlign: 'center', padding: '6px 10px' }}>IMMO/EEPROM</th>
+                    <th style={{ textAlign: 'left', padding: '6px 10px' }}>Tools</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { method: 'OBD (J2534)', cal: true, prog: true, immo: false, tools: 'DCTuning + J2534 interface', color: '#00aec8' },
+                    { method: 'Tricore BDM', cal: true, prog: true, immo: true, tools: 'KTAG, CMD Flash, BitBox', color: '#22c55e' },
+                    { method: 'Boot Mode', cal: true, prog: true, immo: true, tools: 'KTAG, CMD Flash (BSL pins)', color: '#22c55e' },
+                    { method: 'Bench + OBD', cal: true, prog: true, immo: false, tools: 'DCTuning + bench power supply', color: '#00aec8' },
+                  ].map(r => (
+                    <tr key={r.method}>
+                      <td style={{ padding: '6px 10px', fontWeight: 600 }}>{r.method}</td>
+                      <td style={{ textAlign: 'center', padding: '6px 10px', color: 'var(--success)' }}>✓</td>
+                      <td style={{ textAlign: 'center', padding: '6px 10px', color: r.prog ? 'var(--success)' : 'var(--danger)' }}>{r.prog ? '✓' : '✗'}</td>
+                      <td style={{ textAlign: 'center', padding: '6px 10px', color: r.immo ? 'var(--success)' : 'rgba(239,68,68,0.7)' }}>{r.immo ? '✓ Full clone' : '✗ Needs IMMO tool'}</td>
+                      <td style={{ padding: '6px 10px', fontSize: 11, color: 'var(--text-muted)' }}>{r.tools}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
+              <div style={{ background: 'rgba(0,174,200,0.06)', border: '1px solid rgba(0,174,200,0.15)', borderRadius: 10, padding: '14px 16px' }}>
+                <div style={{ fontWeight: 700, fontSize: 12, color: '#00aec8', marginBottom: 6 }}>OBD CLONE (This App)</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                  Reads/writes calibration + program area via J2534. Good for <strong>remapping</strong> and
+                  <strong> calibration transfers</strong>. For a full clone with immobiliser data, you'll also
+                  need an IMMO tool (ODIS/VAS) or use Tricore instead.
+                </div>
+                <div style={{ fontSize: 11, marginTop: 8, color: 'rgba(255,255,255,0.5)' }}>
+                  ① Select ECU → ② Read source → ③ Write to target → ④ IMMO adapt separately
+                </div>
+              </div>
+              <div style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: 10, padding: '14px 16px' }}>
+                <div style={{ fontWeight: 700, fontSize: 12, color: '#22c55e', marginBottom: 6 }}>TRICORE CLONE (Recommended for full clone)</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                  Reads/writes <strong>everything</strong> — calibration, program, bootloader, IMMO, EEPROM.
+                  Direct hardware access via BDM debug pins. No security access needed. Car starts immediately after write.
+                </div>
+                <div style={{ fontSize: 11, marginTop: 8, color: 'rgba(255,255,255,0.5)' }}>
+                  Requires KTAG, CMD Flash, or similar Tricore tool. Open ECU case to access BDM pins.
+                </div>
+              </div>
+            </div>
+          </div>
+
           {ecuId && (
             <div className="card">
               <div style={{ fontWeight: 700, marginBottom: 12, fontSize: 13, color: 'var(--accent)' }}>ECU Identity (Read from Vehicle)</div>
