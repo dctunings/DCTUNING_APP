@@ -53,7 +53,7 @@ const SECTIONS: { title: string; color: string; options: DeleteOption[] }[] = [
 
 interface Props {
   ecuFile: EcuFileState | null
-  setPage: (p: 'dashboard' | 'ecuflash' | 'pricing') => void
+  setPage: (p: string) => void
 }
 
 export default function EmissionsDelete({ ecuFile, setPage }: Props) {
