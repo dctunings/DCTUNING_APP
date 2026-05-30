@@ -575,6 +575,66 @@ export default function ECUFlashManager({ connected, onConnect }: Props) {
             </div>
           </div>
 
+          {/* ── BENCH / BOOT WIRING GUIDE ─────────────────────────────────── */}
+          <div className="card" style={{ marginBottom: 16 }}>
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, color: 'var(--accent)', letterSpacing: '0.05em' }}>
+              BENCH / BOOT WIRING — PCMTuner Cable
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 14, lineHeight: 1.5 }}>
+              Pin connections for ECU bench and boot mode using the PCMTuner / Scanmatik cable harness.
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12, marginBottom: 16 }}>
+              {/* Bench mode */}
+              <div style={{ background: 'rgba(0,174,200,0.06)', border: '1px solid rgba(0,174,200,0.15)', borderRadius: 10, padding: '14px 16px' }}>
+                <div style={{ fontWeight: 700, fontSize: 12, color: '#00aec8', marginBottom: 10 }}>BENCH MODE (OBD on bench)</div>
+                {[
+                  { color: '#ef4444', wire: 'Red × 2', label: 'VECU → ECU 12V supply pins' },
+                  { color: '#333',    wire: 'Black × 2', label: 'GND → ECU ground pins' },
+                  { color: '#fff',    wire: 'White', label: 'CAN H → ECU CAN High' },
+                  { color: '#22c55e', wire: 'Green', label: 'CAN L → ECU CAN Low' },
+                  { color: '#eab308', wire: 'Yellow', label: 'K-LINE → ECU K-Line (older ECUs)' },
+                ].map(r => (
+                  <div key={r.wire} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, fontSize: 11 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: r.color, border: r.color === '#333' ? '1px solid rgba(255,255,255,0.2)' : 'none', flexShrink: 0 }} />
+                    <span style={{ fontWeight: 700, minWidth: 80 }}>{r.wire}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>{r.label}</span>
+                  </div>
+                ))}
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 8, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+                  Uses standard UDS over CAN — same as OBD but ECU powered on bench. No ECU case opening needed.
+                </div>
+              </div>
+
+              {/* Boot / Tricore mode */}
+              <div style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: 10, padding: '14px 16px' }}>
+                <div style={{ fontWeight: 700, fontSize: 12, color: '#22c55e', marginBottom: 10 }}>BOOT / TRICORE MODE (full clone)</div>
+                {[
+                  { color: '#ef4444', wire: 'Red × 2', label: 'VECU → ECU 12V supply pins' },
+                  { color: '#333',    wire: 'Black × 2', label: 'GND → ECU ground pins' },
+                  { color: '#9ca3af', wire: 'Grey (croc)', label: 'BOOT → Boot pin on ECU board' },
+                  { color: '#3b82f6', wire: 'Blue (croc)', label: 'CNF1 → Config pin on ECU board' },
+                  { color: '#a855f7', wire: 'Purple', label: 'VPP → Programming voltage pin' },
+                  { color: '#fff',    wire: 'White S1', label: 'S1/GPT0 → Tricore BDM data 0' },
+                  { color: '#eab308', wire: 'Yellow S2', label: 'S2/GPT1 → Tricore BDM data 1' },
+                ].map(r => (
+                  <div key={r.wire} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, fontSize: 11 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: r.color, border: (r.color === '#333' || r.color === '#fff') ? '1px solid rgba(255,255,255,0.2)' : 'none', flexShrink: 0 }} />
+                    <span style={{ fontWeight: 700, minWidth: 80 }}>{r.wire}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>{r.label}</span>
+                  </div>
+                ))}
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 8, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+                  Requires opening ECU case. Connect BOOT + CNF1 croc clips to board pads. Gets full flash + IMMO + EEPROM.
+                </div>
+              </div>
+            </div>
+
+            <div className="banner banner-warning" style={{ fontSize: 11, padding: '8px 12px' }}>
+              <strong>Bench power:</strong> Always use a stable 12V bench PSU (13.2–13.8V). Never use a car battery charger — voltage spikes can brick the ECU. Double-check GND and VECU polarity before powering on.
+            </div>
+          </div>
+
           {ecuId && (
             <div className="card">
               <div style={{ fontWeight: 700, marginBottom: 12, fontSize: 13, color: 'var(--accent)' }}>ECU Identity (Read from Vehicle)</div>
