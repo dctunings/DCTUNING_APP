@@ -58,6 +58,26 @@ const ME7_PINS = [
   { pin: 'F4',  func: 'Ignition Coil 4',     type: 'OUT',  note: 'Spark coil D output' },
 ]
 
+const PCMTUNER_CABLE = [
+  { wire: 'Red × 2',       color: '#ef4444', label: 'VECU',       func: 'ECU 12V power supply', modes: ['Bench', 'Boot', 'Tricore'] },
+  { wire: 'Black × 2',     color: '#333333', label: 'GND',        func: 'ECU ground', modes: ['Bench', 'Boot', 'Tricore'] },
+  { wire: 'White',          color: '#e5e5e5', label: 'CAN H',      func: 'CAN bus High (ISO 15765)', modes: ['OBD', 'Bench'] },
+  { wire: 'Green',          color: '#22c55e', label: 'CAN L',      func: 'CAN bus Low (ISO 15765)', modes: ['OBD', 'Bench'] },
+  { wire: 'Yellow',         color: '#eab308', label: 'K-LINE',     func: 'ISO 9141 diagnostic (ME7, EDC16)', modes: ['OBD', 'Bench'] },
+  { wire: 'Purple',         color: '#a855f7', label: 'VPP',        func: 'Programming voltage', modes: ['Boot'] },
+  { wire: 'Grey (croc)',    color: '#9ca3af', label: 'BOOT',       func: 'Bootstrap loader pin — activates BSL mode', modes: ['Boot'] },
+  { wire: 'Blue (croc)',    color: '#3b82f6', label: 'CNF1',       func: 'Configuration pin — sets Tricore debug mode', modes: ['Boot', 'Tricore'] },
+  { wire: 'White S1',       color: '#e5e5e5', label: 'S1 / GPT0',  func: 'Tricore BDM data line 0', modes: ['Tricore'] },
+  { wire: 'Yellow S2',      color: '#eab308', label: 'S2 / GPT1',  func: 'Tricore BDM data line 1', modes: ['Tricore'] },
+]
+
+const MODE_COLORS: Record<string, string> = {
+  OBD: '#00aec8',
+  Bench: '#f59e0b',
+  Boot: '#a855f7',
+  Tricore: '#22c55e',
+}
+
 const PROTOCOL_COLORS: Record<string, string> = {
   PWR: '#ef4444',
   CAN: '#22c55e',
@@ -67,7 +87,7 @@ const PROTOCOL_COLORS: Record<string, string> = {
 }
 
 export default function WiringDiagrams() {
-  const [tab, setTab] = useState<'obd2' | 'me7' | 'can'>('obd2')
+  const [tab, setTab] = useState<'obd2' | 'me7' | 'can' | 'pcmtuner'>('obd2')
 
   return (
     <div style={{ padding: '0 4px' }}>
@@ -77,10 +97,11 @@ export default function WiringDiagrams() {
         icon="🔌"
       />
 
-      <Grid cols={3} gap={12} style={{ marginBottom: 24 }}>
+      <Grid cols={4} gap={12} style={{ marginBottom: 24 }}>
         <StatCard label="OBD2 Pins" value="16" icon="🔢" color="#00aec8" />
         <StatCard label="CAN Nodes" value={CAN_BUS_NODES.length} icon="🌐" color="#10b981" />
         <StatCard label="ME7 Pins" value={ME7_PINS.length} icon="⚡" color="#f59e0b" />
+        <StatCard label="PCMTuner Wires" value={PCMTUNER_CABLE.length} icon="🔌" color="#a855f7" />
       </Grid>
 
       {/* Tabs */}
@@ -89,6 +110,7 @@ export default function WiringDiagrams() {
           ['obd2', 'OBD2 Port'],
           ['can', 'CAN Bus'],
           ['me7', 'ME7 ECU'],
+          ['pcmtuner', 'PCMTuner Cable'],
         ].map(([key, label]) => (
           <button
             key={key}
@@ -219,6 +241,133 @@ export default function WiringDiagrams() {
                 </div>
               </Card>
             ))}
+          </Grid>
+        </>
+      )}
+
+      {tab === 'pcmtuner' && (
+        <>
+          <SectionTitle>PCMTuner / Scanmatik Bench Cable Pinout</SectionTitle>
+
+          {/* Mode legend */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
+            {Object.entries(MODE_COLORS).map(([mode, col]) => (
+              <span key={mode} style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 8, height: 8, borderRadius: 2, background: col }} />
+                <span style={{ color: '#888' }}>{mode}</span>
+              </span>
+            ))}
+          </div>
+
+          {/* Wire cards */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+            {PCMTUNER_CABLE.map((w) => (
+              <Card key={w.wire} style={{ padding: 14, borderLeft: `3px solid ${w.color === '#333333' ? '#666' : w.color}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                  <div style={{
+                    width: 14, height: 14, borderRadius: '50%',
+                    background: w.color,
+                    border: (w.color === '#333333' || w.color === '#e5e5e5') ? '1px solid rgba(255,255,255,0.25)' : 'none',
+                    flexShrink: 0,
+                  }} />
+                  <div style={{ minWidth: 110, flexShrink: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#eee' }}>{w.wire}</div>
+                  </div>
+                  <div style={{ minWidth: 80, flexShrink: 0 }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, fontFamily: 'monospace', color: w.color === '#333333' ? '#aaa' : w.color === '#e5e5e5' ? '#ccc' : w.color }}>
+                      {w.label}
+                    </span>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 160 }}>
+                    <div style={{ fontSize: 12, color: '#999' }}>{w.func}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                    {w.modes.map(m => (
+                      <Badge key={m} color={MODE_COLORS[m]} bg={MODE_COLORS[m] + '18'}>
+                        {m}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Connection guides */}
+          <SectionTitle>Connection Guide by Mode</SectionTitle>
+          <Grid cols={2} gap={12}>
+            <Card style={{ padding: 16, borderTop: `3px solid ${MODE_COLORS.Bench}` }}>
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 10, color: MODE_COLORS.Bench }}>Bench Mode</div>
+              <div style={{ fontSize: 12, color: '#999', lineHeight: 1.7, marginBottom: 10 }}>
+                ECU removed from car, powered on bench. Uses standard OBD protocol (CAN or K-Line) over the cable — no case opening needed.
+              </div>
+              <div style={{ fontSize: 12, lineHeight: 1.8 }}>
+                {[
+                  { c: '#ef4444', t: 'Red × 2 (VECU) → ECU 12V supply pins' },
+                  { c: '#666',    t: 'Black × 2 (GND) → ECU ground pins' },
+                  { c: '#e5e5e5', t: 'White (CAN H) → ECU CAN High' },
+                  { c: '#22c55e', t: 'Green (CAN L) → ECU CAN Low' },
+                  { c: '#eab308', t: 'Yellow (K-LINE) → K-Line (ME7/EDC16 only)' },
+                ].map(r => (
+                  <div key={r.t} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: r.c, border: r.c === '#666' ? '1px solid #999' : 'none', flexShrink: 0 }} />
+                    <span style={{ color: '#bbb' }}>{r.t}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card style={{ padding: 16, borderTop: `3px solid ${MODE_COLORS.Boot}` }}>
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 10, color: MODE_COLORS.Boot }}>Boot Mode</div>
+              <div style={{ fontSize: 12, color: '#999', lineHeight: 1.7, marginBottom: 10 }}>
+                ECU case opened. BOOT + CNF1 croc clips connect to pads on the ECU board to activate the bootstrap loader. Full flash + IMMO access.
+              </div>
+              <div style={{ fontSize: 12, lineHeight: 1.8 }}>
+                {[
+                  { c: '#ef4444', t: 'Red × 2 (VECU) → ECU 12V supply pins' },
+                  { c: '#666',    t: 'Black × 2 (GND) → ECU ground pins' },
+                  { c: '#9ca3af', t: 'Grey croc (BOOT) → Boot pad on ECU board' },
+                  { c: '#3b82f6', t: 'Blue croc (CNF1) → Config pad on ECU board' },
+                  { c: '#a855f7', t: 'Purple (VPP) → Programming voltage pin' },
+                ].map(r => (
+                  <div key={r.t} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: r.c, border: r.c === '#666' ? '1px solid #999' : 'none', flexShrink: 0 }} />
+                    <span style={{ color: '#bbb' }}>{r.t}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card style={{ padding: 16, borderTop: `3px solid ${MODE_COLORS.Tricore}` }}>
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 10, color: MODE_COLORS.Tricore }}>Tricore BDM Mode</div>
+              <div style={{ fontSize: 12, color: '#999', lineHeight: 1.7, marginBottom: 10 }}>
+                Direct debug access to the Tricore processor via BDM pins. Bypasses all security. Best method for full ECU clone — reads everything including IMMO and EEPROM.
+              </div>
+              <div style={{ fontSize: 12, lineHeight: 1.8 }}>
+                {[
+                  { c: '#ef4444', t: 'Red × 2 (VECU) → ECU 12V supply' },
+                  { c: '#666',    t: 'Black × 2 (GND) → ECU ground' },
+                  { c: '#3b82f6', t: 'Blue croc (CNF1) → Config pad on board' },
+                  { c: '#e5e5e5', t: 'White S1 (GPT0) → Tricore BDM data 0' },
+                  { c: '#eab308', t: 'Yellow S2 (GPT1) → Tricore BDM data 1' },
+                ].map(r => (
+                  <div key={r.t} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: r.c, border: (r.c === '#666' || r.c === '#e5e5e5') ? '1px solid #999' : 'none', flexShrink: 0 }} />
+                    <span style={{ color: '#bbb' }}>{r.t}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card style={{ padding: 16, borderTop: '3px solid #ef4444' }}>
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 10, color: '#ef4444' }}>Safety</div>
+              <div style={{ fontSize: 12, color: '#999', lineHeight: 1.8 }}>
+                <div style={{ marginBottom: 6 }}><strong style={{ color: '#ef4444' }}>Power supply:</strong> Use a stable 13.2–13.8V bench PSU. Never a car battery charger — voltage spikes brick ECUs.</div>
+                <div style={{ marginBottom: 6 }}><strong style={{ color: '#ef4444' }}>Polarity:</strong> Double-check Red (VECU) and Black (GND) before powering on. Reverse polarity = dead ECU.</div>
+                <div style={{ marginBottom: 6 }}><strong style={{ color: '#ef4444' }}>Never interrupt:</strong> Once a write/flash starts, do not disconnect power or cable. Wait for completion.</div>
+                <div><strong style={{ color: '#ef4444' }}>Croc clips:</strong> BOOT and CNF1 clips must make solid contact with the board pads. Loose clips = failed flash.</div>
+              </div>
+            </Card>
           </Grid>
         </>
       )}
