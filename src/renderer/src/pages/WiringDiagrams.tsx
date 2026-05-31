@@ -67,8 +67,8 @@ const PCMTUNER_CABLE = [
   { wire: 'Purple',         color: '#a855f7', label: 'VPP',        func: 'Programming voltage', modes: ['Boot'] },
   { wire: 'Grey (croc)',    color: '#9ca3af', label: 'BOOT',       func: 'Bootstrap loader pin — activates BSL mode', modes: ['Boot'] },
   { wire: 'Blue (croc)',    color: '#3b82f6', label: 'CNF1',       func: 'Configuration pin — sets Tricore debug mode', modes: ['Boot', 'Tricore'] },
-  { wire: 'White S1',       color: '#e5e5e5', label: 'S1 / GPT0',  func: 'Tricore BDM data line 0', modes: ['Tricore'] },
-  { wire: 'Yellow S2',      color: '#eab308', label: 'S2 / GPT1',  func: 'Tricore BDM data line 1', modes: ['Tricore'] },
+  { wire: 'White S1',       color: '#e5e5e5', label: 'S1 / GPT0',  func: 'Tricore BDM data line 0 — via ECU connector (no case opening)', modes: ['Tricore'] },
+  { wire: 'Yellow S2',      color: '#eab308', label: 'S2 / GPT1',  func: 'Tricore BDM data line 1 — via ECU connector (no case opening)', modes: ['Tricore'] },
 ]
 
 const MODE_COLORS: Record<string, string> = {
@@ -339,23 +339,27 @@ export default function WiringDiagrams() {
             </Card>
 
             <Card style={{ padding: 16, borderTop: `3px solid ${MODE_COLORS.Tricore}` }}>
-              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 10, color: MODE_COLORS.Tricore }}>Tricore BDM Mode</div>
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 10, color: MODE_COLORS.Tricore }}>Tricore GPT Mode (No case opening)</div>
               <div style={{ fontSize: 12, color: '#999', lineHeight: 1.7, marginBottom: 10 }}>
-                Direct debug access to the Tricore processor via BDM pins. Bypasses all security. Best method for full ECU clone — reads everything including IMMO and EEPROM.
+                Direct Tricore BDM access via GPT pins on the <strong>ECU connector</strong> — no need to open the case.
+                Bypasses all security. Reads/writes full flash including IMMO, EEPROM, bootloader. Best method for full ECU clone.
               </div>
               <div style={{ fontSize: 12, lineHeight: 1.8 }}>
                 {[
-                  { c: '#ef4444', t: 'Red × 2 (VECU) → ECU 12V supply' },
-                  { c: '#666',    t: 'Black × 2 (GND) → ECU ground' },
-                  { c: '#3b82f6', t: 'Blue croc (CNF1) → Config pad on board' },
-                  { c: '#e5e5e5', t: 'White S1 (GPT0) → Tricore BDM data 0' },
-                  { c: '#eab308', t: 'Yellow S2 (GPT1) → Tricore BDM data 1' },
+                  { c: '#ef4444', t: 'Red × 2 (VECU) → ECU 12V supply pins' },
+                  { c: '#666',    t: 'Black × 2 (GND) → ECU ground pins' },
+                  { c: '#e5e5e5', t: 'White S1 (GPT0) → ECU connector GPT0 pin' },
+                  { c: '#eab308', t: 'Yellow S2 (GPT1) → ECU connector GPT1 pin' },
                 ].map(r => (
                   <div key={r.t} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: r.c, border: (r.c === '#666' || r.c === '#e5e5e5') ? '1px solid #999' : 'none', flexShrink: 0 }} />
                     <span style={{ color: '#bbb' }}>{r.t}</span>
                   </div>
                 ))}
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 8, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
+                Supported on most MED17, ME17, EDC17 ECUs where GPT lines are routed to the connector.
+                Only use BOOT/CNF1 croc clips if GPT mode doesn't work for a specific ECU variant.
               </div>
             </Card>
 

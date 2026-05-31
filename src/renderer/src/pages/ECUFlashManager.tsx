@@ -534,8 +534,8 @@ export default function ECUFlashManager({ connected, onConnect }: Props) {
                 <tbody>
                   {[
                     { method: 'OBD (J2534)', cal: true, prog: true, immo: false, tools: 'DCTuning + J2534 interface', color: '#00aec8' },
-                    { method: 'Tricore BDM', cal: true, prog: true, immo: true, tools: 'KTAG, CMD Flash, BitBox', color: '#22c55e' },
-                    { method: 'Boot Mode', cal: true, prog: true, immo: true, tools: 'KTAG, CMD Flash (BSL pins)', color: '#22c55e' },
+                    { method: 'Tricore GPT (bench)', cal: true, prog: true, immo: true, tools: 'PCMTuner / Scanmatik — via ECU connector, no case opening', color: '#22c55e' },
+                    { method: 'Boot Mode', cal: true, prog: true, immo: true, tools: 'BOOT + CNF1 croc clips on board pads (case open)', color: '#a855f7' },
                     { method: 'Bench + OBD', cal: true, prog: true, immo: false, tools: 'DCTuning + bench power supply', color: '#00aec8' },
                   ].map(r => (
                     <tr key={r.method}>
@@ -563,13 +563,14 @@ export default function ECUFlashManager({ connected, onConnect }: Props) {
                 </div>
               </div>
               <div style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: 10, padding: '14px 16px' }}>
-                <div style={{ fontWeight: 700, fontSize: 12, color: '#22c55e', marginBottom: 6 }}>TRICORE CLONE (Recommended for full clone)</div>
+                <div style={{ fontWeight: 700, fontSize: 12, color: '#22c55e', marginBottom: 6 }}>TRICORE GPT CLONE (Recommended for full clone)</div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.6 }}>
                   Reads/writes <strong>everything</strong> — calibration, program, bootloader, IMMO, EEPROM.
-                  Direct hardware access via BDM debug pins. No security access needed. Car starts immediately after write.
+                  Direct Tricore BDM via GPT pins on the <strong>ECU connector</strong> — no case opening needed
+                  on most MED17/ME17/EDC17 ECUs. Bypasses all security. Car starts immediately after write.
                 </div>
                 <div style={{ fontSize: 11, marginTop: 8, color: 'rgba(255,255,255,0.5)' }}>
-                  Requires KTAG, CMD Flash, or similar Tricore tool. Open ECU case to access BDM pins.
+                  ① Bench: Power + GPT0/GPT1 to ECU connector → ② Read source → ③ Write to target → Done
                 </div>
               </div>
             </div>
