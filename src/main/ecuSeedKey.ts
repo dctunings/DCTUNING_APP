@@ -286,7 +286,7 @@ export const ECU_FLASH_DEFINITIONS: ECUFlashDef[] = [
     seedLength: 4,
     flashStartAddr: 0x000000, flashSize: 0x200000, chunkSize: 255,
     canFlashOBD: true, requiresBench: false,
-    notes: 'VAG 1.0 MPI (CHYA/CHYB) — same Bosch 17.x Tricore platform as MED17.5. Full read/write/clone via OBD supported.',
+    notes: 'TC1724 Tricore. PCMTuner Module 71. Bench pinout: +12V → T94:6+87 | GND → T94:2 | CAN-L → T94:67 | CAN-H → T94:68 | GPT0 → T60:7 | GPT1 → T60:5. Full clone via GPT — no case opening.',
   },
   {
     id: 'bosch_med17_bmw_petrol',
