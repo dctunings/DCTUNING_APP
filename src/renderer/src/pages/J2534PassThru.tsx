@@ -64,7 +64,9 @@ export default function J2534PassThru({ setPage, setConnected: setGlobalConnecte
       case 'CAN': return 5
       case 'ISO15765': return 6
       case 'K-Line': return 3
-      case 'J1850': return 1
+      case 'KWP2000': return 4
+      case 'J1850PWM': return 1
+      case 'J1850VPW': return 2
       default: return 5
     }
   }
@@ -264,10 +266,12 @@ export default function J2534PassThru({ setPage, setConnected: setGlobalConnecte
                 onChange={e => setProtocol(e.target.value)}
                 style={{ width: '100%', padding: '8px 12px', borderRadius: 6, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: 13 }}
               >
-                <option value="CAN">CAN (ISO 11898)</option>
-                <option value="ISO15765">ISO 15765-4 (CAN)</option>
+                <option value="ISO15765">ISO 15765 CAN (UDS — most ECUs)</option>
+                <option value="CAN">Raw CAN (ISO 11898)</option>
+                <option value="KWP2000">KWP2000 (ISO 14230)</option>
                 <option value="K-Line">K-Line (ISO 9141-2)</option>
-                <option value="J1850">J1850 (PWM/VPW)</option>
+                <option value="J1850PWM">J1850 PWM</option>
+                <option value="J1850VPW">J1850 VPW</option>
               </select>
             </div>
             <div>

@@ -42,9 +42,12 @@ type Tab = 'select' | 'read' | 'write' | 'seedkey' | 'checksum'
 type Phase = 'idle' | 'reading-id' | 'reading-flash' | 'writing' | 'done' | 'error'
 
 const PROTOCOL_LABELS: Record<number, string> = {
+  1: 'J1850 PWM',
+  2: 'J1850 VPW',
   3: 'K-Line ISO9141',
   4: 'KWP2000 ISO14230',
-  6: 'CAN ISO15765',
+  5: 'Raw CAN ISO11898',
+  6: 'CAN ISO15765 (UDS)',
 }
 
 const MFR_COLORS: Record<string, string> = {
