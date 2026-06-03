@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { bridge } from '../lib/bridgeClient'
 import PreFlashSafetyCheck from '../components/PreFlashSafetyCheck'
+import { ECU_PINOUTS, type EcuPinout } from '../data/ecuPinouts'
 
 interface ConnectResult { ok: boolean; error?: string }
 interface Props {
@@ -38,7 +39,7 @@ interface ECUIdentification {
   raw: Record<string, string>
 }
 
-type Tab = 'select' | 'read' | 'write' | 'seedkey' | 'checksum'
+type Tab = 'select' | 'read' | 'write' | 'seedkey' | 'checksum' | 'pinouts'
 type Phase = 'idle' | 'reading-id' | 'reading-flash' | 'writing' | 'done' | 'error'
 
 const PROTOCOL_LABELS: Record<number, string> = {
@@ -122,6 +123,17 @@ export default function ECUFlashManager({ connected, onConnect }: Props) {
   const [confirmWrite, setConfirmWrite] = useState(false)
   const unsubRef = useRef<(() => void) | null>(null)
   const [showSafetyCheck, setShowSafetyCheck] = useState(false)
+  const [pinoutSearch, setPinoutSearch] = useState('')
+  const filteredPinouts = useMemo(() => {
+    if (!pinoutSearch.trim()) return ECU_PINOUTS
+    const q = pinoutSearch.toLowerCase()
+    return ECU_PINOUTS.filter(p =>
+      p.ecu.toLowerCase().includes(q) ||
+      p.make.toLowerCase().includes(q) ||
+      p.tc.toLowerCase().includes(q) ||
+      p.conn.some(c => c.toLowerCase().includes(q))
+    )
+  }, [pinoutSearch])
   const logEndRef = useRef<HTMLDivElement | null>(null)
 
   const addLog = (msg: string, type = 'info') => {
@@ -429,6 +441,7 @@ export default function ECUFlashManager({ connected, onConnect }: Props) {
           { id: 'write',    label: '③ Write ECU' },
           { id: 'seedkey',  label: '🔑 Seed/Key' },
           { id: 'checksum', label: '✓ Checksum' },
+          { id: 'pinouts',  label: `📌 Pinouts (${ECU_PINOUTS.length})` },
         ] as { id: Tab; label: string }[]).map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             padding: '7px 16px', fontSize: 12, fontWeight: 600, fontFamily: 'Manrope, sans-serif',
@@ -501,124 +514,71 @@ export default function ECUFlashManager({ connected, onConnect }: Props) {
             )}
           </div>
 
-          {/* ── VISUAL PINOUT DIAGRAM ─────────────────────────────────── */}
-          {selectedEcu?.id === 'bosch_me17_vag_small' && (
-            <div className="card" style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, color: 'var(--accent)', letterSpacing: '0.05em' }}>
-                BENCH PINOUT — ME17.5.22 / ME17.5.26 TC1724
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16 }}>
-                PCMTuner Module 71 · Tricore GPT via ECU connector · No case opening
-              </div>
+          {/* ── DYNAMIC PINOUT FROM DATABASE (95 ECUs) ─────────────────── */}
+          {selectedEcu && (() => {
+            // Match selected ECU name to pinout database
+            const ecuName = selectedEcu.name.toLowerCase()
+            const matches = ECU_PINOUTS.filter(p => {
+              const pName = p.ecu.toLowerCase()
+              // Direct match or partial match on ECU family
+              return ecuName.includes(pName) || pName.includes(ecuName.replace(/bosch\s*/i, '').split('/')[0].trim().toLowerCase())
+            })
+            // Also try matching by family name from the selected ECU definition
+            const familyMatches = matches.length === 0 ? ECU_PINOUTS.filter(p => {
+              const family = selectedEcu.family.toLowerCase()
+              return p.ecu.toLowerCase().startsWith(family.replace('med', 'med').replace('edc', 'edc'))
+            }) : []
+            const allMatches = matches.length > 0 ? matches : familyMatches
+            if (allMatches.length === 0) return null
 
-              {/* Connector diagrams */}
-              <div style={{ display: 'flex', gap: 16, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
-                {/* T60 connector */}
-                <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 10, padding: '16px 20px', minWidth: 220 }}>
-                  <div style={{ textAlign: 'center', fontWeight: 800, fontSize: 14, marginBottom: 10, color: '#fff' }}>T60</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'monospace', fontSize: 11 }}>
-                    {[
-                      { row: '46–60', pins: [46,47,48,49,50,51,52,53,54,55,56,57,58,59,60], highlight: {} },
-                      { row: '31–45', pins: [31,32,33,34,35,36,37,38,39,40,41,42,43,44,45], highlight: {} },
-                      { row: '16–30', pins: [16,17,18,19,20,21,22,23,24,25,26,27,28,29,30], highlight: {} },
-                      { row: ' 1–15', pins: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15], highlight: { 5: '#eab308', 7: '#22c55e' } },
-                    ].map(r => (
-                      <div key={r.row} style={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                        {r.pins.map(p => (
-                          <div key={p} style={{
-                            width: 13, height: 13, borderRadius: 2, fontSize: 7, fontWeight: 700,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            background: r.highlight[p] ? r.highlight[p] : 'rgba(255,255,255,0.08)',
-                            color: r.highlight[p] ? '#000' : 'rgba(255,255,255,0.2)',
-                            border: r.highlight[p] ? 'none' : '1px solid rgba(255,255,255,0.06)',
-                          }}>{r.highlight[p] ? p : ''}</div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 10, fontSize: 10 }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: 2, background: '#22c55e' }} /> Pin 7 = GPT0
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: 2, background: '#eab308' }} /> Pin 5 = GPT1
-                    </span>
-                  </div>
+            return (
+              <div className="card" style={{ marginBottom: 16 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8, color: 'var(--accent)', letterSpacing: '0.05em' }}>
+                  BENCH PINOUT — PCMTuner Module 71
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 12 }}>
+                  {allMatches.length} matching ECU variant{allMatches.length > 1 ? 's' : ''} · Tricore GPT via ECU connector · No case opening
                 </div>
 
-                {/* T94 connector */}
-                <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 10, padding: '16px 20px', minWidth: 280 }}>
-                  <div style={{ textAlign: 'center', fontWeight: 800, fontSize: 14, marginBottom: 10, color: '#fff' }}>T94</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'monospace', fontSize: 11 }}>
-                    {[
-                      { row: '73–94', pins: [73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94], highlight: { 87: '#ef4444' } },
-                      { row: '51–72', pins: [51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72], highlight: { 67: '#22c55e', 68: '#fff' } },
-                      { row: '29–50', pins: [29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50], highlight: {} },
-                      { row: ' 7–28', pins: [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28], highlight: {} },
-                    ].map(r => (
-                      <div key={r.row} style={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                        {r.pins.map(p => (
-                          <div key={p} style={{
-                            width: 13, height: 13, borderRadius: 2, fontSize: 7, fontWeight: 700,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            background: r.highlight[p] ? r.highlight[p] : 'rgba(255,255,255,0.08)',
-                            color: r.highlight[p] ? (r.highlight[p] === '#fff' ? '#000' : '#fff') : 'rgba(255,255,255,0.2)',
-                            border: r.highlight[p] ? 'none' : '1px solid rgba(255,255,255,0.06)',
-                          }}>{r.highlight[p] ? p : ''}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {allMatches.map((p, idx) => (
+                    <div key={idx} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: 8, padding: '12px 14px', border: '1px solid var(--border)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <div style={{ fontWeight: 800, fontSize: 13, color: '#fff' }}>{p.ecu} <span style={{ color: 'var(--text-muted)', fontWeight: 500, fontSize: 11 }}>{p.tc}</span></div>
+                        <div style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 700, textTransform: 'uppercase' }}>{p.make}</div>
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
+                        Connectors: <span style={{ color: '#ddd', fontWeight: 600, fontFamily: 'monospace' }}>{p.conn.join(' + ')}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        {[
+                          { label: '+12V', pin: p.v12, bg: '#ef4444', color: '#fff' },
+                          { label: 'CAN-L', pin: p.canl, bg: '#22c55e', color: '#000' },
+                          { label: 'GND', pin: p.gnd, bg: '#333', color: '#fff' },
+                          { label: 'CAN-H', pin: p.canh, bg: '#fff', color: '#000' },
+                          { label: 'GPT0 / GPT1', pin: p.gpt, bg: 'linear-gradient(90deg, #22c55e 50%, #eab308 50%)', color: '#000' },
+                        ].map((r, i) => (
+                          <div key={i} style={{ display: 'flex', borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.04)' : 'none', gridColumn: i === 4 ? '1 / -1' : undefined }}>
+                            <div style={{ width: 90, padding: '6px 10px', background: r.bg, color: r.color, fontWeight: 800, fontSize: 11, fontFamily: 'monospace', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                              {r.label}
+                            </div>
+                            <div style={{ flex: 1, padding: '6px 10px', background: 'rgba(0,0,0,0.15)', color: '#ddd', fontSize: 12, fontWeight: 600, fontFamily: 'monospace', display: 'flex', alignItems: 'center' }}>
+                              {r.pin}
+                            </div>
+                          </div>
                         ))}
                       </div>
-                    ))}
-                    {/* Extra pins 1-6 */}
-                    <div style={{ display: 'flex', gap: 2, justifyContent: 'flex-start', paddingLeft: 0 }}>
-                      {[1,2,3,4,5,6].map(p => (
-                        <div key={p} style={{
-                          width: 13, height: 13, borderRadius: 2, fontSize: 7, fontWeight: 700,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          background: p === 2 ? '#333' : p === 6 ? '#ef4444' : 'rgba(255,255,255,0.08)',
-                          color: p === 2 || p === 6 ? '#fff' : 'rgba(255,255,255,0.2)',
-                          border: (p === 2 || p === 6) ? 'none' : '1px solid rgba(255,255,255,0.06)',
-                        }}>{(p === 2 || p === 6) ? p : ''}</div>
-                      ))}
+                      {p.note && (
+                        <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 6, fontStyle: 'italic' }}>
+                          ℹ️ {p.note}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 10, fontSize: 10, flexWrap: 'wrap' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: 2, background: '#ef4444' }} /> 6,87 = +12V
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: 2, background: '#333', border: '1px solid #666' }} /> 2 = GND
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: 2, background: '#22c55e' }} /> 67 = CAN-L
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: 2, background: '#fff' }} /> 68 = CAN-H
-                    </span>
-                  </div>
+                  ))}
                 </div>
               </div>
-
-              {/* Wiring table */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)' }}>
-                {[
-                  { label: '+12V', pin: 'T94: 6, 87', bg: '#ef4444', color: '#fff' },
-                  { label: 'CAN-L', pin: 'T94: 67', bg: '#22c55e', color: '#000' },
-                  { label: 'GND', pin: 'T94: 2', bg: '#333', color: '#fff' },
-                  { label: 'CAN-H', pin: 'T94: 68', bg: '#fff', color: '#000' },
-                  { label: 'GPT0  GPT1', pin: 'T60: 7, 5', bg: 'linear-gradient(90deg, #22c55e 50%, #eab308 50%)', color: '#000' },
-                ].map((r, i) => (
-                  <div key={i} style={{ display: 'flex', borderBottom: i < 4 ? '1px solid var(--border)' : 'none', gridColumn: i === 4 ? '1 / -1' : undefined }}>
-                    <div style={{ flex: 1, padding: '8px 14px', background: r.bg, color: r.color, fontWeight: 800, fontSize: 13, fontFamily: 'monospace', display: 'flex', alignItems: 'center' }}>
-                      {r.label}
-                    </div>
-                    <div style={{ flex: 1, padding: '8px 14px', background: 'rgba(0,0,0,0.2)', color: '#ddd', fontSize: 13, fontWeight: 600, fontFamily: 'monospace', display: 'flex', alignItems: 'center' }}>
-                      {r.pin}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+            )
+          })()}
 
           {selectedEcu && (
             <div className="card" style={{ marginBottom: 16 }}>
@@ -1064,6 +1024,53 @@ export default function ECUFlashManager({ connected, onConnect }: Props) {
                 </div>
               </div>
             )}
+          </div>
+        </>
+      )}
+
+      {/* ── TAB 6: PINOUTS DATABASE ───────────────────────────────────────── */}
+      {tab === 'pinouts' && (
+        <>
+          <div className="card" style={{ marginBottom: 16 }}>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>ECU Bench Pinout Database</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
+              {ECU_PINOUTS.length} ECU variants · PCMTuner Module 71 · Bosch MEDC17 Bootloader
+            </div>
+            <input
+              type="text"
+              value={pinoutSearch}
+              onChange={e => setPinoutSearch(e.target.value)}
+              placeholder="Search ECU, make, or chip (e.g. EDC17C46, VAG, TC1767)..."
+              style={{ width: '100%', marginBottom: 12, fontSize: 13, fontFamily: 'monospace' }}
+            />
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              Showing {filteredPinouts.length} of {ECU_PINOUTS.length} ECUs
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {filteredPinouts.map((p, idx) => (
+              <div key={idx} style={{ background: 'var(--bg-card)', borderRadius: 8, padding: '10px 14px', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <div>
+                    <span style={{ fontWeight: 800, fontSize: 13, color: '#fff', fontFamily: 'monospace' }}>{p.ecu}</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 11, marginLeft: 8 }}>{p.tc}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{p.conn.join('+')}</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: 'rgba(0,174,200,0.12)', color: '#00aec8', border: '1px solid rgba(0,174,200,0.25)' }}>{p.make}</span>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4, fontSize: 11, fontFamily: 'monospace' }}>
+                  <div><span style={{ color: '#ef4444', fontWeight: 700 }}>+12V</span> <span style={{ color: '#aaa' }}>{p.v12}</span></div>
+                  <div><span style={{ color: '#22c55e', fontWeight: 700 }}>CAN-L</span> <span style={{ color: '#aaa' }}>{p.canl}</span></div>
+                  <div style={{ color: '#22c55e' }}><span style={{ fontWeight: 700 }}>GPT0/1</span> <span style={{ color: '#aaa' }}>{p.gpt}</span></div>
+                  <div><span style={{ color: '#666', fontWeight: 700 }}>GND</span> <span style={{ color: '#aaa' }}>{p.gnd}</span></div>
+                  <div><span style={{ color: '#fff', fontWeight: 700 }}>CAN-H</span> <span style={{ color: '#aaa' }}>{p.canh}</span></div>
+                  {p.note && <div style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: 10 }}>ℹ️ {p.note}</div>}
+                </div>
+              </div>
+            ))}
           </div>
         </>
       )}
