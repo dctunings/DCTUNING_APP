@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { bridge } from '../lib/bridgeClient'
 import PreFlashSafetyCheck from '../components/PreFlashSafetyCheck'
 import { ECU_PINOUTS, type EcuPinout } from '../data/ecuPinouts'
+import ConnectorDiagram from '../components/ConnectorDiagram'
 
 interface ConnectResult { ok: boolean; error?: string }
 interface Props {
@@ -571,6 +572,10 @@ export default function ECUFlashManager({ connected, onConnect }: Props) {
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
                         Connectors: <span style={{ color: '#ddd', fontWeight: 600, fontFamily: 'monospace' }}>{p.conn.join(' + ')}</span>
                       </div>
+                      {/* Visual connector pin grid */}
+                      <div style={{ marginBottom: 10 }}>
+                        <ConnectorDiagram pinout={p} />
+                      </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)' }}>
                         {[
                           { label: '+12V', pin: p.v12, bg: '#ef4444', color: '#fff' },
@@ -1082,7 +1087,8 @@ export default function ECUFlashManager({ connected, onConnect }: Props) {
                     <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: 'rgba(0,174,200,0.12)', color: '#00aec8', border: '1px solid rgba(0,174,200,0.25)' }}>{p.make}</span>
                   </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4, fontSize: 11, fontFamily: 'monospace' }}>
+                <ConnectorDiagram pinout={p} />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4, fontSize: 11, fontFamily: 'monospace', marginTop: 8 }}>
                   <div><span style={{ color: '#ef4444', fontWeight: 700 }}>+12V</span> <span style={{ color: '#aaa' }}>{p.v12}</span></div>
                   <div><span style={{ color: '#22c55e', fontWeight: 700 }}>CAN-L</span> <span style={{ color: '#aaa' }}>{p.canl}</span></div>
                   <div style={{ color: '#22c55e' }}><span style={{ fontWeight: 700 }}>GPT0/1</span> <span style={{ color: '#aaa' }}>{p.gpt}</span></div>
