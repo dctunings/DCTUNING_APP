@@ -6,20 +6,22 @@
  */
 import type { EcuPinout } from '../data/ecuPinouts'
 
-const PIN_COLORS: Record<string, string> = {
+const PIN_COLORS = {
   v12:  '#ef4444',
   gnd:  '#1a1a1a',
   canl: '#22c55e',
   canh: '#fff',
-  gpt:  '#3b82f6',
+  gpt0: '#00aec8',  // Teal — matches PDF GPT0
+  gpt1: '#eab308',  // Yellow — matches PDF GPT1
 }
 
-const PIN_LABELS: Record<string, string> = {
+const PIN_LABELS = {
   v12: '+12V',
   gnd: 'GND',
   canl: 'CAN-L',
   canh: 'CAN-H',
-  gpt: 'GPT',
+  gpt0: 'GPT0',
+  gpt1: 'GPT1',
 }
 
 /** Known connector sizes — standard ECU connector pin counts */
@@ -50,13 +52,43 @@ function parsePins(str: string): Record<string, number[]> {
   return result
 }
 
+/** Parse GPT field into separate GPT0 and GPT1 — first pin = GPT0, second = GPT1 */
+function parseGptPins(str: string): { gpt0: Record<string, number[]>; gpt1: Record<string, number[]> } {
+  const gpt0: Record<string, number[]> = {}
+  const gpt1: Record<string, number[]> = {}
+
+  const parts = str.split(/,\s*/)
+  let lastConn = ''
+  let pinIndex = 0
+
+  for (const part of parts) {
+    const match = part.match(/([A-Za-z]+\d*)\s*:\s*(\d+|[A-Z]\d+)/)
+    if (match) {
+      lastConn = match[1].toUpperCase()
+      const pin = parseInt(match[2])
+      if (!isNaN(pin)) {
+        const target = pinIndex === 0 ? gpt0 : gpt1
+        if (!target[lastConn]) target[lastConn] = []
+        target[lastConn].push(pin)
+        pinIndex++
+      }
+    } else {
+      const pin = parseInt(part.trim())
+      if (!isNaN(pin) && lastConn) {
+        const target = pinIndex === 0 ? gpt0 : gpt1
+        if (!target[lastConn]) target[lastConn] = []
+        target[lastConn].push(pin)
+        pinIndex++
+      }
+    }
+  }
+  return { gpt0, gpt1 }
+}
+
 /** Determine the real pin count for a connector */
 function getConnectorSize(name: string, highlightedPins: Record<number, string>): number {
-  // Check known standard connectors
   if (KNOWN_CONNECTORS[name]) return KNOWN_CONNECTORS[name]
-  // For unknown connectors (BMW T1-T6 sub-connectors, etc.), find max pin number
   const maxPin = Math.max(0, ...Object.keys(highlightedPins).map(Number))
-  // Round up to nearest reasonable connector size
   if (maxPin <= 10) return 10
   if (maxPin <= 20) return 20
   if (maxPin <= 30) return 30
@@ -71,14 +103,15 @@ interface Props {
 }
 
 export default function ConnectorDiagram({ pinout }: Props) {
-  // Build a combined map: connector → pin → { color, label }
+  // Build combined map: connector → pin → color
   const pinMap: Record<string, Record<number, string>> = {}
+
+  // Standard signals (not GPT)
   const signals = [
     { key: 'v12', data: pinout.v12 },
     { key: 'gnd', data: pinout.gnd },
     { key: 'canl', data: pinout.canl },
     { key: 'canh', data: pinout.canh },
-    { key: 'gpt', data: pinout.gpt },
   ]
 
   for (const sig of signals) {
@@ -86,9 +119,20 @@ export default function ConnectorDiagram({ pinout }: Props) {
     for (const [conn, pins] of Object.entries(parsed)) {
       if (!pinMap[conn]) pinMap[conn] = {}
       for (const pin of pins) {
-        pinMap[conn][pin] = PIN_COLORS[sig.key]
+        pinMap[conn][pin] = PIN_COLORS[sig.key as keyof typeof PIN_COLORS]
       }
     }
+  }
+
+  // GPT — split into GPT0 (teal) and GPT1 (yellow)
+  const { gpt0, gpt1 } = parseGptPins(pinout.gpt)
+  for (const [conn, pins] of Object.entries(gpt0)) {
+    if (!pinMap[conn]) pinMap[conn] = {}
+    for (const pin of pins) pinMap[conn][pin] = PIN_COLORS.gpt0
+  }
+  for (const [conn, pins] of Object.entries(gpt1)) {
+    if (!pinMap[conn]) pinMap[conn] = {}
+    for (const pin of pins) pinMap[conn][pin] = PIN_COLORS.gpt1
   }
 
   // Collect all connectors that have data
@@ -96,7 +140,6 @@ export default function ConnectorDiagram({ pinout }: Props) {
   for (const name of Object.keys(pinMap)) {
     if (!connectorNames.includes(name)) connectorNames.push(name)
   }
-  // Sort by connector name
   connectorNames.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
 
   return (
@@ -108,12 +151,8 @@ export default function ConnectorDiagram({ pinout }: Props) {
           const totalPins = getConnectorSize(name, highlights)
           if (totalPins < 1) return null
 
-          // Calculate grid layout — match PDF style with rows
           const cols = totalPins <= 20 ? 10 : totalPins <= 40 ? 10 : totalPins <= 60 ? 15 : totalPins <= 96 ? 16 : 20
           const rows: number[][] = []
-
-          // Build rows top-to-bottom, pins go left-to-right per row
-          // PDF style: highest pins at top, lowest at bottom
           const numRows = Math.ceil(totalPins / cols)
           for (let r = numRows - 1; r >= 0; r--) {
             const rowStart = r * cols + 1
@@ -122,7 +161,7 @@ export default function ConnectorDiagram({ pinout }: Props) {
             for (let p = rowStart; p <= rowEnd; p++) row.push(p)
             rows.push(row)
           }
-          rows.reverse() // top row = highest pins
+          rows.reverse()
 
           return (
             <div key={name} style={{
@@ -130,38 +169,32 @@ export default function ConnectorDiagram({ pinout }: Props) {
               border: '1px solid rgba(255,255,255,0.08)', minWidth: cols * 16,
             }}>
               <div style={{ textAlign: 'center', fontWeight: 800, fontSize: 14, marginBottom: 8, color: '#fff', letterSpacing: 1 }}>{name}</div>
-
-              {/* Pin grid with border to look like connector shape */}
               <div style={{
                 border: '2px solid rgba(255,255,255,0.15)', borderRadius: 6, padding: 4,
                 display: 'inline-flex', flexDirection: 'column', gap: 2, width: '100%',
               }}>
                 {rows.map((row, ri) => (
                   <div key={ri} style={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                    {/* Row start pin number */}
                     <span style={{ width: 18, fontSize: 7, color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 2, fontFamily: 'monospace', flexShrink: 0 }}>
                       {row[row.length - 1]}
                     </span>
                     {row.map(pin => {
                       const color = highlights[pin]
+                      const isDark = color === '#1a1a1a'
+                      const isLight = color === '#fff' || color === '#eab308' || color === '#22c55e' || color === '#00aec8'
                       return (
                         <div key={pin} title={`Pin ${pin}`} style={{
                           width: 14, height: 14, borderRadius: 2, fontSize: 7, fontWeight: 800,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           background: color || 'rgba(255,255,255,0.06)',
-                          color: color
-                            ? (color === '#fff' || color === '#eab308' || color === '#22c55e' || color === '#3b82f6' ? '#000' : '#fff')
-                            : 'rgba(255,255,255,0.12)',
-                          border: color
-                            ? (color === '#1a1a1a' ? '1px solid #666' : `1px solid ${color}`)
-                            : '1px solid rgba(255,255,255,0.06)',
+                          color: color ? (isLight ? '#000' : isDark ? '#aaa' : '#fff') : 'rgba(255,255,255,0.12)',
+                          border: color ? (isDark ? '1px solid #666' : `1px solid ${color}`) : '1px solid rgba(255,255,255,0.06)',
                           fontFamily: 'monospace',
                         }}>
                           {color ? pin : '·'}
                         </div>
                       )
                     })}
-                    {/* Row end pin number */}
                     <span style={{ width: 18, fontSize: 7, color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', paddingLeft: 2, fontFamily: 'monospace', flexShrink: 0 }}>
                       {row[0]}
                     </span>
@@ -173,12 +206,16 @@ export default function ConnectorDiagram({ pinout }: Props) {
         })}
       </div>
 
-      {/* Legend */}
+      {/* Legend — separate GPT0 and GPT1 */}
       <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap', fontSize: 10 }}>
-        {Object.entries(PIN_COLORS).map(([key, color]) => (
+        {Object.entries(PIN_LABELS).map(([key, label]) => (
           <span key={key} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: color, border: color === '#1a1a1a' ? '1px solid #666' : `1px solid ${color}` }} />
-            <span style={{ color: '#999', fontWeight: 600 }}>{PIN_LABELS[key]}</span>
+            <span style={{
+              width: 10, height: 10, borderRadius: 2,
+              background: PIN_COLORS[key as keyof typeof PIN_COLORS],
+              border: key === 'gnd' ? '1px solid #666' : `1px solid ${PIN_COLORS[key as keyof typeof PIN_COLORS]}`,
+            }} />
+            <span style={{ color: '#999', fontWeight: 600 }}>{label}</span>
           </span>
         ))}
       </div>

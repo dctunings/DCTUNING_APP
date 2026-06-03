@@ -582,7 +582,7 @@ export default function ECUFlashManager({ connected, onConnect }: Props) {
                           { label: 'CAN-L', pin: p.canl, bg: '#22c55e', color: '#000' },
                           { label: 'GND', pin: p.gnd, bg: '#333', color: '#fff' },
                           { label: 'CAN-H', pin: p.canh, bg: '#fff', color: '#000' },
-                          { label: 'GPT0 / GPT1', pin: p.gpt, bg: 'linear-gradient(90deg, #22c55e 50%, #eab308 50%)', color: '#000' },
+                          { label: 'GPT0 / GPT1', pin: p.gpt, bg: 'linear-gradient(90deg, #00aec8 50%, #eab308 50%)', color: '#000' },
                         ].map((r, i) => (
                           <div key={i} style={{ display: 'flex', borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.04)' : 'none', gridColumn: i === 4 ? '1 / -1' : undefined }}>
                             <div style={{ width: 90, padding: '6px 10px', background: r.bg, color: r.color, fontWeight: 800, fontSize: 11, fontFamily: 'monospace', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
