@@ -140,23 +140,44 @@ export default function ECUFlashManager({ connected, onConnect }: Props) {
     setLog(l => [...l, { msg: `[${new Date().toLocaleTimeString()}] ${msg}`, type }])
   }
 
-  // Bundled ECU definitions — always available, even without bridge or IPC.
-  // Bridge/IPC may return a superset if updated independently.
-  const BUNDLED_ECU_DEFS: ECUFlashDef[] = [
-    { id: 'bosch_me7_vag', name: 'Bosch ME7.1 / ME7.5', manufacturer: 'Bosch', family: 'ME7', vehicles: ['VW Golf Mk4 1.8T', 'Audi A4/A6 1.8T', 'Seat Leon/Ibiza 1.8T', 'Skoda Octavia 1.8T'], protocol: 3, baudRate: 10400, sessionType: 0x02, securityLevel: 0x01, seedLength: 2, flashStartAddr: 0x000000, flashSize: 0x080000, chunkSize: 128, canFlashOBD: true, requiresBench: false, notes: 'K-Line protocol. OBD flash supported on most variants. Requires security key.' },
-    { id: 'bosch_med9_vag', name: 'Bosch MED9.1 / MED9.5', manufacturer: 'Bosch', family: 'MED9', vehicles: ['Audi A3/S3 2.0T FSI', 'VW Golf GTI Mk5', 'Seat Leon Cupra', 'Skoda Octavia RS'], protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01, seedLength: 2, flashStartAddr: 0x000000, flashSize: 0x100000, chunkSize: 255, canFlashOBD: true, requiresBench: false, notes: 'CAN protocol. Full read/write via OBD on most variants.' },
-    { id: 'bosch_med17_vag', name: 'Bosch MED17.5 / MED17.1', manufacturer: 'Bosch', family: 'MED17', vehicles: ['VW Golf GTI Mk6/7', 'Audi A3/S3/TT 2.0T', 'Seat Leon Cupra', 'Skoda Octavia vRS', 'VW Tiguan 2.0T'], protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01, seedLength: 4, flashStartAddr: 0x000000, flashSize: 0x200000, chunkSize: 255, canFlashOBD: true, requiresBench: false, notes: 'CAN UDS protocol. Standard J2534 flash. Most common on Irish VW/Audi.' },
-    { id: 'bosch_me17_vag_small', name: 'Bosch ME17.5.20 / ME17.5.26', manufacturer: 'Bosch', family: 'MED17', vehicles: ['VW Polo 1.0 MPI (6C/AW)', 'VW Up! 1.0 MPI', 'Seat Ibiza 1.0 MPI', 'Seat Mii 1.0', 'Skoda Fabia 1.0 MPI', 'Skoda Citigo 1.0'], protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01, seedLength: 4, flashStartAddr: 0x000000, flashSize: 0x200000, chunkSize: 255, canFlashOBD: true, requiresBench: false, notes: 'TC1724 Tricore. PCMTuner Module 71. Bench pinout: +12V → T94:6+87 | GND → T94:2 | CAN-L → T94:67 | CAN-H → T94:68 | GPT0 → T60:7 | GPT1 → T60:5. Full clone via GPT — no case opening.' },
-    { id: 'bosch_med17_bmw_petrol', name: 'Bosch MED17.2 (BMW petrol)', manufacturer: 'Bosch', family: 'MED17', vehicles: ['BMW 3 Series F30 (N20)', 'BMW 5 Series F10 (N20)', 'BMW 1 Series F20 (N20)'], protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x11, seedLength: 4, flashStartAddr: 0x000000, flashSize: 0x200000, chunkSize: 255, canFlashOBD: true, requiresBench: false, notes: 'BMW variant MED17.2. Level 0x11 security access.' },
-    { id: 'bosch_edc16_vag', name: 'Bosch EDC16U / EDC16C', manufacturer: 'Bosch', family: 'EDC16', vehicles: ['VW Golf TDI Mk4/5', 'Audi A3/A4 TDI', 'Seat Leon TDI', 'Skoda Octavia TDI', 'VW Passat TDI'], protocol: 3, baudRate: 10400, sessionType: 0x02, securityLevel: 0x01, seedLength: 2, flashStartAddr: 0x000000, flashSize: 0x080000, chunkSize: 128, canFlashOBD: true, requiresBench: false, notes: 'K-Line protocol. Very common on older Irish TDIs. OBD flash works well.' },
-    { id: 'bosch_edc17_vag', name: 'Bosch EDC17C46 / EDC17CP14', manufacturer: 'Bosch', family: 'EDC17', vehicles: ['VW Golf/Passat TDI EA189', 'Audi A3/A4/A6 TDI', 'Seat Leon TDI', 'BMW 320d/520d (E/F series)'], protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01, seedLength: 4, flashStartAddr: 0x000000, flashSize: 0x200000, chunkSize: 255, canFlashOBD: true, requiresBench: false, notes: 'CAN UDS protocol. Most common diesel ECU in Ireland. EA189 emission fix ECU.' },
-    { id: 'siemens_sid803', name: 'Siemens SID803 / SID803A', manufacturer: 'Siemens', family: 'SID803', vehicles: ['Peugeot 307/308 HDi', 'Citroën C4/C5 HDi', 'Ford Focus TDCi (EU)'], protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01, seedLength: 2, flashStartAddr: 0x000000, flashSize: 0x100000, chunkSize: 128, canFlashOBD: true, requiresBench: false, notes: 'PSA diesel. CAN UDS. OBD flash supported.' },
-    { id: 'siemens_sid206', name: 'Siemens SID206 / SID208', manufacturer: 'Siemens', family: 'SID206', vehicles: ['Peugeot 3008/5008 HDi', 'Citroën C5/DS5 HDi', 'Ford C-Max TDCi'], protocol: 6, baudRate: 500000, sessionType: 0x03, securityLevel: 0x01, seedLength: 2, flashStartAddr: 0x000000, flashSize: 0x200000, chunkSize: 255, canFlashOBD: true, requiresBench: false, notes: 'Newer PSA diesel. Extended session (0x03) required.' },
-    { id: 'delphi_dcm35', name: 'Delphi DCM3.5 / DCM6.2', manufacturer: 'Delphi', family: 'DCM3', vehicles: ['Renault Megane/Laguna/Scenic dCi', 'Nissan Qashqai/X-Trail dCi', 'Opel Astra/Insignia CDTi'], protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01, seedLength: 2, flashStartAddr: 0x000000, flashSize: 0x100000, chunkSize: 128, canFlashOBD: true, requiresBench: false, notes: 'Common on French/Korean brands. OBD flash supported.' },
-    { id: 'marelli_mjd8', name: 'Marelli MJD8 / MJD9', manufacturer: 'Marelli', family: 'MJD8', vehicles: ['Fiat 500/Punto 1.3 MultiJet', 'Alfa Romeo Giulietta 1.6/2.0 JTD', 'Jeep Renegade 1.6 MultiJet'], protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01, seedLength: 4, flashStartAddr: 0x000000, flashSize: 0x100000, chunkSize: 128, canFlashOBD: true, requiresBench: false, notes: 'Fiat Group diesel. 4-byte seed variant.' },
-    { id: 'bosch_msd80_bmw', name: 'Bosch MSD80 / MSV80', manufacturer: 'Bosch', family: 'MSD80', vehicles: ['BMW 335i/535i/135i (N54)', 'BMW 328i/528i/128i (N52)', 'BMW Z4 35i/35is'], protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01, seedLength: 4, flashStartAddr: 0x000000, flashSize: 0x200000, chunkSize: 255, canFlashOBD: true, requiresBench: false, notes: 'BMW N54/N52 ECU. Very popular for tuning. OBD flash supported.' },
-    { id: 'continental_ems3125', name: 'Continental EMS3125 / EMS3150', manufacturer: 'Continental', family: 'EMS31', vehicles: ['Renault Clio/Megane 1.2/1.4/1.6 TCe', 'Dacia Sandero/Duster 1.2 TCe'], protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01, seedLength: 2, flashStartAddr: 0x000000, flashSize: 0x080000, chunkSize: 128, canFlashOBD: true, requiresBench: false, notes: 'Renault petrol. Standard UDS flash.' },
-  ]
+  // Auto-generate ECU definitions from pinout database + legacy hand-curated defs.
+  // Tricore chip → typical flash size mapping
+  const TC_FLASH: Record<string, number> = {
+    TC1762: 0x080000, TC1724: 0x100000, TC1766: 0x100000, TC1767: 0x200000,
+    TC1782: 0x200000, TC1784: 0x200000, TC1793: 0x400000, TC1796: 0x200000, TC1797: 0x400000,
+  }
+  const BUNDLED_ECU_DEFS: ECUFlashDef[] = useMemo(() => {
+    // Generate from pinout database
+    const fromPinouts: ECUFlashDef[] = ECU_PINOUTS.map(p => {
+      const family = p.ecu.replace(/[0-9].*/,'').toUpperCase() // MED, ME, EDC, etc.
+      const flashSize = TC_FLASH[p.tc] || 0x200000
+      return {
+        id: `pcm_${p.ecu.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}`,
+        name: `Bosch ${p.ecu}`,
+        manufacturer: 'Bosch',
+        family: family.startsWith('EDC') ? 'EDC17' : family.startsWith('MED') ? 'MED17' : family.startsWith('MEV') ? 'MED17' : family.startsWith('MEG') ? 'MED17' : family.startsWith('DCU') ? 'EDC17' : 'MED17',
+        vehicles: [p.make],
+        protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01,
+        seedLength: (p.tc === 'TC1793' || p.tc === 'TC1797' || p.tc === 'TC1796' || p.tc === 'TC1782') ? 4 : (p.tc === 'TC1762' || p.tc === 'TC1724') ? 2 : 4,
+        flashStartAddr: 0x000000, flashSize, chunkSize: 255,
+        canFlashOBD: true, requiresBench: false,
+        notes: `${p.tc} · Conn: ${p.conn.join('+')} · +12V: ${p.v12} | GND: ${p.gnd} | CAN-L: ${p.canl} | CAN-H: ${p.canh} | GPT: ${p.gpt}${p.note ? ' · ' + p.note : ''}`,
+      }
+    })
+    // Add legacy non-Bosch defs that aren't in the pinout DB
+    const legacy: ECUFlashDef[] = [
+      { id: 'bosch_me7_vag', name: 'Bosch ME7.1 / ME7.5', manufacturer: 'Bosch', family: 'ME7', vehicles: ['VW Golf Mk4 1.8T', 'Audi A4/A6 1.8T', 'Seat Leon 1.8T'], protocol: 3, baudRate: 10400, sessionType: 0x02, securityLevel: 0x01, seedLength: 2, flashStartAddr: 0x000000, flashSize: 0x080000, chunkSize: 128, canFlashOBD: true, requiresBench: false, notes: 'K-Line. OBD flash supported.' },
+      { id: 'bosch_med9_vag', name: 'Bosch MED9.1 / MED9.5', manufacturer: 'Bosch', family: 'MED9', vehicles: ['Audi A3/S3 2.0T FSI', 'VW Golf GTI Mk5'], protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01, seedLength: 2, flashStartAddr: 0x000000, flashSize: 0x100000, chunkSize: 255, canFlashOBD: true, requiresBench: false, notes: 'CAN protocol. Full read/write via OBD.' },
+      { id: 'bosch_edc16_vag', name: 'Bosch EDC16U / EDC16C', manufacturer: 'Bosch', family: 'EDC16', vehicles: ['VW Golf TDI Mk4/5', 'Audi A3/A4 TDI', 'Seat Leon TDI'], protocol: 3, baudRate: 10400, sessionType: 0x02, securityLevel: 0x01, seedLength: 2, flashStartAddr: 0x000000, flashSize: 0x080000, chunkSize: 128, canFlashOBD: true, requiresBench: false, notes: 'K-Line. Very common on older Irish TDIs.' },
+      { id: 'siemens_sid803', name: 'Siemens SID803 / SID803A', manufacturer: 'Siemens', family: 'SID803', vehicles: ['Peugeot 307/308 HDi', 'Ford Focus TDCi'], protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01, seedLength: 2, flashStartAddr: 0x000000, flashSize: 0x100000, chunkSize: 128, canFlashOBD: true, requiresBench: false, notes: 'PSA diesel. CAN UDS.' },
+      { id: 'siemens_sid206', name: 'Siemens SID206 / SID208', manufacturer: 'Siemens', family: 'SID206', vehicles: ['Peugeot 3008 HDi', 'Ford C-Max TDCi'], protocol: 6, baudRate: 500000, sessionType: 0x03, securityLevel: 0x01, seedLength: 2, flashStartAddr: 0x000000, flashSize: 0x200000, chunkSize: 255, canFlashOBD: true, requiresBench: false, notes: 'Newer PSA diesel. Extended session (0x03).' },
+      { id: 'delphi_dcm35', name: 'Delphi DCM3.5 / DCM6.2', manufacturer: 'Delphi', family: 'DCM3', vehicles: ['Renault dCi', 'Nissan dCi', 'Opel CDTi'], protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01, seedLength: 2, flashStartAddr: 0x000000, flashSize: 0x100000, chunkSize: 128, canFlashOBD: true, requiresBench: false, notes: 'French/Korean brands. OBD flash supported.' },
+      { id: 'marelli_mjd8', name: 'Marelli MJD8 / MJD9', manufacturer: 'Marelli', family: 'MJD8', vehicles: ['Fiat 1.3 MultiJet', 'Alfa Romeo JTD'], protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01, seedLength: 4, flashStartAddr: 0x000000, flashSize: 0x100000, chunkSize: 128, canFlashOBD: true, requiresBench: false, notes: 'Fiat Group diesel. 4-byte seed.' },
+      { id: 'bosch_msd80_bmw', name: 'Bosch MSD80 / MSV80', manufacturer: 'Bosch', family: 'MSD80', vehicles: ['BMW 335i/535i N54', 'BMW 328i N52'], protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01, seedLength: 4, flashStartAddr: 0x000000, flashSize: 0x200000, chunkSize: 255, canFlashOBD: true, requiresBench: false, notes: 'BMW N54/N52 ECU. OBD flash supported.' },
+      { id: 'continental_ems3125', name: 'Continental EMS3125 / EMS3150', manufacturer: 'Continental', family: 'EMS31', vehicles: ['Renault Clio/Megane TCe', 'Dacia Duster'], protocol: 6, baudRate: 500000, sessionType: 0x02, securityLevel: 0x01, seedLength: 2, flashStartAddr: 0x000000, flashSize: 0x080000, chunkSize: 128, canFlashOBD: true, requiresBench: false, notes: 'Renault petrol. Standard UDS flash.' },
+    ]
+    return [...fromPinouts, ...legacy]
+  }, [])
 
   // Use bundled definitions directly — no bridge/IPC fetch needed for static data.
   useEffect(() => {
