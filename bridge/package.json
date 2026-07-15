@@ -22,7 +22,7 @@
   "author": "DCTuning Ireland",
   "license": "Proprietary",
   "dependencies": {
-    "ws": "^8.18.0"
+    "ws": "^8.21.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
