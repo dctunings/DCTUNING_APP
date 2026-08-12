@@ -25,7 +25,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^26.2.0",
     "@types/ws": "^8.5.13",
     "esbuild": "^0.28.0",
     "pkg": "^5.8.1",
