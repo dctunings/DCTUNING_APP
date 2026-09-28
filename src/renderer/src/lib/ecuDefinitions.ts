@@ -6331,7 +6331,2486 @@ export const ECU_DEFINITIONS: EcuDef[] = [
         critical: false, showPreview: false,
       },
     ],
-  }
+  },
+
+  // ─── Non-VAG identity restore (2026-09-28) ──────────────────────────────────
+  // 137 defs deleted by 3f4c8d0 ("v3.10.10 — VAG-only") when scope was cut to
+  // VW/Audi/Skoda/Seat. That scope decision has since been reversed, but the defs
+  // were never brought back — leaving 24 filename-detection rules in binaryParser.ts
+  // pointing at ids that no longer existed, so non-VAG files silently failed to
+  // detect. Restored here as IDENTITY ONLY: no map offsets, no checksum claims.
+  // See backlog.md for what verifying a checksumAlgo actually requires.
+
+  {
+    id: 'me9',
+    name: 'Bosch ME9.0',
+    manufacturer: 'Bosch',
+    family: 'ME9',
+    identStrings: ['ME9.0', 'ME9S', '0261208', 'MEDV9'],
+    fileSizeRange: [262144, 524288],
+    vehicles: ['Ford Focus ST Mk2 (2.5L 225PS)', 'Ford Focus RS Mk2 (2.5L 305PS)', 'Ford Mondeo 4 2.5L 220PS', 'Ford Kuga 1 2.5L 200PS', 'Volvo C30/S40/V50 T5 2.5L'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-simple',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'dcm35',
+    name: 'Delphi DCM3.5',
+    manufacturer: 'Delphi',
+    family: 'DCM3.5',
+    identStrings: ['DCM3.5', 'DCM35', 'DCM3.5AP', 'DW10C', 'DW10CD'],
+    fileSizeRange: [524288, 2097152],   // 512KB – 2MB (MPC5566 internal ~2MB),
+    vehicles: ['Ford Focus 3 2.0L TDCi 140/163PS', 'Ford Kuga 1 2.0L TDCi 140/163PS', 'Ford Kuga 2 2.0L TDCi 140/163PS', 'Ford Mondeo 4 2.0L TDCi 140/163PS', 'Peugeot 508 2.0L HDi', 'Citroen C5 2.0L HDi'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'sid208',
+    name: 'Siemens SID208',
+    manufacturer: 'Siemens/Continental',
+    family: 'SID208',
+    identStrings: ['SID208', 'SID 208', 'SID208EVO', 'PUMFRQ', 'FRQ61'],
+    fileSizeRange: [1048576, 4194304],   // 1MB–4MB (TC1728=1.5MB; TC1797 variant=4MB),
+    vehicles: ['Ford Transit 2012 2.2L 100-155PS', 'Ford Transit 2.0L Diesel', 'Ford Tourneo Custom 2.2L', 'Land Rover Defender 2012 2.2L TD4', 'Ford Ranger 3.2L Diesel'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'ems3120',
+    name: 'Continental EMS3120',
+    manufacturer: 'Continental',
+    family: 'EMS3120',
+    identStrings: ['EMS3120', 'EMS3121', 'EMS3122', 'EMS312'],
+    fileSizeRange: [1048576, 2097152],
+    vehicles: ['Renault Megane 2/3 1.5 dCi', 'Renault Clio 3 1.5 dCi', 'Renault Logan 1.5 dCi', 'Renault Sandero 1.5 dCi', 'Renault Fluence 1.5 dCi', 'Nissan Almera 1.5 dCi'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'continental-crc',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'me17_kia',
+    name: 'KEFICO ME17.9 (Kia/Hyundai)',
+    manufacturer: 'Bosch/KEFICO',
+    family: 'ME17.9',
+    identStrings: ['ME17.9.11', 'ME17.9.12', 'ME17.9.13', 'ME17.9', 'KEFICO', '39106', '39118'],
+    fileSizeRange: [524288, 2097152],   // TC1762 = 1MB internal flash,
+    vehicles: ['Kia Ceed 1.6L GDI', 'Kia Sportage 1.6L GDI', 'Hyundai i30 1.6L GDI', 'Hyundai i40 1.6L GDI', 'Kia Rio 1.4L GDI', 'Hyundai i20 1.4L GDI'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'mg1',
+    name: 'Bosch MG1',
+    manufacturer: 'Bosch',
+    family: 'MG1',
+    identStrings: ['MG1CS', 'MG1C3', 'MG1CS015', 'MG1CS016', 'MG1CS017', 'MG1CS002', '0261S14', '0261S15', '0261S12', '06M907', '8W0907', 'EV_ECM29TFS', 'EV_ECM20TFS', '10SW027'],
+    fileSizeRange: [1048576, 4194304],   // 1MB – 4MB (TC275/TC277 = 2–4MB),
+    vehicles: ['Ford Focus RS Mk3 (2.3 EcoBoost)', 'Ford Fiesta ST200 (1.6 EcoBoost)', 'Ford Focus ST Mk3 (2.0 EcoBoost)', 'Ford Mustang 2.3 EcoBoost', 'Ford Focus 1.0 EcoBoost 125/140ps', 'Audi RS5 B9 2.9 TFSI V6', 'Audi RS4 B9 2.9 TFSI', 'Audi S4/S5 B9 3.0 TFSI'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'sim2k',
+    name: 'Continental SIM2K',
+    manufacturer: 'Continental',
+    family: 'SIM2K',
+    identStrings: ['SIM2K-240', 'SIM2K-250', 'SIM2K-260', 'SIM2K-341', 'SIM2K240', 'SIM2K250', 'SIM2K260'],
+    fileSizeRange: [1048576, 4194304],   // 1MB–4MB (TC1767=1.5MB; TC1782=2.5MB; TC1791=4MB),
+    vehicles: ['Kia Stinger 2.0T (SIM2K-250)', 'Kia Stinger 3.3T (SIM2K-260)', 'Hyundai i30N 2.0T (SIM2K-250)', 'Hyundai Veloster N 2.0T', 'Kia Ceed/Hyundai i30 2nd gen (SIM2K-240)', 'Kia ProCeed GT 1.4T'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'continental-crc',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'me9_merc',
+    name: 'Bosch ME9.7 (Mercedes)',
+    manufacturer: 'Bosch',
+    family: 'ME9.7',
+    identStrings: ['ME9.7', 'ME97', 'MED9.7', '0261S02'],
+    fileSizeRange: [524288, 1048576],   // MPC55x = ~512KB–1MB flash,
+    vehicles: ['Mercedes C63 AMG (M156 6.2L)', 'Mercedes E63 AMG', 'Mercedes SL63 AMG', 'Mercedes C-Class M272 3.5L', 'Mercedes E-Class M272/M273', 'Mercedes S-Class M272/M273'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'dcm61',
+    name: 'Delphi DCM6.1',
+    manufacturer: 'Delphi',
+    family: 'DCM6.1',
+    identStrings: ['DCM6.1', 'DCM61', 'DCM6.1AP', '28473', 'CuPF', 'DS71', 'FS7A'],
+    fileSizeRange: [1048576, 4194304],   // TC1797 = 4MB internal flash,
+    vehicles: ['Ford Transit 2.0 TDCi (2016+)', 'Ford Transit 2.2 TDCi', 'Ford Ranger 2.2 TDCi', 'Ford Ranger 3.2 TDCi', 'Ford Mondeo 2.0 TDCi (2015+)', 'Ford Focus 1.5 TDCi (2015+)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'sid807',
+    name: 'Siemens SID807 EVO',
+    manufacturer: 'Continental/VDO',
+    family: 'SID807EVO',
+    identStrings: ['SID807EVO', 'SID807', 'SID211', 'SID209', '5WS40119'],
+    fileSizeRange: [524288, 1048576],
+    vehicles: ['Ford Mondeo 2.0 TDCi (2010–2014)', 'Ford Focus 2.0 TDCi (2010–2014)', 'Ford Galaxy 2.0 TDCi', 'Ford S-Max 2.0 TDCi', 'PSA Peugeot 508 2.0 BlueHDi', 'Volvo S60/V60 D4'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'continental-crc',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'mazda_skyactiv',
+    name: 'Denso SkyActiv (Mazda)',
+    manufacturer: 'Denso',
+    family: 'SkyActiv',
+    identStrings: ['SKYACTIV', 'SkyActiv', 'PE-VPS', 'PX8R', 'P5-VP', 'SH3E', 'S52L'],
+    fileSizeRange: [524288, 2097152],   // SH72531=1.25MB; SH72543=2MB; SH7058=1MB,
+    vehicles: ['Mazda CX-5 2.0 SkyActiv-G', 'Mazda3 2.0/2.5 SkyActiv-G', 'Mazda6 2.5 SkyActiv-G', 'Mazda MX-5 2.0 SkyActiv-G', 'Mazda CX-5 2.2 SkyActiv-D', 'Mazda3 1.5 SkyActiv-D'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'honda_keihin',
+    name: 'Keihin PGM-FI (Honda)',
+    manufacturer: 'Keihin',
+    family: 'PGM-FI',
+    identStrings: ['PGM-FI', 'PGMFI', 'KEIHIN', '37820', '37805'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: ['Honda Civic Type-R FK2/FK8 (2.0T)', 'Honda Civic 1.5 VTEC Turbo', 'Honda Accord 2.4 i-VTEC', 'Honda CR-V 1.5T', 'Honda Jazz 1.5T', 'Honda HR-V 1.5T'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'scania_ems',
+    name: 'Scania EMS S7/S8',
+    manufacturer: 'Scania',
+    family: 'EMS S7',
+    identStrings: ['EMS S7', 'EMS S8', 'EMSS7', 'EMSS8', 'EMD1', 'SCANIA', 'DC9', 'DC13', 'XPI'],
+    fileSizeRange: [1048576, 8388608],   // 1MB – 8MB (truck ECUs are large),
+    vehicles: ['Scania R-series (DC9/DC13/DC16)', 'Scania G-series (DC9/DC13)', 'Scania P-series (DC9/DC13)', 'Scania Irizar Bus (DC9)', 'Scania OmniCity (DC9)', 'Scania Touring (DC13)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'med17_merc',
+    name: 'Bosch MED17.7 (Mercedes)',
+    manufacturer: 'Bosch',
+    family: 'MED17.7',
+    identStrings: ['MED17.7', 'MED177', '0261S07', '0261S08', '0261S09', '0261S10'],
+    fileSizeRange: [1048576, 4194304],
+    vehicles: ['Mercedes A45 AMG (M133 2.0T)', 'Mercedes CLA45 AMG', 'Mercedes GLA45 AMG', 'Mercedes C250 CGI (M274)', 'Mercedes E350 CGI (M276)', 'Mercedes C43 AMG (M276 3.0T)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_jlr',
+    name: 'Bosch EDC17 (JLR)',
+    manufacturer: 'Bosch',
+    family: 'EDC17CP',
+    identStrings: ['EDC17CP42', 'EDC17CP55', 'EDC17CP', '0281020', '0281021', '0281022', '0281032'],
+    fileSizeRange: [1048576, 4194304],
+    vehicles: ['Land Rover Defender 3.0 D200/D250/D300', 'Land Rover Discovery Sport 2.0 TD4', 'Jaguar F-Pace 2.0D/3.0D', 'Range Rover Velar D180/D240', 'Jaguar XE 2.0D (Ingenium)', 'Land Rover Freelander 2 2.2 TD4'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'delphi_mt86',
+    name: 'Delphi DCM3.7 (Hyundai/Kia diesel)',
+    manufacturer: 'Delphi',
+    family: 'DCM3.7',
+    identStrings: ['DCM3.7', 'DCM37', 'DCM3.7AP', '28386', '28371', '25189'],
+    fileSizeRange: [524288, 2097152],   // SH72543 = 2MB; SH72513 = 1.25MB,
+    vehicles: ['Hyundai Tucson 1.6 CRDi (2015+)', 'Kia Sportage 1.6 CRDi', 'Hyundai i30 1.6 CRDi', 'Kia Ceed 1.4/1.6 CRDi', 'Hyundai Santa Fe 2.2 CRDi', 'Kia Sorento 2.2 CRDi'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'sid310',
+    name: 'Continental SID310',
+    manufacturer: 'Continental',
+    family: 'SID310',
+    identStrings: ['SID310', 'SID309', 'SID307', 'SID305', 'SID306', 'SID301', '5WS40', 'S101180'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: ['Renault Megane RS 1.6 TCe', 'Renault Trafic 1.6 dCi', 'Renault Vivaro 1.6 dCi', 'Nissan Qashqai 1.5 dCi (2013+)', 'Nissan Juke 1.5 dCi', 'Renault Clio 1.5 dCi (2014+)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'continental-crc',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'toyota_denso',
+    name: 'Denso (Toyota/Lexus)',
+    manufacturer: 'Denso',
+    family: 'Toyota Denso',
+    identStrings: ['89661-', 'DENSO', 'DNSSYS', '89663-', '89666-'],
+    fileSizeRange: [524288, 4194304],
+    vehicles: ['Toyota GR Yaris 1.6T (G16E-GTS)', 'Toyota GR86 2.4 (FA24)', 'Toyota Supra A90 3.0T (B58)', 'Toyota Hilux 2.8D (1GD-FTV)', 'Lexus IS-F 5.0 V8', 'Toyota Land Cruiser 3.0D (1KD-FTV)', 'Toyota Auris/Corolla 1.8 Hybrid', 'Lexus RC-F 5.0 V8'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'mitsubishi_can',
+    name: 'Mitsubishi CAN (MH82x)',
+    manufacturer: 'Mitsubishi',
+    family: 'MH82x',
+    identStrings: ['MH8204', 'MH8203', 'MH8302', 'MH8301', 'MH820', 'MH830'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: ['Mitsubishi Lancer Evo X (4B11T)', 'Mitsubishi Eclipse Cross 1.5T', 'Mitsubishi Outlander PHEV', 'Mitsubishi ASX 1.6T', 'Mitsubishi L200 2.4D (4N15)', 'Mitsubishi Pajero Sport 2.4D'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'mitsubishi_diesel',
+    name: 'Mitsubishi Diesel CAN',
+    manufacturer: 'Mitsubishi',
+    family: 'MH Diesel',
+    identStrings: ['MH8105', 'MH8106', 'MH8104', 'DENSO'],
+    fileSizeRange: [262144, 1048576],
+    vehicles: ['Mitsubishi L200 2.4D (4N15)', 'Mitsubishi Pajero 3.2D (4M41)', 'Mitsubishi Shogun Sport 2.4D', 'Mitsubishi Fuso Canter 3.0D (4P10)', 'Mitsubishi Outlander 2.2D', 'Mitsubishi Eclipse Cross 1.5D'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'subaru',
+    name: 'Subaru (Hitachi/Denso)',
+    manufacturer: 'Hitachi/Denso',
+    family: 'Subaru',
+    identStrings: ['WA1221', 'WA1222', 'WA12210', 'WA12220'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: ['Subaru Impreza WRX STI (EJ257)', 'Subaru WRX 2.5T (EJ255/EJ257)', 'Subaru BRZ 2.0 (FA20)', 'Subaru Forester XT (EJ255)', 'Subaru Legacy GT (EJ255)', 'Subaru Outback 2.5i (FB25)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'ford_tprot',
+    name: 'Bosch T-PROT (Ford EcoBoost)',
+    manufacturer: 'Bosch',
+    family: 'T-PROT',
+    identStrings: ['GEN2F', 'GEN3F', '0261S18', '0261S19', '0261S20', 'MED17.0', 'ME17.0'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: ['Ford Fiesta 1.0 EcoBoost (125/140ps)', 'Ford Focus 1.5 EcoBoost (150/182ps)', 'Ford Mondeo 1.5/2.0 EcoBoost', 'Ford Galaxy 1.5 EcoBoost', 'Ford S-Max 1.5 EcoBoost', 'Ford Puma 1.0 EcoBoost (155ps)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'ford_powerstroke',
+    name: 'Ford Power Stroke Diesel',
+    manufacturer: 'Bosch',
+    family: 'Power Stroke',
+    identStrings: ['EDC17CP05', 'EDC17CP65', 'EDC17CP', '0281025', '0281026', '0281030'],
+    fileSizeRange: [1048576, 4194304],
+    vehicles: ['Ford F-250/F-350 6.7L Power Stroke (2011+)', 'Ford Transit 3.2L Power Stroke', 'Ford Ranger (US) 3.2L Power Stroke', 'Ford F-150 3.0L Power Stroke', 'Ford Excursion 7.3L Power Stroke', 'Ford Explorer 3.0L Power Stroke'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'mercedes_crd3',
+    name: 'Mercedes CRD3/CRD3P',
+    manufacturer: 'Continental',
+    family: 'CRD3',
+    identStrings: ['CRD3', 'CRD3P', 'CRD3.10', 'CRD3.20', 'OM651', 'OM642', 'A0009008700'],
+    fileSizeRange: [1048576, 4194304],
+    vehicles: ['Mercedes C220d / C250d (OM651)', 'Mercedes E220d / E250d (OM651)', 'Mercedes GLC 220d (OM654)', 'Mercedes A200d / B200d (OM651)', 'Mercedes Sprinter 2.2 CDI (OM651)', 'Mercedes V-Class 2.2 CDI (OM651)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'continental-crc',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'mb_edc16_om646',
+    name: 'Mercedes EDC16 OM646 2.2 CDI (W211 C/E-class)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['OM646', 'EDC16C31', 'EDC16C32', 'CR30-646', 'CR30-646-C5D4', 'CR30-646-C5D7', 'CR30-646-C5DA', 'CR30-646-C6D3', 'CR30-646-C2DD', 'CR30-646-12E1', '0281011', '0281012', '0281013'],
+    fileSizeRange: [524288, 1572864],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'mb_crax_edc16_w169',
+    name: 'Mercedes CRAx EDC16 W169 A/B-class (1.7/2.0 CDI)',
+    manufacturer: 'Bosch',
+    family: 'EDC16 CRAx',
+    identStrings: ['CRAx-640', 'CRAx-640-C5A1', 'CRAx-640-C5A2', 'CRAx-640-C5A4', 'ME_2707', 'ME_2305', 'ME_5106', 'ME_1606', 'ME_0507'],
+    fileSizeRange: [253952, 262144],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'mb_om642_v6_30cdi',
+    name: 'Mercedes OM642 V6 3.0 CDI (W204 C320, W212 E320)',
+    manufacturer: 'Bosch',
+    family: 'EDC16/EDC17 OM642',
+    identStrings: ['OM642', 'CR6-642', 'CR6-642-45S8', 'CR6-642-50S1', 'CR6-642-55S2', 'CR6-642-56S0', 'CR6EU5-642', 'CR60-642', 'CR60-642LS', '0281014428', '0281014429', '0281015985', '0281016383', '0281016656', '642-'],
+    fileSizeRange: [458752, 4194304],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'mb_delphi_crd646',
+    name: 'Mercedes Delphi CRD-646 C200/C220 CDI (W203/W204)',
+    manufacturer: 'Delphi',
+    family: 'CRD-646',
+    identStrings: ['CRD-646', 'CRD-646-NMA9D', 'CRD-646-NMA9J', 'CRD-646-NMA9M', 'NMA9J', 'NMA9M', 'NMA9D', 'OM646-Delphi'],
+    fileSizeRange: [524288, 2626048],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'mb_edc15_pd_cclass_1mb',
+    name: 'Mercedes EDC15 PD C/E-class 1MB (OM611/OM612/OM613)',
+    manufacturer: 'Bosch',
+    family: 'EDC15 PD',
+    identStrings: ['OM611', 'OM612', 'OM613', '0281010040', '0281010041', '0281010042', '0281010043', '0281010191', '0281010222', '0281010223', '0281010409', '0281010528', '0281010608', '0281010798', '0281010805', '0281010818', '0281010849', '0281010852', '0281010908', '0281010909', '0281011001', '0281011002', '0281011006', '0281011011', '0281011171', '0281011182', '0281011253', '0281011328', '0281011338', '0281011346', '0281011469', '0281011620', '0281011717', '0281011737', '0281011934'],
+    fileSizeRange: [1048576, 1048576],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'mb_delphi_crd2_651',
+    name: 'Mercedes Delphi CRD2-651 OM651 2.2 CDI R4 (C/E/GLK/Sprinter/Vito)',
+    manufacturer: 'Delphi',
+    family: 'CRD2-651',
+    identStrings: ['CRD2-651', 'TMA9BD1', 'TMA9DD1', 'TMA9FD2', 'TMA92D2', 'TMAB2D4', 'TMAB4D2', 'TMAB5D1', 'TMAB6D1', 'SMA9CD1', 'SMA9DD1', 'OM651-Delphi-CRD2', '6519020100', '6519021.9', '6519027200'],
+    fileSizeRange: [3145728, 3145728],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'mb_edc15v_cdi_524kb',
+    name: 'Mercedes EDC15V CDI 524KB (W168 A/W639 Vito/W202 C-class)',
+    manufacturer: 'Bosch',
+    family: 'EDC15V',
+    identStrings: ['0281001881', '0281001883', '0281001986', '0281010039', '0281010118', '0281010191', '0281010222', '0281010223', '0281010231', '0281010233', '0281010426', '0281010427', '0281010431', '0281010432', '0281010433', '0281010598', '0281010603', '0281010604', '0281010606', '0281010752', '0281010753', '0281010818', '0281010988', '0281010990', '0281011066', 'OM611', 'OM668', 'OM646-pre', 'EDC15V', 'EDC15VM-V'],
+    fileSizeRange: [524288, 524288],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-simple',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'mb_siemens_m300_m271',
+    name: 'Mercedes Siemens M300 M271 1.8L Kompressor (C180K/CLK200K/SLK200K)',
+    manufacturer: 'Siemens',
+    family: 'Siemens M300',
+    identStrings: ['M300030', 'M300042', 'M300045', 'M300050', 'M300054', 'M271', 'Siemens_M300', '5WK90405', '5WK90507'],
+    fileSizeRange: [327680, 327680],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'continental-crc',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'mb_delphi_crd3_651',
+    name: 'Mercedes Delphi CRD3-651 OM651 2.2 CDI R4 (A/B/C/E/S-class)',
+    manufacturer: 'Delphi',
+    family: 'CRD3-651',
+    identStrings: ['CRD3-651', 'CRD3.x', 'WMA4AD1', 'WMA4BD2', 'WMA4BD3', 'WMA4FD3', 'WMA46D3', 'WMA47D1', 'WMI76D1', 'VMA4AD2', 'OM651-Delphi', '6519024200', '6519025000', '6519032416', '6519011801'],
+    fileSizeRange: [4194304, 4194304],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'mb_cr40_edc17_w176',
+    name: 'Mercedes CR40 EDC17 W176 A/B-class (1.8/2.0 CDI)',
+    manufacturer: 'Bosch',
+    family: 'EDC17 CR40',
+    identStrings: ['CR40-640', 'CR40-640-6GA1', 'ME04', '0281030', '0281031'],
+    fileSizeRange: [2097152, 4194304],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'jeep_edc17',
+    name: 'Bosch EDC17 (Jeep/FCA)',
+    manufacturer: 'Bosch',
+    family: 'EDC17 FCA',
+    identStrings: ['EDC17C49', 'EDC17C69', 'EDC17C79', 'VM2.8', '0281033', '0281034'],
+    fileSizeRange: [1048576, 4194304],
+    vehicles: ['Jeep Wrangler 2.8 CRD (VM Motori)', 'Jeep Grand Cherokee 3.0 CRD (OM642)', 'Fiat Ducato 2.3 Multijet', 'Alfa Romeo Stelvio 2.2 JTD', 'Alfa Romeo Giulia 2.2 JTD', 'Fiat 500X 1.6 Multijet'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'psa_dcm62',
+    name: 'Delphi DCM6.2 (PSA/Stellantis)',
+    manufacturer: 'Delphi',
+    family: 'PSA DCM6.2',
+    identStrings: ['DCM6.2A', 'DCM6.2C', 'DCM6.2', 'DCM62', 'DW10F', 'DW12C'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: ['Peugeot 508 2.0 BlueHDi 180', 'Citroën C5 Aircross 2.0 BlueHDi', 'Peugeot 3008/5008 2.0 BlueHDi', 'DS7 Crossback 2.0 BlueHDi', 'Peugeot Expert 2.0 BlueHDi', 'Citroën SpaceTourer 2.0 BlueHDi'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'renault_dc4',
+    name: 'Renault DC4 (RS Petrol)',
+    manufacturer: 'Continental',
+    family: 'DC4',
+    identStrings: ['DC4', 'M5P', 'M5MT', 'M5PT', '0261S16', '0261S17', 'S101'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: ['Renault Mégane RS 300 Trophy (1.8T M5P)', 'Renault Mégane RS 280 Cup (1.8T M5P)', 'Renault Clio RS 200 EDC (1.6T)', 'Renault Zoe (motor calibration)', 'Alpine A110 1.8T M5P (300ps)', 'Alpine A110S 1.8T M5P (252ps)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'continental-crc',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'nissan_me7',
+    name: 'Bosch ME7.9 (Nissan)',
+    manufacturer: 'Bosch',
+    family: 'Nissan ME7',
+    identStrings: ['ME7.9.20', 'ME7.9', 'ME79', '0261208', '0261S00', '0261S01'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: ['Nissan 350Z 3.5 V6 (VQ35DE)', 'Nissan 370Z 3.7 V6 (VQ37VHR)', 'Nissan Skyline V35/V36 (VQ35/VQ37)', 'Nissan GT-R R34 (RB26DETT)', 'Nissan Patrol 5.6 V8 (VK56)', 'Nissan Stagea 2.5T (RB25DET)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'bmw_msd',
+    name: 'Bosch MSD80/MSD85 (BMW N54/N55)',
+    manufacturer: 'Bosch',
+    family: 'MSD80',
+    identStrings: ['MSD80', 'MSD85', 'MSD87', 'MSV80', 'MSV85', 'MSV87', 'MSD8', 'MSV8'],
+    fileSizeRange: [524288, 4194304],   // TC1796=2MB, TC1797=4MB,
+    vehicles: ['BMW 335i/335is (E90/E92/E93 N54)', 'BMW 135i (E82/E88 N54)', 'BMW 535i (E60/E61 N54)', 'BMW Z4 35i (E89 N54)', 'BMW 335i/435i (F30/F32 N55)', 'BMW M135i/M235i (F20/F22 N55)', 'BMW 320i/328i/420i (N20 turbo)', 'BMW 520i/528i (F10 N20)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'bmw_ms43',
+    name: 'Siemens MS43/MS45 (BMW M54)',
+    manufacturer: 'Siemens/Continental',
+    family: 'MS43',
+    identStrings: ['MS43', 'MS45', 'MS41', 'MS42', 'MS43.1', 'MS45.1', 'SIEMENS'],
+    fileSizeRange: [131072, 524288],   // 128KB–512KB flash,
+    vehicles: ['BMW 318i/320i (E46 M52TU/N42)', 'BMW 325i/330i (E46 M54)', 'BMW 318i/320i/325i (E36 M52)', 'BMW 520i/525i/530i (E39 M54)', 'BMW Z3/Z4 2.5i/3.0i (M54)', 'BMW X5 3.0i (E53 M54)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'marelli_iaw',
+    name: 'Magneti Marelli IAW (Fiat/Alfa/Lancia)',
+    manufacturer: 'Magneti Marelli',
+    family: 'IAW',
+    identStrings: ['IAW4GV', 'IAW5F', 'IAW5NF', 'IAW6F', 'IAW7GF', 'IAW7GFA', 'IAW8F', 'IAW4', 'IAW5', 'IAW6', 'IAW7'],
+    fileSizeRange: [131072, 2097152],   // 128KB (IAW4GV) – 2MB (IAW7GF+),
+    vehicles: ['Alfa Romeo 147/156/GT 1.8/2.0 TS (IAW4GV)', 'Fiat Stilo 1.8/2.0 (IAW4GV/5F)', 'Fiat Bravo 1.4T 150hp (IAW6F)', 'Fiat Punto Evo 1.4T Abarth (IAW5NF)', 'Alfa Romeo MiTo 1.4T (IAW5NF/6F)', 'Alfa Romeo Giulietta 1.4T 120/170hp (IAW7GF)', 'Fiat 500 Abarth 1.4T 135/160hp (IAW7GF/7GFA)', 'Lancia Delta 1.4T (IAW7GF)', 'Fiat 500 Abarth 595 (IAW8F)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'delphi_crd2',
+    name: 'Delphi CRD2.x (1.3–1.9 diesel)',
+    manufacturer: 'Delphi',
+    family: 'CRD2',
+    identStrings: ['CRD2.1', 'CRD2.2', 'CRD2.3', 'CRD2.6', 'CRD2'],
+    fileSizeRange: [131072, 524288],   // 128KB – 512KB,
+    vehicles: ['Fiat Punto 1.3 JTD (199)', 'Fiat 500 1.3 JTD', 'Fiat Panda 1.3 JTD', 'Fiat Doblo 1.3 JTD', 'Opel/Vauxhall Corsa D 1.3 CDTi', 'Opel/Vauxhall Astra H 1.7 CDTi', 'Suzuki Swift 1.3 DDiS', 'Suzuki SX4 1.9 DDiS', 'Alfa Romeo MiTo 1.3/1.6 JTDm', 'Lancia Ypsilon 1.3 JTD'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'delphi_crd3',
+    name: 'Delphi CRD3.x (1.6–2.0 diesel)',
+    manufacturer: 'Delphi',
+    family: 'CRD3',
+    identStrings: ['CRD3.1', 'CRD3.3', 'CRD3.4', 'CRD3.5', 'CRD3.6', 'CRD3.7', 'CRD3'],
+    fileSizeRange: [524288, 2097152],   // 512KB – 2MB,
+    vehicles: ['Opel/Vauxhall Astra J 1.6/2.0 CDTi (A16DTH/A20DTH)', 'Opel/Vauxhall Insignia 2.0 CDTi', 'Opel/Vauxhall Zafira 2.0 CDTi', 'Ford Focus Mk3 1.6/2.0 TDCi', 'Ford Mondeo Mk4 2.0 TDCi', 'Renault Megane 1.9/2.0 dCi', 'Renault Laguna 2.0 dCi', 'Saab 9-3/9-5 2.0 TTiD', 'Chevrolet Cruze 2.0 VCDi'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'opel_astra_17cdti_edc15',
+    name: 'Opel Astra H 1.7 CDTi EDC15 (Y17DT/Z17DTL)',
+    manufacturer: 'Bosch',
+    family: 'EDC15 Opel',
+    identStrings: ['0281011380', '0281011943', '0281012694', 'Y17DT', 'Z17DTL', 'EDC15C7'],
+    fileSizeRange: [1048576, 1048576],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'opel_19cdti_edc16',
+    name: 'Opel 1.9 CDTi EDC16 (Z19DT/Z19DTH Astra H/Vectra C)',
+    manufacturer: 'Bosch',
+    family: 'EDC16 Opel',
+    identStrings: ['Z19DT', 'Z19DTH', 'Z19DTL', 'Z19DTJ', 'EDC16C39', 'EDC16C9', '0281011448', '0281011449', '0281011668', '0281011914', '0281012122', '0281012123', '0281012533', '0281012534', '0281012549', '0281012656', '0281012867', '0281013409'],
+    fileSizeRange: [262144, 2097152],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'opel_cdti_edc17',
+    name: 'Opel 2.0 CDTi EDC17 (Insignia/Astra A20DT)',
+    manufacturer: 'Bosch',
+    family: 'EDC17 Opel',
+    identStrings: ['A20DT', 'A20DTH', 'A20DTJ', 'A20DTR', 'EDC17C18', 'EDC17C59', '0281015149', '0281015774', '0281017105', '0281017452', '0281017453', '0281018081'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'marelli_mjd',
+    name: 'Magneti Marelli MJD (Fiat/Alfa diesel)',
+    manufacturer: 'Magneti Marelli',
+    family: 'MJD',
+    identStrings: ['MJD6F3', 'MJD6JF', 'MJ8DF', 'MJ8F3', 'MJ8F2', 'MJD6', 'MJD8', 'MJ8'],
+    fileSizeRange: [262144, 2097152],   // SH7058/SPC564 = 256KB–2MB,
+    vehicles: ['Alfa Romeo 159 2.0 JTDm 136/170hp', 'Alfa Romeo Brera 2.0 JTDm', 'Alfa Romeo Giulietta 2.0 JTDm 140/170hp', 'Alfa Romeo MiTo 1.3/1.6 JTDm', 'Fiat Bravo 1.6/2.0 Multijet', 'Fiat Punto 1.6 Multijet', 'Fiat Croma 1.9 JTDm', 'Jeep Renegade 1.6/2.0 JTD', 'Jeep Compass 2.0 JTD', 'Lancia Delta 2.0 Multijet'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'bmw_mevd17',
+    name: 'Bosch MEVD17.2 (BMW M performance)',
+    manufacturer: 'Bosch',
+    family: 'MEVD17',
+    identStrings: ['MEVD17', 'MEVD17.2', 'MSS60', 'MSS65', 'MEVD17.2.G', 'MEVD17.2.H', 'MEVD17.2.3', 'MEVD17.2.K', 'MEVD17.2.9'],
+    fileSizeRange: [524288, 4194304],   // TC1793=2MB, TC1797=4MB,
+    vehicles: ['BMW M2 Competition (F87 S55)', 'BMW M3 (F80 S55)', 'BMW M4 / M4 CS / M4 GTS (F82/F83 S55)', 'BMW M5 (F10 S63TU)', 'BMW M6 / M6 Gran Coupé (F12/F06 S63)', 'BMW X5M / X6M (F85/F86 S63)', 'BMW M5 (E60 S85 V10 — MSS60)', 'BMW M6 (E63 S85 V10 — MSS60)', 'BMW M3 (E90/E92 S65 V8 — MSS65)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'ford_ems24',
+    name: 'Continental EMS24xx (Ford EcoBoost ST/RS)',
+    manufacturer: 'Continental',
+    family: 'EMS24',
+    identStrings: ['EMS24', 'EMS2400', 'EMS2411', 'EMS2511', 'EMS3155'],
+    fileSizeRange: [524288, 2097152],   // TC1791 = 2MB,
+    vehicles: ['Ford Focus ST Mk3 2.0T EcoBoost (250ps)', 'Ford Focus RS Mk3 2.3T EcoBoost (350ps)', 'Ford Mondeo Mk5 2.0T EcoBoost (240ps)', 'Ford S-Max 2.0T EcoBoost (240ps)', 'Ford Galaxy 2.0T EcoBoost', 'Ford Mustang 2.3 EcoBoost (2015+)', 'Ford Edge 2.0T EcoBoost', 'Ford Kuga Mk2 2.0T EcoBoost (182ps)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'continental-crc',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'delco_e87',
+    name: 'Delco E87/E98 (Opel/Vauxhall petrol)',
+    manufacturer: 'Delphi/ACDelco',
+    family: 'E87',
+    identStrings: ['E87MCA', 'E98MCA', 'E87', 'E98', '12622290', '12655908'],
+    fileSizeRange: [524288, 4194304],   // MPC556=1MB, TC1797=4MB, MPC5674F=2MB,
+    vehicles: ['Opel/Vauxhall Astra J 1.4T 140ps (A14NET)', 'Opel/Vauxhall Astra J 2.0T 280ps (A20NFT OPC)', 'Opel/Vauxhall Insignia 2.0T 220/260ps', 'Opel/Vauxhall Cascada 2.0T 220ps', 'Opel/Vauxhall Meriva B 1.4T', 'Opel/Vauxhall Mokka 1.4T 140ps', 'Opel/Vauxhall Astra K 1.4T/1.6T Turbo', 'Chevrolet Cruze 1.4T/1.6T', 'Chevrolet Trax 1.4T'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'toyota_dcm34',
+    name: 'Delphi DCM3.4 (Toyota diesel)',
+    manufacturer: 'Delphi',
+    family: 'DCM3.4',
+    identStrings: ['DCM3.4', 'DCM34', 'DCM3.4AP', '89871-'],
+    fileSizeRange: [262144, 524288],   // SH7059 = 256KB–512KB,
+    vehicles: ['Toyota Land Cruiser 100/200 3.0D (1KD-FTV)', 'Toyota Land Cruiser Prado 3.0D (1KD-FTV)', 'Toyota Hilux 3.0D 163ps (1KD-FTV)', 'Toyota Hilux 2.5D 102/144ps (2KD-FTV)', 'Toyota HiAce 2.5D (2KD-FTV)', 'Toyota Fortuner 2.5D/3.0D', 'Toyota Innova 2.5D (2KD-FTV)', 'Lexus GX470 4.7D'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'ford_sid803',
+    name: 'Continental SID803A/SID206 (Ford/PSA diesel)',
+    manufacturer: 'Continental',
+    family: 'SID803',
+    identStrings: ['SID803A', 'SID803', 'SID802', 'SID804'],
+    fileSizeRange: [262144, 1048576],   // C167 = 256KB, MPC5xx = 512KB–1MB,
+    vehicles: ['Ford Focus Mk2 1.6/2.0 TDCi (2004–2011)', 'Ford Mondeo Mk4 1.6/2.0 TDCi (2007–2014)', 'Ford C-Max 1.6/2.0 TDCi (2007–2010)', 'Ford Galaxy/S-Max 2.0 TDCi (2006–2010)', 'Ford Kuga Mk1 2.0 TDCi (2008–2012)', 'Peugeot 307/308 2.0 HDi (DW10)', 'Peugeot 407/607 2.0 HDi', 'Citroën C5/C6 2.0 HDi', 'Citroën Berlingo/Dispatch 2.0 HDi'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'continental-crc',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'delphi_mt80',
+    name: 'Delphi MT80/MT80.1 (Opel/Vauxhall 2.0 CDTi)',
+    manufacturer: 'Delphi',
+    family: 'MT80',
+    identStrings: ['MT80.1', 'MT80', 'MT80A', 'MT80B'],
+    fileSizeRange: [524288, 2097152],   // SH72543 = 512KB–2MB flash,
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'volvo_denso',
+    name: 'Denso Volvo Petrol (SH72544/SH72546)',
+    manufacturer: 'Denso',
+    family: 'Volvo Denso',
+    identStrings: ['VD46.1', 'V46.11', 'VD46', 'S3000'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'volvo_d5_2mb',
+    name: 'Volvo D5 2MB (S60/V60/V70/XC60/XC70 2.0D/2.4D5)',
+    manufacturer: 'Bosch',
+    family: 'Volvo EDC16/EDC17 D5',
+    identStrings: ['Volvo D5', 'EDC16C31', 'EDC17CP22', 'EDC17C49', '0281015286'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'volvo_d5_edc16_24',
+    name: 'Volvo D5 2.4 EDC16 (S60/S80/V70/XC70/XC90)',
+    manufacturer: 'Bosch',
+    family: 'Volvo EDC16 D5',
+    identStrings: ['0281012103', '0281012104', 'Volvo D5 2.4', 'EDC16C34'],
+    fileSizeRange: [253952, 2097152],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'volvo_v40_tdi_edc15',
+    name: 'Volvo V40 1.9 CDI/TDI EDC15 (2000-2004)',
+    manufacturer: 'Bosch',
+    family: 'EDC15V Volvo',
+    identStrings: ['0281010440', '0281010441', '0281011087', '0281001906'],
+    fileSizeRange: [262144, 524288],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-simple',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'volvo_me9_2mb',
+    name: 'Volvo ME9 2MB petrol (C30/C50/C70/S70/V50/V70 Turbo)',
+    manufacturer: 'Bosch',
+    family: 'Volvo ME9',
+    identStrings: ['0261209009', '0261209038', '120906439S1'],
+    fileSizeRange: [2097152, 2098176],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'renault_ems31',
+    name: 'Continental EMS311x/315x (Renault/Nissan petrol)',
+    manufacturer: 'Continental',
+    family: 'EMS3110',
+    identStrings: ['EMS3155', 'EMS3150', 'EMS3125', 'EMS3110', 'EMS315', 'EMS311'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'continental-crc',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'porsche_sdi',
+    name: 'Continental SDI9/SDI21 (Porsche)',
+    manufacturer: 'Continental',
+    family: 'SDI',
+    identStrings: ['SDI21.2', 'SDI21.1', 'SDI21', 'SDI9'],
+    fileSizeRange: [1048576, 4194304],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'continental-crc',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_e87_20d_n47_846kw_0584b6',
+    name: 'Bosch EDC17 (BMW E81-E87 2.0d N47 84.6kW — sw507453 0x0584B6 2MB DDE)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['507453'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E81-E87 2.0d N47D20 84.6kW DDE 2MB (sw 507453, 2011)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_e87_20d_compact_0299ac',
+    name: 'Bosch EDC17 (BMW E81-E87 2.0d 270336B compact — sw396564 0x0299AC)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281016068', '396564', '395777'],
+    fileSizeRange: [270336, 270336],
+    vehicles: ['BMW E81-E87 / E90-E91 2.0d N47 84-105kW 270336B compact (0281016068 sw 395777/396564, 2008-2010)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_e87_20d_n47_150kw_074104',
+    name: 'Bosch EDC17 (BMW E81-E87 2.0d N47 150kW — sw395779 0x074104 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['395779'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E81-E87 2.0d N47D20 150kW DDE 2MB (sw 395779, 2007-2009)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_e87_20d_n47_130kw_0682d4',
+    name: 'Bosch EDC17 (BMW E81-E87 2.0d N47 130kW — sw396565 0x0682D4 2MB/1540K)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281014572', '396565'],
+    fileSizeRange: [1540096, 2097152],
+    vehicles: ['BMW E81-E87 2.0d N47D20 130.2kW DDE (0281014572 sw 396565, 2009)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_e87_20d_n47_07491c',
+    name: 'Bosch EDC17 (BMW E81-E87 2.0d N47 100-105kW — 0x07491C 2MB DDE)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['396564', '500770', '507452'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E81-E87 2.0d N47D20 100-105kW DDE 2MB (sw 396564/500770/507452, 2007-2008)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'msv70_bmw_e87_130i_0423ca',
+    name: 'Siemens MSV70 (BMW E81-E87 130i 195kW — 5WK98084 0x0423CA 2.5MB)',
+    manufacturer: 'Siemens',
+    family: 'MSVx',
+    identStrings: ['5WK98084', '5WK98086'],
+    fileSizeRange: [2097152, 2625536],
+    vehicles: ['BMW E81-E87 130i / E85 Z4 3.0i / E63 630i Siemens MSV70 (5WK98084/5WK98086, 2005-2009)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'msd80_bmw_135i_n54_070f3e',
+    name: 'Bosch MSD80 (BMW E81-E87 135i N54 225kW — 07611790 0x070F3E 2MB)',
+    manufacturer: 'Bosch',
+    family: 'MSD8x',
+    identStrings: ['07611790', '07611358', '333711'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E81-E87 135i N54 225kW Bosch MSD80 (07611790/07611358 sw 333711, 2008)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_e90_325d_0d9286',
+    name: 'Bosch EDC16 (BMW E90 325D M57D30TU 144.9kW — 0281012994 sw383498 0x0D9286)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281012994', '383498'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90 325D M57D30TU 144.9kW 2MB (0281012994 sw 383498, 2006-2007)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_n47_20d_sw394079_06a4f0',
+    name: 'Bosch EDC17 (BMW E81-E87 / E90-E91 2.0d N47 — sw394079 0x06A4F0 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['394079'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E81-E87 / E90-E91 2.0d N47D20 130kW DDE 2MB (sw 394079, 2007-2009)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_e90_325d_sw504248_1f2618',
+    name: 'Bosch EDC17 (BMW E90-E91 325d / 3.0d 150-180kW — sw504248 0x1F2618)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281016838', '504248'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E91 325d / 3.0d 150-180.2kW (0281016838 sw 504248, 2011)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_e87_e90_20d_0d4208',
+    name: 'Bosch EDC16 (BMW E87/E90 2.0D 119.9kW — 0281012502 sw379333 0x0D4208)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281012502', '379333'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E87/E90 2.0D 119.9kW (0281012502 sw 379333, 2004-2005)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_e87_120d_sw379332_0c4208',
+    name: 'Bosch EDC16 (BMW E87 120D sw379332 — 0281011416 0x0C4208 2031616B)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['379332'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E87 120D M47D20 119.9kW (0281011416 sw 379332, 2004)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_e90_318d_sw501612_06ae0a',
+    name: 'Bosch EDC17 (BMW E90-E91 318D N47 105.2kW — sw501612 0x06AE0A 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['501612'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E91 318D N47D20 105.2kW DDE 2MB (sw 501612, 2009-2010)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_e90_2_0d_sw396565_0281014572_0282da',
+    name: 'Bosch EDC17 (BMW E90-E93 2.0d N47 130.2kW — 0281014572 sw396565 0x0282DA)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281014572'],
+    fileSizeRange: [262144, 270336],
+    vehicles: ['BMW E90-E93 2.0d N47D20 130.2kW 256-264KB compact (0281014572 sw 396565, 2008-2009)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_x5_40d_e70_n57_1a575c',
+    name: 'Bosch EDC17 (BMW X5 40D E70 N57 225.1kW — 0x1A575C 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['515070', '515071'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW X5 E70 40D N57 180-225.1kW DDE 2MB (sw 515070/515071, 2010-2011)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_f07_gt530d_1f3424',
+    name: 'Bosch EDC17 (BMW F07 GT 530d N57 180.2kW — 0281016728 sw502660 0x1F3424)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281016728', '502660'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW F07 GT 530d N57 180.2kW DDE 2MB (0281016728 sw 502660, 2010)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_f01_740d_n57_1f3edc',
+    name: 'Bosch EDC17 (BMW F01 740d N57 225.1kW — 0x1F3EDC 2MB DDE)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['78T7-00000642', '78T8-00000971'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW F01 740d N57D30T0 225.1kW DDE 2MB (2010-2011)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'msd80_bmw_e90_30i_alt_05f3c0',
+    name: 'Siemens MSD80 (BMW E90-E93 3.0i N54 — 5WK93614/5WK93642/07598594 0x05F3C0)',
+    manufacturer: 'Siemens',
+    family: 'MSD8x',
+    identStrings: ['5WK93614', '5WK93642', '07598594', '07596017'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E91-E92-E93 3.0i N54 225.1kW Siemens MSD80 alt-hardware (5WK93614/5WK93642/07598594 sw 333711, 2007-2008)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'msd80_bmw_e90_30i_n54_5wk93608_05f47c',
+    name: 'Siemens MSD80 (BMW E90-E93 3.0i N54 225kW — 5WK93608 0x05F47C)',
+    manufacturer: 'Siemens',
+    family: 'MSD8x',
+    identStrings: ['5WK93608', '772227', '777227', '333711'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E91-E92-E93 3.0i N54 225.1kW Siemens MSD80 (5WK93608 sw 333711/772227/777227, 2006-2012)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_e90_3_0d_sw504248_072618_524k',
+    name: 'Bosch EDC17 (BMW E90-E93 3.0d 180.2kW — sw504248 0x072618 524KB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281015285'],
+    fileSizeRange: [524288, 524288],
+    vehicles: ['BMW E90-E91-E92-E93 3.0d 180.2kW 512KB dump (sw 504248, 2009-2011)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_e90_2_0d_sw517682_155d18',
+    name: 'Bosch EDC17 (BMW E90-E93 2.0d N47 84-100kW — sw517682 0x155D18 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['517682'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E93 2.0d N47D20 84.6-100kW DDE 2MB (sw 517682, 2011)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_e90_2_0d_sw399762_057d1a',
+    name: 'Bosch EDC17 (BMW E90-E93 2.0d N47 100-105kW — sw399762 0x057D1A)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281016069', '399762'],
+    fileSizeRange: [1540096, 2097152],
+    vehicles: ['BMW E90-E93 2.0d N47D20 100-105kW DDE (0281016069 sw 399762, 2009)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_e90_2_0d_sw504978_151890',
+    name: 'Bosch EDC17 (BMW E90-E93 2.0d N47 85-107kW — sw504978 0x151890 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['504978'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E93 2.0d N47D20 85.3-107.4kW DDE 2MB (sw 504978, 2010)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_e90_2_0d_sw507446_16a754',
+    name: 'Bosch EDC17 (BMW E90-E93 2.0d N47 119.9kW — sw507446 0x16A754 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['507446'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E93 2.0d N47D20 119.9kW DDE 2MB (sw 507446, 2010-2011)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_e90_2_0d_sw509478_068720',
+    name: 'Bosch EDC17 (BMW E90-E93 2.0d N47 119.9kW — sw509478 0x068720)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281016067', '509478'],
+    fileSizeRange: [1540096, 2097152],
+    vehicles: ['BMW E90-E93 2.0d N47D20 119.9kW DDE (0281016067 sw 509478, 2009)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_e90_2_0d_sw507452_07340a',
+    name: 'Bosch EDC17 (BMW E90-E93 2.0d N47 105.2kW — sw507452 0x07340A 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['507452'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E93 2.0d N47D20 105.2kW DDE 2MB (sw 507452, 2007-2010)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_n47_20d_sw507453_06b77e_1572k',
+    name: 'Bosch EDC17 (BMW 2.0d N47 105.2kW — sw507453 0x06B77E 1572864B)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281BKB7S3'],
+    fileSizeRange: [1572864, 1572864],
+    vehicles: ['BMW E81-E87 / E90-E93 2.0d N47D20 105.2kW 1572864B compact (sw 507453, 2007-2010)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_e90_325d_0281015130_0e2337',
+    name: 'Bosch EDC16 (BMW E90-E91 325D M57D30TU 144.9kW — 0281015130 0x0E2337 2031616B)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281015130', '399769', '500774'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E90-E91 325D M57D30TU 144.9kW (0281015130 sw 399769/500774, 2007-2008)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_e90_325d_sw390904_0e2281',
+    name: 'Bosch EDC16 (BMW E90-E91 325D 144.9kW — sw390904 0x0E2281 2031616B)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['390904'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E90-E91 325D M57D30TU 144.9kW (0281014543/0281015130 sw 390904, 2007-2008)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_e90_320d_sw394079_compact_02eed6',
+    name: 'Bosch EDC17 (BMW E90-E91 320d sw394079 N47D20 130.2kW — 0281015043 0x02EED6 264KB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281015043', '394079', '396562'],
+    fileSizeRange: [270336, 270336],
+    vehicles: ['BMW E90-E91-E92-E93 2.0d N47D20 130.2kW 264KB compact (0281015043 sw 394079/396562, 2007-2008)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_e90_320d_sw376967_0c41e0',
+    name: 'Bosch EDC16 (BMW E90-E91 320d M47D20 119.9kW — 0281012754 sw376967 0x0C41E0)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281012754', '376967'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E90-E91 320d M47D20 119.9kW (0281012754 sw 376967, 2006)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_e90_320d_sw372963_0dd281',
+    name: 'Bosch EDC16 (BMW E90-E91 320d M47D20 119.9kW — 0281012334 sw372963 0x0DD281)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['372963'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E90-E91 320d M47D20 119.9kW (0281012334 sw 372963, 2006-2007)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_e90_318d_0d3e60_2mb',
+    name: 'Bosch EDC16 (BMW E90-E91 318D 2MB — 0281013502 sw381342 0x0D3E60)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281013502', '381342', '389883'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E90-E91 318D 89.7-107kW 2MB (0281013502 sw 381342/389883, 2006-2007)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc17_bmw_118d_318d_sw390654_02d3de',
+    name: 'Bosch EDC17 (BMW E81-E87 118D / E90-E91 318D — sw390654 0x02D3DE 264KB)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['0281014239', '390654'],
+    fileSizeRange: [270336, 270336],
+    vehicles: ['BMW E81-E87 118D / E90-E91 318D 105.2kW 264KB compact (0281014239 sw 390654, 2007)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_e83_x3_20d_0281011564_15f029',
+    name: 'Bosch EDC16 (BMW E83 X3 2.0D M47TU2 110.3kW — 0281011564 sw370435 0x15F029)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281011564', '370435'],
+    fileSizeRange: [1511680, 1511680],
+    vehicles: ['BMW E83 X3 2.0D M47TU2 110.3kW (0281011564 sw 370435, 2006)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'msv70_bmw_e85_30i_059d65',
+    name: 'Siemens MSV70 (BMW E85 Z4 3.0i 170-195kW — 5WK98086 0x059D65)',
+    manufacturer: 'Siemens',
+    family: 'MSVx',
+    identStrings: ['5WK98086'],
+    fileSizeRange: [2097152, 2625536],
+    vehicles: ['BMW E85 Z4 3.0i 170-194.9kW Siemens MSV70 (5WK98086, 2005-2008)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'not-declared',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_e83_30d_0e0209',
+    name: 'Bosch EDC16 (BMW E83 X3 3.0d M57D30TU 160.3kW — 0281013052/0281013253 0x0E0209)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281013052', '0281013253', '377760', '379334'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E83 X3 3.0d M57D30TU 160.3kW (0281013052/0281013253 sw 377760/379334, 2005-2006)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_e87_120d_0c3e60',
+    name: 'Bosch EDC16 (BMW E81-E87 120D M47D20 120kW — 0281011416 sw381341 0x0C3E60)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281011416', '0281013502', '0281012501', '0281013251', '0281013501', '0281012754', '381341', '381342'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E81-E87 120D / E90-E91 318D/320D M47D20 89.7-120kW (0281011416/0281013502/0281012501/0281013251/0281013501/0281012754 sw 381341/381342, 2004-2007)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_e87_120d_sw389882_0c3c10',
+    name: 'Bosch EDC16 (BMW E81-E87 120D 120kW — 0281012334/0281013501 sw389882 0x0C3C10)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281012334', '0281013501', '0281013251', '0281012501', '389882'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E81-E87 120D / E83 X3 2.0d / E90-E91 320D M47D20 119.9kW (0281012334/0281013501/0281013251/0281012501 sw 389882, 2005-2007)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_116d_0151bc',
+    name: 'Bosch EDC16 (BMW E81-E87 116D N47D20 85kW — 0x0151BC 264KB compact)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281016068', '08506281', '08508640', '08506960', '08506962', '396564', '1037396564'],
+    fileSizeRange: [270336, 270336],
+    vehicles: ['BMW E81-E87 116D N47D20 84.6-85kW (0281016068 sw 396564, 2009)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_e71_30d_0f2fd5',
+    name: 'Bosch EDC16 (BMW E71 3.0d 172.8kW — 0281016639 sw500775 0x0F2FD5 2MB)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281016639', '500775'],
+    fileSizeRange: [2097152, 2097152],
+    vehicles: ['BMW E71 3.0d 172.8kW DDE 2MB (0281016639 sw 500775, 2009)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_e71_30d_0c9dc6',
+    name: 'Bosch EDC16 (BMW E71 3.0d 210kW — 0281015852/0281015128 0x0C9DC6)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281015852'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E71 3.0d 210.4kW (0281015852 sw 397536/500776, 2007-2008)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_e70_30d_0e304f',
+    name: 'Bosch EDC16 (BMW E70/E71 3.0d 170-173kW — 0281015851/0281014437 0x0E304F)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281015851', '0281014437', '397537', '500775'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E70/E71 3.0d 170-172.8kW (0281015851/0281014437 sw 397537/500775, 2007-2008)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_e70_x5_30sd_0e9c72',
+    name: 'Bosch EDC16 (BMW E70/E71 X5-3.0SD M57D30TU2 210kW — 0281015128 0x0E9C72 1984KB)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281015128', '0281015241', '0281016640', '500776', '397536', '390902'],
+    fileSizeRange: [2031616, 2031616],
+    vehicles: ['BMW E70/E71 X5-3.0SD / E90-E91 335d M57D30TU2 210.4kW bi-turbo (0281015128/0281015241/0281016640 sw 390902/397536/500776, 2007-2009)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'edc16_bmw_e65_730d_0f244f',
+    name: 'Bosch EDC16 (BMW E65 730D M57D30 160kW — 0x0F244F 992KB)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['0281010898', '0281011231', '361884', '361820'],
+    fileSizeRange: [1015808, 1015808],
+    vehicles: ['BMW E65 730D M57D30 160kW (0281010898/0281011231 sw 361820/361884, 2003-2005)'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'bmw_b47',
+    name: 'BMW B47 diesel (EDC17C56/C76)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['EDC17C56', 'EDC17C76', 'B47D20', 'B47C20', '0281020', '0281021'],
+    fileSizeRange: [1048576, 4194304],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'bmw_b58',
+    name: 'BMW B58 petrol (MG1CS003)',
+    manufacturer: 'Bosch',
+    family: 'MG1',
+    identStrings: ['MG1CS003', 'B58B30', 'B58A30', '0261S19', '0261S20', '0261S21'],
+    fileSizeRange: [2097152, 6291456],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'renault_edc17',
+    name: 'Renault/Dacia dCi diesel (EDC17C11/C42/C84)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['EDC17C11', 'EDC17C42', 'EDC17C84', 'K9K', 'R9M', 'M9R', '0281017', '0281018'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'psa_edc17',
+    name: 'PSA Group 1.6/2.0 HDi/BlueHDi (EDC17C10/C60)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['EDC17C10', 'EDC17C60', 'EDC17CP10', 'DV6', 'DW10', 'DW12', '0281014', '0281016'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'ford_edc17',
+    name: 'Ford 1.5/2.0 TDCi Duratorq (EDC17C10/C42)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['EDC17C10', 'EDC17C42', 'T8MF', 'T6JD', 'T6JF', 'TDCI', '0281014', '0281015'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'merc_om651',
+    name: 'Mercedes OM651 2.1 CDI diesel (EDC17C57/C43)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['EDC17C57', 'EDC17C43', 'OM651', 'CDI', '0281017', '0281019', 'A6519005900'],
+    fileSizeRange: [1048576, 4194304],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'fiat_multijet',
+    name: 'Fiat/Alfa/Jeep Multijet diesel (EDC16C39/EDC17C49/C69)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['EDC17C49', 'EDC17C69', 'EDC16C39', 'MULTIJET', 'JTDM', '0281015', '0281016', 'FIAT'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'ford_ecoboost',
+    name: 'Ford EcoBoost 1.0/1.5/2.0T petrol (MED17)',
+    manufacturer: 'Bosch',
+    family: 'MED17',
+    identStrings: ['MED17.0.7', 'MED17.2', 'ECOBOOST', '0261S14', '0261S15', '0261S16', 'EcoBoost'],
+    fileSizeRange: [524288, 4194304],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'bmw_n47',
+    name: 'BMW N47 diesel (EDC17C06/C41)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['EDC17C06', 'EDC17C41', 'N47D20', 'N47S1', '0281013', '0281014'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'hyundai_kia_crdi',
+    name: 'Hyundai/Kia 1.6/2.0 CRDi diesel (EDC17C08/C57)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['EDC17C08', 'EDC17C57', 'D4FB', 'D4FC', 'D4FD', 'D4HB', 'CRDI', '0281018', '0281019'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'bmw_n55',
+    name: 'BMW N55 petrol (MSD87/DDE7)',
+    manufacturer: 'Bosch',
+    family: 'MSD87',
+    identStrings: ['MSD87', 'N55B30', 'N55A30', 'DDE7', '0261203', '0261204', 'N55'],
+    fileSizeRange: [2097152, 4194304],
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'delco_e39a',
+    name: 'Delco E39A (2.0T petrol)',
+    manufacturer: 'Delco',
+    family: 'E39A',
+    identStrings: ['E39A', 'E67A', 'E67', 'Z20LEH', 'A20NFT', 'A20NHT', 'Z20LET', 'OPC', 'VXR'],
+    fileSizeRange: [524288, 1048576],   // 512KB – 1MB,
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'delco_me17',
+    name: 'Delco ME17.9.6 / E78 (1.4T petrol)',
+    manufacturer: 'Delco',
+    family: 'ME17.9.6',
+    identStrings: ['ME17.9.6', 'ME17.9', '0261S10', '0261S11', 'A14NET', 'A14NEL', 'CORSA', 'ADAM'],
+    fileSizeRange: [524288, 2097152],   // 512KB – 2MB,
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'nissan_edc17',
+    name: 'Bosch EDC17CP11/C425 (Nissan dCi)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['EDC17CP11', 'EDC17C42', 'EDC17C425', 'R9M', 'M9R', 'YS23', 'NISSAN', 'QASHQAI', 'NAVARA'],
+    fileSizeRange: [1048576, 4194304],   // 1MB – 4MB,
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'jlr_tdv6',
+    name: 'Bosch EDC17C09/C59 (JLR V6/V8 diesel)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['EDC17C09', 'EDC17C59', '276DT', 'TDV6', 'SDV6', 'SDV8', 'JAGUAR', 'DISCOVERY', 'FREELANDER'],
+    fileSizeRange: [1048576, 4194304],   // 1MB – 4MB,
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'honda_idtec',
+    name: 'Bosch EDC16C7 (Honda 2.2 i-DTEC)',
+    manufacturer: 'Bosch',
+    family: 'EDC16',
+    identStrings: ['EDC16C7', 'N22A', 'IDTEC', 'HONDA', 'ACCORD', 'CR-V', 'CIVIC'],
+    fileSizeRange: [524288, 1048576],   // 512KB – 1MB,
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'volvo_me17',
+    name: 'Bosch ME17.8 (Volvo Drive-E T5/T6)',
+    manufacturer: 'Bosch',
+    family: 'ME17',
+    identStrings: ['ME17.8', '0261S18', 'B4204T', 'VOLVO', 'DRIVE-E', 'T5', 'T6', 'XC60', 'XC90'],
+    fileSizeRange: [1048576, 4194304],   // 1MB – 4MB,
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'volvo_edc17',
+    name: 'Bosch EDC17C16/C50 (Volvo D4/D5 diesel)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['EDC17C16', 'EDC17C50', 'D5244T', 'D4204T', 'VOLVO', 'D4', 'D5', 'XC60', 'V60'],
+    fileSizeRange: [1048576, 4194304],   // 1MB – 4MB,
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'vauxhall_edc17',
+    name: 'Bosch EDC17C60/C84 (Vauxhall 1.6/2.0 CDTi)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['EDC17C60', 'EDC17C84', 'A16DTH', 'A16DTE', 'A20DTJ', 'CDTI', 'VAUXHALL', 'OPEL', 'INSIGNIA'],
+    fileSizeRange: [1048576, 4194304],   // 1MB – 4MB,
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'van_edc17_biturbo',
+    name: 'Bosch EDC17 (Vivaro/Trafic/Transit Custom 1.6 BiTurbo)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['VIVARO', 'TRAFIC', 'NV300', 'TRANSIT', 'R9M', '1.6BITURBO', 'BITURBO', 'EDC17C10', 'EDC17C42'],
+    fileSizeRange: [1048576, 4194304],   // 1MB – 4MB,
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'bmw_n57',
+    name: 'Bosch EDC17CP45/CP49 (BMW N57 3.0d)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['EDC17CP45', 'EDC17CP49', 'N57D30', 'N57D30O0', 'N57D30T0', 'N57S1', 'BMW', 'X5', '530D', '730D'],
+    fileSizeRange: [1048576, 8388608],   // 1MB – 8MB,
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'merc_om654',
+    name: 'Bosch EDC17C87 (Mercedes OM654 2.0d)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['EDC17C87', 'MDG1', 'OM654', 'OM654DE20LA', 'C220D', 'E220D', 'GLC220', 'MERCEDES', 'W205', 'W213'],
+    fileSizeRange: [1048576, 8388608],   // 1MB – 8MB,
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'ford_ranger',
+    name: 'Bosch EDC17C69/C10 (Ford Ranger 2.2/3.2 TDCi)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['EDC17C69', 'EDC17C10', 'RANGER', 'PUMA', '3.2TDCI', '2.2TDCI', 'T6MF', 'T7MF', 'FORD'],
+    fileSizeRange: [1048576, 4194304],   // 1MB – 4MB,
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'bmw_b57',
+    name: 'Bosch EDC17C57 (BMW B57 3.0d)',
+    manufacturer: 'Bosch',
+    family: 'EDC17',
+    identStrings: ['B57D30', 'B57D30O0', 'B57D30T0', 'B57D30S1', 'EDC17C57', 'EDC17C76', 'G30', 'G05', 'G07', 'X5'],
+    fileSizeRange: [2097152, 8388608],   // 2MB – 8MB,
+    vehicles: [,
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'bosch-crc32',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'siemens_sid',
+    name: 'Siemens SID (Diesel)',
+    manufacturer: 'Siemens',
+    family: 'SID',
+    identStrings: ['SID801', 'SID802', 'SID803', 'SID804', 'SID805', 'SID806', 'SID807', 'SID201', 'SID206', 'SID301', 'SID310', '5WS4', '5WK9'],
+    fileSizeRange: [262144, 2097152],
+    vehicles: ['Renault Mégane dCi', 'Renault Laguna dCi', 'Peugeot 307 HDi', 'Citroën C4 HDi', 'Volvo D5'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'siemens_ems3',
+    name: 'Siemens EMS3 (Petrol)',
+    manufacturer: 'Siemens',
+    family: 'EMS3',
+    identStrings: ['EMS3110', 'EMS3120', 'EMS3125', 'EMS3130', 'EMS3132', 'EMS3150', 'EMS31', 'EMS32'],
+    fileSizeRange: [262144, 2097152],
+    vehicles: ['Renault Clio RS', 'Renault Mégane RS', 'Nissan Qashqai', 'Dacia Duster'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'siemens_pcr',
+    name: 'Siemens PCR2.1 (Diesel)',
+    manufacturer: 'Continental',
+    family: 'PCR',
+    identStrings: ['PCR2.1', 'PCR21', 'PCR2', '5WS40', '5WK93'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: ['Peugeot 307 HDi', 'Citroën C4 HDi', 'Ford Focus TDCi', 'Volvo S40 D4'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'delphi_dcm35',
+    name: 'Delphi DCM3.5',
+    manufacturer: 'Delphi',
+    family: 'DCM3',
+    identStrings: ['DCM3.5', 'DCM35', 'DCM3.7', 'DCM37', 'DDCR', 'R0410', 'R0413'],
+    fileSizeRange: [262144, 2097152],
+    vehicles: ['Renault Kangoo dCi', 'Nissan Note dCi', 'Dacia Logan dCi'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'marelli_8gmf',
+    name: 'Marelli 8GMF (Multiair)',
+    manufacturer: 'Magneti Marelli',
+    family: 'Marelli_8GMF',
+    identStrings: ['8GMF', '8GMFHW', 'MM8GMF', 'Gen 8 Multiair', '51896', '51871', '51904', '55263', 'ME10G'],
+    fileSizeRange: [1048576, 4194304],
+    vehicles: ['Fiat 500 Abarth', 'Alfa Giulietta 1.4T', 'Alfa MiTo 1.4T', 'Fiat Punto Evo 1.4T', 'Jeep Renegade 1.4T'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    // Renamed from 'marelli_mjd' during the identity restore: it collided with the
+    // 1.6/2.0 JTDm def above, so .find() always returned that one and this 1.3 JTD
+    // family was unreachable. The clash pre-dates 3f4c8d0.
+    id: 'marelli_mjd_13jtd',
+    name: 'Marelli MJD (1.3 JTD)',
+    manufacturer: 'Magneti Marelli',
+    family: 'Marelli_MJD',
+    identStrings: ['MJD6F3', 'MJD602', 'MJD8F2', 'MJD8DF', 'MJD9DF', 'MJD6JO'],
+    fileSizeRange: [1048576, 4194304],
+    vehicles: ['Fiat 500 1.3 JTD', 'Fiat Punto 1.3 JTD', 'Alfa MiTo 1.3 JTD', 'Fiat Doblo 1.3 JTD', 'Lancia Ypsilon 1.3 JTD'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'denso_v8',
+    name: 'Denso (V8 Petrol)',
+    manufacturer: 'Denso',
+    family: 'Denso',
+    identStrings: ['NNN500', 'NNV506', 'AJ83', 'AJ86', 'AJ133', '279700', 'MB079700'],
+    fileSizeRange: [524288, 4194304],
+    vehicles: ['Jaguar XK 4.2 V8', 'Jaguar XF 5.0 V8', 'Land Rover Range Rover Sport V8', 'Range Rover 5.0 V8'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+  {
+    id: 'visteon_dcm',
+    name: 'Visteon DCM (Diesel)',
+    manufacturer: 'Visteon',
+    family: 'Visteon',
+    identStrings: ['6C1U', '7G91', '9M5Q', 'Visteon', 'VPSH', 'DCU-10'],
+    fileSizeRange: [524288, 2097152],
+    vehicles: ['Ford Transit 2.2 TDCi', 'Fiat Ducato 2.2 JTD', 'Peugeot Boxer 2.2 HDi', 'Citroën Jumper 2.2 HDi'],
+    // Identity-only restore of a def deleted by 3f4c8d0. It declared 'unknown',
+    // never verified against an ORI+tuned pair for this family, so it stays 'unknown'
+    // (which trips the v3.15.2 "checksum not auto-corrected" banner rather than
+    // silently writing a wrong checksum). maps: [] is deliberate — the legacy map
+    // offsets were pre-pivot guesses; tuning goes through the Stage Engine instead.
+    checksumAlgo: 'unknown',
+    checksumOffset: 0,
+    checksumLength: 0,
+    maps: [],
+  },
+
 ]
 
 // ─── Add-on definitions ───────────────────────────────────────────────────────
