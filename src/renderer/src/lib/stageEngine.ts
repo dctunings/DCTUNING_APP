@@ -149,7 +149,32 @@ export interface MapMultiplierLibrary {
 let mapMultiplierCache: MapMultiplierLibrary | null = null
 let mapMultiplierPromise: Promise<MapMultiplierLibrary> | null = null
 
+// Commit 9520abc replaced map-multipliers.json with an 18-entry file using a
+// foreign schema. Every lookup returned undefined, so Tier 2 resolved nothing
+// for four months without surfacing a single error. Both failure modes are
+// checked here because this is the one path both Electron and web loads take.
+const MIN_LIBRARY_ENTRIES = 1000
+
+function assertLibraryHealthy(entries: MapMultiplierEntry[]): void {
+  if (entries.length < MIN_LIBRARY_ENTRIES) {
+    console.error(
+      `[stageEngine] map-multipliers.json has ${entries.length} entries, expected >= ${MIN_LIBRARY_ENTRIES}. ` +
+        `Tier 2 will resolve almost nothing — the file is likely truncated or overwritten.`
+    )
+  }
+  const hasMedian = entries.some(
+    (e) => e.stage1?.median != null || e.stage2?.median != null || e.stage3?.median != null
+  )
+  if (entries.length > 0 && !hasMedian) {
+    console.error(
+      `[stageEngine] map-multipliers.json has no stageN.median on any entry — wrong schema. ` +
+        `Expected { name, family, count, stageN: { median, p25, p75, n } }. Tier 2 is disabled.`
+    )
+  }
+}
+
 function indexEntries(entries: MapMultiplierEntry[]): MapMultiplierLibrary {
+  assertLibraryHealthy(entries)
   const byFamilyName = new Map<string, MapMultiplierEntry>()
   const byName = new Map<string, MapMultiplierEntry>()
   for (const e of entries) {
