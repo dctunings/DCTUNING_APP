@@ -73,8 +73,10 @@ export type Page =
 // via PassThru) genuinely require the desktop app.
 const J2534_DLL_PAGES: Page[] = ['unlock', 'ecuflash']
 
-// Pages that require at least the Pro plan
-const PRO_ONLY_PAGES: Page[] = ['tunes', 'j2534', 'unlock', 'emissions', 'ecuflash']
+// Pages that require a seller Pro/Agency plan (not available to buyer subscribers)
+const SELLER_ONLY_PAGES: Page[] = ['tunes', 'unlock', 'emissions']
+// Pages available to buyer subscribers (€34.99) AND seller plans
+const PAID_PAGES: Page[] = ['j2534', 'ecuflash']
 
 function ProUpgradeWall({ setPage }: { setPage: (p: Page) => void }) {
   return (
@@ -230,14 +232,19 @@ export default function App() {
     isActive,
     isPro,
     isAgency,
+    isBuyer,
     daysRemaining,
     createCheckoutSession,
     openCustomerPortal,
   } = useSubscription(user)
 
   const renderPage = () => {
-    // Gate Pro-only pages — isPro is true during trial, false when trial expired or no sub
-    if (PRO_ONLY_PAGES.includes(page) && !isPro) {
+    // Gate seller-only pages (emissions, unlock, file vault) — need Pro/Agency seller plan
+    if (SELLER_ONLY_PAGES.includes(page) && !isPro) {
+      return <ProUpgradeWall setPage={setPage} />
+    }
+    // Gate paid pages (j2534, ecuflash) — available to buyer OR seller subscribers
+    if (PAID_PAGES.includes(page) && !isPro && !isBuyer) {
       return <ProUpgradeWall setPage={setPage} />
     }
 
@@ -329,6 +336,7 @@ export default function App() {
         isActive={isActive}
         isPro={isPro}
         isAgency={isAgency}
+        isBuyer={isBuyer}
         daysRemaining={daysRemaining}
         onSignOut={signOut}
         onSignIn={() => { /* login screen shown automatically when user is null */ }}

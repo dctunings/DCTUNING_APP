@@ -11,6 +11,7 @@ interface Props {
   isActive?: boolean
   isPro?: boolean
   isAgency?: boolean
+  isBuyer?: boolean
   daysRemaining?: number | null
   onSignOut?: () => void
   onSignIn?: () => void
@@ -131,8 +132,10 @@ const Icons: Record<string, JSX.Element> = {
   ),
 }
 
-// Pro-only pages that require at least Pro plan
-const PRO_ONLY_PAGES: Page[] = ['tunes', 'j2534', 'unlock', 'emissions', 'ecuflash']
+// Pages that require a seller Pro/Agency plan
+const SELLER_ONLY_PAGES: Page[] = ['tunes', 'unlock', 'emissions']
+// Pages available to buyer subscribers AND seller plans
+const BUYER_PAGES: Page[] = ['j2534', 'ecuflash']
 
 // Pages that only make sense in the desktop app. Driver setup is visible
 // everywhere since users need to download J2534 DLLs and Scanmatic drivers.
@@ -195,6 +198,7 @@ function getPlanBadge(subscription: Subscription | null | undefined, isActive: b
   if (planId === 'agency') return { label: 'AGENCY', bg: 'rgba(168,85,247,0.15)', color: '#a855f7' }
   if (planId === 'pro') return { label: 'PRO', bg: 'rgba(0,174,200,0.15)', color: '#00aec8' }
   if (planId === 'starter') return { label: 'STARTER', bg: 'rgba(59,130,246,0.15)', color: '#3b82f6' }
+  if (planId === 'buyer_tools') return { label: 'CUSTOMER', bg: 'rgba(244,63,94,0.15)', color: '#f43f5e' }
   return null
 }
 
@@ -208,7 +212,7 @@ function getInitials(user: User): string {
   return (user.email || 'U').slice(0, 2).toUpperCase()
 }
 
-export default function Sidebar({ currentPage, setPage, user, subscription, isActive, isPro, daysRemaining, onSignOut, onSignIn }: Props) {
+export default function Sidebar({ currentPage, setPage, user, subscription, isActive, isPro, isBuyer, daysRemaining, onSignOut, onSignIn }: Props) {
   const planBadge = getPlanBadge(subscription, isActive)
 
   return (
@@ -237,8 +241,12 @@ export default function Sidebar({ currentPage, setPage, user, subscription, isAc
         <div className="sidebar-section" key={section.section}>
           <div className="sidebar-section-label">{section.section}</div>
           {visibleItems.map((item) => {
-            const isProOnly = PRO_ONLY_PAGES.includes(item.id)
-            const isLocked = isProOnly && !isPro && isActive
+            const isSellerOnly = SELLER_ONLY_PAGES.includes(item.id)
+            const isBuyerPage = BUYER_PAGES.includes(item.id)
+            const isLocked = isActive && (
+              (isSellerOnly && !isPro) ||
+              (isBuyerPage && !isPro && !isBuyer)
+            )
 
             return (
               <div
@@ -246,7 +254,7 @@ export default function Sidebar({ currentPage, setPage, user, subscription, isAc
                 className={`sidebar-nav-item${currentPage === item.id ? ' active' : ''}${isLocked ? ' locked' : ''}`}
                 onClick={() => setPage(item.id)}
                 style={isLocked ? { opacity: 0.55 } : undefined}
-                title={isLocked ? 'Pro plan required' : undefined}
+                title={isLocked ? (isSellerOnly ? 'Seller plan required' : 'Subscription required') : undefined}
               >
                 <span className="nav-icon">{Icons[item.icon]}</span>
                 {item.id === 'remap' ? (

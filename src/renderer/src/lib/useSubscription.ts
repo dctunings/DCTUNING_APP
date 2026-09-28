@@ -30,6 +30,7 @@ export interface SubscriptionState {
   isActive: boolean
   isPro: boolean
   isAgency: boolean
+  isBuyer: boolean
   daysRemaining: number | null
 }
 
@@ -114,6 +115,7 @@ export function useSubscription(user: User | null): SubscriptionState & {
   const isOwner = user?.email === 'dctunings@gmail.com'
   const hasPaidSub = subscription?.status === 'active' || subscription?.status === 'trialing'
 
+  const isBuyer = hasPaidSub && subscription?.plan_id === 'buyer_tools'
   const isActive = isOwner || hasPaidSub
   const isPro = isOwner || (hasPaidSub && (subscription?.plan_id === 'pro' || subscription?.plan_id === 'agency'))
   const isAgency = isOwner || (hasPaidSub && subscription?.plan_id === 'agency')
@@ -175,7 +177,7 @@ export function useSubscription(user: User | null): SubscriptionState & {
 
   return {
     subscription, plans, loading,
-    isActive, isPro, isAgency, daysRemaining,
+    isActive, isPro, isAgency, isBuyer, daysRemaining,
     refresh: loadData, createCheckoutSession, openCustomerPortal
   }
 }
