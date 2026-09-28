@@ -75,6 +75,7 @@ jobs:
           files: |
             release/*.exe
             release/*.exe.blockmap
+            release/latest.yml
           fail_on_unmatched_files: false
           make_latest: true
 

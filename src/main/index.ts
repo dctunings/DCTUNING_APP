@@ -102,7 +102,7 @@ app.whenReady().then(() => {
 
           "font-src 'self';",
 
-          "connect-src 'self' https://eqfmeavkefflwmzihqkd.supabase.co https://releases.dctuning.ie;",
+          "connect-src 'self' https://eqfmeavkefflwmzihqkd.supabase.co https://api.github.com https://objects.githubusercontent.com;",
 
           "frame-ancestors 'none';",
 
