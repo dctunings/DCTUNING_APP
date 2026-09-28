@@ -60,6 +60,34 @@ export function useSubscription(user: User | null): SubscriptionState & {
         .limit(1)
         .single()
 
+      // Check buyer_tool_subscriptions if no active subscription found
+      if (!subData || subData.status !== 'active') {
+        const { data: buyerSub } = await supabase
+          .from('buyer_tool_subscriptions')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .maybeSingle()
+
+        if (buyerSub) {
+          subData = {
+            id: buyerSub.id,
+            user_id: buyerSub.user_id,
+            plan_id: 'buyer_tools',
+            status: buyerSub.status,
+            stripe_subscription_id: buyerSub.stripe_subscription_id,
+            stripe_customer_id: buyerSub.stripe_customer_id,
+            current_period_start: buyerSub.current_period_start,
+            current_period_end: buyerSub.current_period_end,
+            cancel_at_period_end: false,
+            billing_interval: 'monthly',
+            created_at: buyerSub.created_at,
+            updated_at: buyerSub.updated_at,
+            plan: null,
+          } as any
+        }
+      }
+
       // First login — create an inactive subscription record
       if (!subData) {
         const { data: newSub } = await supabase
